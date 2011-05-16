@@ -1237,6 +1237,7 @@ void trajectory::ComputeTraj(Array1D& tspan) {
   int nb_points = tspan.extent(0);
   int statusgdk;
 
+
   if (nb_points == 2) {
     
     tout = tspan(1);          
