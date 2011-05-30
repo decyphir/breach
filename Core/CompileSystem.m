@@ -16,6 +16,9 @@ function CompileSystem(Sys)
 %  
    
   
+  h = waitbar(0,'Compiling System, please wait...');
+
+  
   % find out host architecture
     
   ext = mexext;
@@ -123,23 +126,24 @@ function CompileSystem(Sys)
                obj_out_dir filesep 'param_set' obj_ext  ...
                obj_out_dir filesep 'breach' obj_ext  ...
               ];       
-  
-  
-  
+       
   % compile commands
   
   compile_cvodes_cmd= ['mex -c -outdir ' cv_obj_out_dir ' ' compile_flags ' ' inc_flags ' ' cvodesTB_src_files ];
   compile_obj_cmd = ['mex -c -outdir ' obj_out_dir ' ' compile_flags ' ' inc_flags ' ' src_files ];  
   compile_cvm_cmd= ['mex -output cvm ' compile_flags obj_files cv_obj_files blitz_lib ];
-  
+    
   % execute commands
-  
+
+  waitbar(1 / 4); 
   cd(sys_src_dir);
   fprintf([regexprep(compile_cvodes_cmd,'\','\\\\') '\n' ]);
   eval(compile_cvodes_cmd);
+  waitbar(2 / 4); 
   fprintf([regexprep(compile_obj_cmd,'\','\\\\') '\n']);
   eval(compile_obj_cmd);
+  waitbar(3 / 4); 
   fprintf([regexprep(compile_cvm_cmd,'\','\\\\') '\n']);
   eval(compile_cvm_cmd);
-  
-  
+  waitbar(4 / 4); 
+  close(h);
