@@ -1,8 +1,7 @@
-function CompileSystem(Sys)
-%    
-%   Compile the C function defining the dynamics, enabling simulations. 
+function CompileSystem(Sys)    
+% COMPILESYSTEM  Compile the C function defining the dynamics, enabling simulations. 
 %       
-%   Syntax: CompileSystem(Sys)
+%   usage: CompileSystem(Sys)
 %   
 %   Prerequisite: the presence of properly defined files
 %                        - dynamics.cpp 

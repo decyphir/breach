@@ -1,9 +1,7 @@
 function SplotPts(S,proj,ipts,opt)
+% SPLOTPTS  Plots parameters points in a parameter set
 %  
-%  Plots parameters points in a parameter set S
-%  
-%  Usage:
-%          SplotPts(S [, proj, ipts, opt])
+%  Usage: SplotPts(S [, proj, ipts, opt])
 %
 %   Plots the points in field Pts      
 %   

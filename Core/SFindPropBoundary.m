@@ -1,5 +1,6 @@
 function S = SFindPropBoundary(Sys, S, prop, tspan,tprop)
-%  
+% SFINDPROPBOUNDARY   find parameters in a set with 
+%
 %  S = SFindPropBoundary(Sys, S, prop, tspan, tprop)
 %   
 %  Find in S a set of points such that each points belong to a delaunay

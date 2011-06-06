@@ -80,7 +80,7 @@ class param_set {
   int M_epsi;
   int NumElems;
   int NumRoots;
-  vector<refine_tree> queue; // this maintain nodes that have to be tested 
+  vector<refine_tree> queue; // this maintains nodes that have to be tested 
   
   refine_tree * refine_history;
     
@@ -89,7 +89,8 @@ class param_set {
   param_set() {
     M_pts = M_epsi= NumElems = 1 ;
   };
-						// create a param_set from a matlab structure 
+  
+  // create a param_set from a matlab structure 
   param_set(const mxArray * mxInput, int NumOfChildren)
   {
     const char **fnames;		// pointers to field names

@@ -36,6 +36,7 @@ int param_set::Test1(refine_tree nod,double test[])
 	  }
 	return (nod->status);
 }
+
 /*
 refine_tree param_set :: pop()
 {
@@ -60,7 +61,7 @@ bool param_set::refine_all(int NumOfChildren, int (param_set::*ptr_to_test)(refi
 	data = (double *)mxCalloc(NumOfChildren,sizeof(double));
 
 	/* test all elements in the queue */
-
+	
 	vector<refine_tree>::iterator it;
 	int stat;
 	for(it= queue.begin();it!=queue.end();++it)
@@ -88,11 +89,11 @@ bool param_set::refine_all(int NumOfChildren, int (param_set::*ptr_to_test)(refi
 	/* copy previous pts at the beginning of new_pts */
 
 	for (; k< M_pts*NumElemsOld ; k++) 
-		data_pts_out[k] = pts[k];
+	  data_pts_out[k] = pts[k];
 	  
-	  //cout << endl << " current k: " << k << endl;
+	//cout << endl << " current k: " << k << endl;
 	for (; l< M_epsi*NumElemsOld ; l++) 
-		data_epsi_out[l] = epsi[l];
+	  data_epsi_out[l] = epsi[l];
 	  
 	//cout << endl << " current l: " << l << endl;
 
@@ -101,7 +102,7 @@ bool param_set::refine_all(int NumOfChildren, int (param_set::*ptr_to_test)(refi
 	/* check and refine nodes that need to be refined */
 		
 	vector<refine_tree> new_queue;
-
+	
 	for(it= queue.begin();it!=queue.end();++it)
 	  {
 	    father = *it;
@@ -111,54 +112,54 @@ bool param_set::refine_all(int NumOfChildren, int (param_set::*ptr_to_test)(refi
 	    ind_ep = father->status;
 	    if(ind_ep != -1) // do *nothing* if status == -1
 	    {	      
-			father->isleaf = false;		
-			father->is_divided_in = (int)dim[ind_ep];
-			ind_pts = ((int)dim[ind_ep] - 1);
-			i_father = father->index;
-			father->val = *(pts+i_father*M_pts+ind_pts);
+	      father->isleaf = false;		
+	      father->is_divided_in = (int)dim[ind_ep];
+	      ind_pts = ((int)dim[ind_ep] - 1);
+	      i_father = father->index;
+	      father->val = *(pts+i_father*M_pts+ind_pts);
 		
-			temp = (double)(NumOfChildren/2.0);
-			len = *(epsi+i_father*M_epsi+ind_ep)/temp;
-			m = (NumOfChildren/2);		//m represents for how many times the loop should run
+	      temp = (double)(NumOfChildren/2.0);
+	      len = *(epsi+i_father*M_epsi+ind_ep)/temp;
+	      m = (NumOfChildren/2);		//m represents for how many times the loop should run
 		
-			if(NumOfChildren%2 == 1)
-			{
-				data[0] = *(pts+i_father*M_pts+ind_pts);
-				for(j=1;j<=m;j++)		//data contains resp co_ordinates for new points
-				{	
-					temp = j*len;
-					data[j] = data[0] - temp;
-					data[j+m] = data[0] + temp;
-				}		
-			}//if ends
-		
-			else
-			{
-				data[0] = *(pts+i_father*M_pts+ind_pts) - len/2.0;
-				for(j=1;j<m;j++)		//data contains resp co_ordinates for new points
-				{	
-					temp = j*len;
-					data[j] = data[0] - temp;
-					data[j+m] = data[0] + temp;
-				}
-				data[j] = data[0] + j*len;
-			}//else ends
-			len = len/2.0;
-		
-			for(m=0;m<NumOfChildren;m++)	//This loop is for populating pts and epsi
-			{
-				// test if the new pts is the same as its father
-		    
-				if (father->val == data[m])
-				{
-					refine_tree node = new r_node(father,NumOfChildren);
-					father->children[m] = node;
-					new_queue.push_back(node);			
-					/* pts is the same but we have to update epsi */
-					data_epsi_out[i_father*M_epsi+ind_ep] = len;			
-				}
-				else
-				{	       	
+	      if(NumOfChildren%2 == 1)
+		{
+		  data[0] = *(pts+i_father*M_pts+ind_pts);
+		  for(j=1;j<=m;j++)		//data contains resp co_ordinates for new points
+		    {	
+		      temp = j*len;
+		      data[j] = data[0] - temp;
+		      data[j+m] = data[0] + temp;
+		    }		
+		}//if ends
+	      
+	      else
+		{
+		  data[0] = *(pts+i_father*M_pts+ind_pts) - len/2.0;
+		  for(j=1;j<m;j++)		//data contains resp co_ordinates for new points
+		    {	
+		      temp = j*len;
+		      data[j] = data[0] - temp;
+		      data[j+m] = data[0] + temp;
+		    }
+		  data[j] = data[0] + j*len;
+		}//else ends
+	      len = len/2.0;
+	      
+	      for(m=0;m<NumOfChildren;m++)	//This loop is for populating pts and epsi
+		{
+		  // test if the new pts is the same as its father
+		  
+		  if (father->val == data[m])
+		    {
+		      refine_tree node = new r_node(father,NumOfChildren);
+		      father->children[m] = node;
+		      new_queue.push_back(node);			
+		      /* pts is the same but we have to update epsi */
+		      data_epsi_out[i_father*M_epsi+ind_ep] = len;			
+		    }
+		  else
+		    {	       	
 					//cout << "increasing tree_ind:" << tree_ind << endl;
 					tree_ind++;
 					refine_tree node = new r_node(tree_ind,father,data[m],NumOfChildren);
@@ -239,10 +240,10 @@ void CVM_Refine( int nlhs, mxArray *plhs[],
   bool done = false;
   
   while(done == false)
-  	done = P->refine_all(NumOfChildren,&param_set::Test1,test_epsi);
- 
+    done = P->refine_all(NumOfChildren,&param_set::Test1,test_epsi);
+  
   P->write_mxArray(plhs[0]);
-
+  
   delete P;
 }
 

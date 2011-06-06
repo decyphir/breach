@@ -56,25 +56,6 @@ function [S,val] =  SEvalProp(Sys,S,props,tau, ipts)
       S.props_names= {S.props_names{:} get_id(prop)};
       iprop = numel(S.props_names);      
     end
-
-    % Temporary - deals with oscillations  
-    if (strcmp(get_st(prop), 'iscycling'))
-      params = get_params(prop);
-      C = cmac(params.delta);
-      Stmp = CMAC_ComputeTraj(C, Sys, S, [S.traj(1).time(1) S.traj(1).time(end)], 1);
-      for i = ipts
-        traj = Stmp.traj(i);
-        if (~isempty(tau0))        
-          S.props_values(iprop,i).tau = tau0;
-          S.props_values(iprop,i).val = traj.period*ones(1, numel( tau0));
-        else
-          tau = traj.time; 
-          S.props_values(iprop,i).tau = traj.time;
-          S.props_values(iprop,i).val = traj.period*ones(1, numel(traj.time));
-        end      
-      end        
-    end
-    % End handling of oscillations
         
     for i = ipts
       traj = S.traj(i);
