@@ -16,10 +16,10 @@ function S = SFindPropBoundary(Sys, S, prop, tspan,tprop)
   if (~isfield(Sys, 'rescale'))
     rescale = 1;
   else
-    rescale = Sys.rescale;
+    rescale = Sys.rescale;  
   end
-  
-  S = SPurge(S);
+              
+  S = SPurge(S); 
   S = ComputeTraj(Sys,S, tspan);
   S = SEvalProp(Sys,S,prop, tprop);
   
