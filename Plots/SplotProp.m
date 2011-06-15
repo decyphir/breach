@@ -26,7 +26,7 @@ function val = SplotProp(Pf, prop,opt)
     switch numel(Pf.dim)
      case 1
       val = cat(1, Pf.props_values(iprop,:).val);
-      val = val(:,1);      
+      val = val(:,1);
       plot(Pf.pts(Pf.dim,:)*rescale,val,opt.style{:});
      case 2
       val = cat(1, Pf.props_values(iprop,:).val);
@@ -52,7 +52,6 @@ function val = SplotProp(Pf, prop,opt)
       end
     end
   end
-  
   
 function i = find_prop(st, props_names)
   i=0;
