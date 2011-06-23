@@ -17,7 +17,7 @@ function CompileSystem(Sys)
   
   h = waitbar(0,'Compiling System, please wait...');
 
-  
+  try  
   % find out host architecture
     
   ext = mexext;
@@ -146,3 +146,9 @@ function CompileSystem(Sys)
   eval(compile_cvm_cmd);
   waitbar(4 / 4); 
   close(h);
+  
+  catch 
+    close(h);
+    s = lasterror;
+    warndlg(['Problem during compilation ! Last error reported: ' s.message ] ) 
+  end
