@@ -1400,6 +1400,7 @@ void trajectory::ComputeTraj(Array1D& tspan) {
       tspan.resizeAndPreserve(2);
       nb_points = 2;
     }
+
    length = nb_points;
    (*X).resize(N,nb_points);
    (*U).resize(dimu,nb_points);
