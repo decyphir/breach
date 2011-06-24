@@ -130,7 +130,7 @@ function CompileSystem(Sys)
   
   compile_cvodes_cmd= ['mex -c -outdir ' qwrap(cv_obj_out_dir) ' ' compile_flags ' ' inc_flags ' ' cvodesTB_src_files ];
   compile_obj_cmd = ['mex -c -outdir ' qwrap(obj_out_dir) ' ' compile_flags ' ' inc_flags ' ' src_files ];  
-  compile_cvm_cmd= ['mex -output cvm ' compile_flags obj_files cv_obj_files blitz_lib ];
+  compile_cvm_cmd= ['mex -output cvm ' compile_flags obj_files cv_obj_files qwrap(blitz_lib) ];
     
   % execute commands
 
