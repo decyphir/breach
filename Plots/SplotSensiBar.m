@@ -1,15 +1,15 @@
-function [opts Mend] =  SplotSensiBar(Sys, S, ipts, opts)
+function [h Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
+% SPLOTSENSIBAR plots an histogram of sensitivities
 %
-%   [opts Mend] SplotSensiBar(Sys, S, ipts [, opts])
+%  [h Mend opts] SplotSensiBar(Sys, S, ipts [, opts])
 %
-%   Plots 3d histogram of logarithmic sensitivities of state variables iX
-%   w.r.t. parameters iP at a given time t for a parameter vector ipts in
-%   S. iX, iP and t are provided through an input dialog box, except
-%   when args is given
+%  Plots 3d histogram of logarithmic sensitivities of state variables iX
+%  w.r.t. parameters iP at a given time t for a parameter vector ipts in
+%  S. iX, iP and t are provided through an input dialog box, except
+%  when args is given
 %           
-%   opts has the following fields : args, 
-%            props and taus. props is a
-%   cell of properties 
+%  opts has the following fields : args, props and taus. 
+% 
 %  
 %  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -32,7 +32,6 @@ function [opts Mend] =  SplotSensiBar(Sys, S, ipts, opts)
 
   % default values
   open_dialog = 1;    
-  stat_type = 'average';    
   cutoff =0;
 
   if (exist('opts'))
@@ -54,16 +53,18 @@ function [opts Mend] =  SplotSensiBar(Sys, S, ipts, opts)
       cutoff = opts.cutoff;
     end
     
+  else
+    opts=[];
   end
     
   if (open_dialog)
   
     % deal with dialog box for histogram axes 
     try 
-      [opts.args.iX opts.args.iP opts.args.tspan opts.args] = GetArgSensiBar(Sys.DimX, Sys.ParamList, opts.args);
+      [iX iP tspan args] = GetArgSensiBar(Sys.DimX, Sys.ParamList, opts.args);
     catch
       try
-        [opts.args.iX opts.args.iP tspan opts.args] = GetArgSensiBar(Sys.DimX, Sys.ParamList);
+        [iX iP tspan args] = GetArgSensiBar(Sys.DimX, Sys.ParamList);
       catch
         s = lasterror;
         warndlg(['Problem: ' s.message ', giving up'] );
@@ -71,13 +72,12 @@ function [opts Mend] =  SplotSensiBar(Sys, S, ipts, opts)
         return;
       end
     end
+  else
+    iX = opts.args.iX;
+    iP = opts.args.iP;
+    tspan = opts.args.tspan;
   end
-  
-  
-  iX = opts.args.iX;
-  iP = opts.args.iP;
-  tspan = opts.args.tspan;
-    
+      
   % for properties evaluation 
     
   if (isfield(opts, 'props'))
@@ -108,29 +108,30 @@ function [opts Mend] =  SplotSensiBar(Sys, S, ipts, opts)
   for i = 1:numel(NiP)
     ind = FindParam(S,NiP{i});
     iP(i) = ind;
-  end    
+  end      
   
+  % From now on I shoud have Sys, ipts, tspan, iX, iP, prop, and taus 
+      
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %   Recompute trajectories if needed
+ 
+  if (numel(tspan)==1)
+    stat_type = 'aver_end';  % compute sensitivities at a fixed time
+    tspan = {0 tspan};
+  else
+    stat_type = 'aver_max' 
+  end
+ 
+  Ptmp = CreateSampling(Sys, iP);
+  Ptmp.pts = S.pts(:,ipts);
+  S = ComputeTrajSensi(Sys, Ptmp,  tspan);   
   
-% From now on I shoud have Sys, ipts, tspan, iX, iP, prop, and taus 
-    
-  
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   Recompute trajectories if needed
- 
- if ~isempty('t')
-   
-   Ptmp = CreateSampling(Sys, iP);
-   Ptmp.pts = S.pts(:,ipts);
-   S = ComputeTrajSensi(Sys, Ptmp,  tspan);   
- 
- end
- 
   %  Compute the values for the histo bars 
   
   Mend = zeros(numel(iX)+numel(props), numel(iP));
   
   switch (stat_type)
-   case {'average'}, 
+   case {'aver_end'}, 
     
     % Compute bars for variable sensitivities
             
@@ -185,7 +186,66 @@ function [opts Mend] =  SplotSensiBar(Sys, S, ipts, opts)
       end        
     
     end                   
-           
+    % end case average
+   
+   case {'aver_max'}, % 
+    
+    % Compute bars for variable sensitivities
+            
+    for i = 1:numel(ipts)
+      
+      traj = S.traj(i);
+      time = traj.time;       
+      
+      for j = 1:numel(iX)        
+        
+        for k = 1:numel(iP)
+          
+          is = (find(S.dim==iP(k))-1)*size(traj.X,1)+iX(j);      
+          %[dx idx] = max(abs(traj.XS(is,:))); 
+                             
+          dx = traj.XS(is, :);  % dX/dp[t]          
+          x = traj.X(iX(j),:);  % X[t]
+          
+          % replace zeros by small quantities
+          ind = find(abs(x)<1e-16);        
+          x(ind) = sign(x(ind))*1e-16;       
+          x(x==0) = 1e-16;
+          
+          p = traj.param(iP(k));    % p
+          xs = (dx*p)./abs(x);
+          [dx idx] = max(abs(xs));
+          xs = xs(idx);
+          
+          % Compute the average 
+          Mend(j,k) = Mend(j,k)+xs;      
+        end        
+      end
+    end  % end i = ipts 
+
+    Mend = Mend/numel(ipts);
+    
+    % Compute bars for properties sensitivities
+        
+    for j = 1:numel(props)        
+        
+      for k = 1:numel(iP)
+        
+        [p x dx] = QMITL_SEvalDiff(Sys, props{j}, S,  tspan, iP(k), taus(j));
+                    
+        % replace zeros by small quantities
+        ind = find(abs(x)<1e-16);        
+        x(ind) = sign(x(ind))*1e-16;       
+        x(x==0) = 1e-16;
+                       
+        xs = (dx.*p)./abs(x);
+        
+        % Compute the average 
+        Mend(numel(iX)+j,k) = mean(xs);      
+      
+      end        
+    
+    end                   
 
     
   end % end switch
@@ -193,8 +253,11 @@ function [opts Mend] =  SplotSensiBar(Sys, S, ipts, opts)
   M = max(max(abs(Mend)));
   Mend(abs(Mend)<cutoff*M) = 0;
   
-  figure;  
-
+  h =plot_histo(Mend,S, iX,props,iP);
+  
+function h = plot_histo(Mend,S,iX, props, iP)
+  
+  h = figure;  
   
   h = bar3(Mend,0.5,'detached');
   
@@ -220,13 +283,12 @@ function [opts Mend] =  SplotSensiBar(Sys, S, ipts, opts)
     xtick_labels = {xtick_labels{:}, xlabel };                    
 
   end
-   
+        
   set(gca, 'XTick', 1:size(Mend,2));
   set(gca, 'YTick', 1:size(Mend,1));
   set(gca, 'XTickLabel',  xtick_labels );
   set(gca, 'YTickLabel',  ytick_labels );
   axis([0 size(Mend,2)+1 0 size(Mend,1)+1]);
-   
   
   shading interp;
   colormap cool;
