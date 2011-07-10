@@ -18,68 +18,68 @@ function CompileSystem(Sys)
   h = waitbar(0,'Compiling System, please wait...');
 
   try  
-  % find out host architecture
+    % find out host architecture
     
-  ext = mexext;
-  switch( ext )
-   case {'mexw64', 'mexw32'}
-    obj_ext = '.obj';
-   otherwise
-    obj_ext = '.o';
-  end
-      
-  dr = which('Breach');
-  breach_dir = dr(1:end-9);
-  
-  breach_src_dir = [breach_dir filesep 'Core' filesep 'src']; 
-  qmitl_src_dir = [breach_dir filesep '@QMITL_Formula' filesep 'private' filesep 'src'];
-  cvodes_src_dir = [breach_dir filesep 'Toolboxes' filesep 'sundials' filesep 'src'];
-  
-  sundials_dir = [breach_dir filesep 'Toolboxes' filesep 'sundials'];
-  sundials_inc_dir = [sundials_dir filesep 'include'];
-  sundials_src_dir = [sundials_dir filesep 'src' filesep 'sundials'];
-  sundials_cvodes_src_dir = [sundials_dir filesep 'src' filesep 'cvodes'];
-  sundials_nvm_src_dir = [sundials_dir filesep 'sundialsTB' filesep 'nvector' filesep 'src'];
-  cvodesTB_src_dir =  [breach_dir filesep 'Core' filesep 'cvodesTB++' filesep 'src'];
+    ext = mexext;
+    switch( ext )
+     case {'mexw64', 'mexw32'}
+      obj_ext = '.obj';
+     otherwise
+      obj_ext = '.o';
+    end
     
-  % Blitz 
-  
-  blitz_inc_dir= [breach_dir filesep 'Toolboxes' filesep 'blitz' filesep 'include'];  
-  blitz_lib = [ breach_dir filesep 'Toolboxes' filesep 'blitz' filesep 'lib' filesep 'libblitz' obj_ext];    
-  
- % out directories
-  
-  obj_out_dir = [breach_src_dir  filesep 'obj'];
-  cv_obj_out_dir = [breach_src_dir  filesep 'cv_obj'];
-  sys_src_dir = Sys.Dir;
-  
-  % flags 
-  
-  switch( ext )
-   case {'mexw64', 'mexw32'}
-    compile_flags = [' -DDIMX=' num2str(Sys.DimX) ' '];    
-   case {'mexglx'}
-    compile_flags = [' -DDIMX=' num2str(Sys.DimX) ' -D_DEBUG=0' ' -cxx '];
-   otherwise
-    compile_flags = [' -DDIMX=' num2str(Sys.DimX) ' '];
-  end
+    dr = which('Breach');
+    breach_dir = dr(1:end-9);
     
-  inc_flags = [' -I' qwrap(sys_src_dir) ...
-               ' -I' qwrap(breach_src_dir) ...
-               ' -I' qwrap(sundials_inc_dir) ...
-               ' -I' qwrap(sundials_cvodes_src_dir) ...
-               ' -I' qwrap(cvodesTB_src_dir) ...
-               ' -I' qwrap(sundials_nvm_src_dir) ...
-               ' -I' qwrap(blitz_inc_dir) ...
-               ' -I' qwrap([blitz_inc_dir filesep 'blitz']) ...
-              ];
+    breach_src_dir = [breach_dir filesep 'Core' filesep 'src']; 
+    qmitl_src_dir = [breach_dir filesep '@QMITL_Formula' filesep 'private' filesep 'src'];
+    cvodes_src_dir = [breach_dir filesep 'Toolboxes' filesep 'sundials' filesep 'src'];
+  
+    sundials_dir = [breach_dir filesep 'Toolboxes' filesep 'sundials'];
+    sundials_inc_dir = [sundials_dir filesep 'include'];
+    sundials_src_dir = [sundials_dir filesep 'src' filesep 'sundials'];
+    sundials_cvodes_src_dir = [sundials_dir filesep 'src' filesep 'cvodes'];
+    sundials_nvm_src_dir = [sundials_dir filesep 'sundialsTB' filesep 'nvector' filesep 'src'];
+    cvodesTB_src_dir =  [breach_dir filesep 'Core' filesep 'cvodesTB++' filesep 'src'];
+    
+    % Blitz 
+  
+    blitz_inc_dir= [breach_dir filesep 'Toolboxes' filesep 'blitz' filesep 'include'];  
+    blitz_lib = [ breach_dir filesep 'Toolboxes' filesep 'blitz' filesep 'lib' filesep 'libblitz' obj_ext];    
+  
+    % out directories
+ 
+    obj_out_dir = [breach_src_dir  filesep 'obj'];
+    cv_obj_out_dir = [breach_src_dir  filesep 'cv_obj'];
+    sys_src_dir = Sys.Dir;
+  
+    % flags 
+    
+    switch( ext )
+     case {'mexw64', 'mexw32'}
+      compile_flags = [' -DDIMX=' num2str(Sys.DimX) ' '];    
+     case {'mexglx'}
+      compile_flags = [' -DDIMX=' num2str(Sys.DimX) ' -D_DEBUG=0' ' -cxx '];
+     otherwise
+      compile_flags = [' -DDIMX=' num2str(Sys.DimX) ' '];
+    end
+    
+    inc_flags = [' -I' qwrap(sys_src_dir) ...
+                 ' -I' qwrap(breach_src_dir) ...
+                 ' -I' qwrap(sundials_inc_dir) ...
+                 ' -I' qwrap(sundials_cvodes_src_dir) ...
+                 ' -I' qwrap(cvodesTB_src_dir) ...
+                 ' -I' qwrap(sundials_nvm_src_dir) ...
+                 ' -I' qwrap(blitz_inc_dir) ...
+                 ' -I' qwrap([blitz_inc_dir filesep 'blitz']) ...
+                ];
   
   % source files
-
+  
   cvodesTB_src_files = [qwrap([cvodesTB_src_dir filesep 'cvmFun.cpp']) ...
                     qwrap([cvodesTB_src_dir filesep 'cvmWrap.cpp']) ...
                     qwrap([cvodesTB_src_dir filesep 'cvmOpts.cpp']) ...
-                  ];     
+                   ];     
   
   cv_obj_files = [  
       qwrap([cv_obj_out_dir filesep 'cvmFun' obj_ext])  ...
