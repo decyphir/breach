@@ -91,8 +91,8 @@ end
     kn = find(sum(SToCheck.epsi>Dp,1));
     nkn = find(prod(1*(SToCheck.epsi<=Dp),1));
     
-    Snotrn = select(SToCheck,nkn);    
-    SToCheck = select(SToCheck,kn);
+    Snotrn = Sselect(SToCheck,nkn);    
+    SToCheck = Sselect(SToCheck,kn);
     
     if (isfield(Snotrn,'ToCheck'))
       Snotrn = rmfield(Snotrn,'ToCheck');

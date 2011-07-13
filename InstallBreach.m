@@ -32,6 +32,9 @@ mex -outdir .. lim_inf_inv.c
 fprintf('mex -outdir .. lim_inf_indx.c\n');
 mex -outdir .. lim_inf_indx.c               
 
+cd robustness;
+CompileRobustness;
+
 % compiles cvodes common stuff
 
 sundials_dir = [breach_dir filesep 'Toolboxes' filesep 'sundials'];
@@ -75,7 +78,6 @@ sundials_src_files = [
            qwrap([sundials_src_dir filesep 'sundials_math.c']) ...
            qwrap([sundials_dir filesep  'src' filesep 'nvec_ser' filesep 'nvector_serial.c' ])... 
            ];
-
 
 out_dir = qwrap([breach_src_dir  filesep 'cv_obj']);
 
