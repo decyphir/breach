@@ -1,26 +1,23 @@
 function [S,val] =  SEvalProp(Sys,S,props,tau, ipts)
 %
-%   Eval property for traj in S
+%   SEVALPROP Eval property for previously computed traj.
 %  
-%   SEvalProp(Sys,S,prop,tau, ipt)
+%   Usage: [Pf val] SEvalProp(Sys, Ptraj ,prop,tau, ipt)
 %   
 %   Inputs: 
 %   
-%    - Sys       system    
-%     
-%    -  S        sampling set. 
-%
-%    -  prop     property(ies)
-%   
-%    -  tau    time instant(s) when to estimate properties
-%    -  ipts    trajectories for which to eval properties
+%    - Sys      system    
+%    - Ptraj    param set with trajectories
+%    - prop     property(ies)  
+%    - tau      time instant(s) when to estimate properties
+%    - ipts     trajectories for which to eval properties 
 % 
 %   Outputs: 
 %  
-%    - S, val
+%    - Pf       param set with prop_values field 
+%    - val      quantitative satisfaction of properties
 %   
-      
-  
+         
   if (~exist('ipts')||isempty(ipts))
     ipts = 1:numel(S.traj);
   end
@@ -31,12 +28,11 @@ function [S,val] =  SEvalProp(Sys,S,props,tau, ipts)
   
   if ~isfield(S,'props_names')
     S.props_names = {} ;		
-	end  
+  end  
   
   if (~exist('props')||isempty(props))
     props = S.props;
-  else
-    
+  else    
     npb = numel(S.props);
     S.props = [S.props props];
   end
@@ -46,7 +42,7 @@ function [S,val] =  SEvalProp(Sys,S,props,tau, ipts)
   else
     tau0 = tau;
   end
-
+     
   for np = npb+1:numel(props)+npb
     prop = props(np-npb);
     prop_name =  get_id(prop);
@@ -56,8 +52,16 @@ function [S,val] =  SEvalProp(Sys,S,props,tau, ipts)
       S.props_names= {S.props_names{:} get_id(prop)};
       iprop = numel(S.props_names);      
     end
-        
+    
+    
+    fprintf(['Checking ' prop_name  '\n[             25%%           50%%            75%%               ]\n ']);
+    iprog =0;
     for i = ipts
+      while (floor(60*i/numel(ipts))>iprog)
+        fprintf('^');
+        iprog = iprog+1;
+      end
+      
       traj = S.traj(i);
       if (~isempty(tau0))        
         S.props_values(iprop,i).tau = tau0;
@@ -72,6 +76,8 @@ function [S,val] =  SEvalProp(Sys,S,props,tau, ipts)
     end  
   end
      
+  fprintf('\n');
+  
 function i = find_prop(S,st)
 
   i=0;
@@ -80,5 +86,4 @@ function i = find_prop(S,st)
       i = k;
       return;
     end    
-  end  
-
+  end   

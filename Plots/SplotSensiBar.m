@@ -9,7 +9,6 @@ function [h Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
 %  when args is given
 %           
 %  opts has the following fields : args, props and taus. 
-% 
 %  
 %  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -250,6 +249,7 @@ function [h Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
     
   end % end switch
   
+  % Cut off negligible values
   M = max(max(abs(Mend)));
   Mend(abs(Mend)<cutoff*M) = 0;
   
@@ -261,7 +261,7 @@ function h = plot_histo(Mend,S,iX, props, iP)
   
   h = bar3(Mend,0.5,'detached');
   
-   % Ticks labels
+  % Ticks labels
  
   xtick_labels = {};
   ytick_labels = {};
