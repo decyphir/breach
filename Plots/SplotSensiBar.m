@@ -95,19 +95,23 @@ function [h Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
     taus = repmat(taus,numel(props),1);
   end
   
-  NiX = iX;
-  iX = [];
-  for i = 1:numel(NiX)
-    ind = FindParam(S,NiX{i});
-    iX(i) = ind;
-  end    
-
-  NiP = iP;
-  iP = [];
-  for i = 1:numel(NiP)
-    ind = FindParam(S,NiP{i});
-    iP(i) = ind;
-  end      
+  if (~isnumeric(iX))
+    NiX = iX;
+    iX = [];
+    for i = 1:numel(NiX)
+      ind = FindParam(S,NiX{i});
+      iX(i) = ind;
+    end    
+  end
+  
+  if (~isnumeric(iP))
+    NiP = iP;
+    iP = [];
+    for i = 1:numel(NiP)
+      ind = FindParam(S,NiP{i});
+      iP(i) = ind;
+    end      
+  end
   
   % From now on I shoud have Sys, ipts, tspan, iX, iP, prop, and taus 
       
