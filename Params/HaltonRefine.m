@@ -25,7 +25,9 @@ function Sh = HaltonRefine(S, nb, step)
 
   %Sh.epsi = repmat(Sh.epsi,[1 nb])/(floor(nb^(1/dim_num)));
 
-%  Sh.epsi = kron(Sh.epsi,ones(1,size(Sh.pts,2)))/(floor(nb^(1/dim_num)));
+  %Sh.epsi = kron(Sh.epsi,ones(1,size(Sh.pts,2)))/(floor(nb^(1/dim_num)));
+
+  
 
   Sh.epsi = kron(Sh.epsi, ones(1,size(Sh.pts,2)))/nb;
   

@@ -48,7 +48,7 @@ function h = SplotReach(Sys, S, timespan, facecolor, edgecolor, alph, maxf)
     alpha(alph);        
    
    otherwise 
-    errormsg('Only works for 2D and 3D systems so far');
+    error('Only works for 2D and 3D systems so far');
   end
   
   h = gcf;

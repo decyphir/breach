@@ -1,6 +1,9 @@
-function Sf = ComputeTrajSensi(Sys,S,tspan)
+function Sf = ComputeTrajSensi(Sys,S,tspan, is)
 %
-%   Sf = ComputeTrajSensi(Sys,S0,tspan) 
+%  ComputeTrajSensi compute trajectories with  sensitivities
+%  
+%  Usage:
+%   Sf = ComputeTrajSensi(Sys,S0,tspan [, is]) 
 %  
 %   Compute trajectories with corresponding sensitivities issued from points
 %   in S0 on the time interval tspan.
@@ -9,18 +12,25 @@ function Sf = ComputeTrajSensi(Sys,S,tspan)
 %   
 %    -  Sys      System (needs to be compiled)  
 %    -  S0       Initial sampling of the uncertain set  
-%    -  tspan    interval of the form [t0, tf];
-%
+%    -  tspan    interval of the form [t0, tf], t0:dt:tf, etc
+%    -  is       Parameter sensitivities to compute, if absent uses uncertain parameters in S
+%  
 %   Outputs:
 %      
 %    -  Sf       Sampling structure augmented with the field traj
 %                containing computed trajectories
 %
   
-
-  if (isfield(Sys, 'fake'))
-    Sf=S0;
-    return;
+  if (exist('is'))  
+    org_dims = S.dim;
+    S = SAddUncertainParam(S,is);        
+  end
+    
+  if (isfield(Sys, 'type'))
+    if (Sys.type == 'traces')
+      Sf=S;
+      return;
+    end
   end  
 
   if iscell(tspan)
@@ -61,9 +71,11 @@ function Sf = ComputeTrajSensi(Sys,S,tspan)
     
     S.XS0 = repmat(xS0,[1 size(S.pts,2)]);
       
-  end
-
+  end  
+  
   Sf = cvm(93,S,T);
   CVodeFree();
-    
-  
+     
+  if (exist('is'))    
+    Sf = SDelUncertainParam(Sf,is,org_dims);  
+  end

@@ -299,7 +299,7 @@ int CVM_ComputeTrajSensi(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prh
   Array1D Tspan;
   Array1D xS0(N*Ns);
   
-  if (nb_pts>=1) {
+  if (nb_pts>1) {
     cout << "\nComputing "  << nb_pts <<  " trajectories " << endl;
     cout << "[             25%            50%            75%              ] "<< endl;
     cout << " "; 
@@ -312,7 +312,7 @@ int CVM_ComputeTrajSensi(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prh
 
 
     /* Progress bar */
-    if (nb_pts>=1) {
+    if (nb_pts>1) {
       cout.flush();
       while (floor(60*(j+1)/nb_pts)>iprog) {      
 	cout << "^";

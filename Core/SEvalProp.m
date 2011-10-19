@@ -1,8 +1,8 @@
-function [S,val] =  SEvalProp(Sys,S,props,tau, ipts)
+function [S,val] =  SEvalProp(Sys,S,props, tau, ipts)
 %
-%   SEVALPROP Eval property for previously computed traj.
+%   SEVALPROP Eval property for previously computed trajectories
 %  
-%   Usage: [Pf val] SEvalProp(Sys, Ptraj ,prop,tau, ipt)
+%   Usage: [Pf val] = SEvalProp(Sys, Ptraj ,prop,tau, ipt)
 %   
 %   Inputs: 
 %   
