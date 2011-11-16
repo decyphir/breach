@@ -9,8 +9,7 @@ function [h Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
 %  when args is given
 %           
 %  opts has the following fields : args, props and taus. 
-%  
-%  
+%    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   Check inputs 
  
