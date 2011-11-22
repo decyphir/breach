@@ -133,6 +133,44 @@ function [h Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
   Mend = zeros(numel(iX)+numel(props), numel(iP));
   
   switch (stat_type)
+    case {'aver_sum'},  % integrate local sensitivities over the trajectories and average
+    
+    % Compute bars for variable sensitivities
+            
+    for i = 1:numel(ipts)
+      
+      traj = S.traj(i);
+      time = traj.time;       
+      
+      for j = 1:numel(iX)        
+        
+        for k = 1:numel(iP)
+          
+          is = (find(S.dim==iP(k))-1)*size(traj.X,1)+iX(j);      
+
+          dx = traj.XS(is,:);  % dX/dp[t]          
+          x = traj.X(iX(j),:);  % X[t]        
+          
+          % replace zeros by small quantities
+          ind = find(abs(x)<1e-16);        
+          x(ind) = sign(x(ind))*1e-16;       
+          x(x==0) = 1e-16;
+          
+          p = traj.param(iP(k));    % p
+          xs = (dx*p)./abs(x);
+
+          XS =  trapz(time, xs); % computes the sum
+          
+          % Compute the sum  
+          Mend(j,k) = Mend(j,k)+XS;      
+        end        
+      end
+    end  % end i = ipts 
+
+    Mend = Mend/numel(ipts);
+    
+    % Compute bars for properties sensitivities
+        
    case {'aver_end'}, 
     
     % Compute bars for variable sensitivities
@@ -248,7 +286,6 @@ function [h Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
       end        
     
     end                   
-
     
   end % end switch
   
@@ -260,8 +297,7 @@ function [h Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
   
 function h = plot_histo(Mend,S,iX, props, iP)
   
-  h = figure;  
-  
+  h = figure;    
   h = bar3(Mend,0.5,'detached');
   
   % Ticks labels
