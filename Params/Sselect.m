@@ -1,5 +1,11 @@
-function Sn = select(S, kn)
-  
+function Sn = Sselect(S, kn)
+%SSELECT extract parameters from indices
+%
+%Synopsis  Sn = Sselect(S, kn)
+%
+% E.g.: 
+%          Peven = Sselect(P, 2:2:10)
+%
   Sn = [];
  
   field_list_copy = {'dim', 'ParamList', 'DimX', 'DimP', 'props_names', 'props'};

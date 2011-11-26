@@ -1,10 +1,10 @@
 function Sets = DiscrimPropValues(S)
-
- % Separates traj set S according to properties checked for S
- %   
- % Usage:
- %        Sets = DiscrimPropValues(S)
- %
+%
+% DISCRIMPROPVALUES Separates traj set S according to properties checked for S
+%   
+% Synopsis: Sets = DiscrimPropValues(S)
+%        
+%
   
    
    if ~isfield(S,'props_values')

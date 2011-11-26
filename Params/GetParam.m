@@ -1,11 +1,12 @@
 function ParamValues = GetParam(S,ParamList)
+% GETPARAM get the values of parameters in parameter set
+%
 
   if (isfield(S,'pts'))
     p= S.pts(:,1);
   else
     p = S.p;
   end
-  
   
   if isstr(ParamList) 
     ind = FindParam(S,ParamList);    

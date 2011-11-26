@@ -1,6 +1,6 @@
 function index=  FindParam(Sys,param)
 %  
-% Finds the indices of parameters given by their name for a given system
+% FINDPARAM Finds the indices of parameters given by their name for a given system
 %  
 % Syntax: index = FindParam(Sys, param)
 %

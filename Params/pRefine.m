@@ -8,6 +8,7 @@ function [S Stmp]= pRefine(S,p,r)
 %         (See Saltelli's Books, chapter 3 or 4) Uses the suggested value
 %         for Delta: p/(2(p-1)) 
 %   
+%         
   
 % define the admissible grid and pick points
 
