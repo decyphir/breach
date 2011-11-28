@@ -24,18 +24,22 @@ function [S,val] =  SEvalProp(Sys,S,props, tau, ipts)
 
   if ~isfield(S,'props')
     S.props = [];
+    npb =0;
+  else
+    npb = numel(S.props);
   end
   
   if ~isfield(S,'props_names')
     S.props_names = {} ;		
   end  
   
-  if (~exist('props')||isempty(props))
-    props = S.props;
-  else    
-    npb = numel(S.props);
-    S.props = [S.props props];
-  end
+
+ %if (~exist('props')||isempty(props))
+ %   props = S.props;
+ % else    
+ %   npb = numel(S.props);
+ %   S.props = [S.props props];
+ % end
  
   if (~exist('tau')||isempty(tau))
     tau0=[];
@@ -50,9 +54,9 @@ function [S,val] =  SEvalProp(Sys,S,props, tau, ipts)
 
     if ~iprop      
       S.props_names= {S.props_names{:} get_id(prop)};
+      S.props= [S.props prop];
       iprop = numel(S.props_names);      
-    end
-    
+    end    
     
     fprintf(['Checking ' prop_name  '\n[             25%%           50%%            75%%               ]\n ']);
     iprog =0;

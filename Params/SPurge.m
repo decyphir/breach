@@ -22,13 +22,4 @@ function S = SPurge(S)
   try
     S = rmfield(S, 'ExpaMax');  
   end  
-  try 
-    S = rmfield(S, 'props_values');
-  end
-  try
-    S = rmfield(S, 'props');  
-  end
-  try
-    S = rmfield(S, 'props_names');  
-  end
  
