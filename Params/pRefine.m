@@ -43,7 +43,3 @@ S.epsi = repmat(S.epsi, [1 size(S2.pts,2)]);
 S.pts(S.dim,:) = S.pts(S.dim,:) + (2*S2.pts-1).*S.epsi;
 S.D = S2.D;  
  
-  
-  
-
-  
