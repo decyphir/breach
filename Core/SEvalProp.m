@@ -57,7 +57,8 @@ function [S,val] =  SEvalProp(Sys,S,props, tau, ipts)
       S.props= [S.props prop];
       iprop = numel(S.props_names);      
     end    
-    
+
+    prop = QMITL_OptimizePredicates(Sys,prop);
     fprintf(['Checking ' prop_name  '\n[             25%%           50%%            75%%               ]\n ']);
     iprog =0;
     for i = ipts
