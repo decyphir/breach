@@ -88,9 +88,9 @@ function SplotBoxPts(S,proj, ipts, opt, col,alph)
     
     hold on;    
     if isfield(S,'ParamList')            
-      xlabel(S.ParamList{proj(1)});  
+      xlabel(S.ParamList{proj(1)},'Interpreter','none');  
     else
-      xlabel(['x_' num2str(proj(1))]);
+      xlabel(['x_' num2str(proj(1))],'Interpreter','tex');
     end
     
     DX(2) = 0;
@@ -106,7 +106,7 @@ function SplotBoxPts(S,proj, ipts, opt, col,alph)
         
       end
     end
-%    set(gca, 'YLim', [-1 1], 'YtickLabel', {});
+%    set(gca, 'YLim', [-1 1], 'YtickLabel', {},'Interpreter','none');
     
    case 2
     hold on;
@@ -128,13 +128,13 @@ function SplotBoxPts(S,proj, ipts, opt, col,alph)
    case 3    
     hold on
     if isfield(S,'ParamList')            
-      xlabel(S.ParamList{proj(1)});  
-      ylabel(S.ParamList{proj(2)});
-      zlabel(S.ParamList{proj(3)});
+      xlabel(S.ParamList{proj(1)},'Interpreter','none');  
+      ylabel(S.ParamList{proj(2)},'Interpreter','none');
+      zlabel(S.ParamList{proj(3)},'Interpreter','none');
     else
-      xlabel(['x_' num2str(proj(1))]);
-      ylabel(['x_' num2str(proj(2))]);
-      zlabel(['x_' num2str(proj(3))]);
+      xlabel(['x_' num2str(proj(1))],'Interpreter','tex');
+      ylabel(['x_' num2str(proj(2))],'Interpreter','tex');
+      zlabel(['x_' num2str(proj(3))],'Interpreter','tex');
     end
     nb_pts= size(S.pts,2);
 

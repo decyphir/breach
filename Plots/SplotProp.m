@@ -28,6 +28,10 @@ function val = SplotProp(Pf, prop,opt)
       val = cat(1, Pf.props_values(iprop,:).val);
       val = val(:,1);
       plot(Pf.pts(Pf.dim,:)*rescale,val,opt.style{:});
+      xlabel(Pf.ParamList{Pf.dim},'Interpreter','none');  
+      ylabel(disp(prop, -1),'Interpreter','none');
+     
+     
      case 2
       val = cat(1, Pf.props_values(iprop,:).val);
       if isfield(opt,'plot_pts')
@@ -48,8 +52,13 @@ function val = SplotProp(Pf, prop,opt)
           end
           cla;
           surf(X,Y,Z,'EdgeColor','None');        
-        end
+          xlabel(Pf.ParamList{Pf.dim(1)},'Interpreter','none');  
+          ylabel(Pf.ParamList{Pf.dim(2)},'Interpreter','none');
+          zlabel(disp(prop, -1),'Interpreter','none');        
+        end      
       end
+     otherwise 
+      return;
     end
   end
   

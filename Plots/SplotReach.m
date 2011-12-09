@@ -5,8 +5,6 @@ function h = SplotReach(Sys, S, timespan, facecolor, edgecolor, alph, maxf)
 %  Usage:
 %         h = SplotReach(Sys, S, timespan, facecolor, alpha)
 %
-
-
   
   if (~exist('alph'))
     alph=.1;

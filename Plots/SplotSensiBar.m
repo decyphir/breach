@@ -329,6 +329,11 @@ function h = plot_histo(Mend,S,iX, props, iP)
   set(gca, 'YTickLabel',  ytick_labels );
   axis([0 size(Mend,2)+1 0 size(Mend,1)+1]);
   
+  hx = get(gca, 'xlabel')
+  set(hx, 'Interpreter','none');
+  hy = get(gca, 'ylabel')
+  set(hy, 'Interpreter','none');
+  
   shading interp;
   colormap cool;
   colorbar;

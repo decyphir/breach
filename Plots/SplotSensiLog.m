@@ -101,7 +101,7 @@ function SplotSensiLog(S,iX,iP,ipts)
         subplot(numel(iX),1,j)
       end
       hold on;
-      ylabel(['Sensi(' S.ParamList{iX(j)} ')']);
+      ylabel(['Sensi(' S.ParamList{iX(j)} ')'],'Interpreter','none');
 
       leg = {};
 
@@ -123,11 +123,11 @@ function SplotSensiLog(S,iX,iP,ipts)
         leg = {leg{:}, S.ParamList{iP(k)}};
       
       end
-      legend(leg{:});
+      legend(leg{:}, 'Interpreter', 'none');
     end
   end
   
-  xlabel('time');
+  xlabel('time','Interpreter','none');
   
   end
   

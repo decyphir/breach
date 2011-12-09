@@ -99,9 +99,9 @@ function SplotPts(S,proj,ipts,opt)
    case {1}
     hold on;    
     if isfield(S,'ParamList')            
-      xlabel(S.ParamList{proj(1)});  
+      xlabel(S.ParamList{proj(1)},'Interpreter','none');  
     else
-      xlabel(['x_' num2str(proj(1))]);
+      xlabel(['x_' num2str(proj(1))],'Interpreter','tex');
     end
       
     x = S.pts(proj(1),ipts)*rescale;
@@ -111,38 +111,38 @@ function SplotPts(S,proj,ipts,opt)
     hold on;  
    
     if isfield(S,'ParamList')            
-      xlabel(S.ParamList{proj(1)});  
-      ylabel(S.ParamList{proj(2)});
+      xlabel(S.ParamList{proj(1)},'Interpreter','none');  
+      ylabel(S.ParamList{proj(2)},'Interpreter','none');
       
     else
-      xlabel(['x_' num2str(proj(1))]);
-      ylabel(['x_' num2str(proj(2))]);
+      xlabel(['x_' num2str(proj(1))],'Interpreter','tex');
+      ylabel(['x_' num2str(proj(2))],'Interpreter','tex');
       
     end
       
     x = S.pts(proj(1),ipts)*rescale;
     y = S.pts(proj(2),ipts)*rescale;
     plot(x,y,opt.plot_opt{:});  
-    xlabel(S.ParamList{proj(1)});  
-    ylabel(S.ParamList{proj(2)});   
+    xlabel(S.ParamList{proj(1)},'Interpreter','none');  
+    ylabel(S.ParamList{proj(2)},'Interpreter','none');   
    
   otherwise
     hold on;
     
     if isfield(S,'ParamList')            
-      xlabel(S.ParamList{proj(1)});  
-      ylabel(S.ParamList{proj(2)});
-      zlabel(S.ParamList{proj(3)});
+      xlabel(S.ParamList{proj(1)},'Interpreter','none');  
+      ylabel(S.ParamList{proj(2)},'Interpreter','none');
+      zlabel(S.ParamList{proj(3)},'Interpreter','none');
     else
-      xlabel(['x_' num2str(proj(1))]);
-      ylabel(['x_' num2str(proj(2))]);
-      zlabel(['x_' num2str(proj(3))]);
+      xlabel(['x_' num2str(proj(1))],'Interpreter','tex');
+      ylabel(['x_' num2str(proj(2))],'Interpreter','tex');
+      zlabel(['x_' num2str(proj(3))],'Interpreter','tex');
     end
    
     x = S.pts(proj(1),ipts)*rescale;
     y = S.pts(proj(2),ipts)*rescale;
     z = S.pts(proj(3),ipts)*rescale;    
-		plot3(x,y,z,opt.plot_opt{:});
+    plot3(x,y,z,opt.plot_opt{:});
       
   end
   grid on;

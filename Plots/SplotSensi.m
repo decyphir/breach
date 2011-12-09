@@ -109,7 +109,7 @@ function SplotSensi(S,iX,iP,ipts)
         subplot(numel(iX),1,j)
       end
       hold on;
-      ylabel(['Sensi(' S.ParamList{iX(j)} ')']);
+      ylabel(['Sensi(' S.ParamList{iX(j)} ')'],'Interpreter','none');
 
       leg = {};
 
@@ -124,7 +124,7 @@ function SplotSensi(S,iX,iP,ipts)
     end
   end
   
-  xlabel('time');
+  xlabel('time','Interpreter','none');
   
   end
   

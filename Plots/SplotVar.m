@@ -95,7 +95,7 @@ function SplotVar(S,iX,ipts,opt)
       hold on;  
       
       if isfield(S,'ParamList')            
-        ylabel(S.ParamList{iX(j)});
+        ylabel(S.ParamList{iX(j)},'Interpreter','none');
       else
         ylabel(['x_' num2str(iX(j))]);
       end

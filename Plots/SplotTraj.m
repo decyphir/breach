@@ -117,7 +117,7 @@ function SplotTraj(S,proj,iX,opt,t0)%
     xlabel('time')
     
     if isfield(S,'ParamList')            
-      ylabel(S.ParamList{proj(1)});
+      ylabel(S.ParamList{proj(1)},'Interpreter','none');
     else
       ylabel(['x_' num2str(proj(1))]);
     end       
@@ -143,8 +143,8 @@ function SplotTraj(S,proj,iX,opt,t0)%
     hold on;
     
     if isfield(S,'ParamList')            
-      xlabel(S.ParamList{proj(1)});
-      ylabel(S.ParamList{proj(2)});
+      xlabel(S.ParamList{proj(1)},'Interpreter','none');
+      ylabel(S.ParamList{proj(2)},'Interpreter','none');
     else
       xlabel(['x_' num2str(proj(1))]);
       ylabel(['x_' num2str(proj(2))]);
@@ -171,9 +171,9 @@ function SplotTraj(S,proj,iX,opt,t0)%
     hold on;
     
     if isfield(S,'ParamList')            
-      xlabel(S.ParamList{proj(1)});  
-      ylabel(S.ParamList{proj(2)});
-      zlabel(S.ParamList{proj(3)});
+      xlabel(S.ParamList{proj(1)},'Interpreter','none');  
+      ylabel(S.ParamList{proj(2)},'Interpreter','none');
+      zlabel(S.ParamList{proj(3)},'Interpreter','none');
     else
       xlabel(['x_' num2str(proj(1))]);
       ylabel(['x_' num2str(proj(2))]);
