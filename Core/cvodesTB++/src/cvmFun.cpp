@@ -1122,10 +1122,10 @@ int CVM_Solve(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   }
 
   /* CVODE return flag */
-  plhs[0] = mxCreateScalarDouble((double)status);
+  plhs[0] = mxCreateDoubleScalar((double)status);
 
   /* Return time */
-  plhs[1] = mxCreateScalarDouble(tret);
+  plhs[1] = mxCreateDoubleScalar(tret);
 
   /* Solution vector */
   plhs[2] = mxCreateDoubleMatrix(N,1,mxREAL);
@@ -1243,10 +1243,10 @@ int CVM_SolveB(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   }
 
   /* CVodeB return flag */
-  plhs[0] = mxCreateScalarDouble((double)status);
+  plhs[0] = mxCreateDoubleScalar((double)status);
 
   /* Return time */
-  plhs[1] = mxCreateScalarDouble(tretB);
+  plhs[1] = mxCreateDoubleScalar(tretB);
 
   /* Solution vector */
   plhs[2] = mxCreateDoubleMatrix(NB,1,mxREAL);
@@ -1359,18 +1359,18 @@ int CVM_Stats(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   nfields = sizeof(fnames_intgr)/sizeof(*fnames_intgr);
   plhs[0] = mxCreateStructMatrix(1, 1, nfields, fnames_intgr);
  
-  mxSetField(plhs[0], 0, "nst",     mxCreateScalarDouble((double)nst));
-  mxSetField(plhs[0], 0, "nfe",     mxCreateScalarDouble((double)nfe));
-  mxSetField(plhs[0], 0, "nsetups", mxCreateScalarDouble((double)nsetups));
-  mxSetField(plhs[0], 0, "netf",    mxCreateScalarDouble((double)netf));
-  mxSetField(plhs[0], 0, "nni",     mxCreateScalarDouble((double)nni));
-  mxSetField(plhs[0], 0, "ncfn",    mxCreateScalarDouble((double)ncfn));
-  mxSetField(plhs[0], 0, "qlast",   mxCreateScalarDouble((double)qlast));
-  mxSetField(plhs[0], 0, "qcur",    mxCreateScalarDouble((double)qcur));
-  mxSetField(plhs[0], 0, "h0used",  mxCreateScalarDouble(h0used));
-  mxSetField(plhs[0], 0, "hlast",   mxCreateScalarDouble(hlast));
-  mxSetField(plhs[0], 0, "hcur",    mxCreateScalarDouble(hcur));
-  mxSetField(plhs[0], 0, "tcur",    mxCreateScalarDouble(tcur));
+  mxSetField(plhs[0], 0, "nst",     mxCreateDoubleScalar((double)nst));
+  mxSetField(plhs[0], 0, "nfe",     mxCreateDoubleScalar((double)nfe));
+  mxSetField(plhs[0], 0, "nsetups", mxCreateDoubleScalar((double)nsetups));
+  mxSetField(plhs[0], 0, "netf",    mxCreateDoubleScalar((double)netf));
+  mxSetField(plhs[0], 0, "nni",     mxCreateDoubleScalar((double)nni));
+  mxSetField(plhs[0], 0, "ncfn",    mxCreateDoubleScalar((double)ncfn));
+  mxSetField(plhs[0], 0, "qlast",   mxCreateDoubleScalar((double)qlast));
+  mxSetField(plhs[0], 0, "qcur",    mxCreateDoubleScalar((double)qcur));
+  mxSetField(plhs[0], 0, "h0used",  mxCreateDoubleScalar(h0used));
+  mxSetField(plhs[0], 0, "hlast",   mxCreateDoubleScalar(hlast));
+  mxSetField(plhs[0], 0, "hcur",    mxCreateDoubleScalar(hcur));
+  mxSetField(plhs[0], 0, "tcur",    mxCreateDoubleScalar(tcur));
 
 
   /* Root Finding Statistics */
@@ -1382,7 +1382,7 @@ int CVM_Stats(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     nfields = sizeof(fnames_root)/sizeof(*fnames_root);
     mx_root = mxCreateStructMatrix(1, 1, nfields, fnames_root);
 
-    mxSetField(mx_root, 0, "nge", mxCreateScalarDouble((double)nge));
+    mxSetField(mx_root, 0, "nge", mxCreateDoubleScalar((double)nge));
 
     rootsfound = (int *) malloc(nge*sizeof(int));
     flag = CVodeGetRootInfo(cvode_mem, rootsfound);
@@ -1409,8 +1409,8 @@ int CVM_Stats(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     nfields = sizeof(fnames_quad)/sizeof(*fnames_quad);
     mx_quad = mxCreateStructMatrix(1, 1, nfields, fnames_quad);
 
-    mxSetField(mx_quad, 0, "nfQe",  mxCreateScalarDouble((double)nfQe));
-    mxSetField(mx_quad, 0, "netfQ", mxCreateScalarDouble((double)netfQ));
+    mxSetField(mx_quad, 0, "nfQe",  mxCreateDoubleScalar((double)nfQe));
+    mxSetField(mx_quad, 0, "netfQ", mxCreateDoubleScalar((double)netfQ));
 
   } else {
 
@@ -1438,8 +1438,8 @@ int CVM_Stats(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mx_ls = mxCreateStructMatrix(1, 1, nfields, fnames_dense);
     
     mxSetField(mx_ls, 0, "name", mxCreateString("Dense"));
-    mxSetField(mx_ls, 0, "njeD", mxCreateScalarDouble((double)njeD));
-    mxSetField(mx_ls, 0, "nfeD", mxCreateScalarDouble((double)nfeD));
+    mxSetField(mx_ls, 0, "njeD", mxCreateDoubleScalar((double)njeD));
+    mxSetField(mx_ls, 0, "nfeD", mxCreateDoubleScalar((double)nfeD));
     
     break;
 
@@ -1451,7 +1451,7 @@ int CVM_Stats(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mx_ls = mxCreateStructMatrix(1, 1, nfields, fnames_diag);
  
     mxSetField(mx_ls, 0, "name", mxCreateString("Diag"));
-    mxSetField(mx_ls, 0, "nfeDI", mxCreateScalarDouble((double)nfeDI));
+    mxSetField(mx_ls, 0, "nfeDI", mxCreateDoubleScalar((double)nfeDI));
       
     break;
 
@@ -1464,8 +1464,8 @@ int CVM_Stats(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mx_ls = mxCreateStructMatrix(1, 1, nfields, fnames_band);
  
     mxSetField(mx_ls, 0, "name", mxCreateString("Band"));
-    mxSetField(mx_ls, 0, "njeB", mxCreateScalarDouble((double)njeB));
-    mxSetField(mx_ls, 0, "nfeB", mxCreateScalarDouble((double)nfeB));
+    mxSetField(mx_ls, 0, "njeB", mxCreateDoubleScalar((double)njeB));
+    mxSetField(mx_ls, 0, "nfeB", mxCreateDoubleScalar((double)nfeB));
       
     break;
 
@@ -1490,12 +1490,12 @@ int CVM_Stats(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else
       mxSetField(mx_ls, 0, "name",  mxCreateString("TFQMR"));
 
-    mxSetField(mx_ls, 0, "nli",   mxCreateScalarDouble((double)nli));
-    mxSetField(mx_ls, 0, "npe",   mxCreateScalarDouble((double)npe));
-    mxSetField(mx_ls, 0, "nps",   mxCreateScalarDouble((double)nps));
-    mxSetField(mx_ls, 0, "ncfl",  mxCreateScalarDouble((double)ncfl));
-    mxSetField(mx_ls, 0, "njeSG", mxCreateScalarDouble((double)njeSG));
-    mxSetField(mx_ls, 0, "nfeSG", mxCreateScalarDouble((double)nfeSG));
+    mxSetField(mx_ls, 0, "nli",   mxCreateDoubleScalar((double)nli));
+    mxSetField(mx_ls, 0, "npe",   mxCreateDoubleScalar((double)npe));
+    mxSetField(mx_ls, 0, "nps",   mxCreateDoubleScalar((double)nps));
+    mxSetField(mx_ls, 0, "ncfl",  mxCreateDoubleScalar((double)ncfl));
+    mxSetField(mx_ls, 0, "njeSG", mxCreateDoubleScalar((double)njeSG));
+    mxSetField(mx_ls, 0, "nfeSG", mxCreateDoubleScalar((double)nfeSG));
     
     break;
     
@@ -1514,12 +1514,12 @@ int CVM_Stats(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     nfields = sizeof(fnames_sens)/sizeof(*fnames_sens);
     mx_fsa = mxCreateStructMatrix(1, 1, nfields, fnames_sens);
     
-    mxSetField(mx_fsa, 0, "nfSe",     mxCreateScalarDouble((double)nfSe));
-    mxSetField(mx_fsa, 0, "nfeS",     mxCreateScalarDouble((double)nfeS));
-    mxSetField(mx_fsa, 0, "nsetupsS", mxCreateScalarDouble((double)nsetupsS));
-    mxSetField(mx_fsa, 0, "netfS",    mxCreateScalarDouble((double)netfS));
-    mxSetField(mx_fsa, 0, "nniS",     mxCreateScalarDouble((double)nniS));
-    mxSetField(mx_fsa, 0, "ncfnS",    mxCreateScalarDouble((double)ncfnS));
+    mxSetField(mx_fsa, 0, "nfSe",     mxCreateDoubleScalar((double)nfSe));
+    mxSetField(mx_fsa, 0, "nfeS",     mxCreateDoubleScalar((double)nfeS));
+    mxSetField(mx_fsa, 0, "nsetupsS", mxCreateDoubleScalar((double)nsetupsS));
+    mxSetField(mx_fsa, 0, "netfS",    mxCreateDoubleScalar((double)netfS));
+    mxSetField(mx_fsa, 0, "nniS",     mxCreateDoubleScalar((double)nniS));
+    mxSetField(mx_fsa, 0, "ncfnS",    mxCreateDoubleScalar((double)ncfnS));
     
   } else {
 
@@ -1606,18 +1606,18 @@ int CVM_StatsB(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   nfields = sizeof(fnames_intgr)/sizeof(*fnames_intgr);
   plhs[0] = mxCreateStructMatrix(1, 1, nfields, fnames_intgr);
  
-  mxSetField(plhs[0], 0, "nst",     mxCreateScalarDouble((double)nst));
-  mxSetField(plhs[0], 0, "nfe",     mxCreateScalarDouble((double)nfe));
-  mxSetField(plhs[0], 0, "nsetups", mxCreateScalarDouble((double)nsetups));
-  mxSetField(plhs[0], 0, "netf",    mxCreateScalarDouble((double)netf));
-  mxSetField(plhs[0], 0, "nni",     mxCreateScalarDouble((double)nni));
-  mxSetField(plhs[0], 0, "ncfn",    mxCreateScalarDouble((double)ncfn));
-  mxSetField(plhs[0], 0, "qlast",   mxCreateScalarDouble((double)qlast));
-  mxSetField(plhs[0], 0, "qcur",    mxCreateScalarDouble((double)qcur));
-  mxSetField(plhs[0], 0, "h0used",  mxCreateScalarDouble(h0used));
-  mxSetField(plhs[0], 0, "hlast",   mxCreateScalarDouble(hlast));
-  mxSetField(plhs[0], 0, "hcur",    mxCreateScalarDouble(hcur));
-  mxSetField(plhs[0], 0, "tcur",    mxCreateScalarDouble(tcur));
+  mxSetField(plhs[0], 0, "nst",     mxCreateDoubleScalar((double)nst));
+  mxSetField(plhs[0], 0, "nfe",     mxCreateDoubleScalar((double)nfe));
+  mxSetField(plhs[0], 0, "nsetups", mxCreateDoubleScalar((double)nsetups));
+  mxSetField(plhs[0], 0, "netf",    mxCreateDoubleScalar((double)netf));
+  mxSetField(plhs[0], 0, "nni",     mxCreateDoubleScalar((double)nni));
+  mxSetField(plhs[0], 0, "ncfn",    mxCreateDoubleScalar((double)ncfn));
+  mxSetField(plhs[0], 0, "qlast",   mxCreateDoubleScalar((double)qlast));
+  mxSetField(plhs[0], 0, "qcur",    mxCreateDoubleScalar((double)qcur));
+  mxSetField(plhs[0], 0, "h0used",  mxCreateDoubleScalar(h0used));
+  mxSetField(plhs[0], 0, "hlast",   mxCreateDoubleScalar(hlast));
+  mxSetField(plhs[0], 0, "hcur",    mxCreateDoubleScalar(hcur));
+  mxSetField(plhs[0], 0, "tcur",    mxCreateDoubleScalar(tcur));
 
 
   /* Quadrature Statistics */
@@ -1629,8 +1629,8 @@ int CVM_StatsB(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     nfields = sizeof(fnames_quad)/sizeof(*fnames_quad);
     mx_quad = mxCreateStructMatrix(1, 1, nfields, fnames_quad);
 
-    mxSetField(mx_quad, 0, "nfQe",  mxCreateScalarDouble((double)nfQe));
-    mxSetField(mx_quad, 0, "netfQ", mxCreateScalarDouble((double)netfQ));
+    mxSetField(mx_quad, 0, "nfQe",  mxCreateDoubleScalar((double)nfQe));
+    mxSetField(mx_quad, 0, "netfQ", mxCreateDoubleScalar((double)netfQ));
 
   } else {
 
@@ -1658,8 +1658,8 @@ int CVM_StatsB(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mx_ls = mxCreateStructMatrix(1, 1, nfields, fnames_dense);
 
     mxSetField(mx_ls, 0, "name", mxCreateString("Dense"));
-    mxSetField(mx_ls, 0, "njeD", mxCreateScalarDouble((double)njeD));
-    mxSetField(mx_ls, 0, "nfeD", mxCreateScalarDouble((double)nfeD));
+    mxSetField(mx_ls, 0, "njeD", mxCreateDoubleScalar((double)njeD));
+    mxSetField(mx_ls, 0, "nfeD", mxCreateDoubleScalar((double)nfeD));
     
     break;
 
@@ -1671,7 +1671,7 @@ int CVM_StatsB(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mx_ls = mxCreateStructMatrix(1, 1, nfields, fnames_diag);
  
     mxSetField(mx_ls, 0, "name", mxCreateString("Diag"));
-    mxSetField(mx_ls, 0, "nfeDI", mxCreateScalarDouble((double)nfeDI));
+    mxSetField(mx_ls, 0, "nfeDI", mxCreateDoubleScalar((double)nfeDI));
       
     break;
 
@@ -1684,8 +1684,8 @@ int CVM_StatsB(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mx_ls = mxCreateStructMatrix(1, 1, nfields, fnames_band);
  
     mxSetField(mx_ls, 0, "name", mxCreateString("Band"));
-    mxSetField(mx_ls, 0, "njeB", mxCreateScalarDouble((double)njeB));
-    mxSetField(mx_ls, 0, "nfeB", mxCreateScalarDouble((double)nfeB));
+    mxSetField(mx_ls, 0, "njeB", mxCreateDoubleScalar((double)njeB));
+    mxSetField(mx_ls, 0, "nfeB", mxCreateDoubleScalar((double)nfeB));
       
     break;
 
@@ -1710,12 +1710,12 @@ int CVM_StatsB(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else
       mxSetField(mx_ls, 0, "name",  mxCreateString("TFQMR"));
 
-    mxSetField(mx_ls, 0, "nli",   mxCreateScalarDouble((double)nli));
-    mxSetField(mx_ls, 0, "npe",   mxCreateScalarDouble((double)npe));
-    mxSetField(mx_ls, 0, "nps",   mxCreateScalarDouble((double)nps));
-    mxSetField(mx_ls, 0, "ncfl",  mxCreateScalarDouble((double)ncfl));
-    mxSetField(mx_ls, 0, "njeSG", mxCreateScalarDouble((double)njeSG));
-    mxSetField(mx_ls, 0, "nfeSG", mxCreateScalarDouble((double)nfeSG));
+    mxSetField(mx_ls, 0, "nli",   mxCreateDoubleScalar((double)nli));
+    mxSetField(mx_ls, 0, "npe",   mxCreateDoubleScalar((double)npe));
+    mxSetField(mx_ls, 0, "nps",   mxCreateDoubleScalar((double)nps));
+    mxSetField(mx_ls, 0, "ncfl",  mxCreateDoubleScalar((double)ncfl));
+    mxSetField(mx_ls, 0, "njeSG", mxCreateDoubleScalar((double)njeSG));
+    mxSetField(mx_ls, 0, "nfeSG", mxCreateDoubleScalar((double)nfeSG));
     
     break;
   }
@@ -1787,11 +1787,11 @@ int CVM_Get(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     for (i=0; i<=Nc; i++) {
       tthis = (double *)(ckpnt[Nc-i].my_addr);
       next = (double *)(ckpnt[Nc-i].next_addr);
-      mxSetField(plhs[0], i, "t0",    mxCreateScalarDouble((double)(ckpnt[Nc-i].t0)));
-      mxSetField(plhs[0], i, "t1",    mxCreateScalarDouble((double)(ckpnt[Nc-i].t1)));
-      mxSetField(plhs[0], i, "nstep", mxCreateScalarDouble((double)(ckpnt[Nc-i].nstep)));
-      mxSetField(plhs[0], i, "order", mxCreateScalarDouble((double)(ckpnt[Nc-i].order)));
-      mxSetField(plhs[0], i, "step",  mxCreateScalarDouble((double)(ckpnt[Nc-i].step)));
+      mxSetField(plhs[0], i, "t0",    mxCreateDoubleScalar((double)(ckpnt[Nc-i].t0)));
+      mxSetField(plhs[0], i, "t1",    mxCreateDoubleScalar((double)(ckpnt[Nc-i].t1)));
+      mxSetField(plhs[0], i, "nstep", mxCreateDoubleScalar((double)(ckpnt[Nc-i].nstep)));
+      mxSetField(plhs[0], i, "order", mxCreateDoubleScalar((double)(ckpnt[Nc-i].order)));
+      mxSetField(plhs[0], i, "step",  mxCreateDoubleScalar((double)(ckpnt[Nc-i].step)));
     }
 
     break;
@@ -1800,7 +1800,7 @@ int CVM_Get(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     status = CVadjGetCurrentCheckPoint(cvadj_mem, (void **)(&tthis));
 
-    plhs[0] = mxCreateScalarDouble(*tthis);
+    plhs[0] = mxCreateDoubleScalar(*tthis);
 
     break;
 
@@ -1816,7 +1816,7 @@ int CVM_Get(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
       plhs[0] = mxCreateCellMatrix(1, 3);
 
-      mxSetCell(plhs[0],1,mxCreateScalarDouble(t));
+      mxSetCell(plhs[0],1,mxCreateDoubleScalar(t));
 
       mx_y  = mxCreateDoubleMatrix(N,1,mxREAL);
       GetData(y, mxGetPr(mx_y), N);

@@ -47,10 +47,10 @@ int CVM_TD(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   const char * fieldnames[4] = {"Av_Perf", "Av_BellRes", "Av_nb_new","mem_used"};
   mxArray* mxStats = mxCreateStructMatrix(1,1,4, fieldnames);
 
-  mxSetField(mxStats, 0, "Av_Perf", mxCreateScalarDouble(stats->Av_Perf));
-  mxSetField(mxStats, 0, "Av_BellRes",mxCreateScalarDouble(stats->Av_BellRes));
-  mxSetField(mxStats, 0, "Av_nb_new",mxCreateScalarDouble((double) stats->Av_nb_new));
-  mxSetField(mxStats, 0, "mem_used",mxCreateScalarDouble(mem_used));
+  mxSetField(mxStats, 0, "Av_Perf", mxCreateDoubleScalar(stats->Av_Perf));
+  mxSetField(mxStats, 0, "Av_BellRes",mxCreateDoubleScalar(stats->Av_BellRes));
+  mxSetField(mxStats, 0, "Av_nb_new",mxCreateDoubleScalar((double) stats->Av_nb_new));
+  mxSetField(mxStats, 0, "mem_used",mxCreateDoubleScalar(mem_used));
   
   plhs[1] = mxStats;
   
@@ -97,9 +97,9 @@ int CVM_ComputeCosts(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   const char * fieldnames[3] = {"Av_Perf", "Av_BellRes", "Av_nb_new"};
   mxArray* mxStats = mxCreateStructMatrix(1,1,3, fieldnames);
 
-  mxSetField(mxStats, 0, "Av_Perf", mxCreateScalarDouble(stats->Av_Perf));
-  mxSetField(mxStats, 0, "Av_BellRes",mxCreateScalarDouble(stats->Av_BellRes));
-  mxSetField(mxStats, 0, "Av_nb_new",mxCreateScalarDouble((double) stats->Av_nb_new));
+  mxSetField(mxStats, 0, "Av_Perf", mxCreateDoubleScalar(stats->Av_Perf));
+  mxSetField(mxStats, 0, "Av_BellRes",mxCreateDoubleScalar(stats->Av_BellRes));
+  mxSetField(mxStats, 0, "Av_nb_new",mxCreateDoubleScalar((double) stats->Av_nb_new));
   
   plhs[1] = mxStats;
 
@@ -678,7 +678,7 @@ mxArray* Traj2mxStruct(Array<trajectory*,1> trajArray) {
   
   for (int j = 0; j<nb_traj ; j++) {
  
-    mxPerf = mxCreateScalarDouble(trajArray(j)->perf);
+    mxPerf = mxCreateDoubleScalar(trajArray(j)->perf);
     SetArray(*trajArray(j)->X,mxX);
     SetArray(*trajArray(j)->U,mxU);
     SetArray(*trajArray(j)->time,mxtime);

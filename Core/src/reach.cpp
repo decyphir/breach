@@ -1,4 +1,3 @@
-
 #include "reach.h"
 
 
@@ -40,7 +39,7 @@ int CVM_CmacComputeExpTraj(int nlhs, mxArray *plhs[], int nrhs, const mxArray *p
   int imem_used;
   imem_used = C->cmac_memory_usage();
   double mem_used= (double) imem_used;
-  plhs[2] = mxCreateScalarDouble(mem_used);
+  plhs[2] = mxCreateDoubleScalar(mem_used);
 
   mxArray * mxwmap;
   C->serialize_wmap(mxwmap);    
@@ -124,7 +123,7 @@ int CVM_ComputeTrajs(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 #endif
 
   double mem_used= (double) C->cmac_memory_usage();
-  plhs[2] = mxCreateScalarDouble(mem_used);
+  plhs[2] = mxCreateDoubleScalar(mem_used);
 
   mxArray * mxwmap;
   C->serialize_wmap(mxwmap);    
@@ -296,7 +295,7 @@ int CVM_CmacComputeTraj(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs
     mxSetField(mxTraj, j, "U",mxU);
     
     if (stop_cycle) {
-      mxPeriod = mxCreateScalarDouble(periods(j));    
+      mxPeriod = mxCreateDoubleScalar(periods(j));    
       mxSetField(mxTraj,j, "period",mxPeriod);    
     }
   }
@@ -309,7 +308,7 @@ int CVM_CmacComputeTraj(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs
   
   double mem_used= (double) C->cmac_memory_usage();
   
-  plhs[2] = mxCreateScalarDouble(mem_used);
+  plhs[2] = mxCreateDoubleScalar(mem_used);
   
   mxArray * mxwmap;
   C->serialize_wmap(mxwmap);    
