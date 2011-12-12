@@ -1,4 +1,4 @@
-function [S,val] =  SEvalProp(Sys,S,props, tau, ipts, bool_plot, bool_break)
+function [S,val] =  SEvalProp(Sys,S,props, tau, ipts, bool_plot, break_level)
 %
 %   SEVALPROP Eval property for previously computed trajectories
 %  
@@ -12,7 +12,8 @@ function [S,val] =  SEvalProp(Sys,S,props, tau, ipts, bool_plot, bool_break)
 %    - tau        time instant(s) when to estimate properties
 %    - ipts       trajectories for which to eval properties 
 %    - bool_plot  side effects plots the values if 1 
-%    - bool_break computes satisfaction of subformulas if 1
+%    - break_level computes satisfaction of subformulas up to break_level
+%    
 %  
 %   Outputs: 
 %  
@@ -27,14 +28,14 @@ function [S,val] =  SEvalProp(Sys,S,props, tau, ipts, bool_plot, bool_break)
     ipts = 1:numel(S.traj);
   end
 
-  if (~exist('bool_break'))
-    bool_break = 0;
+  if (~exist('break_level'))
+    break_level = 0;
   end
   
-  if (bool_break==1)
+  if (break_level>0)
     nprops = [];
     for i = 1:numel(props)
-      nprops =   [nprops QMITL_Break(props(i)) ];      
+      nprops =   [nprops QMITL_Break(props(i), break_level) ];      
     end    
     props = nprops;
   end 
@@ -84,7 +85,7 @@ function [S,val] =  SEvalProp(Sys,S,props, tau, ipts, bool_plot, bool_break)
     iprop = find_prop(S,prop_name);
 
     if (bool_plot)
-      subplot(nb_prop, 1, np);     
+      subplot(nb_prop, 1, np-npb);     
       hold on;
       xlabel('tau');
       title(disp(prop), 'Interpreter','none');
@@ -94,6 +95,7 @@ function [S,val] =  SEvalProp(Sys,S,props, tau, ipts, bool_plot, bool_break)
       S.props_names= {S.props_names{:} get_id(prop)};
       S.props= [S.props prop];
       iprop = numel(S.props_names);      
+      grid on;
     end    
 
     prop = QMITL_OptimizePredicates(Sys,prop);
