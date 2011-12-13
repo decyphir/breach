@@ -1,4 +1,4 @@
-function SplotVar(S,iX,ipts,opt)
+function SplotVar(S,iX,ipts,opt, bool_same_axe)
 %
 %   SplotVar(S, [iX,ipts,opt])
 %
@@ -63,14 +63,20 @@ function SplotVar(S,iX,ipts,opt)
   end
   iX = iX(iX<=S.DimX);
   
-  if (~exist('opt'))
+  if (~exist('opt')||isempty(opt))
     if (isfield(S,'traj_plot_opt'))
       opt = S.traj_plot_opt;
     else
       opt = {'b','LineWidth',1};
-    end
+   end
   end
 
+  if (~exist('bool_same_axe'))
+    same_axe = 0;
+  else
+    same_axe = bool_same_axe;
+  end
+  
   if (isfield(S,'plot_proj'))
     proj = S.plot_proj;
   else
@@ -82,32 +88,64 @@ function SplotVar(S,iX,ipts,opt)
     ipts = 1:numel(S.traj);
   end
   
-  for i = ipts
-    
-    time = S.traj(i).time;       
-    
-    for j = 1:numel(iX)
-      if (numel(iX)>1)
-        subplot(numel(iX),1,j)
-      end
+  
+  if (same_axe==1)
+    lg = {};
+    for i = ipts
+      
+      time = S.traj(i).time;       
       grid on;
       set(gca,'FontSize',12,'FontName','times');
       hold on;  
-      
+                  
+      X = S.traj(i).X(iX(:),:);       
+      plot(time*time_mult,X);
+            
+    end
+    
+    for j = 1:numel(iX)
       if isfield(S,'ParamList')            
-        ylabel(S.ParamList{iX(j)},'Interpreter','none');
+        lg = {lg{:} S.ParamList{iX(j)} }; 
+        
       else
-        ylabel(['x_' num2str(iX(j))]);
+        lg = {lg{:} ['x_' num2str(iX(j))] }; 
+        
+      end
+    end
+    hl = legend(lg);
+    set(hl, 'Interpreter','none');
+    hold off;
+    xlabel('time')
+  
+  else % plots on multi axes
+    
+    for i = ipts
+      
+      time = S.traj(i).time;       
+      
+      for j = 1:numel(iX)
+        if (numel(iX)>1)
+          subplot(numel(iX),1,j)
+        end
+        grid on;
+        set(gca,'FontSize',12,'FontName','times');
+        hold on;  
+        
+        if isfield(S,'ParamList')            
+          ylabel(S.ParamList{iX(j)},'Interpreter','none');
+        else
+          ylabel(['x_' num2str(iX(j))]);
       end
       
       x = S.traj(i).X(iX(j),:);       
       
       plot(time*time_mult,x,opt{:});
-    end
-  end      
-  hold off;
-  xlabel('time')
+      end
+    end      
+    hold off;
+    xlabel('time')
   
+  end
 
   
 function index=  FindParam(Sys,param)
