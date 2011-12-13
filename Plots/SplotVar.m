@@ -95,7 +95,7 @@ function SplotVar(S,iX,ipts,opt, bool_same_axe)
       
       time = S.traj(i).time;       
       grid on;
-      set(gca,'FontSize',12,'FontName','times');
+     % set(gca,'FontSize',12,'FontName','times');
       hold on;  
                   
       X = S.traj(i).X(iX(:),:);       
@@ -128,7 +128,7 @@ function SplotVar(S,iX,ipts,opt, bool_same_axe)
           subplot(numel(iX),1,j)
         end
         grid on;
-        set(gca,'FontSize',12,'FontName','times');
+    %    set(gca,'FontSize',12,'FontName','times');
         hold on;  
         
         if isfield(S,'ParamList')            
