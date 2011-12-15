@@ -119,6 +119,8 @@ function SplotVar(S,iX,ipts,opt, bool_same_axe)
   
   else % plots on multi axes
     
+    colors = hsv(numel(ipts));
+    
     for i = ipts
       
       time = S.traj(i).time;       
@@ -139,7 +141,8 @@ function SplotVar(S,iX,ipts,opt, bool_same_axe)
       
       x = S.traj(i).X(iX(j),:);       
       
-      plot(time*time_mult,x,opt{:});
+      %plot(time*time_mult,x,opt{:});
+      plot(time*time_mult,x, 'Color', colors(i));
       end
     end      
     hold off;

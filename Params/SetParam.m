@@ -8,7 +8,7 @@ function S = SetParam(S,ParamList,ParamValues)
   
   if isnumeric(ParamList)
     for i= 1:numel(ParamList)
-      S.pts(ParamList(i),:) = ParamValues(i,:)
+      S.pts(ParamList(i),:) = ParamValues(i,:);
     end
     return
   end

@@ -9,17 +9,18 @@ function index=  FindParam(Sys,param)
     error('No parameter list ...');
   end
     
-  if (iscell(param))
-     param = char(param); 
+  if (~iscell(param))
+     param = {param}; 
   end
-  for j = 1:numel(Sys.ParamList)
+  
+  index = [];
+  for i= 1:numel(param)
+   for j = 1:numel(Sys.ParamList)
       
-      test = strcmp(Sys.ParamList{j},param);
+      test = strcmp(Sys.ParamList{j},param{i});
       if (test)
-          index = j;
-          return;
+          index = [index j];
       end
+    end
   end
-  
-  index =0;
-  
+ 
