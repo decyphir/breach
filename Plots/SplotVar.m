@@ -142,7 +142,7 @@ function SplotVar(S,iX,ipts,opt, bool_same_axe)
       x = S.traj(i).X(iX(j),:);       
       
       %plot(time*time_mult,x,opt{:});
-      plot(time*time_mult,x, 'Color', colors(i));
+      plot(time*time_mult,x, 'Color', colors(i,:));
       end
     end      
     hold off;
