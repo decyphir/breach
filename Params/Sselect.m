@@ -1,11 +1,22 @@
 function Sn = Sselect(S, kn)
 %SSELECT extract parameters from indices
 %
-%Synopsis  Sn = Sselect(S, kn)
+%Synopsis  Sn = Sselect(S [, kn])
 %
 % E.g.: 
 %          Peven = Sselect(P, 2:2:10)
 %
+%  if kn is not given, looks for a 'selected' field in S
+
+  if (nargin==1)
+    try 
+      kn = find(S.selected~=0);
+    catch
+      Sn= S;
+      return;
+    end
+  end
+  
   Sn = [];
  
   field_list_copy = {'dim', 'ParamList', 'DimX', 'DimP', 'props_names', 'props'};

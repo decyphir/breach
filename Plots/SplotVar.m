@@ -119,7 +119,7 @@ function SplotVar(S,iX,ipts,opt, bool_same_axe)
   
   else % plots on multi axes
     
-    colors = hsv(numel(ipts));
+    colors = hsv(size(S.pts, 2));
     
     for i = ipts
       

@@ -1,9 +1,9 @@
 function val = SplotProp(Pf, prop,opt)
 
-%  Plots the quantitative satisfaction of property prop for the different
+% SPLOTPROP  Plots the quantitative satisfaction of property prop for the different
 %  param values in Pf. Works in 1d and 2d only. 
 %  
-%  Syntax:  val = SplotProp(Pf, prop, opt)  
+%  Synopsys:  val = SplotProp(Pf, prop, opt)  
 %
 %  Prerequisite: prop was evaluated before
 %   
@@ -14,12 +14,6 @@ function val = SplotProp(Pf, prop,opt)
     opt.style = {'-b'};
   end
   
-  if (~isfield(opt,'rescale'))
-    rescale = 1;
-  else
-    rescale = opt.rescale;
-  end
-  
   iprop = find_prop(get_id(prop), Pf.props_names);  
   
   if iprop
@@ -27,7 +21,7 @@ function val = SplotProp(Pf, prop,opt)
      case 1
       val = cat(1, Pf.props_values(iprop,:).val);
       val = val(:,1);
-      plot(Pf.pts(Pf.dim,:)*rescale,val,opt.style{:});
+      plot(Pf.pts(Pf.dim,:),val,opt.style{:});
       xlabel(Pf.ParamList{Pf.dim},'Interpreter','none');  
       ylabel(disp(prop, -1),'Interpreter','none');
      
@@ -39,24 +33,12 @@ function val = SplotProp(Pf, prop,opt)
       else
         Z = val(:,1);
         QuickMeshSf(Pf,Z);         
+        
+        xlabel(Pf.ParamList{Pf.dim(1)},'Interpreter','none');  
+        ylabel(Pf.ParamList{Pf.dim(2)},'Interpreter','none');
+        zlabel(disp(prop, -1),'Interpreter','none');        
+      end      
       
-        if (rescale ~= 1)
-          h = findobj(gca)
-          for k =1:numel(h)
-            try 
-              X= get(h(k),'XData')*rescale;
-              Y= get(h(k),'YData')*rescale;
-              Z= get(h(k),'Zdata');
-              break;
-            end
-          end
-          cla;
-          surf(X,Y,Z,'EdgeColor','None');        
-          xlabel(Pf.ParamList{Pf.dim(1)},'Interpreter','none');  
-          ylabel(Pf.ParamList{Pf.dim(2)},'Interpreter','none');
-          zlabel(disp(prop, -1),'Interpreter','none');        
-        end      
-      end
      otherwise 
       return;
     end
