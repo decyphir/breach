@@ -3,7 +3,7 @@ function ParamValues = GetParam(S,ParamList)
 %
 
   if (isfield(S,'pts'))
-    p= S.pts(:,1);
+    p= S.pts;
   else
     p = S.p;
   end
