@@ -314,7 +314,7 @@ int CVM_ComputeTrajSensi(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prh
     /* Progress bar */
     if (nb_pts>1) {
       cout.flush();
-      while (floor(60*(j+1)/nb_pts)>iprog) {      
+      while (60*(j+1)/nb_pts>iprog) {      
 	cout << "^";
 	iprog++;
       }
@@ -441,7 +441,7 @@ int CVM_ComputeTraj(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) 
     /* Progress bar */
     if (nb_pts>1) {
       cout.flush();
-      while (floor(60*(j+1)/nb_pts)>iprog) {      
+      while (60*(j+1)/nb_pts>iprog) {      
 	cout << "^";
 	iprog++;
       }
