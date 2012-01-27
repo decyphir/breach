@@ -46,7 +46,18 @@ function Sf = ComputeTraj(Sys, S0,tspan)
 
   end
  
-  
+   if (isfield(Sys, 'type'))
+
+    % If system type is only traces, check consistency of params and pts
+    if strcmp(Sys.type, 'traces')
+      Sf=S0;
+      for (i = 1:numel(Sf.traj))
+        Sf.traj(i).param = Sf.pts(:,i)';      
+      end
+      return;
+    end
+  end
+
   if (isfield(S0,'traj'))
     if ((numel(S0.traj(1).time)==numel(tspan)))
       if (sum(S0.traj(1).time==tspan))
@@ -55,14 +66,7 @@ function Sf = ComputeTraj(Sys, S0,tspan)
       end
     end
   end
-  
-  if (isfield(Sys, 'type'))
-    if strcmp(Sys.type, 'traces')
-      Sf=S0;
-      return;
-    end
-  end
- 
+   
   InitSystem(Sys);
 
   if iscell(tspan)
