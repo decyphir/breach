@@ -29,6 +29,9 @@ double GetDoubleField(const mxArray *PB,const char * FieldName);
 double * GetPrField(const mxArray *PB,const  char * FieldName); 
 int GetArrayField(Array1D &A, const mxArray *PB, const char * FieldName);
 int GetArrayField(Array2D &A, const mxArray *PB,const  char * FieldName);
+int GetArrayField(Array1D &A, const mxArray *PB, const char * FieldName, int idx);
+int GetArrayField(Array2D &A, const mxArray *PB, const char * FieldName, int idx);
+
 int GetNField(const mxArray *PB, const char * FieldName);
 
 /* Write */

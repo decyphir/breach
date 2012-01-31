@@ -68,6 +68,7 @@ class trajectory {
 
   void ComputeTraj(Array1D& tspan);
   void ComputeTraj(Array1D& tspan, int (trajectory::*test_function)());
+  void ComputeTraj(Array1D& tspan, Array1D& tin, Array2D& uval);
   void ComputeTrajSensi(Array1D& tspan); 
   void ComputeExpa(const Array1D& epsi, Array1D &ExpaMax);
 
@@ -130,6 +131,7 @@ mxArray* Traj2mxStruct(Array<trajectory*,1> trajArray);
 int g_delta(realtype t, N_Vector y, realtype *gout, void *g_data);
 void FreeFdata(void * &f_data, mxArray * &mxData);
 void GetU(void * f_data, void *&res);
+
 int giDQ(int ig,realtype t, N_Vector x, realtype* gx, realtype *dgi,void *g_data);
 int ComputeSensiJump(int ig, realtype t, N_Vector x, N_Vector *xS, void* f_data);
 

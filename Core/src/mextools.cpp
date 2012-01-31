@@ -114,11 +114,50 @@ int GetArrayField(Array1D &A, const mxArray *PB, const char * FieldName) {
   }
 }
 
+int GetArrayField(Array1D &A, const mxArray *PB, const char * FieldName, int idx) {
+
+  mxArray * mxA = mxGetField(PB,idx,FieldName);
+  
+  double * A_data;
+  int n;
+
+  if (mxA == NULL) {
+    return 0;
+  }
+  else {
+    n = mxGetNumberOfElements(mxA);
+    A_data = mxGetPr(mxA);
+    BlitzArray_SetData(A,n,A_data);
+    return 1;
+  }
+}
+
+
 /* La même pour les Array2D */
 
 int GetArrayField(Array2D &A, const mxArray *PB, const char * FieldName) {
 
   mxArray * mxA = mxGetField(PB,0,FieldName);
+  
+  double * A_data;
+  int n,m;
+
+  if (mxA == NULL) {
+    return 0;
+  }
+
+  else {
+    n = mxGetM(mxA);
+    m = mxGetN(mxA);
+    A_data = mxGetPr(mxA);
+    BlitzArray_SetData(A,n,m,A_data);
+    return 1;
+  }
+}
+
+int GetArrayField(Array2D &A, const mxArray *PB, const char * FieldName, int idx) {
+
+  mxArray * mxA = mxGetField(PB,idx,FieldName);
   
   double * A_data;
   int n,m;

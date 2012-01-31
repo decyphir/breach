@@ -1,4 +1,4 @@
-function Sf = ComputeTraj(Sys, S0,tspan)
+function Sf = ComputeTraj(Sys, S0,tspan, u)
 %  COMPUTETRAJ compute trajectories for a system given initial conditions
 %  and parameters
 %    
@@ -46,7 +46,7 @@ function Sf = ComputeTraj(Sys, S0,tspan)
 
   end
  
-   if (isfield(Sys, 'type'))
+  if (isfield(Sys, 'type'))
 
     % If system type is only traces, check consistency of params and pts
     if strcmp(Sys.type, 'traces')
@@ -68,7 +68,7 @@ function Sf = ComputeTraj(Sys, S0,tspan)
   end
    
   InitSystem(Sys);
-
+  
   if iscell(tspan)
     if (numel(tspan)==2)
       T = [tspan{1} tspan{2} tspan{2}];  % not really nice.. should be
@@ -80,11 +80,10 @@ function Sf = ComputeTraj(Sys, S0,tspan)
     T = tspan;
   end
   
-  if (isfield(S0,'test'))
-    switch S0.test
-     case 1
-      Sf=cvm(61,S0,T,1);            
-    end
+  if (exist('u'))
+     
+    Sf=cvm(61,S0,T,u);            
+   
   else
     Sf=cvm(61,S0,T);        
   end    
