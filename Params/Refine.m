@@ -12,11 +12,10 @@ function S = Refine(S0,delta)
 %              real. If it is integer, S has delta(i) points in dimension
 %              i. If it is real then delta is interpreted as a distance and
 %              S is divided into points that at distance delta from one
-%              another.  delta. If S0 had already a dispersion less than
-%              delta, it is unchanged.
+%              another. 
 %   
 % 
-%   This function is better understandable through examples. First, create
+%   This function is better understood through examples. First, create
 %   some parameter set, 2 dimensions ranging from -1 to 1:
 %    
 %   S0 = CreateSampling(Sys, [1 2], [-1 1 -1 1]);
