@@ -68,16 +68,9 @@ class trajectory {
 
   void ComputeTraj(Array1D& tspan);
   void ComputeTraj(Array1D& tspan, int (trajectory::*test_function)());
-  void ComputeTraj(Array1D& tspan, Array1D& tin, Array2D& uval);
+  void ComputeTraj(Array1D& tspan, vector<int>& idx_u, Array1D& tin, Array2D& uval);
   void ComputeTrajSensi(Array1D& tspan); 
   void ComputeExpa(const Array1D& epsi, Array1D &ExpaMax);
-
-#ifndef SKIP_CMAC
-  double ComputeTraj(CmacVF* &C, Array1D& tspan, int stop_cycle);
-  void EvalBellRes();
-  void EvalTDUpdate();
-  void EvalTDlambdaUpdate();
-#endif
 
   void affiche();
   void write_mxTraj(mxArray* & mxTraj);

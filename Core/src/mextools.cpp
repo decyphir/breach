@@ -28,6 +28,7 @@ void GetArray1D(Array1D & A, const mxArray * mxA){
 
 }
 
+
 void GetArray2D(Array2D & A, const mxArray * mxA) {
 
   double * A_data;
@@ -116,7 +117,7 @@ int GetArrayField(Array1D &A, const mxArray *PB, const char * FieldName) {
 
 int GetArrayField(Array1D &A, const mxArray *PB, const char * FieldName, int idx) {
 
-  mxArray * mxA = mxGetField(PB,idx,FieldName);
+  mxArray * mxA = mxGetField(PB, idx,FieldName);
   
   double * A_data;
   int n;
@@ -131,6 +132,29 @@ int GetArrayField(Array1D &A, const mxArray *PB, const char * FieldName, int idx
     return 1;
   }
 }
+
+int GetArrayField(vector<int> &A, const mxArray *PB, const char * FieldName, int idx) {
+
+  mxArray * mxA = mxGetField(PB,idx,FieldName);  
+  double * A_data;
+  int n;
+
+  A.clear();
+  if (mxA == NULL) {
+    return 0;
+  }
+  else {
+    n = mxGetNumberOfElements(mxA);
+    A_data = mxGetPr(mxA);
+    for (int i=0; i<n; i++) {
+      A.push_back((int) A_data[i]);
+    }
+
+
+    return 1;
+  }
+}
+
 
 
 /* La même pour les Array2D */
