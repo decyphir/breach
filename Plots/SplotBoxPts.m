@@ -1,18 +1,17 @@
 function SplotBoxPts(S,proj, ipts, opt, col,alph)
 %
-%   Plots the points in the field pts of a parameter set and the boxes they represent.
+% SPLOTBOXPTS  Plots the points in the field pts of a parameter set and the boxes they represent.
 %
-%   SplotBoxPts(S, proj, ipts, opt, col,alpha)
+% Synopsis:  SplotBoxPts(P, proj, ipts, opt, col,alpha)
 %    
 %   Inputs: 
 %   
-%    -  S        Box sampling set. Any set with a field 'Pts'
-%                will do though.
+%    -  P        parameter  set.
 %
 %    -  proj     chooses the parameters to plot; can be numbers or
 %                parameters names; all if [] 
 %
-%    -  ipts       indices of the pts to plot; all if absent or []   
+%    -  ipts     indices of the pts to plot; all if absent or []   
 % 
 %    -  opt      Uses the plotting options defined in field X0plot_opt or
 %                default if this is absent 
@@ -20,11 +19,8 @@ function SplotBoxPts(S,proj, ipts, opt, col,alph)
 %
 %    -  alph     alpha rendering
 %
-%   Outputs:     
-%      
-%    -  Some figure, hopefully an interesting one.
-% 
-  
+ 
+ 
   
   if (~exist('proj')||isempty(proj))
     proj = 1:min(3, numel(S.dim));

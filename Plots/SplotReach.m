@@ -1,9 +1,9 @@
 function h = SplotReach(Sys, S, timespan, facecolor, edgecolor, alph, maxf)
-%  Plots the reachable set as estimated using sensitivity matrices (works
+%  SPLOTREACH Plots the reachable set as estimated using sensitivity matrices (works
 %  only in 2D and 3D) 
 % 
-%  Usage:
-%         h = SplotReach(Sys, S, timespan, facecolor, alpha)
+%  Synopsis:
+%         h = SplotReach(Sys, S, timespan, facecolor, edgecolor, alpha)
 %
   
   if (~exist('alph'))
@@ -25,10 +25,9 @@ function h = SplotReach(Sys, S, timespan, facecolor, edgecolor, alph, maxf)
   switch (S.DimX)
   
    case 2
-%    SplotBoxPts(S,[],[],[], facecolor, alph);
+
     SplotPts(S,[1 2]);
     fv = SPolygon2d(Sys,S,timespan);
-%    nfv = reducepatch(fv,maxf) 
     
     p = patch(fv);
     
@@ -37,10 +36,9 @@ function h = SplotReach(Sys, S, timespan, facecolor, edgecolor, alph, maxf)
     
    case 3
     
-    %    SplotBoxPts(S,[],[],[], facecolor, alph);
     SplotPts(S, [1 2 3]);
     fv = SPolygon3d(Sys,S,timespan)
-%    nfv = reducepatch(fv,maxf)
+
     p = patch(fv);
     set(p,'facecolor',facecolor,'edgecolor', edgecolor);    
     alpha(alph);        

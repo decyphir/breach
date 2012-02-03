@@ -1,5 +1,5 @@
 function InstallBreach
-% INSTALLBREACH Compiles C/C++ mex functions used by Breach. Needs only to be call once after an update of Breach
+% INSTALLBREACH Compiles C/C++ mex functions used by Breach. Needs only to be called once after an update of Breach
 
 cdr = pwd;
 dr = which('Breach');

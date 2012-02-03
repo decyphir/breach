@@ -1,8 +1,9 @@
 function SplotSensi(S,iX,iP,ipts)
+%  SPLOTSENSI Plots trajectories sensitivities 
 %
-%   SplotSensi(S,iX,iP,ipt)
+%   Synopsis: SplotSensi(S,iX,iP,ipt)
 %
-%   Plots trajectories sensibilities of state variables iX
+%   Plots trajectories sensitivities of state variables iX
 %   w.r.t. parameters iP
 %   
 %   Note: Uses the plotting options defined in field traj_plot_opt, and
@@ -21,10 +22,8 @@ function SplotSensi(S,iX,iP,ipts)
 %    -  ipts     (optional) indices of the trajectories in S to plot (all
 %                if absent)
 %
-%   Outputs:     
-%      
-%    -  Some figure, hopefully an interesting one.
-%  
+
+ 
   
 %   Check inputs 
      

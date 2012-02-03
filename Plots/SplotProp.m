@@ -1,5 +1,4 @@
 function val = SplotProp(Pf, prop,opt)
-
 % SPLOTPROP  Plots the quantitative satisfaction of property prop for the different
 %  param values in Pf. Works in 1d and 2d only. 
 %  

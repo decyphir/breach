@@ -1,7 +1,7 @@
 function [h Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
 % SPLOTSENSIBAR plots an histogram of sensitivities
 %
-%  [h Mend opts] SplotSensiBar(Sys, S, ipts [, opts])
+%  Synopsis:  [h Mend opts] = SplotSensiBar(Sys, S, ipts [, opts])
 %
 %  Plots 3d histogram of logarithmic sensitivities of state variables iX
 %  w.r.t. parameters iP at a given time t for a parameter vector ipts in
@@ -10,6 +10,8 @@ function [h Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
 %           
 %  opts has the following fields : args, props and taus. 
 %    
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   Check inputs 
  

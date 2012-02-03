@@ -1,15 +1,14 @@
 function SplotSensiLog(S,iX,iP,ipts)
+% SPLOTSENSILOG    Plots trajectories logaritmic sensibilities 
+%   
+%  
+%   Synopsis:  SplotSensiLog(S,iX,iP,ipt)
 %
-%   SplotSensi(S,iX,iP,ipt)
+%     Plots trajectories logaritmic sensibilities of state variables iX
+%     w.r.t. parameters iP
+%   
+%   Prerequisite: S has a traj field with an XS field.    
 %
-%   Plots trajectories sensibilities of state variables iX
-%   w.r.t. parameters iP
-%   
-%   Note: Uses the plotting options defined in field traj_plot_opt, and
-%   project on dimensions specified by field 'plot_proj'.
-%   
-%   Prerequisite: S has a traj field with an XS field. Else what's the point ?
-%   
 %   Inputs: 
 %   
 %    -  S        rectangular sampling set. 
@@ -21,10 +20,11 @@ function SplotSensiLog(S,iX,iP,ipts)
 %    -  ipts     (optional) indices of the trajectories in S to plot (all
 %                if absent)
 %
-%   Outputs:     
-%      
-%    -  Some figure, hopefully an interesting one.
 %  
+%  SEE ALSO SPLOTSENSI  
+%  
+  
+  
   
 %   Check inputs 
      

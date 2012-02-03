@@ -1,30 +1,23 @@
 function SplotVar(S,iX,ipts,opt, bool_same_axe)
+% SPLOTVAR Plots trajectories variables separatly
 %
-%   SplotVar(S, [iX,ipts,opt])
-%
-%   Plots trajectories variables separatly
+% Synopsis:  SplotVar(P, [iX,ipts,opt])
 %   
-%   Note:   Uses the plotting options defined in field traj_plot_opt, and
-%   project on dimensions specified by field 'plot_proj'.
-%   
-%   Prerequisite: S has a traj field. Else what's the point ?
+%   Prerequisite: P has a traj field with precomputed 
 %   
 %   Inputs: 
 %   
-%    -  S        rectangular sampling set. 
+%    -  P        Parameter set 
 %    -  iX       indices of the  X variables to plot (optional, absent
 %    means all)
 %    -  ipts     indices of the trajectories in S to plot (optional,
 %    absent means all)
 %    -  opt      plotting options    
 %  
-%   Outputs:     
-%      
-%    -  Some figure, hopefully an interesting one.
 %  
 
-  % Check inputs
 
+% Check inputs
 
   if (isfield(S, 'time_mult'))
     time_mult= S.time_mult;

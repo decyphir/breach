@@ -1,5 +1,5 @@
 function SplotXf(S,proj,ipts,opt)
-%   Plots final points of computed trajectories in parameter set S
+% SPLOTXF  Plots final points of computed trajectories in a parameter set 
 %
 %   Usage:
 %           SplotXf(S [, proj, ipts, opt])
