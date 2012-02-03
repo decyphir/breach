@@ -1,11 +1,12 @@
-function f = GetF_Traj(Pf,ind_traj, t)
-
-  global Sys;
-  InitSystem(Sys);
+function f = GetF_Traj(Sys, traj , t)
+% GETF_TRAJ returns the values of the rhs ODE function along a computed trajectory 
+%  
+% Synopsys:    f = GetF_Traj(Sys, traj [, t])
+%
   
-  traj = Pf.traj(ind_traj);  
-
-  if (exist('t'))
+  InitSystem(Sys);  
+ 
+  if (exist('t','var'))
     ind_t= find(traj.time>= t,1);
   
     t0 = traj.time(ind_t-1);

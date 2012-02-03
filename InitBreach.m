@@ -15,6 +15,7 @@ end
 
 addpath(dr);
 addpath( [dr filesep 'Core']);
+addpath( [dr filesep 'Core' filesep 'm_src']);
 addpath( [dr filesep 'Params']);
 addpath( [dr filesep 'Plots']);
 addpath( [dr filesep 'Toolboxes' filesep 'optimize']);

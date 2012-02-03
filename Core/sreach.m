@@ -1,26 +1,27 @@
 function [Sf ErrStat] = sreach(Sys,S0,tspan,options)
-%
-%   [Sf Err] = sreach(Sys,S0,tspan,options)
+% SREACH Refine a parameter set to get a good estimate of reachset with a set of trajectories 
+%  
+%   [Pf Err] = sreach(Sys,P0,tspan,options)
 %
 %   Reachability routine using sensitivity.   
 %    
 %   Inputs: 
 %
 %    -  Sys      System  
-%    -  S0       Initial parameter set  
+%    -  P0       Initial parameter set  
 %    -  tspan    Timespan
 %  
 %    - options    can contain the following fields:   
 %
 %       .tol      absolute tolerance vector (or scalar) for nonlin error
 %       .delta     vector of dimension n, where n is the dimension of the
-%                  system; The algorithm won't refine S0 into boxes of
+%                  system; The algorithm won't refine P0 into boxes of
 %                  dimensions less than delta  
 %       .NbIterErr maximum number of refinement iterations  
 %  
 %   Outputs:
 %      
-%    -  Sf       Sampling of the reachable set
+%    -  Pf       Sampling of the reachable set
 %    -  Err      Error estimation history
 %   
 

@@ -2,13 +2,14 @@ function Sopt = SOptimProp(Sys, S, prop, tspan, lbound, ubound)
 %
 % SOPTIMPROP optimizes the satisfaction of a property
 %
-% Usage: Sopt  = SOptimProp(Sys, S0, phi, tspan, lbound, ubound) 
+% Synopsis: Sopt  = SOptimProp(Sys, P0, phi, tspan, lbound, ubound) 
 % 
 %    - S0 is a parameter set for Sys
 %    - phi is obviously a QMITL property
 %    - tspan is the time domain computation of the trajectories
+%    - lbound : lower bounds for the search domain
+%    - ubound : upper bounds for the search domain
 %
-
   
   dim = S.dim;
   Stmp = Sselect(S,1); 

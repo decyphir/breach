@@ -10,7 +10,7 @@ function val = SplotProp(Pf, prop,opt)
 %  Returns the plotted values.
 %   
   
-  if (~exist('opt'))
+  if (~exist('opt','var'))
     opt.style = {'-b'};
   end
   
