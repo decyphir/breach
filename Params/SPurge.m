@@ -1,10 +1,11 @@
 function S = SPurge(S)
-  
-  % S= SPurge(S)
-  %
-  % Remove all fields related to a specific computation of trajectories
-  %
-    
+% SPURGE Remove all fields related to a specific computation of trajectories  
+%
+%  Synopsis: P = SPurge(P)
+%
+%  Notes: does not remove properties values
+%
+%  SEE ALSO SPURGE_PROPS    
   
   try
     S = rmfield(S, 'traj');

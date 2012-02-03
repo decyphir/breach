@@ -1,7 +1,7 @@
 function Sn = Sselect(S, kn)
 %SSELECT extract parameters from indices
 %
-%Synopsis  Sn = Sselect(S [, kn])
+% Synopsis  Pn = Sselect(P [, kn])
 %
 % E.g.: 
 %          Peven = Sselect(P, 2:2:10)

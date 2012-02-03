@@ -1,9 +1,10 @@
 function S = VoronoiRefine(S0)
+% VORONOIREFINE Voronoi diagram based refinement (experimental)
+%  
+%   P = VoronoiRefine(P0)
 % 
-%   S = VoronoiRefine(S0)
-% 
-%   Returns a sampling S refining S0 based on the Voronoi diagram of
-%   S0.
+%   Returns a sampling P refining P0 based on the Voronoi diagram of
+%   P0.
     
   n = numel(S0.dim);
   

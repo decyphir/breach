@@ -2,35 +2,35 @@ function S = Refine(S0,delta)
 %      
 %   REFINE Generates grid points in a N-dimensional parameter set 
 %  
-%   Usage: S = Refine(S0,delta)
+%   Usage: P = Refine(P0,delta)
 %
-%   - S0       is a parameter set
+%   - P0       is a parameter set
 %
-%   - delta    should be a scalar or a vector of dimension size(S0.dim). If it
+%   - delta    should be a scalar or a vector of dimension size(P0.dim). If it
 %              is a scalar, it is interpreted as vector with all components
 %              equal to its value. Its value(s) can be either integer or
-%              real. If it is integer, S has delta(i) points in dimension
+%              real. If it is integer, P has delta(i) points in dimension
 %              i. If it is real then delta is interpreted as a distance and
-%              S is divided into points that at distance delta from one
+%              P is divided into points that at distance delta from one
 %              another. 
 %   
 % 
 %   This function is better understood through examples. First, create
 %   some parameter set, 2 dimensions ranging from -1 to 1:
 %    
-%   S0 = CreateSampling(Sys, [1 2], [-1 1 -1 1]);
+%   P0 = CreateSampling(Sys, [1 2], [-1 1 -1 1]);
 %
 %   Then :   
 %   
-%   Refine(S0, 2) creates a 2x2 grid in [-1 1 -1 1]
+%   Refine(P0, 2) % creates a 2x2 grid in [-1 1 -1 1]
 %    
-%   Refine(S0, [2 3] creates a 2x3 grid 
+%   Refine(P0, [2 3]  % creates a 2x3 grid 
 %  
-%   Refine(S0, .1) creates a grid with resolution (.1,.1)
+%   Refine(P0, .1) % creates a grid with resolution (.1,.1)
 %  
-%   Refine(S0 [.1 .2]) creates a grid with resolution (.1,.2)
+%   Refine(P0 [.1 .2]) % creates a grid with resolution (.1,.2)
 %
-%   Refine(S0 [1.1 1.2]) returns S0
+%   Refine(P0 [1.1 1.2]) % returns P0
 %  
 
   n = numel(S0.dim);

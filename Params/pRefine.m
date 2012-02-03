@@ -1,10 +1,10 @@
-function [S Stmp]= pRefine(S,p,r)
+function S = pRefine(S,p,r)
 % 
-% pRefine   pick initial points for the Morris global sensitivity measure
+% PREFINE   pick initial points for the Morris global sensitivity measure
 %  
-% Usage:  Sr = pRefine(S, p, r)
+% Usage:  Pr = pRefine(P, p, r)
 % 
-%         Refines S with r points chosen randomly in the grid with p levels
+%         Refines P with r points chosen randomly in the grid with p levels
 %         (See Saltelli's Books, chapter 3 or 4) Uses the suggested value
 %         for Delta: p/(2(p-1)) 
 %   

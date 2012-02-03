@@ -131,18 +131,6 @@ end
     Sf = SConcat(Sf,SToCheck);
   end
  
-%  nbtraj_computed
-  
-% $$$ function S = Select(S, kn)              
-% $$$   
-% $$$   S.pts = S.pts(:,kn);
-% $$$   S.epsi = S.epsi(:,kn);
-% $$$   S.Xf =  S.Xf(:,kn);
-% $$$   S.ExpaMax = S.ExpaMax(:,kn);
-% $$$   S.XSf = S.XSf(:,kn);        
-% $$$  
-%  S.traj = S.traj(:,kn);
-  
 function Affiche(Err)
   
   fprintf('Error:');
