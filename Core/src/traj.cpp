@@ -303,7 +303,7 @@ int CVM_ComputeTraj(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) 
   Array1D Tspan;
 
   /* Progress bar init */
-  if (nb_pts>100) {
+  if (nb_pts>1) {
     cout << "\nComputing "  << nb_pts <<  " trajectories " << endl;
     cout << "[             25%            50%            75%              ] "<< endl;
     cout << " "; 
@@ -313,9 +313,9 @@ int CVM_ComputeTraj(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) 
   int iprog=0;
   
   for (int j = 0; j<nb_pts ; j++) {
-    cout << "\n\n\n**********************************************************" <<endl;
+    //cout << "\n\n\n**********************************************************" <<endl;
     /* Progress bar progress */
-    if (nb_pts>100) {
+    if (nb_pts>1) {
       cout.flush();
       while (60*(j+1)/nb_pts>iprog) {      
 	cout << "^";
@@ -330,16 +330,16 @@ int CVM_ComputeTraj(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) 
     trajArray(j) =  new trajectory();
     trajArray(j)->p0 = &p0;
 
-    cout << "p0: " << p0 << endl;
+    //    cout << "p0: " << p0 << endl;
 
     if (inputs_there) {
       GetArrayField(uval, inputs,"values",j);        
       GetArrayField(tin, inputs,"time",j);        
       GetArrayField(indx_u, inputs,"params_idx",j);        
       
-      cout << "indx_u: " << indx_u[0]  << endl;
-      cout << "tin: " << tin << endl;
-      cout << "uval: " << uval << endl;
+      //      cout << "indx_u: " << indx_u[0]  << endl;
+      //      cout << "tin: " << tin << endl;
+      //      cout << "uval: " << uval << endl;
 
       (trajArray(j))->ComputeTraj(Tspan, indx_u,tin, uval);  
     }
@@ -712,9 +712,9 @@ void trajectory::ComputeTraj(Array1D& tspan) {
 
 void trajectory::ComputeTraj(Array1D& tspan, vector<int>& indx_u,  Array1D& tin, Array2D& uval) {
 
- //#if _DEBUG >= 1
+#if _DEBUG >= 1
     cout << "Entering traj::ComputeTraj ..." <<endl;
-  //#endif
+#endif
  
   /* CVodes Reinitialization */
  
@@ -972,15 +972,17 @@ void trajectory::ComputeTraj(Array1D& tspan, vector<int>& indx_u,  Array1D& tin,
     if (data->dimg>0) {
       CVodeRootInit(cvode_mem, data->dimg, g, f_data);
     }
-  
-  
+    
     for(i=1; i<nb_points;i++) {
       
       iret = FALSE;
 
       tend =tspan(i);
-      tout = min(tin(i_u), tend);
-
+     
+      //cout << "tend: " << tend << " tin(" << i_u << "):" << tin(i_u) << endl;
+ 
+      if (i_u+1< n_u)
+	tout = min(tin(i_u), tend);
       
       CVodeSetStopTime(cvode_mem,tout);
 
@@ -1006,19 +1008,21 @@ void trajectory::ComputeTraj(Array1D& tspan, vector<int>& indx_u,  Array1D& tin,
 	    break;
 	  }
 	  else { // update input
-	    i_u++;
+	    status= 666;
 	    // update time step
-	    if (i_u == n_u)
-	      tout = tend;
+	    if (i_u + 1< n_u) {
+	      i_u++;
+	      tout = min(tin(i_u), tend);	    
+	    }
 	    else
-	      tout = min(tin(i_u), tend);
+	      tout = tend;
 	    
 	    CVodeSetStopTime(cvode_mem, tout);	    	 
 	  }      
 	}
 	/* Update f_data */
 	
-	if (UpdateFdata(tret,y,f_data,0,NULL)||status == CV_ROOT_RETURN || status == CV_TSTOP_RETURN) { /* if f_data changed in a discontinuity, reinit cvode */
+	if (UpdateFdata(tret,y,f_data,0,NULL)||status == CV_ROOT_RETURN || status == 666) { /* if f_data changed in a discontinuity, reinit cvode */
 	  CVodeGetDky(cvode_mem, tret, 0, y);
 	  
 	  /* update inputs */
@@ -1112,12 +1116,7 @@ void trajectory::ComputeTrajSensi(Array1D& tspan) {
     
     x = (*p0)(Rx); // new x0
     p = (*p0)(All);
-    
-#ifdef _TD
-    x(N)=0.;
-#endif
-
-    //    InitFdata(f_data, cvm_Mdata->mx_data);
+      
     UpdateFdata(t0,y,f_data,0,NULL);
 
     compteur = 0; 

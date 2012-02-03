@@ -2,8 +2,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
 %  COMPUTETRAJ compute trajectories for a system given initial conditions
 %  and parameters
 %    
-%  Synopsis: 
-%  Sf = ComputeTraj(Sys,S0,tspan) or  trajs = ComputeTraj(Sys, P0,tspan)  
+%  Synopsis:   Pf = ComputeTraj(Sys,P0,tspan [,u]) 
 %  
 %   Compute trajectories issued from points in S0 on the
 %   time interval tspan
@@ -11,16 +10,22 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
 %   Inputs: 
 %    
 %    -  Sys      System (needs to be compiled)
-%    -  S0       Initial conditions and params given in a parameter set 
+%    -  P0       Initial conditions and params given in a parameter set 
 %                or in an array of size DimX x nb_traj
 %    -  tspan    interval of the form [t0, tf]; Fixed time instants can
-%    also be specified tspan = [t0 t1 ... tN];
-%
+%                also be specified tspan = [t0 t1 ... tN];
+%    -  u        is a structure array of nb_traj inputs. u(i) must be a
+%                struct with fields 
+%                    - params_idx : indicates which parameters are made 
+%                        time dependant  
+%                    - tin : times when the input changes    
+%                    - values : values of the parameters       
+%     
 %   Outputs:
 %      
-%    -  Sf       Sampling structure augmented with the field traj
-%                containing computed trajectories if the input is a param
-%                set 
+%    -  Sf       Sampling structure augmented with the field traj containing
+%                 computed trajectories if the input is a param set 
+%                
 % or - trajs     array of trajectories
 %  
  
@@ -83,7 +88,8 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
   if (exist('u'))
      
     Sf=cvm(61,S0,T,u);            
-   
+    Sf.u = u;
+    
   else
     Sf=cvm(61,S0,T);        
   end    
