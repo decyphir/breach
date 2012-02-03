@@ -1,4 +1,18 @@
 function Sh = HaltonRefine(S, nb, step)
+% HALTONREFINE  Sample quasi-uniformly a parameter set using Halton sequence
+% 
+% Synopsis:  Ph = HaltonRefine(S, nb)
+%  
+% Example: 
+%
+%   CreateSystem;
+%   P = CreateSampling(Sys); % Create default parameter set for system Sys
+%   Ph = HaltonRefine(P, 1000); % Sample with 1000 points
+%  
+%   SplotBoxPts(P); % Parameter set before sampling 
+%   SplotPts(Ph);   % plots the generated points
+%
+% 
   
   dim_num = numel(S.dim);
   

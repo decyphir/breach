@@ -1,7 +1,22 @@
 function Sys = CreateSystem(vars, params, p0)
 % CREATESYSTEM creates a dynamicless system      
+%
+% Synopsis: Sys = CreateSystem(vars, params, p0)
+%  
+% Example:   
+%
+%   vars = {'s0','s1'};  % variables for signals values
 
-
+%   params = {'p0','p1','p2'};  % parameters related to signal or to be
+%                               % used in temporal logic formulas
+%
+%   p0 = [ 0 0 ...      % default for initial values of signals 
+%          0 0 0 ];    % default for parameters p0,p1 and p2
+%
+%   Sys = CreateSystem(vars,params, p0); % creates the Sys structure
+%
+  
+  
   Sys.DimX = numel(vars);
   Sys.DimU =0; 
   Sys.DimP = numel(vars)+numel(params); 

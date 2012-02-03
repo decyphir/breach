@@ -1,24 +1,22 @@
 function Sf = ComputeTrajSensi(Sys,S,tspan, is)
-%
-%  ComputeTrajSensi compute trajectories with  sensitivities
+%COMPUTETRAJSENSI compute trajectories with  sensitivities
 %  
-%  Usage:
-%   Sf = ComputeTrajSensi(Sys,S0,tspan [, is]) 
+%  Synopsis:  Pf = ComputeTrajSensi(Sys,P0,tspan [, is]) 
 %  
 %   Compute trajectories with corresponding sensitivities issued from points
-%   in S0 on the time interval tspan.
+%   in P0 on the time interval tspan.
 %    
 %   Inputs: 
 %   
 %    -  Sys      System (needs to be compiled)  
-%    -  S0       Initial sampling of the uncertain set  
+%    -  P0       Initial parameter set
 %    -  tspan    interval of the form [t0, tf], t0:dt:tf, etc
-%    -  is       Parameter sensitivities to compute, if absent uses uncertain parameters in S
+%    -  is       Parameter sensitivities to compute, if absent uses uncertain parameters in P
 %  
 %   Outputs:
 %      
-%    -  Sf       Sampling structure augmented with the field traj
-%                containing computed trajectories
+%    -  Pf       Sampling structure augmented with the field traj
+%                containing computed trajectories with sensitivities
 %
   
   if (exist('is'))  
