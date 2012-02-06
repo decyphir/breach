@@ -1,10 +1,9 @@
-% CORE
+% BREACH/CORE Routines for trajectory computation and higher-level functions
 %
 % Files
 %   CompileSystem     - Compile the C function defining the dynamics, enabling simulations. 
 %   ComputeTraj       - compute trajectories for a system given initial conditions
 %   ComputeTrajSensi  - compute trajectories with  sensitivities
-%   CreateSampling    - S = CreateSampling(Sys,Param,Ranges)
 %   CreateSystem      - creates a dynamicless system      
 %   GetF              - returns the value of rhs function of the ODE dynamics
 %   GetF_Traj         - returns the values of the rhs ODE function along a computed trajectory 
