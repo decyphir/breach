@@ -1,7 +1,6 @@
 % BREACH/CORE Routines for trajectory computation and higher-level functions
 %
 % Files
-%   CompileSystem     - Compile the C function defining the dynamics, enabling simulations. 
 %   ComputeTraj       - compute trajectories for a system given initial conditions
 %   ComputeTrajSensi  - compute trajectories with  sensitivities
 %   CreateSystem      - creates a dynamicless system      

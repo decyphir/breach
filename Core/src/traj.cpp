@@ -290,7 +290,7 @@ int CVM_ComputeTraj(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) 
     inputs_there = 1;
     inputs = prhs[2];      
     if (nb_pts != mxGetNumberOfElements(inputs)) 
-      mexErrMsgTxt("Number of inputs should be the same as the number of trajectories required.");
+      mexErrMsgTxt("Number of inputs should be the same as the number of trajectories required.");    
   }
   
   /* Doing some stuff */
@@ -669,7 +669,7 @@ void trajectory::ComputeTraj(Array1D& tspan) {
 	status = CVode(cvode_mem, tout, y, &tret, itask);
 	
 	/* break on CVode error */
-	if (status < 0) return;   
+	if (status < 0) mexErrMsgTxt("Cvodes error.");   
 	  
 	/* Test if tout was reached */
 	CVodeGetCurrentStep(cvode_mem, &h);
@@ -746,6 +746,9 @@ void trajectory::ComputeTraj(Array1D& tspan, vector<int>& indx_u,  Array1D& tin,
   int i_u = 0, n_idxu = indx_u.size();
   int n_u = tin.extent(0);
 
+  //  cout << "tin:" << tin << endl;
+  //  cout << "uval" << uval << endl;  
+
   /* working variables */
 
   Range Rx(0,N-1);
@@ -770,13 +773,13 @@ void trajectory::ComputeTraj(Array1D& tspan, vector<int>& indx_u,  Array1D& tin,
     
     /* if first input is at 0, initialize it */
     if (tin(i_u)<=t0) {          
-      i_u++;
-      tout = min(tin(i_u), tend);
       for (int k = 0; k < n_idxu; k++) 
 	if ( indx_u[k] <= N)
 	  x(indx_u[k]-1) = uval(k, i_u);
 	else 
 	  p(indx_u[k]-1) = uval(k, i_u);      
+      i_u++;
+      tout = min(tin(i_u), tend);
     }
     else
       tout = min(tin(i_u), tend);
@@ -831,7 +834,7 @@ void trajectory::ComputeTraj(Array1D& tspan, vector<int>& indx_u,  Array1D& tin,
 #endif
 	CVodeGetDky(cvode_mem, tout, 1, y);
 	cout << "dx:" << x << endl;
-	cout << "CVODES failed miserably for some reason. Status= " << status << endl;
+	cout << "CVODES failed for some reason. Status= " << status << endl;
 	mexErrMsgTxt("Dying...");	  
 	return;
       }
@@ -846,17 +849,6 @@ void trajectory::ComputeTraj(Array1D& tspan, vector<int>& indx_u,  Array1D& tin,
 	if (tout == tend) {
 	  iret = TRUE;
 	  break;
-	}
-	else { // update input
-	  i_u++;
-	  // update time step
-	  if (i_u == n_u)
-	    tout = tend;
-	  else
-	    tout = min(tin(i_u), tend);
-
-	  CVodeSetStopTime(cvode_mem, tout);
-	    
 	}
       }      
 	  
@@ -873,10 +865,21 @@ void trajectory::ComputeTraj(Array1D& tspan, vector<int>& indx_u,  Array1D& tin,
 
 	/* update inputs */
 	 for (int k = 0; k < n_idxu; k++) 
-	   if ( indx_u[k] <= N)
+	   if ( indx_u[k] <= N )
 	     x(indx_u[k]-1) = uval(k, i_u);
 	   else
 	     p(indx_u[k]-1) = uval(k, i_u);
+
+	 i_u++;
+	 // update time step
+	 if (i_u == n_u)
+	   tout = tend;
+	 else
+	   tout = min(tin(i_u), tend);
+
+	 CVodeSetStopTime(cvode_mem, tout);	   
+	  
+
 
 	switch (itol) {
 	case CV_SS:
@@ -945,15 +948,14 @@ void trajectory::ComputeTraj(Array1D& tspan, vector<int>& indx_u,  Array1D& tin,
     (*X)(All,0)= x;
     iret = FALSE;
 
-
     /* if first input is at 0, initialize it */
-    if (tin(i_u)<=t0) {          
-      i_u++;
+    if (tin(i_u)<=t0) {             
       for (int k = 0; k < n_idxu; k++) 
 	if ( indx_u[k] <= N)
 	  x(indx_u[k]-1) = uval(k, i_u);
 	else 
 	  p(indx_u[k]-1) = uval(k, i_u);      
+      i_u++;
     }
     
     /* Reinit solver */
@@ -976,62 +978,80 @@ void trajectory::ComputeTraj(Array1D& tspan, vector<int>& indx_u,  Array1D& tin,
     for(i=1; i<nb_points;i++) {
       
       iret = FALSE;
-
-      tend =tspan(i);
-     
-      //cout << "tend: " << tend << " tin(" << i_u << "):" << tin(i_u) << endl;
+      tend =tspan(i);     
+      //     cout << "tend: " << tend << " tin(" << i_u << "):" << tin(i_u) << endl;
  
       if (i_u+1< n_u)
-	tout = min(tin(i_u), tend);
-      
+      	tout = min(tin(i_u), tend);
+      else      
+	tout = tend;
+
       CVodeSetStopTime(cvode_mem,tout);
 
       /* Integrate system until tout */
-      
       while (1) {
-	
+
 	/* Integrate one step */
 	status = CVode(cvode_mem, tout, y, &tret, itask);
 	
 	/* break on CVode error */
-	if (status < 0) return;   
+	if (status < 0) mexErrMsgTxt("Cvodes error.");   
 	
 	/* Test if tout was reached */
 	CVodeGetCurrentStep(cvode_mem, &h);
 	
-	if ( (tret - tout)*h >= 0.0 ) {
+	if ( (tret - tout)*h >= 0.0 ) {	  
+
 	  tret = tout;
 	  CVodeGetDky(cvode_mem, tout, 0, y);
-	  /* check if we need to update inputs */
-	  if (tout == tend) {
-	    iret = TRUE;
-	    break;
-	  }
-	  else { // update input
-	    status= 666;
-	    // update time step
-	    if (i_u + 1< n_u) {
-	      i_u++;
-	      tout = min(tin(i_u), tend);	    
+
+	  /* check if we need to break or update inputs */
+	  if (tret == tin(i_u)) {
+
+	    /* update inputs */
+	    for (int k = 0; k < n_idxu; k++) 
+	      if ( indx_u[k] <= N)
+		x(indx_u[k]-1) = uval(k, i_u);
+	      else {
+		//		cout <<  "p(" << indx_u[k]-1 << ") = " <<  uval(k, i_u) << endl;
+		p(indx_u[k]-1) = uval(k, i_u);
+	      }
+
+	    /* Reinit solver */
+	    switch (itol) {
+	    case CV_SS:
+	      status = CVodeReInit(cvode_mem, f, tret,y, itol, reltol, &Sabstol);      
+	      break;
+	    case CV_SV:
+	      status = CVodeReInit(cvode_mem, f, tret,y, itol, reltol, NV_abstol);
 	    }
-	    else
-	      tout = tend;
+	      
+	    /* update time step */
+	    if (i_u + 1< n_u) 
+	      i_u++;
 	    
-	    CVodeSetStopTime(cvode_mem, tout);	    	 
-	  }      
-	}
+	    if (tout == tend)
+	      break;
+	    
+	    if (tout== tin(i_u))
+	      tout = tend;
+	    else
+	      min(tin(i_u), tend);	        	  	  
+	    
+	    CVodeSetStopTime(cvode_mem, tout);	  	    
+	    	  
+	    continue;	  	  	  	  
+	  }
+
+	  if (tret == tend)
+	    iret=TRUE;	    
+	}	
 	/* Update f_data */
 	
-	if (UpdateFdata(tret,y,f_data,0,NULL)||status == CV_ROOT_RETURN || status == 666) { /* if f_data changed in a discontinuity, reinit cvode */
+	if (UpdateFdata(tret,y,f_data,0,NULL)||status == CV_ROOT_RETURN) { /* if f_data changed in a discontinuity, reinit cvode */
+
 	  CVodeGetDky(cvode_mem, tret, 0, y);
 	  
-	  /* update inputs */
-	  for (int k = 0; k < n_idxu; k++) 
-	    if ( indx_u[k] <= N)
-	      x(indx_u[k]-1) = uval(k, i_u);
-	    else
-	      p(indx_u[k]-1) = uval(k, i_u);
-
 	  switch (itol) {
 	  case CV_SS:
 	    status = CVodeReInit(cvode_mem, f, tret,y, itol, reltol, &Sabstol);      
@@ -1040,11 +1060,12 @@ void trajectory::ComputeTraj(Array1D& tspan, vector<int>& indx_u,  Array1D& tin,
 	    status = CVodeReInit(cvode_mem, f, tret,y, itol, reltol, NV_abstol);
 	  }
 	  CVodeSetInitStep(cvode_mem,h);
-	}
-	  
-	/* break if we need to */
-	if(iret)  break;      
-      }
+	}	  
+
+	if (iret)
+	  break;
+      } // end while (1)
+
       (*X)(All,i)= x;	
     }       
   }

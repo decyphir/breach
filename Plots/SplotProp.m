@@ -1,4 +1,4 @@
-function val = SplotProp(Pf, prop,opt)
+function [val XI YI ZI] = SplotProp(Pf, prop,opt)
 % SPLOTPROP  Plots the quantitative satisfaction of property prop for the different
 %  param values in Pf. Works in 1d and 2d only. 
 %  
@@ -12,7 +12,7 @@ function val = SplotProp(Pf, prop,opt)
   if (~exist('opt','var'))
     opt.style = {'-b'};
   end
-  
+    
   iprop = find_prop(get_id(prop), Pf.props_names);  
   
   if iprop
@@ -31,7 +31,8 @@ function val = SplotProp(Pf, prop,opt)
         plot3(Pf.pts(Pf.dim(1),:), Pf.pts(Pf.dim(2),:), val+.01*abs(val), 'MarkerSize', 14);
       else
         Z = val(:,1);
-        QuickMeshSf(Pf,Z);         
+
+        [XI YI ZI] = QuickMeshSf(Pf,Z);         
         
         xlabel(Pf.ParamList{Pf.dim(1)},'Interpreter','none');  
         ylabel(Pf.ParamList{Pf.dim(2)},'Interpreter','none');

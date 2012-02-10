@@ -1397,6 +1397,11 @@ function handles= plot_pts(handles)
   set(gca,'YLimMode','auto');
   
   param_to_plot = handles.current_plot_pts{1};
+
+  if (~isfield(handles.working_sets.(handles.current_set),'selected'))
+      handles.working_sets.(handles.current_set).selected = zeros(size(handles.working_sets.(handles.current_set).pts,2))
+  end  
+  
   ipts = [handles.current_pts find(handles.working_sets.(handles.current_set).selected)];
   ipts = unique(sort(ipts));
   
@@ -1694,7 +1699,7 @@ function menu_select_prop_gt_Callback(hObject, eventdata, handles)
     val_threshold = eval(valst{1});
    
     if iprop
-      val = cat(1, Pf.props_values(iprop,:).val);
+      val = cat(1,handles.current_prop,handles.working_sets.(handles.current_set).props_values(iprop,:).val);
       val = val(:,1);      
       handles.working_sets.(handles.current_set).selected = (val>=val_threshold)';      
     end
@@ -1723,7 +1728,7 @@ function menu_select_prop_abs_st_Callback(hObject, eventdata, handles)
     end
     val_threshold = eval(valst{1});
     if iprop
-      val = cat(1, Pf.props_values(iprop,:).val);
+      val = cat(1,handles.current_prop,handles.working_sets.(handles.current_set).props_values(iprop,:).val);
       val = val(:,1);      
       handles.working_sets.(handles.current_set).selected = (abs(val)<=val_threshold)';      
     end

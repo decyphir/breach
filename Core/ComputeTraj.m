@@ -85,8 +85,14 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
     T = tspan;
   end
   
+  
   if (exist('u'))
      
+    err = check_u(u);
+    if (err~=0)
+      error(err);
+    end
+    
     Sf=cvm(61,S0,T,u);            
     Sf.u = u;
     
@@ -100,3 +106,37 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
     Sf = Sf.traj;
   end
   
+function err = check_u(u)
+  
+  err = 0;
+
+  if ~isstruct(u)
+    err = 'u has to be a structure';
+    return;
+  end
+    
+  if ~isfield(u,'params_idx')
+    err = 'missing field params_idx';
+    return;
+  end
+  
+  if ~isfield(u,'time')
+    err = 'missing field time';
+    return;
+  end
+  
+  if ~isfield(u,'values')
+    err = 'missing field values';
+    return;
+  end
+    
+  if numel(u.params_idx) ~= size(u.values, 1)
+    err = 'numel(u.params_idx) should be equal to  size(u.values, 1)';
+    return;
+  end
+  
+  if  numel(u.time) ~= size(u.values, 2)
+    err = 'numel(u.time) should be equal to size(u.values, 2)'; 
+    return;
+  end
+    
