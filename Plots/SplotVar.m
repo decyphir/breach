@@ -2,9 +2,7 @@ function SplotVar(S,iX,ipts,opt, bool_same_axe)
 % SPLOTVAR Plots trajectories variables separatly
 %
 % Synopsis:  SplotVar(P, [iX,ipts,opt])
-%   
-%   Prerequisite: P has a traj field with precomputed 
-%   
+%     
 %   Inputs: 
 %   
 %    -  P        Parameter set 
@@ -13,7 +11,7 @@ function SplotVar(S,iX,ipts,opt, bool_same_axe)
 %    -  ipts     indices of the trajectories in S to plot (optional,
 %    absent means all)
 %    -  opt      plotting options    
-%  
+%    - bool_same_axe  if 1, all variables are plot on the same axe
 %  
 
 

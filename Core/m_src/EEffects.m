@@ -23,10 +23,11 @@ delta = p/(2*(p-1));
 dY = diff(Y);
 
 idx = 1:size(Y,2); 
+
 % size should be some multiple k of n+1 whereas D is some multiple of n. We
 % need to remove indices n+1, 2(n+1), ..., (k-1)*n-1 in dY
+idx = idx(mod(idx,n+1)~=0); % abracadabra
 
-idx = idx(mod(idx,n+1)~=0); % abradabra
 dY = dY(idx);
 
 DY = repmat(dY/delta,[n 1]);

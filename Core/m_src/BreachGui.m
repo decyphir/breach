@@ -2529,6 +2529,7 @@ function menu_remove_prop_Callback(hObject, eventdata, handles)
   handles.working_sets.(handles.current_set) = SPurge_props(handles.working_sets.(handles.current_set));
   handles = update_working_sets_panel(handles);
   handles = update_modif_panel(handles);
+  handles = update_properties_panel(handles);
   guidata(hObject,handles);  
 
 

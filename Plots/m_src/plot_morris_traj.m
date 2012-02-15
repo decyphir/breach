@@ -4,11 +4,14 @@ function plot_morris_traj(S)
 %
 %  Useful to illustrate the Morris method
 %  
-%  Ex.: 
-% 
-%  S = SCreate(ones(3,1), ones(3,1))
-%  Sr = pRefine(S, 10, 3)  % 10-grid  with 3 trajectories
-%  
+%  Ex:
+%    Pt.dim = 1:3;
+%    Pt.epsi = [.5 .5 .5]';
+%    Pt.pts = [.5 .5 .5]';
+%    Ptr = pRefine(Pt, 4, 3);
+%    plot_morris_traj(Ptr);
+%
+  
 
   n = numel(S.dim);
   sz = size(S.pts,2);

@@ -11,6 +11,7 @@
 %   Refine            - Generates grid points in a N-dimensional parameter set 
 %   SConcat           - concat two parameter sets 
 %   SetParam          - set the values of parameters in a parameter set
+%   Psave             - save a parameter set in the default param set file of a system
 %   SPurge            - Remove all fields related to a specific computation of trajectories  
 %   SPurge_props      - Removes values of satisfaction functions in a parameter set
 %   Sselect           - extract parameters from indices
