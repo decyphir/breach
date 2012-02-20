@@ -26,12 +26,13 @@ addpath( [dr filesep 'Toolboxes' filesep 'sundials' filesep 'sundialsTB' filesep
 
 %addpath(genpath(BreachGlobOpt.breach_dir));
 
-
 %% Init BreachGlobOpt options and fourre-tout global variable
 BreachGlobOptTmp = BreachGlobOpt;
 clear BreachGlobOpt;
 global BreachGlobOpt;
 BreachGlobOpt = BreachGlobOptTmp; 
 clear BreachGlobOptTmp;
+
+BreachGlobOpt.RobustSemantics = -1; % 0 by default, -1 is for left time robustness, +1 for right, inf for sum ?
 
 cd(cdr);
