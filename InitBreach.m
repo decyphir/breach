@@ -33,6 +33,6 @@ global BreachGlobOpt;
 BreachGlobOpt = BreachGlobOptTmp; 
 clear BreachGlobOptTmp;
 
-BreachGlobOpt.RobustSemantics = -1; % 0 by default, -1 is for left time robustness, +1 for right, inf for sum ?
+BreachGlobOpt.RobustSemantics = 0 ; % 0 by default, -1 is for left time robustness, +1 for right, inf for sum ?
 
 cd(cdr);
