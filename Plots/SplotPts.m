@@ -28,7 +28,7 @@ function SplotPts(S,proj,ipts,opt)
     if (isfield(S(1),'X0plot_opt'))
       opt.plot_opt = S(1).X0plot_opt;
     else
-      opt.plot_opt = {'+m','MarkerSize',6};       
+      opt.plot_opt = {'om','MarkerSize',6};       
     end
   else
     if (ischar(opt))    
@@ -44,7 +44,7 @@ function SplotPts(S,proj,ipts,opt)
   
   % default plot option
   if (~isfield(opt, 'plot_opt'))
-    opt.plot_opt=  {'+m','MarkerSize',6};       
+    opt.plot_opt=  {'om','MarkerSize',6};       
   end    
     
   % rescaling axis
@@ -87,7 +87,7 @@ function SplotPts(S,proj,ipts,opt)
     nb = numel(S);
     colors = hsv(nb);
     for i=1:nb
-      opt.plot_opt ={'+','MarkerSize',6,'Color',colors(i,:)};
+      opt.plot_opt ={'o','MarkerSize',6,'Color',colors(i,:)};
       SplotPts(S(i),proj,[],opt);
     end    
     hold off

@@ -34,9 +34,13 @@ function [val XI YI ZI] = SplotProp(Pf, prop,opt)
 
         [XI YI ZI] = QuickMeshSf(Pf,Z);         
         
+        %scatter(Pf.pts(Pf.dim(1),:), Pf.pts(Pf.dim(2),:),20, val);
+        
         xlabel(Pf.ParamList{Pf.dim(1)},'Interpreter','none');  
         ylabel(Pf.ParamList{Pf.dim(2)},'Interpreter','none');
         zlabel(disp(prop, -1),'Interpreter','none');        
+        prop_cmap;
+      
       end      
       
      otherwise 
@@ -53,5 +57,6 @@ function i = find_prop(st, props_names)
     end    
   end
  
+  
   
   

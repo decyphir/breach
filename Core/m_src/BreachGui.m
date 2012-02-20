@@ -1420,6 +1420,7 @@ function handles= plot_pts(handles)
   if (~isempty(ipts(2:end)))
     SplotBoxPts(handles.working_sets.(handles.current_set), param_to_plot,ipts(2:end),'+b','y',.1);
   end
+
   SplotPts(handles.working_sets.(handles.current_set), param_to_plot,handles.current_pts,{'ok', 'MarkerSize',14});
   SplotBoxPts(handles.working_sets.(handles.current_set), param_to_plot,handles.current_pts,{'xk', 'MarkerSize',14} ,'k',.1);
   S = DiscrimPropValues(handles.working_sets.(handles.current_set)); 
@@ -1434,13 +1435,38 @@ function handles= plot_pts(handles)
       end
     end
     if i0
-      for k= 1:size(P.pts,2)
-        kn(k) = P.props_values(i0,k).val(1)>=0;          
+      val = cat(1, P.props_values(i0,:).val);
+      val = val(:,1);
+      iparam = FindParam(handles.Sys,param_to_plot);
+      switch (numel(iparam))
+        
+       case 1
+        x = P.pts(iparam(1),:);
+        y = zeros(size(x));
+        scatter(x,y, 30, val);
+        
+       case 2
+        x = P.pts(iparam(1),:);
+        y = P.pts(iparam(2),:);
+        scatter(x,y, 30, val);
+        
+       case 3
+        x = P.pts(iparam(1),:);
+        y = P.pts(iparam(2),:);
+        z = P.pts(iparam(3),:);
+        scatter3(x,y, z, 30, val);
       end
-      kn = find(kn);
-      Pok = Sselect(P,kn);
-      SplotPts(P,param_to_plot,[],{'r+'})
-      SplotPts(Pok,param_to_plot,[],{'*', 'Color', [.5 1 .5]})
+      
+      prop_cmap;
+      hold on;
+        
+      if (~isempty(ipts(2:end)))
+        SplotBoxPts(handles.working_sets.(handles.current_set), param_to_plot,ipts(2:end),'+b','y',.1);
+      end
+
+      SplotPts(handles.working_sets.(handles.current_set), param_to_plot,handles.current_pts,{'ok', 'MarkerSize',14});
+      SplotBoxPts(handles.working_sets.(handles.current_set), param_to_plot,handles.current_pts,{'xk', 'MarkerSize',14} ,'k',.1);
+    
     end
   end
  

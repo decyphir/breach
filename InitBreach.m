@@ -27,6 +27,8 @@ addpath( [dr filesep 'Toolboxes' filesep 'sundials' filesep 'sundialsTB' filesep
 %addpath(genpath(BreachGlobOpt.breach_dir));
 
 %% Init BreachGlobOpt options and fourre-tout global variable
+
+% Convert BreachGlobOpt into global
 BreachGlobOptTmp = BreachGlobOpt;
 clear BreachGlobOpt;
 global BreachGlobOpt;
