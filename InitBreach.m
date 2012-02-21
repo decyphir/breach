@@ -6,13 +6,6 @@ dr =  dr(1:end-13);
 
 cd(dr);
 
-if (exist('BreachGlobOpt.mat'))  
-  load BreachGlobOpt;
-else
-  BreachGlobOpt.breach_dir = dr;  
-  save('BreachGlobOpt.mat', 'BreachGlobOpt')
-end
-
 addpath(dr);
 addpath( [dr filesep 'Core']);
 addpath( [dr filesep 'Core' filesep 'm_src']);
@@ -28,13 +21,21 @@ addpath( [dr filesep 'Toolboxes' filesep 'sundials' filesep 'sundialsTB' filesep
 
 %% Init BreachGlobOpt options and fourre-tout global variable
 
-% Convert BreachGlobOpt into global
-BreachGlobOptTmp = BreachGlobOpt;
-clear BreachGlobOpt;
-global BreachGlobOpt;
-BreachGlobOpt = BreachGlobOptTmp; 
-clear BreachGlobOptTmp;
+if (exist('BreachGlobOpt.mat'))  
+  load BreachGlobOpt;
+  
+  % Convert BreachGlobOpt into global
+  BreachGlobOptTmp = BreachGlobOpt;
+  clear BreachGlobOpt;
+  global BreachGlobOpt;
+  BreachGlobOpt = BreachGlobOptTmp; 
+  clear BreachGlobOptTmp;
+  BreachGlobOpt.RobustSemantics = 0 ; % 0 by default, -1 is for left time robustness, +1 for right, inf for sum ?
 
-BreachGlobOpt.RobustSemantics = 0 ; % 0 by default, -1 is for left time robustness, +1 for right, inf for sum ?
+else 
+  if (~exist('BreachGlobOpt','var'))
+    BreachGlobOpt.breach_dir = dr;  
+  end  
+end
 
 cd(cdr);
