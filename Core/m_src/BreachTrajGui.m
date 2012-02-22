@@ -1867,7 +1867,7 @@ function handles = update_trajectories(handles)
         Pftmp = Ptmp;
     end
     handles.TrajSet.traj(handles.current_pts) = Pftmp.traj;
-    handles.TrajSet.Xf(:,handles.current_pts) = Pftmp.traj(:,end);
+    handles.TrajSet.Xf(:,handles.current_pts) = Pftmp.traj.X(:,end);
     
     new_plot = plot_param(handles,1);
     handles.current_plot{1} = new_plot;

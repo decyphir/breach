@@ -13,10 +13,12 @@ function Y = GetTrajValues(Pf, iX,  t)
   end
   
   if (ischar(iX))
-    iX = FindParam(P, iX);
+    iX = FindParam(Pf, iX);
   end
   
-  
+  if (~exist('t','var'))
+    t = Pf.traj(1).time;  
+  end
   X = cat(1, Pf.traj.X);
   
   X = X(iX:Pf.DimX:end,:);   
