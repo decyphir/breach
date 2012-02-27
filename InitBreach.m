@@ -34,7 +34,9 @@ if (exist('BreachGlobOpt.mat'))
 
 else 
   if (~exist('BreachGlobOpt','var'))
+    global BreachGlobOpt;
     BreachGlobOpt.breach_dir = dr;  
+    BreachGlobOpt.RobustSemantics = 0;
   end  
 end
 

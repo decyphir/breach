@@ -1504,7 +1504,7 @@ function new_plot= plot_param(handles,ax)
       new_plot = plot(phi_tspan*time_mult, phi_val); 
       hold on; 
       plot([phi_tspan(1) phi_tspan(end)]*time_mult, [0 0],'-k');
-      plot(phi_tspan*time_mult, (phi_val>0)*max(abs(phi_val))/2,'-r');
+      stairs(phi_tspan*time_mult, (phi_val>0)*max(abs(phi_val))/2,'-r');
       lgh = legend(short_disp(prop,100));           
       set(lgh,'Interpreter','none');
       

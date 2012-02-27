@@ -488,7 +488,8 @@ if ~any(handles.working_sets.(handles.current_set).dim==handles.selected_param)
   
   if isfield(handles.working_sets.(handles.current_set), 'traj')    
     tspan=handles.working_sets.(handles.current_set).traj(1).time;
-    handles.working_sets.(handles.current_set) = ComputeTraj(handles.Sys,handles.working_sets.(handles.current_set), tspan);    
+    
+    handles.working_sets.(handles.current_set) = ComputeTraj(handles.Sys,rmfield(handles.working_sets.(handles.current_set),'traj'), tspan);    
   end
 
   if isfield(handles.working_sets.(handles.current_set), 'props')    
@@ -499,6 +500,7 @@ if ~any(handles.working_sets.(handles.current_set).dim==handles.selected_param)
     P0 = rmfield(handles.working_sets.(handles.current_set),'props');
     P0 = rmfield(P0,'props_names');
     P0 = rmfield(P0,'props_values');    
+    
     for i= 1:numel(props) 
       phi = props(i);    
       tau = props_values(i).tau;
@@ -1458,6 +1460,8 @@ function handles= plot_pts(handles)
       end
       
       prop_cmap;
+      set(gca, 'CLim', sym_clim(val));
+      
       hold on;
         
       if (~isempty(ipts(2:end)))
@@ -1725,7 +1729,7 @@ function menu_select_prop_gt_Callback(hObject, eventdata, handles)
     val_threshold = eval(valst{1});
    
     if iprop
-      val = cat(1,handles.current_prop,handles.working_sets.(handles.current_set).props_values(iprop,:).val);
+      val = cat(1,handles.working_sets.(handles.current_set).props_values(iprop,:).val);
       val = val(:,1);      
       handles.working_sets.(handles.current_set).selected = (val>=val_threshold)';      
     end

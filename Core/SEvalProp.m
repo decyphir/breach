@@ -125,7 +125,7 @@ function [S,val] =  SEvalProp(Sys,S,props, tau, ipts, bool_plot, break_level)
         phi_val = S.props_values(iprop,i).val;
         plot(phi_tspan*time_mult, phi_val);         
         plot([phi_tspan(1) phi_tspan(end)]*time_mult, [0 0],'-k');
-        plot(phi_tspan*time_mult, (phi_val>0)*max(abs(phi_val))/2,'-r');
+        stairs(phi_tspan*time_mult, (phi_val>0)*max(abs(phi_val))/2,'-r');
       end
     
     end  

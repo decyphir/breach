@@ -164,16 +164,21 @@ function button_rem_Callback(hObject, eventdata, handles)
   
   content_to_plot = get(handles.listbox_var_to_plot, 'String');
   vtp = get(handles.listbox_var_to_plot,'Value');
+  nb = numel(content_to_plot);
+  
   
   if numel(content_to_plot)==1
     return;
   end
   
+  
   if (vtp==1)
     content_to_plot = {content_to_plot{2:end}};
+  elseif (vtp == nb) 
+    content_to_plot = { content_to_plot{1:vtp-1}};
+    set(handles.listbox_var_to_plot,'Value',vtp-1);
   else
-    content_to_plot = { content_to_plot{1:vtp-1} content_to_plot{vtp+1: ...
-                        end}}
+    content_to_plot = { content_to_plot{1:vtp-1} content_to_plot{vtp+1:end}};
   end
   set(handles.listbox_var_to_plot, 'String', content_to_plot);
   
