@@ -74,7 +74,8 @@ function [fv S] = SPolygon3d(Sys,S,timespan)
         vertices1 = reshape(X(:,j),3,[])';   % vertices at time t_j    
         vertices2 = reshape(X(:,j+1),3,[])'; % vertices at time t_j+1    
         vertices = [vertices1; vertices2];
-        face = convhulln(vertices, {'Qt', 'Qbb','Qc', 'QbB'} )+size(fv.vertices-nbetraj,1);
+        %face = convhulln(vertices, {'Qt', 'Qbb','Qc', 'QbB'} )+size(fv.vertices-nbetraj,1);
+        face = convhulln(vertices, {'Qt','Qc', 'QbB'} )+size(fv.vertices-nbetraj,1);
         fv.vertices = [fv.vertices; vertices1];
         try
           fv.faces = [fv.faces ; face]; % try in case face has the same

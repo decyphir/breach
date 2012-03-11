@@ -1553,17 +1553,25 @@ void trajectory::ComputeTrajSensi(Array1D& tspan) {
 
 int giDQ(int ig,realtype t, N_Vector x, realtype* gx, realtype *dgi,void *g_data) {
 
+#if _DEBUG >= 1
+  cout << "Entering giDQ..." << endl;
+#endif     
+
+
   /* jac_data points to cvode_mem */
   Fdata* data= (Fdata*) g_data;
-
   realtype gnorm, minInc, inc, inc_inv, xjsaved, srur;
 
-  realtype* gtemp = (realtype*) malloc( (gtemp[data->dimg])*sizeof(realtype));
+  
+  //realtype* gtemp = (realtype*) malloc( (gtemp[data->dimg])*sizeof(realtype));
+  realtype* gtemp = (realtype*) malloc( (data->dimg)*sizeof(realtype));
+  
   realtype  *x_data, *ewt_data;
   realtype h; 
   N_Vector nvgx;
   CVodeGetCurrentStep(cvode_mem,&h);
-  				   
+  
+  
   int j;
   N_Vector ewt;
   ewt = N_VNew_Serial(N);
@@ -1572,7 +1580,6 @@ int giDQ(int ig,realtype t, N_Vector x, realtype* gx, realtype *dgi,void *g_data
   nvgx = N_VNew_Serial(data->dimg);
   N_VSetArrayPointer(gx,nvgx);
 
-  
   /* Obtain pointers to the data for ewt, y */
   ewt_data = N_VGetArrayPointer(ewt);
   x_data   = N_VGetArrayPointer(x);
@@ -1583,7 +1590,7 @@ int giDQ(int ig,realtype t, N_Vector x, realtype* gx, realtype *dgi,void *g_data
   gnorm = N_VWrmsNorm(nvgx, ewt);
   minInc = (gnorm != ZERO) ?
     (MIN_INC_MULT * ABS(h) * DBL_EPSILON * N * gnorm) : ONE;
-
+  
   for (j = 0; j < N; j++) {
   
     xjsaved = x_data[j];
@@ -1598,14 +1605,21 @@ int giDQ(int ig,realtype t, N_Vector x, realtype* gx, realtype *dgi,void *g_data
    }
 
   free(gtemp);
-  return 0;
 
+#if _DEBUG >= 1
+  cout << "Leaving giDQ..." << endl;
+#endif     
+
+
+  return 0;
 }
 
 int ComputeSensiJump(int ig, realtype t, N_Vector x, N_Vector *xS, void* g_data) {
 
-  //cout << "Entering ComputeSensiJump..." << endl;
-  
+#if _DEBUG >= 1
+  cout << "Entering ComputeSensiJump..." << endl;
+#endif     
+
   Fdata* data = (Fdata*) g_data;
   int i,is; 
   double dgs,dgf,dtau;
@@ -1659,10 +1673,14 @@ int ComputeSensiJump(int ig, realtype t, N_Vector x, N_Vector *xS, void* g_data)
       Ith(data->xsJump[is],i) = dtau* (Ith(f2,i) - Ith(f1,i));	  
     }
   }          
-  //  cout << "Leaving ComputeSensiJump..." << endl;
+
 
   free(dgi);
   free(gval);
+
+#if _DEBUG >= 1
+  cout << "Leaving ComputeSensiJump..." << endl;  
+#endif
 
   return 0;
 }

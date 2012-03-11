@@ -45,8 +45,10 @@ function [fv S] = SPolygon2d(Sys,S,timespan,proj)
       
       for j = 1:lengthX
         vertices = reshape(X(:,j),2,[])';
-        face = convhull(vertices(:,1),vertices(:,2),  {'Qt', 'Qbb','Qc', 'QbB'})+size(fv.vertices,1);
+        %face = convhull(vertices(:,1),vertices(:,2),  {'Qt', 'Qbb','Qc', 'QbB'})+size(fv.vertices,1);
+        face = convhull(vertices(:,1),vertices(:,2),  {'Qt','Qc', 'QbB'})+size(fv.vertices,1);
         fv.vertices = [fv.vertices; vertices];
+        
         try
           fv.faces = [fv.faces ; face']; % try in case face has the same
                                          % number of vertices
