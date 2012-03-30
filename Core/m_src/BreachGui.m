@@ -1638,21 +1638,6 @@ function menu_plot_property_val_Callback(hObject, eventdata, handles)
     end
     
     SplotProp(handles.working_sets.(handles.current_set), handles.properties.(handles.current_prop));
-    
-    % Pf = handles.working_sets.(handles.current_set);
-    % iprop = find_prop(handles.current_prop, Pf);  
-    % if iprop
-    %   switch numel(Pf.dim)
-    %    case 1
-    %     val = cat(1, Pf.props_values(iprop,:).val);
-    %     val = val(:,1);
-    %     plot(Pf.pts(Pf.dim,:),val);
-    %    case 2
-    %     val = cat(1, Pf.props_values(iprop,:).val);
-    %     Z = val(:,1);
-    %     QuickMeshSf(Pf,Z)           
-    %   end
-    % end
     guidata(hObject,handles);
   catch
     s = lasterror;
@@ -2581,7 +2566,6 @@ function button_plot_prop_Callback(hObject, eventdata, handles)
     
     [opt handles.check_prop_options] = structdlg(opt,title,prompt, handles.check_prop_options);
     
-    
     if isempty(opt)
       return;
     end
@@ -2594,6 +2578,7 @@ function button_plot_prop_Callback(hObject, eventdata, handles)
     else
       Pphi= Ptmp;
     end
+    
     
     SEvalProp(handles.Sys,Pphi, prop, opt.tspan_prop_eval, 1,1,opt.break_lev);    
     guidata(hObject,handles);
