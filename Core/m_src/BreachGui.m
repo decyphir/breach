@@ -430,7 +430,9 @@ function button_compute_traj_Callback(hObject, eventdata, handles)
     tspan = eval(tspan{1});
     
     if (exist([pwd filesep 'cvm'])~=3)
-      CompileSystem(handles.Sys);
+      if (~isfield(handles.Sys,'type'))
+        CompileSystem(handles.Sys);
+      end
     end
         
     handles.working_sets.(handles.current_set) = ComputeTraj(handles.Sys, handles.working_sets.(handles.current_set), tspan);
@@ -1342,7 +1344,7 @@ function handles = update_modif_panel(handles)
   % button plot all/selected
   
   if isempty(find(handles.working_sets.(handles.current_set).selected))
-    set(handles.button_plot_selected, 'String', 'Plot all traj')
+    set(handles.button_plot_selected, 'String', 'Plot traj(s)')
   else
     set(handles.button_plot_selected, 'String', 'Plot selected')
   end
@@ -1362,7 +1364,10 @@ function handles = update_system_panel(handles)
   set(handles.text_dimp,'String', stdimp);
   
   if (isfield(Sys, 'type'))
-    if strcmp(Sys.type,'traces')
+    switch Sys.type        
+      case 'traces'   
+      return
+      case 'Simulink'
       return
     end
   end
@@ -2643,8 +2648,10 @@ function button_plot_selected_Callback(hObject, eventdata, handles)
     if isempty(args)
       return;
     end
-    figure;
-   
+    
+    h = figure;
+    assignin('base','h_breach_', h);
+    
     if args.phase_portrait == 1
       SplotTraj(handles.working_sets.(handles.current_set), args.iX ,ipts ,[]);    
     else

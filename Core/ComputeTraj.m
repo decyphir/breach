@@ -10,6 +10,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
 %   Inputs: 
 %    
 %    -  Sys      System (needs to be compiled)
+%
 %    -  P0       Initial conditions and params given in a parameter set 
 %                or in an array of size DimX x nb_traj
 %    -  tspan    interval of the form [t0, tf]; Fixed time instants can
@@ -52,15 +53,45 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
   end
  
   if (isfield(Sys, 'type'))
-
-    % If system type is only traces, check consistency of params and pts
-    if strcmp(Sys.type, 'traces')
+  
+    switch Sys.type
+     case 'traces'
+      % If system type is only traces, check consistency of params and pts      
       Sf=S0;
       for (i = 1:numel(Sf.traj))
         Sf.traj(i).param = Sf.pts(:,i)';      
       end
-      return;
+      
+     case 'Simulink'
+      model = Sys.mdl;
+      opt = simget(model);
+      
+      opt = simset(opt, 'OutputPoints', 'specified');
+      Sf = S0; 
+      ipts = 1:size(S0.pts,2);
+      fprintf(['Computing ' num2str(numel(ipts)) ' trajectories of model ' model '\n[             25%%           50%%            75%%               ]\n ']);
+       iprog =0;
+      for i= ipts
+        
+       
+        while (floor(60*i/numel(ipts))>iprog)
+          fprintf('^');
+          iprog = iprog+1;
+        end
+        
+        opt = simset(opt,'InitialState', S0.pts(1:Sys.DimX, i));
+        [traj.time traj.X] = sim(model, tspan, opt);
+        traj.param = S0.pts(:,i)';
+        traj.time = traj.time';
+        traj.X = traj.X';
+        Sf.traj(i) = traj;
+        Sf.Xf(:,i) = traj.X(:,end);
+      end
+       fprintf('\n');
     end
+  
+    return
+  
   end
 
   if (isfield(S0,'traj'))
