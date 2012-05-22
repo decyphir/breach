@@ -37,7 +37,11 @@ else
     global BreachGlobOpt;
     BreachGlobOpt.breach_dir = dr;  
     BreachGlobOpt.RobustSemantics = 0;
-  end  
+  end
+  
+  if (~isfield(BreachGlobOpt,'RobustSemantics'))        
+    BreachGlobOpt.RobustSemantics = 0;  
+  end
 end
 
 cd(cdr);

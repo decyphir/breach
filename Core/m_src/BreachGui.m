@@ -1467,6 +1467,7 @@ function handles= plot_pts(handles)
       prop_cmap;
       set(gca, 'CLim', sym_clim(val));
       
+      
       hold on;
         
       if (~isempty(ipts(2:end)))
