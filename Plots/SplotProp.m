@@ -41,6 +41,7 @@ function [val XI YI ZI] = SplotProp(Pf, prop,opt)
         zlabel(disp(prop, -1),'Interpreter','none');        
         prop_cmap;
         set(gca, 'CLim', sym_clim(Z));
+        colorbar;
         
       end      
       

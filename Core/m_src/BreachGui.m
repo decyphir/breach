@@ -1465,8 +1465,9 @@ function handles= plot_pts(handles)
       end
       
       prop_cmap;
-      set(gca, 'CLim', sym_clim(val));
       
+      %colormap([ 1 0 0; 0 1 0 ]);
+      set(gca, 'CLim', sym_clim(val));
       
       hold on;
         
