@@ -37,9 +37,13 @@ function Sh = HaltonRefine(S, nb, step)
   
   Sh.pts(S.dim,:) = repmat(A,[1 nb]).*r+repmat(a,[1 nb]);
 
+  %Sh.epsi = repmat(Sh.epsi,[1 nb])/(floor(nb^(1/dim_num)));
+
   Sh.epsi = kron(Sh.epsi,ones(1,size(Sh.pts,2)))/(floor(nb^(1/dim_num)));
+
   
-%  Sh.epsi = kron(Sh.epsi, ones(1,size(Sh.pts,2)))/nb;
+
+  %Sh.epsi = kron(Sh.epsi, ones(1,size(Sh.pts,2)))/nb;
   
   if (isfield(S,'selected'))
     Sh.selected = zeros(1, size(S.pts,2));    
