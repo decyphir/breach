@@ -123,7 +123,7 @@ function [h Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
     stat_type = 'aver_end';  % compute sensitivities at a fixed time
     tspan = {0 tspan};
   else
-    stat_type = 'aver_max'; 
+    stat_type = 'aver_sum'; 
   end
  
   Ptmp = CreateSampling(Sys, iP);
