@@ -76,9 +76,9 @@ function [iX iP t args] = GetArgSensiBar(DimX, ParamList, args, props)
   t = [];
   try
     t = eval(answer{3});
-  catch warndlg(['Using tspan of pre-computed trajectories']);
-    return
-  end
+  catch
+     return
+end
   
 
      

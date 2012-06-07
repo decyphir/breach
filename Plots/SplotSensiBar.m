@@ -1,15 +1,19 @@
-function [h Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
+function [Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
 % SPLOTSENSIBAR plots an histogram of sensitivities
 %
-%  Synopsis:  [h Mend opts] = SplotSensiBar(Sys, S, ipts [, opts])
+%  Synopsis:  [M opts] = SplotSensiBar(Sys, P, ipts [, opts])
 %
-%  Plots 3d histogram of logarithmic sensitivities of state variables iX
+%  Plots histogram(s) of logarithmic sensitivities of state variables iX
 %  w.r.t. parameters iP at a given time t for a parameter vector ipts in
-%  S. iX, iP and t are provided through an input dialog box, except
+%  P. iX, iP and t are provided through an input dialog box, except
 %  when args is given
 %           
 %  opts has the following fields : args, props and taus. 
 %    
+%  M returns the values of sensitivities 
+%  
+%  opts returns the structure of options used 
+%
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -70,6 +74,14 @@ function [h Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
         warndlg(['Problem: ' s.message ', giving up'] );
         close;
         return;
+      end
+    end
+    
+    if isempty(tspan)
+      if isfield(S, 'traj')
+        tspan= S.traj(1).time;
+      else
+        error('No precomputed trajectories.')          
       end
     end
   else
@@ -161,7 +173,7 @@ function [h Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
           p = traj.param(iP(k));    % p
           xs = (dx*p)./abs(x);
 
-          XS =  trapz(time, xs); % computes the sum
+          XS =  trapz(time, xs)/time(end); % computes the sum
           
           % Compute the sum  
           Mend(j,k) = Mend(j,k)+XS;      
@@ -297,7 +309,7 @@ function [h Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
   
   h =plot_histo(Mend,S, iX,props,iP);
   
-function h = plot_histo(Mend,S,iX, props, iP)
+function h = plot_histo3d(Mend,S,iX, props, iP)
   
   h = figure;    
   h = bar3(Mend,0.5,'detached');
@@ -338,9 +350,53 @@ function h = plot_histo(Mend,S,iX, props, iP)
   
   shading interp;
   colormap cool;
-  colorbar;
+%  colorbar;
   for i = 1:length(h)
     zdata = get(h(i),'Zdata');
     set(h(i),'Cdata',zdata);
     set(h,'EdgeColor','k');
   end
+
+  
+  function h = plot_histo(M,S,iX, props, iP)
+  
+  h = figure;    
+  nb_histo = numel(iX)+numel(props);
+  
+  % y labels
+
+  ytick_labels = {};
+  for k = 1:numel(iP)
+    ylabel = S.ParamList{iP(k)};
+    if (iP(k)<= S.DimX)
+      ylabel = [ylabel '(0)'];
+    end
+    ytick_labels = {ytick_labels{:}, ylabel };                    
+  end
+  
+  
+  % plotting sensitivities of variables
+  for i = 1:numel(iX)
+    subplot(ceil(nb_histo/3),3,i);
+    barh(M(i,:));          
+    set(gca, 'YTick', 1:numel(iP), 'YTickLabel',  ytick_labels);    
+    hy = get(gca, 'ylabel');
+    set(hy, 'Interpreter','none');    
+    
+    st = ['S(' S.ParamList{i} '[t])'];
+    title(st, 'Interpreter','none');
+  end
+  
+    % plotting sensitivities of properties
+  for i = numel(iX)+1:nb_histo
+    subplot(ceil(nb_histo/3),3,i+numel(iX));
+    barh(M(i,:));          
+    set(gca, 'YTick', 1:numel(iP), 'YTickLabel',  ytick_labels);    
+    hy = get(gca, 'ylabel')
+    set(hy, 'Interpreter','none');    
+    
+  end
+  
+  fig_resize(gcf, 3,1);
+  
+  

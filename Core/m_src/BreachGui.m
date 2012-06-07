@@ -1450,23 +1450,22 @@ function handles= plot_pts(handles)
        case 1
         x = P.pts(iparam(1),:);
         y = zeros(size(x));
-        scatter(x,y, 30, val);
+        scatter(x,y, 30, val, 'filled');
         
        case 2
         x = P.pts(iparam(1),:);
         y = P.pts(iparam(2),:);
-        scatter(x,y, 30, val);
+        scatter(x,y, 30, val, 'filled');
         
        case 3
         x = P.pts(iparam(1),:);
         y = P.pts(iparam(2),:);
         z = P.pts(iparam(3),:);
-        scatter3(x,y, z, 30, val);
+        scatter3(x,y, z, 30, val, 'filled');
       end
       
-      prop_cmap;
-      
-      %colormap([ 1 0 0; 0 1 0 ]);
+      %prop_cmap;     
+      colormap([ 1 0 0; 0 1 0 ]);
       set(gca, 'CLim', sym_clim(val));
       
       hold on;
@@ -2287,7 +2286,7 @@ function menu_plot_local_sensi_histo_Callback(hObject, eventdata, handles)
 %  P = Sselect(handles.working_sets.(handles.current_set), handles.current_pts);
   try
     P = handles.working_sets.(handles.current_set);
-    [h Mend handles.last_options] = SplotSensiBar(handles.Sys, P, [],[]);  
+    [M handles.last_options] = SplotSensiBar(handles.Sys, P, [],[]);  
 
   catch 
     s = lasterror;
