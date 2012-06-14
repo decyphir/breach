@@ -2307,7 +2307,7 @@ function menu_plot_local_sensi_histo_prev_Callback(hObject, eventdata, handles)
  
   P = handles.working_sets.(handles.current_set);
   try 
-    [h Mend handles.last_options] = SplotSensiBar(handles.Sys, P, [],handles.last_options);
+    [M handles.last_options] = SplotSensiBar(handles.Sys, P, [],handles.last_options);
   catch
     handles.last_options = [];
   end

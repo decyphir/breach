@@ -89,7 +89,20 @@ function [Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
     iP = opts.args.iP;
     tspan = opts.args.tspan;
   end
-      
+   
+  % what type of computation do we do (default: average)
+  
+  if isfield(opts,'stat_type')
+    stat_type = opts.stat_type;
+  else
+    if (numel(tspan)==1)
+      stat_type = 'aver_end';  % compute sensitivities at a fixed time
+      tspan = {0 tspan};
+    else
+      stat_type = 'aver_sum'; 
+    end           
+  end
+    
   % for properties evaluation 
     
   if (isfield(opts, 'props'))
@@ -130,14 +143,7 @@ function [Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
       
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %   Recompute trajectories if needed
- 
-  if (numel(tspan)==1)
-    stat_type = 'aver_end';  % compute sensitivities at a fixed time
-    tspan = {0 tspan};
-  else
-    stat_type = 'aver_sum'; 
-  end
- 
+  
   Ptmp = CreateSampling(Sys, iP);
   Ptmp.pts = S.pts(:,ipts);
   S = ComputeTrajSensi(Sys, Ptmp,  tspan);   
@@ -309,6 +315,7 @@ function [Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
   
   h =plot_histo(Mend,S, iX,props,iP);
   
+
 function h = plot_histo3d(Mend,S,iX, props, iP)
   
   h = figure;    
@@ -358,13 +365,39 @@ function h = plot_histo3d(Mend,S,iX, props, iP)
   end
 
   
-  function h = plot_histo(M,S,iX, props, iP)
+function h = plot_histo1(M,S,iX, props, iP)
   
   h = figure;    
   nb_histo = numel(iX)+numel(props);
   
   % y labels
+  
+  ytick_labels = {};
+  for k = 1:numel(iP)
+    ylabel = S.ParamList{iP(k)};
+    if (iP(k)<= S.DimX)
+      ylabel = [ylabel '(0)'];
+    end
+    ytick_labels = {ytick_labels{:}, ylabel };                    
+  end
+    
+  % plotting sensitivities of variables
 
+  
+  barh(M);            
+  set(gca, 'YTick', 1:numel(iP), 'YTickLabel',  ytick_labels);    
+  hy = get(gca, 'ylabel');
+  set(hy, 'Interpreter','none');    
+
+  legend(S.ParamList{iX});
+  
+  
+function h = plot_histo(M,S,iX, props, iP)
+  
+  h = figure;    
+  nb_histo = numel(iX)+numel(props);
+  
+  % y labels
   ytick_labels = {};
   for k = 1:numel(iP)
     ylabel = S.ParamList{iP(k)};
@@ -380,23 +413,24 @@ function h = plot_histo3d(Mend,S,iX, props, iP)
     subplot(ceil(nb_histo/3),3,i);
     barh(M(i,:));          
     set(gca, 'YTick', 1:numel(iP), 'YTickLabel',  ytick_labels);    
+    axis tight;
+    grid on;
     hy = get(gca, 'ylabel');
-    set(hy, 'Interpreter','none');    
-    
+    set(hy, 'Interpreter','none');        
     st = ['S(' S.ParamList{i} '[t])'];
     title(st, 'Interpreter','none');
+    
   end
   
-    % plotting sensitivities of properties
+  % plotting sensitivities of properties
   for i = numel(iX)+1:nb_histo
     subplot(ceil(nb_histo/3),3,i+numel(iX));
     barh(M(i,:));          
     set(gca, 'YTick', 1:numel(iP), 'YTickLabel',  ytick_labels);    
     hy = get(gca, 'ylabel')
-    set(hy, 'Interpreter','none');    
-    
+    set(hy, 'Interpreter','none');        
   end
   
-  fig_resize(gcf, 3,1);
-  
+  fig_resize(gcf, 3,ceil(nb_histo/3));
+
   
