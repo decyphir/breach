@@ -1464,6 +1464,14 @@ function handles= plot_pts(handles)
         scatter3(x,y, z, 30, val, 'filled');
       end
       
+      stats = sprintf(['True:' dbl2str(numel(find(val>0))) '/' dbl2str(numel(val))  ... 
+                       '\nMean:' dbl2str(mean(val)) ...
+                       '\nstd:' dbl2str(std(val)) ... 
+                       '\nMax:' dbl2str(max(val)) ...
+                       '\nMin:' dbl2str(min(val))]);
+      
+      legend(stats)
+          
       %prop_cmap;     
       colormap([ 1 0 0; 0 1 0 ]);
       set(gca, 'CLim', sym_clim(val));
