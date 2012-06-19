@@ -490,8 +490,9 @@ if ~any(handles.working_sets.(handles.current_set).dim==handles.selected_param)
   
   if isfield(handles.working_sets.(handles.current_set), 'traj')    
     tspan=handles.working_sets.(handles.current_set).traj(1).time;
-    
+    uiwait(handle);
     handles.working_sets.(handles.current_set) = ComputeTraj(handles.Sys,rmfield(handles.working_sets.(handles.current_set),'traj'), tspan);    
+    uiresume(handle)
   end
 
   if isfield(handles.working_sets.(handles.current_set), 'props')    
