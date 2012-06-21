@@ -7,3 +7,4 @@ function fig_resize(f, x, y)
   
   set(f, 'Position',pos);
   figure(f);
+  

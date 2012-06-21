@@ -136,6 +136,11 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
   if output_trajs
     Sf = Sf.traj;
   end
+
+  if isfield(Sys, 'time_mult')
+    Sf.time_mult = Sys.time_mult;
+  end
+  
   
 function err = check_u(u)
   
