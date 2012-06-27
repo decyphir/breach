@@ -2355,7 +2355,7 @@ function button_go_refine_Callback(hObject, eventdata, handles)
     nb_pts = size(handles.working_sets.(handles.current_set).pts,2);    
     if (handles.refine_all)
       if (handles.halton)
-        Pr = HaltonRefine(handles.working_sets.(handles.current_set), ...
+        Pr = QuasiRefine(handles.working_sets.(handles.current_set), ...
                           handles.refine_args);
       else
         Pr = Refine(handles.working_sets.(handles.current_set), ...
@@ -2374,7 +2374,7 @@ function button_go_refine_Callback(hObject, eventdata, handles)
       
       Ptmp = Sselect(handles.working_sets.(handles.current_set),ipts);
       if (handles.halton)
-        Pr =HaltonRefine(Ptmp, handles.refine_args);
+        Pr =QuasiRefine(Ptmp, handles.refine_args);
       else
         Pr = Refine(Ptmp, handles.refine_args);
       end

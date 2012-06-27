@@ -11,6 +11,8 @@ addpath( [dr filesep 'Core']);
 addpath( [dr filesep 'Core' filesep 'm_src']);
 addpath( [dr filesep 'Params']);
 addpath( [dr filesep 'Params' filesep 'm_src']);
+addpath( [dr filesep 'Params' filesep 'm_src' filesep 'sobolqr']);
+addpath( [dr filesep 'Params' filesep 'm_src' filesep 'niederreiter2']);
 addpath( [dr filesep 'Plots']);
 addpath( [dr filesep 'Plots' filesep 'm_src']);
 addpath( [dr filesep 'Toolboxes' filesep 'optimize']);

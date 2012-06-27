@@ -7,7 +7,7 @@ function Psave(Sys, varargin)
 % Ex: 
 %
 %  P = CreateSampling(Sys);
-%  Ph = HaltonRefine(P,100);
+%  Ph = QuasiRefine(P,100);
 %  P2 = Refine(P,2);
 %  Psave(Sys, 'P', 'Ph', 'P2' );
 %

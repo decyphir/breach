@@ -12,6 +12,7 @@ function Sh = HaltonRefine(S, nb, step)
 %   SplotBoxPts(P); % Parameter set before sampling 
 %   SplotPts(Ph);   % plots the generated points
 %
+% Credit:  John Burkardt, 2003
 % 
   
   dim_num = numel(S.dim);
@@ -23,7 +24,7 @@ function Sh = HaltonRefine(S, nb, step)
   seed = 1*ones(dim_num,1);
   leap = ones(dim_num,1);
   
-  base = primes(dim_num*dim_num+1);
+  base = primes(dim_num*dim_num+1)
   base = base(1:dim_num);
   
   r = halton_sequence( dim_num,nb, step, seed, leap, base );
@@ -40,8 +41,6 @@ function Sh = HaltonRefine(S, nb, step)
   %Sh.epsi = repmat(Sh.epsi,[1 nb])/(floor(nb^(1/dim_num)));
 
   Sh.epsi = kron(Sh.epsi,ones(1,size(Sh.pts,2)))/(floor(nb^(1/dim_num)));
-
-  
 
   %Sh.epsi = kron(Sh.epsi, ones(1,size(Sh.pts,2)))/nb;
   

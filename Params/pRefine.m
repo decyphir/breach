@@ -20,7 +20,7 @@ function S = pRefine(S,p,r)
   Stmp.pts = (ngrid+1)/2*ones(n,1);
   Stmp.epsi = (ngrid+1)/2*ones(n,1);
   
-  Stmp = HaltonRefine(Stmp,r);  
+  Stmp = QuasiRefine(Stmp,r);  
   Stmp.pts = floor(Stmp.pts)/(p-1);
   
   % can be improved

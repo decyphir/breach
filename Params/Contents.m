@@ -6,7 +6,7 @@
 %   DiscrimPropValues - Separates traj set S according to properties checked for S
 %   FindParam         - Finds the indices of parameters given by their name for a given system or param set
 %   GetParam          - get the values of parameters in a parameter set
-%   HaltonRefine      - Sample quasi-uniformly a parameter set using Halton sequence
+%   QuasiRefine       - Sample quasi-uniformly a parameter set 
 %   pRefine           - pick initial points for the Morris global sensitivity measure
 %   Refine            - Generates grid points in a N-dimensional parameter set 
 %   SConcat           - concat two parameter sets 
