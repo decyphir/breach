@@ -42,7 +42,10 @@ function SplotVar(S,iX,ipts,opt, bool_same_axe)
 
   if (~isempty(iX))
     if (~isnumeric(iX))  
-      NiX = iX;
+      if isstr(iX)
+          iX = {iX};
+      end
+        NiX = iX;
       iX = [];
       for i = 1:numel(NiX)
         ind = FindParam(S,NiX{i});
