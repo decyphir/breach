@@ -19,6 +19,7 @@ function [Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   Check inputs 
  
+ 
   if (isempty(S.pts))
     disp('S empty !');
     return
@@ -41,8 +42,8 @@ function [Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
   if (exist('opts'))
     
     % do we need a dialog box to enter arguments (default: yes)
-    if isfield(opts,'open_dialog')
-      open_dialog = opts.open_dialog;
+    if isfield(opts,'open_dialog')                     
+        open_dialog = opts.open_dialog;
     end
    
     % what type of computation do we do (default: average)
@@ -57,8 +58,15 @@ function [Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
       cutoff = opts.cutoff;
     end
     
+    if isfield(opts,'plot_histo')
+      plots = opts.plot_histo;
+    else
+      plots =1;
+    end
+    
   else
     opts=[];
+    plots =1; 
   end
     
   if (open_dialog)
@@ -122,10 +130,13 @@ function [Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
   end
   
   if (~isnumeric(iX))
+    if isstr(iX)
+        iX={iX};
+    end      
     NiX = iX;
     iX = [];
     for i = 1:numel(NiX)
-      ind = FindParam(S,NiX{i});
+      ind = FindParam(S,NiX(i));
       iX(i) = ind;
     end    
   end
@@ -313,8 +324,9 @@ function [Mend opts] =  SplotSensiBar(Sys, S, ipts, opts)
   M = max(max(abs(Mend)));
   Mend(abs(Mend)<cutoff*M) = 0;
   
-  h =plot_histo(Mend,S, iX,props,iP);
-  
+  if plots
+    h =plot_histo(Mend,S, iX,props,iP);
+  end
 
 function h = plot_histo3d(Mend,S,iX, props, iP)
   
@@ -391,46 +403,4 @@ function h = plot_histo1(M,S,iX, props, iP)
 
   legend(S.ParamList{iX});
   
-  
-function h = plot_histo(M,S,iX, props, iP)
-  
-  h = figure;    
-  nb_histo = numel(iX)+numel(props);
-  
-  % y labels
-  ytick_labels = {};
-  for k = 1:numel(iP)
-    ylabel = S.ParamList{iP(k)};
-    if (iP(k)<= S.DimX)
-      ylabel = [ylabel '(0)'];
-    end
-    ytick_labels = {ytick_labels{:}, ylabel };                    
-  end
-  
-  
-  % plotting sensitivities of variables
-  for i = 1:numel(iX)
-    subplot(ceil(nb_histo/3),3,i);
-    barh(M(i,:));          
-    set(gca, 'YTick', 1:numel(iP), 'YTickLabel',  ytick_labels);    
-    axis tight;
-    grid on;
-    hy = get(gca, 'ylabel');
-    set(hy, 'Interpreter','none');        
-    st = ['S(' S.ParamList{i} '[t])'];
-    title(st, 'Interpreter','none');
-    
-  end
-  
-  % plotting sensitivities of properties
-  for i = numel(iX)+1:nb_histo
-    subplot(ceil(nb_histo/3),3,i+numel(iX));
-    barh(M(i,:));          
-    set(gca, 'YTick', 1:numel(iP), 'YTickLabel',  ytick_labels);    
-    hy = get(gca, 'ylabel')
-    set(hy, 'Interpreter','none');        
-  end
-  
-  fig_resize(gcf, 3,ceil(nb_histo/3));
-
   

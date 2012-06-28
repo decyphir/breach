@@ -15,4 +15,4 @@ function Sh = SobolRefine(S, nb)
 % TODO optionalize the sequence used - so far Sobol
 %  
   
-  Sh = SobolRefine(S,nb) 
+  Sh = SobolRefine(S,nb);

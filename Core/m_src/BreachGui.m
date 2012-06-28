@@ -24,7 +24,6 @@ function varargout = BreachGui(varargin)
 
 % Last Modified by GUIDE v2.5 05-Jan-2012 09:55:13
 
-
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
@@ -1216,10 +1215,10 @@ function button_reload_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
   handles.working_sets = load(handles.working_sets_file_name);
-  handles = update_working_sets_panel(handles);
   handles.properties = load(handles.properties_file_name);
-  handles = update_modif_panel(handles);
+  handles = update_working_sets_panel(handles);
   handles = update_properties_panel(handles);
+  handles = update_modif_panel(handles);
   
   guidata(hObject, handles);  
     
@@ -1295,8 +1294,7 @@ function handles = update_modif_panel(handles)
   if (~isfield(handles.working_sets.(handles.current_set), 'selected'))
     val = get(handles.working_sets_listbox, 'Value');
     names = fieldnames(handles.working_sets);
-    set_name = names{val};
-    
+    set_name = names{val};    
     handles.working_sets.(set_name)= setfield(handles.working_sets.(set_name), ...
                                               'selected', zeros(1, ...
                                                       nb_pts));
@@ -1402,6 +1400,7 @@ function handles= plot_pts(handles)
 
   axes(handles.axes_pts);
   cla;
+  legend off;
   set(gca,'YLimMode','auto');
   
   param_to_plot = handles.current_plot_pts{1};
@@ -2558,8 +2557,8 @@ function menu_remove_prop_Callback(hObject, eventdata, handles)
 
   handles.working_sets.(handles.current_set) = SPurge_props(handles.working_sets.(handles.current_set));
   handles = update_working_sets_panel(handles);
-  handles = update_modif_panel(handles);
   handles = update_properties_panel(handles);
+  handles = update_modif_panel(handles);
   guidata(hObject,handles);  
 
 

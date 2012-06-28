@@ -21,7 +21,7 @@ function Sh = SobolRefine(S, nb, step)
     step=1;
   end
       
-  r = i4_sobol_generate ( dim_num, nb, 0 )
+  r = i4_sobol_generate ( dim_num, nb, 0 );
   r = kron(r, ones(1,size(S.pts,2)));
   
   A = 2*S.epsi;
