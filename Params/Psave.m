@@ -18,6 +18,10 @@ function Psave(Sys, varargin)
     P___ = varargin{i};
     
     eval([P___ '= evalin(''base'',''' P___ ''');']);
-    save(filename, '-append', P___);
+	if(exist(filename,'file')==0)
+		save(filename, P___);
+	else
+		save(filename, '-append', P___);
+	end
   end
 
