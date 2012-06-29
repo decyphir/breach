@@ -52,6 +52,16 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
 
   end
  
+  % check for an initialization function
+  if isfield(Sys, 'init_fun')
+    S0 = Sys.init_fun(S0);    
+  end
+  
+  if isfield(S0, 'init_fun')
+    S0 = S0.init_fun(S0);    
+  end
+  
+  % 
   if (isfield(Sys, 'type'))
   
     switch Sys.type
@@ -70,10 +80,8 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
       Sf = S0; 
       ipts = 1:size(S0.pts,2);
       fprintf(['Computing ' num2str(numel(ipts)) ' trajectories of model ' model '\n[             25%%           50%%            75%%               ]\n ']);
-       iprog =0;
-      for i= ipts
-        
-       
+      iprog =0;
+      for i= ipts               
         while (floor(60*i/numel(ipts))>iprog)
           fprintf('^');
           iprog = iprog+1;

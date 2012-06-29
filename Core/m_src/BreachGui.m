@@ -2568,7 +2568,7 @@ function button_plot_prop_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-  try
+ % try
     prop = handles.properties.(handles.current_prop);
     title = 'Plot property options';
     prompt = {'Enter tspan for trajectory computation (empty = existing traj), ',...
@@ -2597,12 +2597,12 @@ function button_plot_prop_Callback(hObject, eventdata, handles)
     SEvalProp(handles.Sys,Pphi, prop, opt.tspan_prop_eval, 1,1,opt.break_lev);    
     guidata(hObject,handles);
 
-  catch 
-    s = lasterror;
-    warndlg(['Problem checking property: ' s.message] );
-    error(s);    
-    return
-  end
+%  catch 
+%    s = lasterror;
+%    warndlg(['Problem checking property: ' s.message] );
+%    error(s);    
+%    return
+%  end
  
   
 
