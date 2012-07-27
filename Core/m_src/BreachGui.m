@@ -131,27 +131,6 @@ function BreachGui_OpeningFcn(hObject, eventdata, handles, varargin)
   handles.current_plot{3} =[];
   handles.current_marked = [];
 
-  set(handles.popup_pts1,'String',P.ParamList);
-  handles.current_plot_pts{1} = P.ParamList(P.dim(1));
-  set(handles.popup_pts1,'Value', P.dim(1));
-  set(handles.popup_pts2,'String',{'', P.ParamList{:}});
-
-  if numel(P.dim)>=2
-    handles.current_plot_pts{2} = P.ParamList(P.dim(2));
-    set(handles.popup_pts2,'Value', P.dim(2)+1);  
-  else
-    handles.current_plot_pts{2} = '';
-    set(handles.popup_pts2,'Value', 1);  
-  end
-
-  set(handles.popup_pts3,'String',{'', P.ParamList{:}});
-  if numel(P.dim)>=3
-    handles.current_plot_pts{3} = P.ParamList(P.dim(3));
-    set(handles.popup_pts3,'Value', P.dim(3)+1);  
-  else
-    handles.current_plot_pts{3} = '';
-    set(handles.popup_pts3,'Value', 1);  
-  end
 
   handles = update_modif_panel(handles);
 
@@ -253,40 +232,6 @@ function working_sets_listbox_Callback(hObject, eventdata, handles)
   handles.current_set = set_name;
   handles.current_pts = 1;
 
-  % P = handles.working_sets.(set_name);
-  % if (~isfield(P, 'selected'))
-  %   nb_pts = size(P.pts,2);
-  %   handles.working_sets.(set_name)= setfield(handles.working_sets.(set_name), ...
-  %                                             'selected', zeros(1, ...
-  %                                                     nb_pts));
-  % end
-  
-  % set(handles.popup_pts1,'String',P.ParamList);
-  % handles.current_plot_pts{1} = P.ParamList(P.dim(1));
-  % set(handles.popup_pts1,'Value', P.dim(1));
-  % set(handles.popup_pts2,'String',{'', P.ParamList{:}});
-
-  % if numel(P.dim)>=2
-  %   handles.current_plot_pts{2} = P.ParamList(P.dim(2));
-  %   set(handles.popup_pts2,'Value', P.dim(2)+1);  
-  % else
-  %   handles.current_plot_pts{2} = '';
-  %   set(handles.popup_pts2,'Value', 1);  
-  % end
-
-  % set(handles.popup_pts3,'String',{'', P.ParamList{:}});
-  % if numel(P.dim)>=3
-  %   handles.current_plot_pts{3} = P.ParamList(P.dim(3));
-  %   set(handles.popup_pts3,'Value', P.dim(3)+1);  
-  % else
-  %   handles.current_plot_pts{3} = '';
-  %   set(handles.popup_pts3,'Value', 1);  
-  % end
-  % handles.selected_varying_param = 1;  
-  % axes(handles.axes_pts);
-  % cla;
-%  reset(gca);
-  
   handles = update_working_sets_panel(handles);
   handles = update_modif_panel(handles);
   handles= update_properties_panel(handles);
@@ -1350,6 +1295,33 @@ function handles = update_modif_panel(handles)
   
   % menu for param pts plot
 
+  ParamList = handles.working_sets.(handles.current_set).ParamList;
+  dim =  handles.working_sets.(handles.current_set).dim;
+  
+  set(handles.popup_pts1,'String',ParamList);
+  handles.current_plot_pts{1} = ParamList(dim(1));
+  set(handles.popup_pts1,'Value', dim(1));
+  set(handles.popup_pts2,'String',{'', ParamList{:}});
+
+  if numel(dim)>=2
+    handles.current_plot_pts{2} = ParamList(dim(2));
+    set(handles.popup_pts2,'Value', dim(2)+1);  
+  else
+    handles.current_plot_pts{2} = '';
+    set(handles.popup_pts2,'Value', 1);  
+  end
+
+  set(handles.popup_pts3,'String',{'', ParamList{:}});
+  if numel(dim)>=3
+    handles.current_plot_pts{3} = ParamList(dim(3));
+    set(handles.popup_pts3,'Value', dim(3)+1);  
+  else
+    handles.current_plot_pts{3} = '';
+    set(handles.popup_pts3,'Value', 1);  
+  end
+
+  
+  
   handles =  plot_pts(handles);
    
   

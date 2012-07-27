@@ -2,7 +2,7 @@ function [S,val] =  SEvalProp(Sys,S,props, tau, ipts, bool_plot, break_level)
 %
 %   SEVALPROP Eval property for previously computed trajectories
 %  
-%   Usage: [Pf val] = SEvalProp(Sys, Ptraj ,prop,tau, ipt, bool_plot, bool_break )
+%   Usage: [Pf val] = SEvalProp(Sys, Ptraj ,prop,tau, [ ipt, bool_plot, bool_break ])
 %   
 %   Inputs: 
 %   
@@ -110,12 +110,12 @@ function [S,val] =  SEvalProp(Sys,S,props, tau, ipts, bool_plot, break_level)
       if (~isempty(tau0))        
         S.props_values(iprop,i).tau = tau0;
         S.props_values(iprop,i).val = QMITL_Eval(Sys,prop,traj, tau0);
-        val(i) =  S.props_values(iprop,i).val(1);
+        val(np-npb,i) =  S.props_values(iprop,i).val(1);
       else
         tau = traj.time; 
         S.props_values(iprop,i).tau = traj.time;
         S.props_values(iprop,i).val = QMITL_Eval(Sys,prop, traj, tau);         
-        val(i) =  S.props_values(iprop,i).val(1);
+        val(np-npb,i) =  S.props_values(iprop,i).val(1);
       end 
 
       % plot property values

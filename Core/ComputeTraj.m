@@ -74,6 +74,8 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
       
      case 'Simulink'
       model = Sys.mdl;
+      open(model);
+      set_param(model,'InitInArrayFormatMsg', 'None');
       opt = simget(model);
       
       opt = simset(opt, 'OutputPoints', 'specified');
@@ -81,6 +83,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
       ipts = 1:size(S0.pts,2);
       fprintf(['Computing ' num2str(numel(ipts)) ' trajectories of model ' model '\n[             25%%           50%%            75%%               ]\n ']);
       iprog =0;
+
       for i= ipts               
         while (floor(60*i/numel(ipts))>iprog)
           fprintf('^');
@@ -88,6 +91,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
         end
         
         opt = simset(opt,'InitialState', S0.pts(1:Sys.DimX, i));
+      
         [traj.time traj.X] = sim(model, tspan, opt);
         traj.param = S0.pts(:,i)';
         traj.time = traj.time';

@@ -6,7 +6,7 @@ function Sys = CreateSystem(vars, params, p0)
 % Example:   
 %
 %   vars = {'s0','s1'};  % variables for signals values
-
+%
 %   params = {'p0','p1','p2'};  % parameters related to signal or to be
 %                               % used in temporal logic formulas
 %
@@ -28,6 +28,8 @@ function Sys = CreateSystem(vars, params, p0)
   else
       Sys.p = p0;
   end
+  
+  Sys.x0(1:Sys.DimX)= p0(1:Sys.DimX);
   
   % dynamicless system
   Sys.type = 'traces';

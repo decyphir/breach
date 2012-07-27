@@ -35,15 +35,16 @@ if (exist('BreachGlobOpt.mat'))
   BreachGlobOpt.RobustSemantics = 0 ; % 0 by default, -1 is for left time robustness, +1 for right, inf for sum ?
 
 else 
+
   if (~exist('BreachGlobOpt','var'))
     global BreachGlobOpt;
     BreachGlobOpt.breach_dir = dr;  
-    BreachGlobOpt.RobustSemantics = 0;
   end
   
   if (~isfield(BreachGlobOpt,'RobustSemantics'))        
     BreachGlobOpt.RobustSemantics = 0;  
   end
+
 end
 
 cd(cdr);
