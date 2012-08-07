@@ -31,7 +31,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
 %  
  
   
-% checks if we have a parameter set or 
+% checks if we have a parameter set or a trajectory
     
   output_trajs = 0;  
   if ~isstruct(S0)
@@ -52,7 +52,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
 
   end
  
-  % check for an initialization function
+  % checks for an initialization function
   if isfield(Sys, 'init_fun')
     S0 = Sys.init_fun(S0);    
   end
@@ -61,11 +61,11 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
     S0 = S0.init_fun(S0);    
   end
   
-  % 
+ 
   if (isfield(Sys, 'type'))
   
     switch Sys.type
-     case 'traces'
+     case 'traces' % No model
       % If system type is only traces, check consistency of params and pts      
       Sf=S0;
       for (i = 1:numel(Sf.traj))
@@ -73,12 +73,12 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
       end
       
      case 'Simulink'
-      model = Sys.mdl;
-      open(model);
-      set_param(model,'InitInArrayFormatMsg', 'None');
-      opt = simget(model);
-      
-      opt = simset(opt, 'OutputPoints', 'specified');
+       model = Sys.mdl;
+%      open(model);
+%      set_param(model,'InitInArrayFormatMsg', 'None');
+%      opt = simget(model);      
+%      opt = simset(opt, 'OutputPoints', 'specified');
+
       Sf = S0; 
       ipts = 1:size(S0.pts,2);
       fprintf(['Computing ' num2str(numel(ipts)) ' trajectories of model ' model '\n[             25%%           50%%            75%%               ]\n ']);
@@ -90,12 +90,10 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
           iprog = iprog+1;
         end
         
-        opt = simset(opt,'InitialState', S0.pts(1:Sys.DimX, i));
-      
-        [traj.time traj.X] = sim(model, tspan, opt);
+%        opt = simset(opt,'InitialState', S0.pts(1:Sys.DimX, i));
+  
+        [traj.time traj.X] = Sys.sim(Sys,tspan, S0.pts(:,i));
         traj.param = S0.pts(:,i)';
-        traj.time = traj.time';
-        traj.X = traj.X';
         Sf.traj(i) = traj;
         Sf.Xf(:,i) = traj.X(:,end);
       end

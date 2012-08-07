@@ -433,10 +433,8 @@ if ~any(handles.working_sets.(handles.current_set).dim==handles.selected_param)
   handles.working_sets.(handles.current_set).pts(handles.selected_param,:) = val;
   
   if isfield(handles.working_sets.(handles.current_set), 'traj')    
-    tspan=handles.working_sets.(handles.current_set).traj(1).time;
-    uiwait(handle);
-    handles.working_sets.(handles.current_set) = ComputeTraj(handles.Sys,rmfield(handles.working_sets.(handles.current_set),'traj'), tspan);    
-    uiresume(handle)
+    tspan=handles.working_sets.(handles.current_set).traj(1).time;   
+    handles.working_sets.(handles.current_set) = ComputeTraj(handles.Sys,rmfield(handles.working_sets.(handles.current_set),'traj'), tspan);        
   end
 
   if isfield(handles.working_sets.(handles.current_set), 'props')    

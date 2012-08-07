@@ -89,12 +89,6 @@ while (numel(plist)<3)
   plist = {plist{:} plist{end}};
 end  
 
-%if (isfield(Pf,'props'))
-%  for i = 1:numel(Pf.props)    
-%    plist = {plist{:}, get_id(Pf.props(i))};
-%  end
-%end
-  
 handles.var_list = plist;
 handles.change_tspan_for_all = 0;
 
@@ -102,6 +96,7 @@ set(handles.edit_min_slider_param, 'String', num2str(0));
 set(handles.edit_max_slider_param, 'String', num2str(0));
 
 handles.exported_axes=[];
+handles.selected_prop =0;
 
 % menu for axes 1
 set(handles.param1,'String',plist);
@@ -109,7 +104,7 @@ handles.current_var{1,1} = plist(1);
 handles.current_var{1,2} = '';
 handles.current_var{1,3} = '';
 
-    set(handles.param1,'Value', 1);
+set(handles.param1,'Value', 1);
 
 plist2 = {'' plist{:}};
 handles.param_list=handles.TrajSet.ParamList(:);
@@ -182,6 +177,7 @@ if numel(plist)>=3
   set(handles.param33,'Value', 1);
 
 else
+
   handles.current_var{3,1} = '';
   set(handles.param3,'String',{''})
   set(handles.param3,'Value',1);
@@ -189,6 +185,7 @@ else
   set(handles.param32,'Value',1);
   set(handles.param33,'String',{''})
   set(handles.param33,'Value',1);
+
 end
 
 % menu for param pts plot
@@ -486,6 +483,17 @@ function listbox_Callback(hObject, eventdata, handles)
    
      pnames = fieldnames(handles.properties);
      prop = handles.properties.(pnames{handles.indices_selected_prop(val)});
+
+     if (handles.indices_selected_prop(val-1)~=handles.indices_selected_prop(val))
+      handles.selected_prop = handles.indices_selected_prop(val);
+      handles.current_change_param = 0;
+      handles = update_listbox_param(handles);
+      guidata(hObject,handles);      
+      return      
+     else
+       handles.selected_prop = 0;
+     end
+     
      par = get_params(prop);
      try
        valpts = min(par.(handles.names_selected_param{val}),1e99);
@@ -837,6 +845,7 @@ function export_button1_Callback(hObject, eventdata, handles)
   grid on;
   guidata(hObject,handles);
 
+  
 % --- Executes on button press in export_button2.
 function export_button2_Callback(hObject, eventdata, handles)
 % hObject    handle to export_button2 (see GCBO)
@@ -926,23 +935,41 @@ function edit_change_param_Callback(hObject, eventdata, handles)
   try
   
     ind_p = handles.current_change_param;
-    new_val = str2double(get(hObject,'String'));
-    lbda = handles.slider_param_coeff;
-    maxv = get(handles.slider_param,'Max')*lbda;
-    minv = get(handles.slider_param,'Min')*lbda;
+    if (ind_p)
+      new_val = str2double(get(hObject,'String'));
+      lbda = handles.slider_param_coeff;
+      maxv = get(handles.slider_param,'Max')*lbda;
+      minv = get(handles.slider_param,'Min')*lbda;
+      
+      if (new_val>maxv)
+        set(handles.slider_param, 'Value', new_val/lbda,'Max',new_val/lbda);
+      elseif (new_val<minv)
+        set(handles.slider_param, 'Value', new_val/lbda,'Min',new_val/lbda);
+      else
+        set(handles.slider_param, 'Value', new_val/lbda);
+      end
     
-    if (new_val>maxv)
-      set(handles.slider_param, 'Value', new_val/lbda,'Max',new_val/lbda);
-    elseif (new_val<minv)
-      set(handles.slider_param, 'Value', new_val/lbda,'Min',new_val/lbda);
-    else
-      set(handles.slider_param, 'Value', new_val/lbda);
+      handles = update_listbox_param(handles,1);
+      
+      guidata(hObject,handles);
+      return;
+      
+    elseif (handles.selected_prop)
+
+      new_val = get(hObject,'String');
+      pnames = fieldnames(handles.properties);
+      prop = handles.properties.(pnames{handles.selected_prop});
+      
+      if (~strcmp( new_val , disp(prop,-1)  ))
+
+        handles.properties.(pnames{handles.selected_prop}) = QMITL_Formula(get_id(prop), new_val);
+        handles = update_listbox_param(handles,1);               
+        handles = UpdatePlots(handles);               
+        guidata(hObject,handles);
+        
+      end  
+      
     end
-    
-    handles = update_listbox_param(handles,1);
-  
-    guidata(hObject,handles);
-  
   catch 
     s = lasterror;
     warndlg(['Problem edit_change_param: ' s.message] );
@@ -1400,11 +1427,6 @@ function new_plot= plot_param(handles,ax)
   
 
   param_to_plot = handles.current_var{ax,1};
-
-  %nprop=0;
-  %if isfield(handles.TrajSet,'props_names')
-  %      nprop = find_prop(param_to_plot{1}, handles.TrajSet.props_names);
-  %end
  
   pnames = fieldnames(handles.properties);
   nprop = find_prop(param_to_plot{1}, pnames);
@@ -1539,11 +1561,10 @@ function new_plot= plot_param(handles,ax)
         end
         Pftmp = ComputeTrajSensi(handles.Sys, Ptmp, tspan);
 
-%       handles.TrajSet.traj(handles.current_pts) = Pftmp.traj;
         handles.TrajSet.Xf(:,handles.current_pts) = Pftmp.Xf;
         Pftmp.time_mult = time_mult;
         SplotSensi(Pftmp, param_to_plot, sensi_param);
-%       SplotSensiLog(Pftmp, param_to_plot, sensi_param);
+
       end
       new_plot=[];
     
@@ -1887,8 +1908,10 @@ function handles =  update_listbox_param(handles, changed)
   if nargin==1
     changed =0;
   end
+  
   lbda = handles.slider_param_coeff;
   ind_p = handles.current_change_param;
+  
   if (ind_p)
     if (changed)
       new_val = get(handles.slider_param,'Value')*lbda;
@@ -1925,11 +1948,14 @@ function handles =  update_listbox_param(handles, changed)
     set(handles.edit_max_slider_param, 'String', dbl2str(maxv));
     set(handles.edit_change_param, 'String', dbl2str(val));
     
+  elseif (handles.selected_prop)
+    pnames = fieldnames(handles.properties);
+    set(handles.edit_change_param, 'String', disp(handles.properties.(pnames{handles.selected_prop}),-1));    
   else
-    
     set(handles.edit_min_slider_param, 'String', '');
     set(handles.edit_max_slider_param, 'String', '');
     set(handles.edit_change_param, 'String', '');
+  
     
   end    
   
@@ -1954,27 +1980,30 @@ function handles =  update_listbox_param(handles, changed)
   pnames = fieldnames(handles.properties);
   for i= 1:numel(pnames)
 
-      prop = handles.properties.(pnames{i});
-      st_prop = disp(prop,-1);
-      content = {content{:} '' [get_id(prop) ': ' st_prop]  '-------------------'};
-      phi_params = get_params(prop);
-      param_names = fieldnames(phi_params);
-      param_values = struct2cell(phi_params);
+    prop = handles.properties.(pnames{i});
+    st_prop = disp(prop,-1);
+    content = {content{:} '' [get_id(prop) ': ' st_prop]  '-------------------'};
+ 
+    indx = numel(content);
+    handles.indices_selected_prop(indx-1:indx) = i;
       
-      for j=1:numel(param_names)
-        if ~strcmp(param_names{j},'fn')      
-          try
-            st = strcat(param_names{j}, ':',' ',dbl2str(param_values{j}));
-          catch
-            st = strcat(param_names{j}, ':',' ',class(param_values{j}));
-          end
-          
-          content = {content{:} st};
-          indx = numel(content);
-          handles.indices_selected_prop(indx) = i;
-          handles.names_selected_param{indx} = param_names{j};
+    phi_params = get_params(prop);
+    param_names = fieldnames(phi_params);
+    param_values = struct2cell(phi_params);
+      
+    for j=1:numel(param_names)
+      if ~strcmp(param_names{j},'fn')      
+        try
+          st = strcat(param_names{j}, ':',' ',dbl2str(param_values{j}));
+        catch
+          st = strcat(param_names{j}, ':',' ',class(param_values{j}));
         end
         
+        content = {content{:} st};
+        indx = numel(content);
+        handles.indices_selected_prop(indx) = i;
+        handles.names_selected_param{indx} = param_names{j};        
+      end        
     end
   end
   
