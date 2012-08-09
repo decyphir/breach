@@ -1,6 +1,6 @@
 function [val XI YI ZI] = SplotProp(Pf, prop,opt)
 % SPLOTPROP  Plots the quantitative satisfaction of property prop for the different
-%  param values in Pf. Works in 1d and 2d only. 
+%  param values in Pf. Works in 1d and 2d surfaces only. 
 %  
 %  Synopsys:  val = SplotProp(Pf, prop, opt)  
 %

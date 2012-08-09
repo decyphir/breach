@@ -22,7 +22,7 @@ function varargout = BreachGui(varargin)
 
 % Edit the above text to modify the response to help BreachGui
 
-% Last Modified by GUIDE v2.5 05-Jan-2012 09:55:13
+% Last Modified by GUIDE v2.5 08-Aug-2012 18:52:59
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1031,7 +1031,8 @@ function listbox_prop_Callback(hObject, eventdata, handles)
   idx_prop = get(hObject,'Value');
   fnames = fieldnames(handles.properties);
   handles.current_prop = fnames{idx_prop};
-  
+  prop = handles.properties.(handles.current_prop);
+  set(handles.text_info, 'String', disp(prop,0));
   handles = plot_pts(handles);
   guidata(hObject,handles);
   
@@ -1891,9 +1892,19 @@ function button_new_prop_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+  prop = handles.properties.(handles.current_prop);
   evalin('base', ['load(''' handles.properties_file_name ''')']);
   load(handles.properties_file_name);
-  str = inputdlg({'Enter id:','Enter expression for the new formula'});
+
+  
+  prompt={'Enter id', 'Edit formula expression:'};
+  name='New/Copy Formula';
+  numlines=1;  
+  defaultanswer={genvarname(get_id(prop), fieldnames(handles.properties)), disp(prop,-1)};
+  opts.Resize='on';
+  opts.WindowStyle='normal';   
+  str=inputdlg(prompt,name,numlines,defaultanswer, opts);
+ 
   if isempty(str)
     return;
   end
@@ -2664,3 +2675,43 @@ function st = dbl2str(x)
   st = num2str(x, '%0.5g');
 
   
+
+
+% --------------------------------------------------------------------
+function set_space_semantics_Callback(hObject, eventdata, handles)
+% hObject    handle to set_space_semantics (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+  global BreachGlobOpt;
+  BreachGlobOpt.RobustSemantics = 0;
+  set(handles.text_info, 'String', 'Quantitative semantics set to space');
+   guidata(hObject, handles);
+  
+
+% --------------------------------------------------------------------
+function set_semantics_Callback(hObject, eventdata, handles)
+% hObject    handle to set_semantics (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function set_ltime_semantics_Callback(hObject, eventdata, handles)
+% hObject    handle to set_ltime_semantics (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+  global BreachGlobOpt;
+  BreachGlobOpt.RobustSemantics = -1;
+  set(handles.text_info, 'String', 'Quantitative semantics set to left time');
+  guidata(hObject, handles);
+  
+
+% --------------------------------------------------------------------
+function set_rtime_semantics_Callback(hObject, eventdata, handles)
+% hObject    handle to set_rtime_semantics (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+  global BreachGlobOpt;
+  BreachGlobOpt.RobustSemantics = 1;
+  set(handles.text_info, 'String', 'Quantitative semantics set to right time');
+  guidata(hObject, handles);

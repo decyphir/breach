@@ -22,10 +22,10 @@ function varargout = BreachTrajGui(varargin)
 
 % Edit the above text to modify the response to help BreachTrajGui
 
-% Last Modified by GUIDE v2.5 08-Oct-2009 12:15:51
+% Last Modified by GUIDE v2.5 08-Aug-2012 16:56:10
 
 % Begin initialization code - DO NOT EDIT
-gui_Singleton = 0;
+gui_Singleton = 1;
 gui_State = struct('gui_Name',     mfilename,  ...
                    'gui_Singleton',  gui_Singleton, ...
                    'gui_OpeningFcn', @BreachTrajGui_OpeningFcn, ...
@@ -960,7 +960,7 @@ function edit_change_param_Callback(hObject, eventdata, handles)
       pnames = fieldnames(handles.properties);
       prop = handles.properties.(pnames{handles.selected_prop});
       
-      if (~strcmp( new_val , disp(prop,-1)  ))
+      if (~strcmp( new_val , disp(prop,0)  ))
 
         handles.properties.(pnames{handles.selected_prop}) = QMITL_Formula(get_id(prop), new_val);
         handles = update_listbox_param(handles,1);               
@@ -1950,7 +1950,7 @@ function handles =  update_listbox_param(handles, changed)
     
   elseif (handles.selected_prop)
     pnames = fieldnames(handles.properties);
-    set(handles.edit_change_param, 'String', disp(handles.properties.(pnames{handles.selected_prop}),-1));    
+    set(handles.edit_change_param, 'String', disp(handles.properties.(pnames{handles.selected_prop}),0));    
   else
     set(handles.edit_min_slider_param, 'String', '');
     set(handles.edit_max_slider_param, 'String', '');
