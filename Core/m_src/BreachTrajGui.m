@@ -1982,7 +1982,7 @@ function handles =  update_listbox_param(handles, changed)
 
     prop = handles.properties.(pnames{i});
     st_prop = disp(prop,-1);
-    content = {content{:} '' [get_id(prop) ': ' st_prop]  '-------------------'};
+    content = {content{:} ''  st_prop  '-------------------'};
  
     indx = numel(content);
     handles.indices_selected_prop(indx-1:indx) = i;
