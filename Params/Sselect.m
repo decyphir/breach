@@ -53,7 +53,7 @@ function Sn = Sselect(S, kn)
     
   for i = 1:numel(field_list_traj_ref_select2)    
      if isfield(S, field_list_traj_ref_select2{i})
-      Sn.(field_list_traj_ref_select2{i}) = S.(field_list_traj_ref_select2{i})(S.traj_ref(:,kn));
+      Sn.(field_list_traj_ref_select2{i}) = S.(field_list_traj_ref_select2{i})(:,S.traj_ref(kn));
     end
   end
 

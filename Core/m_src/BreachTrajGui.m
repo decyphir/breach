@@ -978,7 +978,7 @@ function edit_change_param_Callback(hObject, eventdata, handles)
       end  
       
     end
-  catch 
+  catch
     s = lasterror;
     warndlg(['Problem edit_change_param: ' s.message] );
     return
@@ -1930,12 +1930,17 @@ function handles =  update_listbox_param(handles, changed)
       if (ind_p<=numel(handles.TrajSet.ParamList))
         if (get(handles.for_all_checkbox,'Value'))        
           handles.TrajSet.pts(ind_p, :) = new_val;
-          for i = 1:numel(handles.TrajSet.traj)
-            handles.TrajSet.traj(i).param(ind_p) = new_val;
+          if (ind_p<=handles.TrajSet.DimP)
+            for i = 1:numel(handles.TrajSet.traj)
+              handles.TrajSet.traj(i).param(ind_p) = new_val;
+            end
           end
         else
           handles.TrajSet.pts(ind_p, handles.current_pts) = new_val;      
-          handles.TrajSet.traj(handles.current_pts).param(ind_p) = new_val;
+          if (ind_p<=handles.TrajSet.DimP)
+            handles.TrajSet.traj(handles.current_pts).param(ind_p) = new_val;
+          end
+          
         end
        else
          iprop = handles.indices_selected_prop(ind_p);
@@ -1948,7 +1953,9 @@ function handles =  update_listbox_param(handles, changed)
       end
       
       if (handles.auto_recompute)
-        handles = update_trajectories(handles);
+        if (ind_p<=handles.TrajSet.DimP)
+          handles = update_trajectories(handles);
+        end
         handles = UpdatePlots(handles);
       end
     end
