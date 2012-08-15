@@ -16,7 +16,7 @@ function S= SConcat(S,S2)
   end
  
   field_list= {'pts', 'epsi', 'XS0', 'Xf', 'ExpaMax', 'XSf','traj', ...
-               'selected','props_values', };
+               'selected','props_values'};
   
   for i = 1:numel(field_list)
     
@@ -28,3 +28,17 @@ function S= SConcat(S,S2)
       end
     end    
   end
+
+  if (isfield(S, 'traj')&&(isfield(S2,'traj')))
+    if (~isfield(S, 'traj_ref'))
+      S.traj_ref= 1:numel(S.traj);
+    end
+    
+    if (~isfield(S2, 'traj_ref'))
+      S2.traj_ref= 1:numel(S2.traj);
+    end
+  
+    S.traj_ref = [S.traj_ref S2.traj_ref+size(S2.pts,2)];
+  end
+      
+  

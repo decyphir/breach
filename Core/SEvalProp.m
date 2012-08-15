@@ -25,7 +25,7 @@ function [S,val] =  SEvalProp(Sys,S,props, tau, ipts, bool_plot, break_level)
 
     
   if (~exist('ipts')||isempty(ipts))
-    ipts = 1:numel(S.traj);
+    ipts = 1:size(S.pts,2);
   end
 
   if (~exist('break_level'))
@@ -50,7 +50,11 @@ function [S,val] =  SEvalProp(Sys,S,props, tau, ipts, bool_plot, break_level)
   if ~isfield(S,'props_names')
     S.props_names = {} ;		
   end    
- 
+
+  if ~isfield(S,'traj_ref')
+    S.traj_ref =1:numel(S.traj);
+  end
+  
   if (~exist('tau')||isempty(tau))
     tau0=[];
   else
@@ -60,8 +64,6 @@ function [S,val] =  SEvalProp(Sys,S,props, tau, ipts, bool_plot, break_level)
   if (~exist('bool_plot'))
     bool_plot = 0;
   end
-
-  
   
   % do things
     
@@ -100,21 +102,25 @@ function [S,val] =  SEvalProp(Sys,S,props, tau, ipts, bool_plot, break_level)
     prop = QMITL_OptimizePredicates(Sys,prop);
     fprintf(['Checking ' prop_name  '\n[             25%%           50%%            75%%               ]\n ']);
     iprog =0;
+    
+    Ptmp = Sselect(S,1);
+    
     for i = ipts
       while (floor(60*i/numel(ipts))>iprog)
         fprintf('^');
         iprog = iprog+1;
       end
       
-      traj = S.traj(i);
+      traj = S.traj(S.traj_ref(i));
+      Ptmp.pts = S.pts(:,i);
       if (~isempty(tau0))        
         S.props_values(iprop,i).tau = tau0;
-        S.props_values(iprop,i).val = QMITL_Eval(Sys,prop,traj, tau0);
+        S.props_values(iprop,i).val = QMITL_Eval(Sys,prop,Ptmp,traj, tau0);
         val(np-npb,i) =  S.props_values(iprop,i).val(1);
       else
         tau = traj.time; 
         S.props_values(iprop,i).tau = traj.time;
-        S.props_values(iprop,i).val = QMITL_Eval(Sys,prop, traj, tau);         
+        S.props_values(iprop,i).val = QMITL_Eval(Sys,prop,Ptmp, traj, tau);         
         val(np-npb,i) =  S.props_values(iprop,i).val(1);
       end 
 

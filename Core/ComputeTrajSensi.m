@@ -18,6 +18,8 @@ function Sf = ComputeTrajSensi(Sys,S,tspan, is)
 %    -  Pf       Sampling structure augmented with the field traj
 %                containing computed trajectories with sensitivities
 %
+%  NEEDS UPDATE TO HANDLE TRAJ_REF AND PROPERTIES
+  
   
   if (exist('is'))  
     org_dims = S.dim;

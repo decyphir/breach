@@ -24,3 +24,10 @@ function S = SPurge(S)
     S = rmfield(S, 'ExpaMax');  
   end  
  
+ % Reset field traj_to_compute 
+ 
+  X = S.pts(1:S.DimP,:)'; 
+  [C,IA,IC] = unique(X,'rows','stable');
+  
+  S.traj_ref= IC;
+  S.traj_to_compute = IA;

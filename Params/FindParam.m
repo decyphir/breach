@@ -5,15 +5,14 @@ function index=  FindParam(Sys,param)
 % Syntax: index = FindParam(Sys, param)
 %
 % param can be a string or a cell of string when looking for more than one
-% parameter. Returns -1 for a parameter not found.
+% parameter. Returns index greater than Sys.DimP for parameter(s) not found.
 %  
 % Example: 
 %  
 %  CreateSystem;
 %  idx = FindParam(Sys, 'a');
-%  idxs = FindParam(Sys, {'a','F','G'});
+%  idxs = FindParam(Sys, {'a','F','G'}); 
 %
-  
   
   if ~isfield(Sys,'ParamList')
     error('No parameter list ...');
@@ -24,6 +23,12 @@ function index=  FindParam(Sys,param)
   end
   
   index = ones(1, numel(param));
+
+  newp = Sys.DimP;
+  
+  if isfield(Sys, 'pts')
+      newp= size(Sys.pts,1);
+  end
   for i= 1:numel(param)
     found = 0;
     for j = 1:numel(Sys.ParamList)
@@ -35,7 +40,8 @@ function index=  FindParam(Sys,param)
      end
    end
    if (~found)
-     index(i) =-1;
+     newp = newp+1;
+     index(i) = newp;
    end     
   end
  

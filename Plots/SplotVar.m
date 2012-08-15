@@ -31,7 +31,8 @@ function SplotVar(S,iX,ipts,opt, bool_same_axe)
   if (~isfield(S,'traj'))
     disp('No trajectory computed for this set')
   end
-
+  
+  
   if (~exist('iX')||isempty(iX))
     iX = 1:S.DimX;
   end
@@ -39,7 +40,11 @@ function SplotVar(S,iX,ipts,opt, bool_same_axe)
   if (~exist('ipts')||isempty(ipts))
     ipts = 1:numel(S.traj);
   end
-
+  
+  if ( isfield(S, 'traj_ref') )    
+    ipts = unique(S.traj_ref(ipts));        
+  end
+     
   if (~isempty(iX))
     if (~isnumeric(iX))  
       if isstr(iX)

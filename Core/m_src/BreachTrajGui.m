@@ -61,6 +61,14 @@ handles.Sys= handles_main.Sys;
 handles.properties= handles_main.properties;
 handles.TrajSet= handles_main.working_sets.(handles_main.current_set);
 
+if (isfield(handles.TrajSet, 'traj'))
+  if ~isfield(handles.TrajSet, 'traj_ref')
+    handles.TrajSet.traj_ref = 1:numel(handles.TrajSet.traj);   
+  end
+end
+
+handles.traj_ref = handles.TrajSet.traj_ref;
+
 %  init things
 
 if (isfield(handles.Sys,'time_mult'))
@@ -468,7 +476,7 @@ function listbox_Callback(hObject, eventdata, handles)
  try
    val = get(hObject,'Value');
    nbd = numel(handles.TrajSet.dim);
-   nbp = handles.TrajSet.DimP;
+   nbp = numel(handles.TrajSet.ParamList);
    if (val>2&&val<=nbd+2)
      
      val = handles.TrajSet.dim(val-2);
@@ -1459,8 +1467,8 @@ function new_plot= plot_param(handles,ax)
           if isfield(handles.TrajSet.traj(handles.current_pts), 'XS')
             isf =find(handles.TrajSet.traj(handles.current_pts).sensis==sensi_param(is));
             if ~isempty(isf) % ok, no need to recompute
-              phi_tspan = handles.TrajSet.traj(ipts).time;
-              [phi_val phivald] = QMITL_EvalSensi(handles.Sys,prop,handles.TrajSet.traj(ipts),phi_tspan);
+              phi_tspan = handles.TrajSet.traj(handles.traj_ref(ipts)).time;
+              [phi_val phivald] = QMITL_EvalSensi(handles.Sys,prop,handles.TrajSet.traj(handles.traj_ref(ipts)),phi_tspan);
               plot(phi_tspan*time_mult, phi_vald,colors{is});            
               plot_done=1;            
             end
@@ -1486,7 +1494,7 @@ function new_plot= plot_param(handles,ax)
 %            handles.TrajSet.traj(handles.current_pts) = Pftmp.traj;
             handles.TrajSet.Xf(:,handles.current_pts) = Pftmp.Xf;
             
-            phi_tspan = handles.TrajSet.traj(ipts).time;
+            phi_tspan = handles.TrajSet.traj(handles.traj_ref(ipts)).time;
             [phi_val phi_vald] = QMITL_EvalSensi(prop,Pftmp.traj,phi_tspan);
             plot(phi_tspan*time_mult, phi_vald,colors{is});
           end
@@ -1505,18 +1513,20 @@ function new_plot= plot_param(handles,ax)
       grid on;
       st = param_to_plot{1};
       ipts = handles.current_pts;
-      phi_tspan = handles.TrajSet.traj(ipts).time;      
+      phi_tspan = handles.TrajSet.traj(handles.traj_ref(ipts)).time;      
       
       % checks if sensitivities needs be (re)computed for the formula
       
+      %% OBSOLETE, TO REMOVE OR UPDATE...
       is = QMITL_ExtractSensi(prop);
       if (~isempty(is))        
         Ptmp = CreateSampling(handles.Sys,is);
         Ptmp.pts = handles.TrajSet.pts(:,handles.current_pts);
-        Pftmp = ComputeTrajSensi(handles.Sys, Ptmp, handles.TrajSet.traj(ipts).time);          
-        phi_val = QMITL_Eval(handles.Sys,prop,Pftmp.traj,phi_tspan);
+        Pftmp = ComputeTrajSensi(handles.Sys, Ptmp, handles.TrajSet.traj(handles.traj_ref(ipts)).time);          
+        phi_val = QMITL_Eval(handles.Sys,prop,Ptmp, Pftmp.traj,phi_tspan);
       else        
-        phi_val = QMITL_Eval(handles.Sys,prop,handles.TrajSet.traj(ipts),phi_tspan);   
+        Ptmp = Sselect(handles.TrajSet, ipts);
+        phi_val = QMITL_Eval(handles.Sys,prop,Ptmp,handles.TrajSet.traj(handles.traj_ref(ipts)),phi_tspan);   
       end
                  
       
@@ -1850,14 +1860,16 @@ function handles = update_trajectories(handles)
   if (get(handles.for_all_checkbox,'Value')||~isfield(handles.TrajSet,'traj'))
     
     handles.TrajSet = ComputeTraj(handles.Sys, handles.TrajSet, tspan);
-    
+    traj_ref = handles.TrajSet.traj_ref;
+   
     if isfield(handles.TrajSet,'props')
       for i=1:numel(handles.TrajSet.props)
         prop = handles.TrajSet.props(i);
-        for j= 1:numel(handles.TrajSet.traj)
-          traj = handles.TrajSet.traj(j);
+        for j= 1:size(handles.TrajSet.pts,2)          
+          traj = handles.TrajSet.traj(traj_ref(j));
+          P = Sselect(handles.TrajSet,j);
           handles.TrajSet.props_values(i,j).val = ...
-          QMITL_Eval(handles.Sys,props, traj,handles.TrajSet.props_values(i,j).tspan);         
+          QMITL_Eval(handles.Sys,props, P, traj,handles.TrajSet.props_values(i,j).tspan);         
         end
       end
     end    
@@ -1915,7 +1927,7 @@ function handles =  update_listbox_param(handles, changed)
   if (ind_p)
     if (changed)
       new_val = get(handles.slider_param,'Value')*lbda;
-      if (ind_p<=handles.TrajSet.DimP)
+      if (ind_p<=numel(handles.TrajSet.ParamList))
         if (get(handles.for_all_checkbox,'Value'))        
           handles.TrajSet.pts(ind_p, :) = new_val;
           for i = 1:numel(handles.TrajSet.traj)
@@ -1969,20 +1981,22 @@ function handles =  update_listbox_param(handles, changed)
     handles.current_varying_param{i} = st;
   end
   
-  content = {content{:} handles.current_varying_param{:} '' 'Systems parameters' '-------------------'};
+  content = {content{:} handles.current_varying_param{:} '' 'Systems and props parameters' '-------------------'};
 
-  for i=1:handles.TrajSet.DimP
+  for i=1:numel(handles.TrajSet.ParamList)
     st = handles.TrajSet.ParamList{i};
     st = strcat(st, ':',' ',dbl2str(handles.TrajSet.pts(i, handles.current_pts)));
     content = {content{:} st};
   end
+  
+  content = {content{:} ''};
   
   pnames = fieldnames(handles.properties);
   for i= 1:numel(pnames)
 
     prop = handles.properties.(pnames{i});
     st_prop = disp(prop,-1);
-    content = {content{:} ''  st_prop  '-------------------'};
+    content = {content{:}  [get_id(prop) ': '  st_prop]  '-------------------'};
  
     indx = numel(content);
     handles.indices_selected_prop(indx-1:indx) = i;

@@ -24,7 +24,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
 %     
 %   Outputs:
 %      
-%    -  Sf       Sampling structure augmented with the field traj containing
+%    -  Pf       Sampling structure augmented with the field traj containing
 %                 computed trajectories if the input is a param set 
 %                
 % or - trajs     array of trajectories
@@ -52,6 +52,17 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
 
   end
  
+  if (isfield(S0, 'traj_to_compute'))
+    
+    S = Sselect( S0, S0.traj_to_compute );
+    S = ComputeTraj(Sys, S, tspan); 
+    Sf = S0;
+    Sf.traj = S.traj;
+    
+    return;
+  end
+  
+    
   % checks for an initialization function
   if isfield(Sys, 'init_fun')
     S0 = Sys.init_fun(S0);    
@@ -60,8 +71,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
   if isfield(S0, 'init_fun')
     S0 = S0.init_fun(S0);    
   end
-  
- 
+        
   if (isfield(Sys, 'type'))
   
     switch Sys.type
@@ -69,16 +79,12 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
       % If system type is only traces, check consistency of params and pts      
       Sf=S0;
       for (i = 1:numel(Sf.traj))
-        Sf.traj(i).param = Sf.pts(:,i)';      
+        Sf.traj(i).param = Sf.pts(1:Sf.DimP,i)';      
       end
       
      case 'Simulink'
-       model = Sys.mdl;
-%      open(model);
-%      set_param(model,'InitInArrayFormatMsg', 'None');
-%      opt = simget(model);      
-%      opt = simset(opt, 'OutputPoints', 'specified');
 
+      model = Sys.mdl;      
       Sf = S0; 
       ipts = 1:size(S0.pts,2);
       fprintf(['Computing ' num2str(numel(ipts)) ' trajectories of model ' model '\n[             25%%           50%%            75%%               ]\n ']);
@@ -93,7 +99,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
 %        opt = simset(opt,'InitialState', S0.pts(1:Sys.DimX, i));
   
         [traj.time traj.X] = Sys.sim(Sys,tspan, S0.pts(:,i));
-        traj.param = S0.pts(:,i)';
+        traj.param = S0.pts(1:S0.DimP,i)';
         Sf.traj(i) = traj;
         Sf.Xf(:,i) = traj.X(:,end);
       end
@@ -104,14 +110,14 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
   
   end
 
-  if (isfield(S0,'traj'))
-    if ((numel(S0.traj(1).time)==numel(tspan)))
-      if (sum(S0.traj(1).time==tspan))
-        Sf = S0;
-        return;
-      end
-    end
-  end
+  %if (isfield(S0,'traj'))
+  %  if ((numel(S0.traj(1).time)==numel(tspan)))
+  %    if (sum(S0.traj(1).time==tspan))
+  %      Sf = S0;
+  %      return;
+  %    end
+  %  end
+  %end
    
   InitSystem(Sys);
   
@@ -125,8 +131,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
   else
     T = tspan;
   end
-  
-  
+    
   if (exist('u'))
      
     err = check_u(u);
@@ -134,11 +139,21 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
       error(err);
     end
     
-    Sf=cvm(61,S0,T,u);            
+    %This is quit ugly...
+    Sf = S0;
+    Sf.pts = S0.pts(1:S0.DimP, :);
+    Sf=cvm(61, Sf,T,u);            
+    Sf.pts = S0.pts;
+    
     Sf.u = u;
     
   else
-    Sf=cvm(61,S0,T);        
+    
+    Sf = S0;
+    Sf.pts = S0.pts(1:S0.DimP, :);
+    Sf=cvm(61, Sf,T);            
+    Sf.pts = S0.pts;
+  
   end    
   
   CVodeFree();
@@ -151,6 +166,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
     Sf.time_mult = Sys.time_mult;
   end
   
+
   
 function err = check_u(u)
   

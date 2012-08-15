@@ -22,7 +22,7 @@ function varargout = BreachGui(varargin)
 
 % Edit the above text to modify the response to help BreachGui
 
-% Last Modified by GUIDE v2.5 08-Aug-2012 18:52:59
+% Last Modified by GUIDE v2.5 14-Aug-2012 12:19:53
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -162,7 +162,20 @@ function listbox_default_parameters_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
   val= get(hObject,'Value');
   handles.selected_param = val;
+  
+  if (val<= handles.Sys.DimX)
+    whatisit = 'an initial condition.';
+  elseif val<= handles.Sys.DimP
+    whatisit = 'a system parameter.';
+  else
+    whatisit = 'a property parameter.';
+  end
+    
   handles= update_modif_panel(handles);
+
+  set(handles.text_info, 'String', ['Parameter ' ...
+                      handles.working_sets.(handles.current_set).ParamList{val} ...
+                      ' is ' whatisit])
   guidata(hObject, handles);
 % Hints: contents = get(hObject,'String') returns listbox_default_parameters contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from listbox_default_parameters
@@ -1248,7 +1261,7 @@ function handles = update_modif_panel(handles)
   k = handles.current_pts;
   
   content = {};  
-  for i=1:DimP
+  for i=1:numel(ParamList)
     st = ParamList{i};
     st = strcat(st, ':',' ',dbl2str(handles.working_sets.(handles.current_set).pts(i,k)));
     content = {content{:} st};
@@ -1270,7 +1283,8 @@ function handles = update_modif_panel(handles)
   
   % edit pts and epsi
   
-  ipts = dim(handles.selected_varying_param);
+  
+  ipts = dim(min(handles.selected_varying_param, numel(dim)));
   pts = handles.working_sets.(handles.current_set).pts(ipts,k);
   epsi = handles.working_sets.(handles.current_set).epsi(handles.selected_varying_param,k);
   
@@ -1415,7 +1429,7 @@ function handles= plot_pts(handles)
     if i0
       val = cat(1, P.props_values(i0,:).val);
       val = val(:,1);
-      iparam = FindParam(handles.Sys,param_to_plot);
+      iparam = FindParam(P,param_to_plot);
       switch (numel(iparam))
         
        case 1
@@ -1472,7 +1486,7 @@ function menu_compute_traj_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_compute_traj (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-  try
+%  try
     
     tspan = inputdlg('Enter tspan (Format: [ti tf] or [t0 t1 t2 ... tn] or ti:dt:tf)','Compute trajectories', 1, {handles.last_tspan});
     if isempty(tspan)
@@ -1485,15 +1499,21 @@ function menu_compute_traj_Callback(hObject, eventdata, handles)
       CompileSystem(handles.Sys);
     end
     
+    uipause;
+    set(handles.text_info, 'Simulation running ...'); 
+    guidata(hObject, handles);
+    
     handles.working_sets.(handles.current_set) = ComputeTraj(handles.Sys, handles.working_sets.(handles.current_set), tspan);
     handles = update_working_sets_panel(handles);
+    uiresume;
+    set(handles.text_info, 'Simulation done.'); 
     guidata(hObject, handles);
-  catch 
-    s = lasterror;
-    warndlg(['Problem computing traj: ' s.message] );
-    error(s);    
-    return
-  end
+%  catch 
+%    s = lasterror;
+%    warndlg(['Problem computing traj: ' s.message] );
+%    error(s);    
+%    return
+%  end
   
 % --------------------------------------------------------------------
 function menu_compute_sensi_Callback(hObject, eventdata, handles)
@@ -2370,7 +2390,7 @@ function button_go_refine_Callback(hObject, eventdata, handles)
       P = SPurge(P);
       P = SPurge_props(P);
 
-      Sf =  SConcat(P,Pr);
+      Sf =  SConcat(Pr,P);
       if (restore_traj)
         Sf.traj = repmat(traj(1), [1 size(Sf.pts,2)]);
         for j = 1:numel(Sf.traj)
@@ -2381,9 +2401,12 @@ function button_go_refine_Callback(hObject, eventdata, handles)
       handles.working_sets.(handles.current_set) = Sf;
       
   end
+  
   set(handles.edit_refine, 'String','');
   set(hObject,'String','Go (0 new subsets)');
   handles.refine_args = 0 ;
+  
+  handles = update_working_sets_panel(handles);
   handles = update_modif_panel(handles);
   guidata(hObject,handles);
   
@@ -2392,6 +2415,7 @@ function button_go_refine_Callback(hObject, eventdata, handles)
     set(handles.edit_refine, 'String','');
     set(hObject,'String','Go (0 new subsets)');
     handles.refine_args = 0 ;
+    handles = update_working_sets_panel(handles);
     handles = update_modif_panel(handles);
     warndlg(['Problem refining: ' s.message] );
   end
@@ -2402,18 +2426,10 @@ function button_explore_traj_Callback(hObject, eventdata, handles)
 % hObject    handle to button_explore_traj (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-  try   
     
     h = BreachTrajGui('varargin', handles);
+ 
     
-  catch   
-    
-    s = lasterror;
-    warndlg(['Problem with explore_traj: ' s.message] );
-    return  
-    
-  end
 
 
 % --------------------------------------------------------------------
@@ -2675,8 +2691,6 @@ function st = dbl2str(x)
   st = num2str(x, '%0.5g');
 
   
-
-
 % --------------------------------------------------------------------
 function set_space_semantics_Callback(hObject, eventdata, handles)
 % hObject    handle to set_space_semantics (see GCBO)
@@ -2715,3 +2729,31 @@ function set_rtime_semantics_Callback(hObject, eventdata, handles)
   BreachGlobOpt.RobustSemantics = 1;
   set(handles.text_info, 'String', 'Quantitative semantics set to right time');
   guidata(hObject, handles);
+
+
+% --------------------------------------------------------------------
+function menu_select_satisfied_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_select_satisfied (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+  try
+    
+    iprop = find_prop(handles.current_prop,handles.working_sets.(handles.current_set));    
+    val_threshold = 0;
+    
+    if iprop
+      val = cat(1,handles.working_sets.(handles.current_set).props_values(iprop,:).val);
+      val = val(:,1);      
+      handles.working_sets.(handles.current_set).selected = (val>=val_threshold)';      
+    end
+    
+    handles = update_modif_panel(handles);
+    guidata(hObject,handles);
+    
+  catch 
+    s = lasterror;
+    warndlg(['Problem selection: ' s.message] );
+    error(s);    
+    return
+  end

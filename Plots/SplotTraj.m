@@ -1,5 +1,5 @@
-function SplotTraj(S,proj,iX,opt,t0)%
-%   SplotTraj(S [, proj, iX, opt, t0])
+function SplotTraj(S,proj,ipts,opt,t0)%
+%   SplotTraj(S [, proj, ipts, opt, t0])
 %
 %   Plots the trajectories in field traj of S, recursively (explore children
 %   structure, if any), in the phase space.
@@ -14,7 +14,7 @@ function SplotTraj(S,proj,iX,opt,t0)%
 %   
 %    -  S        box sampling set. 
 %    -  proj     variables to plot (all if [])
-%    -  iX       indices of the initial pts from which to plot   
+%    -  ipts     indices of the initial pts from which to plot   
 %    -  opt      plotting option e.g: {'r','LineWidth',4}
 %    -  t0       starting time to plot trajectories from.
 % 
@@ -51,9 +51,7 @@ function SplotTraj(S,proj,iX,opt,t0)%
       rescale=1;
     end
   end   
-  
-  
-  
+    
     
   if (isempty(S.pts))
     error('S empty !');
@@ -64,7 +62,8 @@ function SplotTraj(S,proj,iX,opt,t0)%
     error('No trajectory computed for this set')
     return
   end
-
+    
+  
   if (~exist('t0'))
     t0= 0;
   end
@@ -106,9 +105,13 @@ function SplotTraj(S,proj,iX,opt,t0)%
   end  
   proj = proj(proj~=0);
   
-  if (~exist('iX')||isempty(iX))
-    iX = 1:size(S.pts,2);
+  if (~exist('ipts')||isempty(ipts))
+    ipts = 1:numel(S.traj);
   end
+  
+  if ( isfield(S, 'traj_ref') )    
+    ipts = unique(S.traj_ref(ipts));        
+  end  
   
   switch (numel(proj))
     
@@ -128,7 +131,7 @@ function SplotTraj(S,proj,iX,opt,t0)%
       opt = S.traj_plot_opt;
     end
       
-    for i = iX
+    for i = ipts
       time = S.traj(i).time;
       if (numel(time>t0))
         y = S.traj(i).X(proj(1),time>=t0) * rescale;
@@ -157,7 +160,7 @@ function SplotTraj(S,proj,iX,opt,t0)%
       opt = S.traj_plot_opt;
     end
     
-    for i = iX
+    for i = ipts
       time = S.traj(i).time;
       if (numel(S.traj(i).time)>0)
         x = S.traj(i).X(proj(1),time>=t0)*rescale;
@@ -187,7 +190,7 @@ function SplotTraj(S,proj,iX,opt,t0)%
       opt = S.traj_plot_opt;
     end
     
-    for i = iX
+    for i = ipts
       time = S.traj(i).time;
       if (~isempty(S.traj(i).time))
         x = S.traj(i).X(proj(1),time>=t0)*rescale;
@@ -201,7 +204,7 @@ function SplotTraj(S,proj,iX,opt,t0)%
   
   grid on;
   if (t0==0)&&(numel(proj)>1)
-    SplotPts(S,proj,iX);      
+    SplotPts(S,proj,ipts);      
     if isfield(S,'Xf')      
       SplotXf(S,proj,iX);  
     end

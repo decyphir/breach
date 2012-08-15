@@ -27,15 +27,35 @@ function Sn = Sselect(S, kn)
     end
   end
   
-  field_list_select= {'pts', 'epsi', 'XS0', 'Xf', 'ExpaMax', 'XSf','traj', ...
-               'selected', 'props_values','etraj'};
-  
-  
+  field_list_select= {'pts', 'epsi', 'selected', 'props_values'};
+    
   for i = 1:numel(field_list_select)    
     if isfield(S, field_list_select{i})
       Sn.(field_list_select{i}) = S.(field_list_select{i})(:,kn);
     end
   end
   
+  field_list_traj_ref_select = {'traj', 'etraj'};
+  
+  if isfield(S,'traj')
+    if ~isfield(S, 'traj_ref')
+      S.traj_ref = 1:numel();
+    end
+  end
+ 
+  for i = 1:numel(field_list_traj_ref_select)    
+     if isfield(S, field_list_traj_ref_select{i})
+      Sn.(field_list_traj_ref_select{i}) = S.(field_list_traj_ref_select{i})(S.traj_ref(kn));
+    end
+  end
+
+  field_list_traj_ref_select2 = {'XS0', 'Xf', 'ExpaMax', 'XSf'}; 
+    
+  for i = 1:numel(field_list_traj_ref_select2)    
+     if isfield(S, field_list_traj_ref_select2{i})
+      Sn.(field_list_traj_ref_select2{i}) = S.(field_list_traj_ref_select2{i})(S.traj_ref(:,kn));
+    end
+  end
+
   
  

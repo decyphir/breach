@@ -104,5 +104,12 @@ function S = Refine(S0,delta)
   S.DimX= S0.DimX;
   S.DimP= S0.DimP;
 
-
+  %  Checks for pts sharing the sames systems parameters 
+  
+  X = S.pts(1:S.DimP,:)'; 
+  [C,IA,IC] = unique(X,'rows','stable');
+  
+  S.traj_ref= IC;
+  S.traj_to_compute = IA;
+  
   

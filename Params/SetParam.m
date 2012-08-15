@@ -3,6 +3,8 @@ function S = SetParam(S,ParamList,ParamValues)
 % 
 % Synopsis: ParamValues = SetParam(P, ParamList, ParamValues)
 %  
+% Note that if the parameter is not present in P, it is created and appended.  
+%  
 % Example (for Lorenz84 system):
 %  
 %    CreateSystem;
@@ -12,13 +14,19 @@ function S = SetParam(S,ParamList,ParamValues)
 %    val10 = 10*val; 
 %    Pr10 = SetParam(Pr, 'a', val10); % values for 'a' in Pr10 are ten times those in Pr
 %  
-% SEE ALSO GETPARAM
+% SEE ALSO GETPARAM, CREATEPARAMSET 
 %  
- 
+  
   if isstr(ParamList) 
     ind = FindParam(S,ParamList);
+    S.ParamList = unique({S.ParamList{:}, ParamList},'stable');
     S.pts(ind,:) = ParamValues;
-    return
+    return    
+  elseif iscell(ParamList)
+    ind = FindParam(S,ParamList);
+    S.ParamList = unique({S.ParamList{:}, ParamList{:}},'stable');
+    S.pts(ind,:) = ParamValues;
+    return        
   end
   
   if isnumeric(ParamList)
@@ -32,19 +40,4 @@ function S = SetParam(S,ParamList,ParamValues)
     ind = FindParam(S,ParamList{i});
     S.pts(ind,:) =  ParamValues(i,:);    
   end
-  
-function index=  FindParam(Sys,param)
-  
-  if ~isfield(Sys,'ParamList')
-    error('No parameter list ...');
-  end
-
-  for j = 1:numel(Sys.ParamList)
-    if (strcmp(Sys.ParamList{j}, param))
-      index = j;
-      return;            
-    end
-  end
-  
-  error(['Parameter ' param ' not found']);
-  
+    

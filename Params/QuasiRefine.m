@@ -16,3 +16,9 @@ function Sh = SobolRefine(S, nb)
 %  
   
   Sh = SobolRefine(S,nb);
+  
+  X = S.pts(1:S.DimP,:)'; 
+  [C,IA,IC] = unique(X,'rows','stable');
+  
+  S.traj_ref= IC;
+  S.traj_to_compute = IA;
