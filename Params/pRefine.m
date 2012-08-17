@@ -16,9 +16,12 @@ function S = pRefine(S,p,r)
   delta = p/(2*(p-1));        
   ngrid = floor(p*(1-delta));
   
+  
   Stmp.dim = 1:n;
   Stmp.pts = (ngrid+1)/2*ones(n,1);
   Stmp.epsi = (ngrid+1)/2*ones(n,1);
+  Stmp.DimP = S.DimP;
+  Stmp.DimX = n;
   
   Stmp = QuasiRefine(Stmp,r);  
   Stmp.pts = floor(Stmp.pts)/(p-1);
