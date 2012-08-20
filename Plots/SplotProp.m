@@ -39,8 +39,12 @@ function [val XI YI ZI] = SplotProp(Pf, prop,opt)
         xlabel(Pf.ParamList{Pf.dim(1)},'Interpreter','none');  
         ylabel(Pf.ParamList{Pf.dim(2)},'Interpreter','none');
         zlabel(disp(prop, -1),'Interpreter','none');        
-        prop_cmap;
-        set(gca, 'CLim', sym_clim(Z));
+        
+       % clim = sym_clim(Z);
+        M = abs(max(val));
+        m = abs(min(val));
+        
+        prop_cmap(ceil(m/(m+M)*256),ceil(M/(m+M)*256));
         colorbar;
         
       end      
