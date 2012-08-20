@@ -19,20 +19,25 @@ function S = CreateParamSet(Sys,Param,Ranges)
 pts = Sys.p;
 
 if (exist('Param','var'))
-  if isstr(Param)
+  if ischar(Param)
       Param = {Param};
   end   
   nbParam = numel(Param);
   dim = zeros(nbParam,1);
   if isnumeric(Param)
     dim = Param(1:nbParam);
+    ParamList = Sys.ParamList;
   else
     ind = FindParam(Sys,Param);
-    ParamList = unique({Sys.ParamList{:}, Param{:}},'stable');         
+    ParamList = unique({Sys.ParamList{:}, Param{:}});         
     dim = ind;
   end
   
   pts(dim)=0;
+  
+  dim_sys = dim(dim<= Sys.DimP);
+  pts(dim_sys)= Sys.p(dim_sys);
+  
   ptsun = pts(dim);
   epsi = zeros(nbParam,1);
   
@@ -52,7 +57,7 @@ else
   epsi = zeros(numel(dim),1);
   epsi(ptsun~=0) = abs(ptsun(ptsun~=0)/10);
   epsi(ptsun==0) = 1;
-
+  ParamList = Sys.ParamList;  
 end
 
 S.DimX = Sys.DimX;

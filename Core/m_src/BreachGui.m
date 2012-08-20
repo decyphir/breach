@@ -58,15 +58,20 @@ function BreachGui_OpeningFcn(hObject, eventdata, handles, varargin)
   % used to memorize previous entries
   handles.last_options =[];
   handles.check_prop_options =[];
-  handles.last_tspan = '';
-  
+    
   % Init system panel  
   Sys = varargin{2};
   SysName = varargin{3};
   handles.Sys=Sys;
 
   handles.system_name_file = [ SysName '.mat' ];
-
+  if (isfield(Sys,'tspan'))
+     handles.last_tspan = ['0:' dbl2str(Sys.tspan(2)-Sys.tspan(1)) ':' dbl2str(Sys.tspan(end))];
+  else
+     handles.last_tspan = '';
+  end
+  
+ 
   str_name = ['System (' handles.system_name_file ')'];
   if (numel(str_name)>35)
     str_name= [str_name(1:30) '...' str_name(end-5:end)];
@@ -378,7 +383,7 @@ function button_compute_traj_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
   
-  try
+  try            
     tspan = inputdlg('Enter tspan (Format: [ti tf] or [t0 t1 t2 ... tn] or ti:dt:tf)','Compute trajectories', 1, {handles.last_tspan});
     if isempty(tspan)
       return;

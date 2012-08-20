@@ -19,12 +19,12 @@ function S = SetParam(S,ParamList,ParamValues)
   
   if isstr(ParamList) 
     ind = FindParam(S,ParamList);
-    S.ParamList = unique({S.ParamList{:}, ParamList},'stable');
+    S.ParamList = unique({S.ParamList{:}, ParamList});
     S.pts(ind,:) = ParamValues;
     return    
   elseif iscell(ParamList)
     ind = FindParam(S,ParamList);
-    S.ParamList = unique({S.ParamList{:}, ParamList{:}},'stable');
+    S.ParamList = unique({S.ParamList{:}, ParamList{:}});
     S.pts(ind,:) = ParamValues;
     return        
   end
