@@ -29,7 +29,8 @@ if (exist('Param','var'))
     ParamList = Sys.ParamList;
   else
     ind = FindParam(Sys,Param);
-    ParamList = unique({Sys.ParamList{:}, Param{:}});         
+    new_params = Param(ind>Sys.DimP);
+    ParamList = {Sys.ParamList{:} new_params{:}};
     dim = ind;
   end
   

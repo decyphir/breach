@@ -24,7 +24,8 @@ function S = SetParam(S,ParamList,ParamValues)
     return    
   elseif iscell(ParamList)
     ind = FindParam(S,ParamList);
-    S.ParamList = unique({S.ParamList{:}, ParamList{:}});
+    new_params = ParamList(ind>numel(S.ParamList));
+    S.ParamList = {S.ParamList{:} new_params{:}};
     S.pts(ind,:) = ParamValues;
     return        
   end
