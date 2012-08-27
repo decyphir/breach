@@ -76,7 +76,7 @@ function Sf = SFindPropBoundary(Sys, S, prop, tspan,tprop, iter)
       end    
     end
   
-    Sn = Sselect(S, find(S.IsOnBoundary>0));
+    Sn =  Sselect(S, find(S.IsOnBoundary>0));
     Snn = Sselect(S, find(S.IsOnBoundary==0));
   
     nbnn = size(Snn.pts,2);   

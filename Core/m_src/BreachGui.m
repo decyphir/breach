@@ -1283,11 +1283,10 @@ function handles = update_modif_panel(handles)
     st = get_varying_param_string(handles,i);
     content = {content{:} st};
   end
-  set(handles.listbox_varying_parameters,'String',content); 
+  set(handles.listbox_varying_parameters,'String',content);
   set(handles.listbox_varying_parameters,'Value',handles.selected_varying_param); 
   
   % edit pts and epsi
-  
   
   ipts = dim(min(handles.selected_varying_param, numel(dim)));
   pts = handles.working_sets.(handles.current_set).pts(ipts,k);
