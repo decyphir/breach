@@ -5,9 +5,12 @@ function st = SysName(Sys)
 % Synopsis:  st = SysName(Sys)
 %  
 %    
-  
-  dr = Sys.Dir; 
+
+if isfield(Sys,'mdl')
+  st = Sys.mdl
+else
+  dr = Sys.Dir;
   indst = strfind(dr, filesep);
   st = dr(indst(end)+1:end);    
-
+end
   

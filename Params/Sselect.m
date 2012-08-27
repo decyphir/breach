@@ -39,7 +39,7 @@ function Sn = Sselect(S, kn)
   
   if isfield(S,'traj')
     if ~isfield(S, 'traj_ref')
-      S.traj_ref = 1:numel();
+      S.traj_ref = 1:numel(S.traj);
     end
   end
  

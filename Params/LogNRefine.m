@@ -21,7 +21,6 @@ function Sr = LOGNREFINE(S, N)
     
   end
   
- 
   if (isfield(S,'selected'))
     Sr.selected = zeros(1, size(S.pts,2));    
   end

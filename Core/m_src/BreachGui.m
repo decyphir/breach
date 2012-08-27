@@ -107,7 +107,7 @@ function BreachGui_OpeningFcn(hObject, eventdata, handles, varargin)
   try
     handles.properties = load(handles.properties_file_name);
   catch
-    phi0 = QMITL_Formula('phi0',[Sys.ParamList{1} '[t]<=c | c=.1']) ;
+    phi0 = QMITL_Formula('phi0',[Sys.ParamList{1} '[t]<=.1']) ;
     save([SysName '_properties.mat'], 'phi0');
     handles.properties = load(handles.properties_file_name);
   end

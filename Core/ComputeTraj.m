@@ -87,23 +87,28 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
       model = Sys.mdl;      
       Sf = S0; 
       ipts = 1:size(S0.pts,2);
-      fprintf(['Computing ' num2str(numel(ipts)) ' trajectories of model ' model '\n[             25%%           50%%            75%%               ]\n ']);
-      iprog =0;
-
+      if (numel(ipts)>1)
+        fprintf(['Computing ' num2str(numel(ipts)) ' trajectories of model ' model '\n[             25%%           50%%            75%%               ]\n ']);
+        iprog =0;
+      end
+      
       for i= ipts               
-        while (floor(60*i/numel(ipts))>iprog)
-          fprintf('^');
-          iprog = iprog+1;
+       
+        if (numel(ipts)>1)
+          while (floor(60*i/numel(ipts))>iprog)
+            fprintf('^');
+            iprog = iprog+1;
+          end
         end
         
-%        opt = simset(opt,'InitialState', S0.pts(1:Sys.DimX, i));
-  
         [traj.time traj.X] = Sys.sim(Sys,tspan, S0.pts(:,i));
         traj.param = S0.pts(1:S0.DimP,i)';
         Sf.traj(i) = traj;
         Sf.Xf(:,i) = traj.X(:,end);
       end
-       fprintf('\n');
+      if (numel(ipts)>1)
+        fprintf('\n');
+      end
     end
   
     return
