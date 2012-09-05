@@ -109,10 +109,10 @@ function S = Refine(S0,delta)
   X = S.pts(1:S.DimP,:)'; 
   [C,IA,IC] = unique(X,'rows');
   
-  S.traj_ref= IC;
+  S.traj_ref= IC';
  
   if (isfield(S0,'traj'))
     S.traj = S0.traj;
   else
-    S.traj_to_compute = IA;  
+    S.traj_to_compute = IA';  
   end

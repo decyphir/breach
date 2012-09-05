@@ -1,8 +1,18 @@
-function cm = prop_cmap(n0,n1)
-  
-  if nargin == 0
+function cm = prop_cmap(varargin) 
+
+  switch nargin 
+   case 0
     n0 = 128;
     n1 = 128;
+   case 1
+    val= varargin{1};
+    M = abs(max(val));
+    m = abs(min(val));
+    n0= ceil(m/(m+M)*256);
+    n1= ceil(M/(m+M)*256);
+   case 2
+    n0 = varargin{1};
+    n1 = varargin{2};          
   end
    
   r0 = linspace(1,0.5, n0)'; %ones(n0,1);

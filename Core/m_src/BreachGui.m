@@ -1617,8 +1617,7 @@ function menu_refine_prop_bound_Callback(hObject, eventdata, handles)
     nb_iter = eval(ins{4});
   
     S = rmfield(S,'selected'); 
-    Sf = SFindPropBoundary(handles.Sys,S, prop, tspan,tprop, nb_iter);   
-    
+    Sf = SFindPropBoundary(handles.Sys,S, prop, tspan,tprop, nb_iter);
     
     handles.working_sets.(handles.current_set) = Sf;
     handles = update_modif_panel(handles);

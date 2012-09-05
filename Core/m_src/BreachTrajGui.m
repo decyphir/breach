@@ -65,9 +65,8 @@ if (isfield(handles.TrajSet, 'traj'))
   if ~isfield(handles.TrajSet, 'traj_ref')
     handles.TrajSet.traj_ref = 1:numel(handles.TrajSet.traj);   
   end
+  handles.traj_ref = handles.TrajSet.traj_ref;    
 end
-
-handles.traj_ref = handles.TrajSet.traj_ref;
 
 %  init things
 
