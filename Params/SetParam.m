@@ -19,9 +19,11 @@ function S = SetParam(S,ParamList,ParamValues)
   
   if isstr(ParamList) 
     ind = FindParam(S,ParamList);
-    S.ParamList = unique({S.ParamList{:}, ParamList});
-    S.pts(ind,:) = ParamValues;
-    return    
+    if (ind>S.DimP)
+      S.ParamList = {S.ParamList{:}, ParamList};      
+    end
+    S.pts(ind,:) = ParamValues;       
+    return
   elseif iscell(ParamList)
     ind = FindParam(S,ParamList);
     new_params = ParamList(ind>numel(S.ParamList));
