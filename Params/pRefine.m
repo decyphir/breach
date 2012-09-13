@@ -42,10 +42,10 @@ function S = pRefine(S,p,r)
     S2.D = [S2.D D];  
     
   end
-% Normalize to S ranges
+  % Normalize to S ranges
     
-S.pts = repmat(S.pts, [1 size(S2.pts,2)]);
-S.epsi = repmat(S.epsi, [1 size(S2.pts,2)]);
-S.pts(S.dim,:) = S.pts(S.dim,:) + (2*S2.pts-1).*S.epsi;
-S.D = S2.D;  
+  S.pts = repmat(S.pts, [1 size(S2.pts,2)]);
+  S.epsi = repmat(S.epsi, [1 size(S2.pts,2)]);
+  S.pts(S.dim,:) = S.pts(S.dim,:) + (2*S2.pts-1).*S.epsi;
+  S.D = S2.D;  
  

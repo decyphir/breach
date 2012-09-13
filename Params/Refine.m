@@ -33,6 +33,11 @@ function S = Refine(S0,delta)
 %   Refine(P0 [1.1 1.2]) % returns P0
 %  
 
+  if (delta ==1)
+   S = S0;
+   return;
+  end
+
   n = numel(S0.dim);
   
   if (isscalar(delta))

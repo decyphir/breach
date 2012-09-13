@@ -17,7 +17,7 @@ function Sh = SobolRefine(S, nb)
   
   Sh = SobolRefine(S,nb);
   
-  X = Sh.pts(1:Sh.DimX,:)'; 
+  X = Sh.pts(1:Sh.DimP,:)'; 
   [C,IA,IC] = unique(X,'rows');
   
   Sh.traj_ref= IC';
