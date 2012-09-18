@@ -22,7 +22,7 @@ function varargout = BreachGui(varargin)
 
 % Edit the above text to modify the response to help BreachGui
 
-% Last Modified by GUIDE v2.5 14-Aug-2012 12:19:53
+% Last Modified by GUIDE v2.5 18-Sep-2012 11:58:17
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -233,6 +233,7 @@ function button_remove_set_Callback(hObject, eventdata, handles)
     handles= update_properties_panel(handles);
     handles =update_modif_panel(handles);	
     guidata(hObject,handles);
+  
   end
 % hObject    handle to button_remove_set (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -445,38 +446,52 @@ function edit_default_param_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_default_param (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if ~any(handles.working_sets.(handles.current_set).dim==handles.selected_param)
+
+  if ~any(handles.working_sets.(handles.current_set).dim==handles.selected_param)
   
-  val = eval(get(hObject,'String'));
-  handles.working_sets.(handles.current_set).pts(handles.selected_param,:) = val;
-  
-  if isfield(handles.working_sets.(handles.current_set), 'traj')    
-    tspan=handles.working_sets.(handles.current_set).traj(1).time;   
-    handles.working_sets.(handles.current_set) = ComputeTraj(handles.Sys,rmfield(handles.working_sets.(handles.current_set),'traj'), tspan);        
-  end
-
-  if isfield(handles.working_sets.(handles.current_set), 'props')    
-
-    props = handles.working_sets.(handles.current_set).props;
-    props_values = handles.working_sets.(handles.current_set).props_values;
-
-    P0 = rmfield(handles.working_sets.(handles.current_set),'props');
-    P0 = rmfield(P0,'props_names');
-    P0 = rmfield(P0,'props_values');    
+    val = eval(get(hObject,'String'));
+    param = get(handles.edit30,'String');
     
-    for i= 1:numel(props) 
-      phi = props(i);    
-      tau = props_values(i).tau;
-      P0 = SEvalProp(handles.Sys, P0, phi, tau);
+    handles.working_sets.(handles.current_set) = ...
+        SetParam(handles.working_sets.(handles.current_set),param, val);    
+    
+    handles.selected_param = FindParam(handles.working_sets.(handles.current_set), param);
+    
+    set(handles.listbox_default_parameters, 'Value',handles.selected_param);
+    
+    if isfield(handles.working_sets.(handles.current_set), 'traj')    
+      tspan=handles.working_sets.(handles.current_set).traj(1).time;   
+      handles.working_sets.(handles.current_set) = ComputeTraj(handles.Sys,rmfield(handles.working_sets.(handles.current_set),'traj'), tspan);        
     end
-    handles.working_sets.(handles.current_set) = P0;
-  end
 
-  handles = update_modif_panel(handles);
-  handles= update_properties_panel(handles);
+    if isfield(handles.working_sets.(handles.current_set), 'props')    
+      
+      props = handles.working_sets.(handles.current_set).props;
+      props_values = handles.working_sets.(handles.current_set).props_values;
+      
+      P0 = rmfield(handles.working_sets.(handles.current_set),'props');
+      P0 = rmfield(P0,'props_names');
+      P0 = rmfield(P0,'props_values');    
+      
+      for i= 1:numel(props) 
+        phi = props(i);    
+        tau = props_values(i).tau;
+        P0 = SEvalProp(handles.Sys, P0, phi, tau);
+      end
+      handles.working_sets.(handles.current_set) = P0;
+    end
+
+    handles = update_modif_panel(handles);
+    handles = update_properties_panel(handles);
+    
+    guidata(hObject,handles);
   
-  guidata(hObject,handles);
-end
+  else
+    
+    handles = info(handles, 'To change this value, use Modif current subset');    
+      
+  end
+ 
 
 % Hints: get(hObject,'String') returns contents of edit_default_param as text
 %        str2double(get(hObject,'String')) returns contents of edit_default_param as a double
@@ -1244,10 +1259,8 @@ function handles = update_properties_panel(handles)
  
 function handles = update_modif_panel(handles)
 
-% parameters listbox
-    
-  %P = handles.working_sets.(handles.current_set);
-
+  % parameters listbox
+     
   nb_pts = size(handles.working_sets.(handles.current_set).pts,2);
   DimP = handles.working_sets.(handles.current_set).DimP;
   ParamList = handles.working_sets.(handles.current_set).ParamList;
@@ -1258,8 +1271,7 @@ function handles = update_modif_panel(handles)
     names = fieldnames(handles.working_sets);
     set_name = names{val};    
     handles.working_sets.(set_name)= setfield(handles.working_sets.(set_name), ...
-                                              'selected', zeros(1, ...
-                                                      nb_pts));
+                                              'selected', zeros(1,nb_pts));
   end
   
   handles.current_pts = min(handles.current_pts, nb_pts);
@@ -1272,8 +1284,14 @@ function handles = update_modif_panel(handles)
     content = {content{:} st};
   end
   
+  handles.selected_param = min(handles.selected_param, ...
+                                       numel(ParamList));
+  
   set(handles.listbox_default_parameters,'String',content);
+  set(handles.listbox_default_parameters,'Value',handles.selected_param);
+  
   set(handles.edit_default_param, 'String', dbl2str(handles.working_sets.(handles.current_set).pts(handles.selected_param,k)));
+  set(handles.edit30, 'String', handles.working_sets.(handles.current_set).ParamList(handles.selected_param));
 
   % Varying parameters listbox  
     
@@ -1284,6 +1302,9 @@ function handles = update_modif_panel(handles)
     content = {content{:} st};
   end
   set(handles.listbox_varying_parameters,'String',content);
+  
+  handles.selected_varying_param = min(handles.selected_varying_param, ...
+                                       numel(content));
   set(handles.listbox_varying_parameters,'Value',handles.selected_varying_param); 
   
   % edit pts and epsi
@@ -1337,10 +1358,7 @@ function handles = update_modif_panel(handles)
     set(handles.popup_pts3,'Value', 1);  
   end
 
-  
-  
-  handles =  plot_pts(handles);
-   
+  handles =  plot_pts(handles);   
   
 function handles = update_system_panel(handles)
  
@@ -2568,41 +2586,34 @@ function button_plot_prop_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
- % try
-    prop = handles.properties.(handles.current_prop);
-    title = 'Plot property options';
-    prompt = {'Enter tspan for trajectory computation (empty = existing traj), ',...
-              'Enter tspan for property evaluation (empty = same as above)' ...
-              'Levels of subformulas to plot'};
-    opt.tspan_traj= [];
-    opt.tspan_prop_eval = [];
-    opt.break_lev = 1;
-    
-    [opt handles.check_prop_options] = structdlg(opt,title,prompt, handles.check_prop_options);
-    
-    if isempty(opt)
-      return;
-    end
-    
-    Ptmp = Sselect(handles.working_sets.(handles.current_set), handles.current_pts)
-    
-    if ~isempty(opt.tspan_traj)
-      Pphi = ComputeTraj(handles.Sys, Ptmp, ...
-                         opt.tspan_traj);
-    else
-      Pphi= Ptmp;
-    end
-    
-    
-    SEvalProp(handles.Sys,Pphi, prop, opt.tspan_prop_eval, 1,1,opt.break_lev);    
-    guidata(hObject,handles);
 
-%  catch 
-%    s = lasterror;
-%    warndlg(['Problem checking property: ' s.message] );
-%    error(s);    
-%    return
-%  end
+  prop = handles.properties.(handles.current_prop);
+  title = 'Plot property options';
+  prompt = {'Enter tspan for trajectory computation (empty = existing traj), ',...
+            'Enter tspan for property evaluation (empty = same as above)' ...
+            'Levels of subformulas to plot'};
+  opt.tspan_traj= [];
+  opt.tspan_prop_eval = [];
+  opt.break_lev = 1;
+  
+  [opt handles.check_prop_options] = structdlg(opt,title,prompt, handles.check_prop_options);
+  
+  if isempty(opt)
+    return;
+  end
+  
+  Ptmp = Sselect(handles.working_sets.(handles.current_set), handles.current_pts)
+  
+  if ~isempty(opt.tspan_traj)
+    Pphi = ComputeTraj(handles.Sys, Ptmp, ...
+                       opt.tspan_traj);
+  else
+    Pphi= Ptmp;
+  end
+    
+    
+  SEvalProp(handles.Sys,Pphi, prop, opt.tspan_prop_eval, 1,1,opt.break_lev);    
+  guidata(hObject,handles);
  
   
 
@@ -2612,11 +2623,9 @@ function button_break_prop_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-  prop = handles.properties.(handles.current_prop);
-  
+  prop = handles.properties.(handles.current_prop);  
   props = QMITL_Break(prop);
-  
-  
+    
   for i = 1:numel(props)
     PHI_= props(i);
     eval([get_id(PHI_) '=PHI_']);
@@ -2669,7 +2678,6 @@ function button_plot_selected_Callback(hObject, eventdata, handles)
     end
     guidata(hObject, handles);
   
-    
   catch 
     s = lasterror;
     warndlg(['Problem computing traj: ' s.message] );
@@ -2760,3 +2768,32 @@ function menu_select_satisfied_Callback(hObject, eventdata, handles)
     error(s);    
     return
   end
+
+
+
+function edit30_Callback(hObject, eventdata, handles)
+% hObject    handle to edit30 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit30 as text
+%        str2double(get(hObject,'String')) returns contents of edit30 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit30_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit30 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function h = info(h,msg)
+  set(h.text_info, 'String', msg);
+    
+  
+  
