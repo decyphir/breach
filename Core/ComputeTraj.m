@@ -52,17 +52,6 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
 
   end
  
-  if (isfield(S0, 'traj_to_compute'))
-    
-    S = Sselect( S0, S0.traj_to_compute );
-    S = ComputeTraj(Sys, S, tspan); 
-    Sf = S0;
-    Sf.traj = S.traj;
-    
-    return;
-  end
-  
-    
   % checks for an initialization function
   if isfield(Sys, 'init_fun')
     S0 = Sys.init_fun(S0);    
@@ -71,106 +60,112 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
   if isfield(S0, 'init_fun')
     S0 = S0.init_fun(S0);    
   end
-        
-  if (isfield(Sys, 'type'))
   
-    switch Sys.type
-     case 'traces' % No model
-      % If system type is only traces, check consistency of params and pts      
-      Sf=S0;
-      for (i = 1:numel(Sf.traj))
-        Sf.traj(i).param = Sf.pts(1:Sf.DimP,i)';      
-      end
+  if (isfield(S0, 'traj_to_compute'))
+    
+    S = Sselect( S0, S0.traj_to_compute );
+    S = ComputeTraj(Sys, S, tspan); 
+    Sf = S0;
+    Sf.traj = S.traj;
+    
+    return;
+  end  
+            
+  if (~isfield(Sys, 'type'))
+    Sys.type = '';
+  end
+    
+  
+  switch Sys.type
+   case 'traces' % No model
+                 % If system type is only traces, check consistency of params and pts      
+    Sf=S0;
+    for (i = 1:numel(Sf.traj))
+      Sf.traj(i).param = Sf.pts(1:Sf.DimP,i)';      
+    end
+    
+   case 'Simulink'
+    
+    model = Sys.mdl;      
+    Sf = S0; 
+    ipts = 1:size(S0.pts,2);
+    if (numel(ipts)>1)
+      fprintf(['Computing ' num2str(numel(ipts)) ' trajectories of model ' model '\n[             25%%           50%%            75%%               ]\n ']);
+      iprog =0;
+    end
       
-     case 'Simulink'
-
-      model = Sys.mdl;      
-      Sf = S0; 
-      ipts = 1:size(S0.pts,2);
+    for i= ipts               
+      
       if (numel(ipts)>1)
-        fprintf(['Computing ' num2str(numel(ipts)) ' trajectories of model ' model '\n[             25%%           50%%            75%%               ]\n ']);
-        iprog =0;
-      end
-      
-      for i= ipts               
-       
-        if (numel(ipts)>1)
-          while (floor(60*i/numel(ipts))>iprog)
-            fprintf('^');
-            iprog = iprog+1;
-          end
+        while (floor(60*i/numel(ipts))>iprog)
+          fprintf('^');
+          iprog = iprog+1;
         end
-        
-        [traj.time traj.X] = Sys.sim(Sys,tspan, S0.pts(:,i));
-        traj.param = S0.pts(1:S0.DimP,i)';
-        Sf.traj(i) = traj;
-        Sf.Xf(:,i) = traj.X(:,end);
       end
-      if (numel(ipts)>1)
-        fprintf('\n');
-      end
+      
+      [traj.time traj.X] = Sys.sim(Sys,tspan, S0.pts(:,i));
+      traj.param = S0.pts(1:S0.DimP,i)';
+      Sf.traj(i) = traj;
+      Sf.Xf(:,i) = traj.X(:,end);
     end
-  
-    return
-  
-  end
-
-  %if (isfield(S0,'traj'))
-  %  if ((numel(S0.traj(1).time)==numel(tspan)))
-  %    if (sum(S0.traj(1).time==tspan))
-  %      Sf = S0;
-  %      return;
-  %    end
-  %  end
-  %end
-   
-  InitSystem(Sys);
-  
-  if iscell(tspan)
-    if (numel(tspan)==2)
-      T = [tspan{1} tspan{2} tspan{2}];  % not really nice.. should be
-                                         % changed some day
+    
+    if (numel(ipts)>1)
+      fprintf('\n');
+    end
+    
+      
+   otherwise
+ 
+    
+    InitSystem(Sys);
+    
+    if iscell(tspan)
+      if (numel(tspan)==2)
+        T = [tspan{1} tspan{2} tspan{2}];  % not really nice.. should be
+                                           % changed some day
+      else
+        T= cell2mat(tspan);
+      end
     else
-      T= cell2mat(tspan);
-    end
-  else
-    T = tspan;
-  end
-    
-  if (exist('u'))
-     
-    err = check_u(u);
-    if (err~=0)
-      error(err);
+      T = tspan;
     end
     
-    %This is quit ugly...
-    Sf = S0;
-    Sf.pts = S0.pts(1:S0.DimP, :);
-    Sf=cvm(61, Sf,T,u);            
-    Sf.pts = S0.pts;
-    
-    Sf.u = u;
-    
-  else
-    
-    Sf = S0;
-    Sf.pts = S0.pts(1:S0.DimP, :);
-    Sf=cvm(61, Sf,T);            
-    Sf.pts = S0.pts;
+    if (exist('u'))
+      
+      err = check_u(u);
+      if (err~=0)
+        error(err);
+      end
+      
+      %This is quit ugly...
+      Sf = S0;
+      Sf.pts = S0.pts(1:S0.DimP, :);
+      Sf=cvm(61, Sf,T,u);            
+      Sf.pts = S0.pts;
+      
+      Sf.u = u;
+      
+    else
+      
+      Sf = S0;
+      Sf.pts = S0.pts(1:S0.DimP, :);
+      Sf=cvm(61, Sf,T);            
+      Sf.pts = S0.pts;
+      
+    end    
   
-  end    
-  
-  CVodeFree();
-  
-  if output_trajs
-    Sf = Sf.traj;
+    CVodeFree();
+    
+    if output_trajs
+      Sf = Sf.traj;
+    end        
   end
 
   if isfield(Sys, 'time_mult')
     Sf.time_mult = Sys.time_mult;
   end
-  
+
+end
 
   
 function err = check_u(u)
@@ -206,4 +201,4 @@ function err = check_u(u)
     err = 'numel(u.time) should be equal to size(u.values, 2)'; 
     return;
   end
-    
+end

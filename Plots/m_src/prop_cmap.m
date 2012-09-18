@@ -1,36 +1,37 @@
 function cm = prop_cmap(varargin) 
 
+  nb_col = 256;
+  
   switch nargin 
    case 0
-    n0 = 128;
-    n1 = 128;
+    n0 = nb_col/2;
+    n1 = nb_vol/2;
    case 1
     val= varargin{1};
     
     M = max(val);
     m = min(val);
-    
-    
+        
     if (M<0) % all values negative
       
-      r = linspace(0.5, 1, 256)';
-      v = zeros(256,1);
-      b = zeros(256,1);            
+      r = linspace(0.5, 1, nb_col)';
+      v = zeros(nb_col,1);
+      b = zeros(nb_col,1);            
       
       cm = [r v b];
     elseif (m>0) % all values positive
       
-      r = zeros(256,1);
-      v = linspace(0.5, 1, 256)';
-      b = zeros(256,1);           
+      r = zeros(nb_col,1);
+      v = linspace(0.5, 1, nb_col)';
+      b = zeros(nb_col,1);           
       cm = [r v b ];
     else % normal situation
       
       M = abs(max(val));
       m = abs(min(val));
       
-      n0= ceil(m/(m+M)*256);
-      n1= ceil(M/(m+M)*256);
+      n0= ceil(m/(m+M)*nb_col);
+      n1= ceil(M/(m+M)*nb_col);
       
       cm = bicolormap(n0,n1);
     end
@@ -41,7 +42,6 @@ function cm = prop_cmap(varargin)
     
   end
    
-
   colormap(cm);
 
 function cm = bicolormap(n0,n1)
