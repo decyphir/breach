@@ -397,8 +397,10 @@ function button_compute_traj_Callback(hObject, eventdata, handles)
         CompileSystem(handles.Sys);
       end
     end
-        
+    handles= info(handles,'Computing trajectories...');
     handles.working_sets.(handles.current_set) = ComputeTraj(handles.Sys, handles.working_sets.(handles.current_set), tspan);
+    handles= info(handles,'Computing trajectories... Done.');
+    
     handles = update_working_sets_panel(handles);
     guidata(hObject, handles);
   catch 
@@ -447,11 +449,12 @@ function edit_default_param_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-  if ~any(handles.working_sets.(handles.current_set).dim==handles.selected_param)
+  val = eval(get(hObject,'String'));
+  param = get(handles.edit30,'String');
+  i = FindParam(handles.working_sets.(handles.current_set), param);  
   
-    val = eval(get(hObject,'String'));
-    param = get(handles.edit30,'String');
-    
+  if (~any(handles.working_sets.(handles.current_set).dim==i))
+          
     handles.working_sets.(handles.current_set) = ...
         SetParam(handles.working_sets.(handles.current_set),param, val);    
     
@@ -461,7 +464,9 @@ function edit_default_param_Callback(hObject, eventdata, handles)
     
     if isfield(handles.working_sets.(handles.current_set), 'traj')    
       tspan=handles.working_sets.(handles.current_set).traj(1).time;   
+      handles= info(handles,'Updating trajectories...');
       handles.working_sets.(handles.current_set) = ComputeTraj(handles.Sys,rmfield(handles.working_sets.(handles.current_set),'traj'), tspan);        
+      handles= info(handles,'Updating trajectories... Done.');
     end
 
     if isfield(handles.working_sets.(handles.current_set), 'props')    

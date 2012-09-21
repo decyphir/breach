@@ -117,7 +117,12 @@ function S = Refine(S0,delta)
   S.traj_ref= IC';
  
   if (isfield(S0,'traj'))
+      
     S.traj = S0.traj;
+    S.Xf = S0.Xf;
+    if ~isequal(S.pts(1:S.DimP,IA), vertcat(S.traj.param))
+        S.traj_to_compute = IA';
+    end    
   else
     S.traj_to_compute = IA';  
   end

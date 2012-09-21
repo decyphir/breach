@@ -22,7 +22,8 @@ function S = SetParam(S,ParamList,ParamValues)
     if (ind>S.DimP)
       S.ParamList = {S.ParamList{:}, ParamList};      
     end
-    S.pts(ind,:) = ParamValues;       
+    
+    S.pts(ind,:) = ParamValues;
     return
   elseif iscell(ParamList)
     ind = FindParam(S,ParamList);

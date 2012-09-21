@@ -66,8 +66,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
     S = Sselect( S0, S0.traj_to_compute );
     S = ComputeTraj(Sys, S, tspan); 
     Sf = S0;
-    Sf.traj = S.traj;
-    
+    Sf.traj = S.traj;   
     return;
   end  
             
@@ -112,10 +111,8 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
     if (numel(ipts)>1)
       fprintf('\n');
     end
-    
-      
+          
    otherwise
- 
     
     InitSystem(Sys);
     

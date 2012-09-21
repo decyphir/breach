@@ -7,7 +7,7 @@ function st = SysName(Sys)
 %    
 
 if isfield(Sys,'mdl')
-  st = Sys.mdl
+  st = Sys.mdl;
 else
   dr = Sys.Dir;
   indst = strfind(dr, filesep);

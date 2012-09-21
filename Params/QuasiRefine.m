@@ -22,3 +22,13 @@ function Sh = SobolRefine(S, nb)
   
   Sh.traj_ref= IC';
   Sh.traj_to_compute = IA';
+  
+  if (isfield(S,'traj'))     
+      Sh.traj = S.traj;
+      Sh.Xf = S.Xf;
+      if ~isequal(S.pts(1:S.DimP,IA), vertcat(S.traj.param))
+          S.traj_to_compute = IA';
+      end
+  else
+      S.traj_to_compute = IA';
+  end

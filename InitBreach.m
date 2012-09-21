@@ -42,9 +42,9 @@ else
   end
   
   if (~isfield(BreachGlobOpt,'RobustSemantics'))        
-    BreachGlobOpt.RobustSemantics = 0;  
+    BreachGlobOpt.RobustSemantics = 0;     
   end
-
+  
 end
 
 cd(cdr);
