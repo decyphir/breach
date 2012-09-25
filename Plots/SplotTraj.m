@@ -206,7 +206,7 @@ function SplotTraj(S,proj,ipts,opt,t0)%
   if (t0==0)&&(numel(proj)>1)
     SplotPts(S,proj,ipts);      
     if isfield(S,'Xf')      
-      SplotXf(S,proj,iX);  
+      SplotXf(S,proj,ipts);  
     end
   end
   
