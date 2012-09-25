@@ -18,10 +18,10 @@ function Sh = SobolRefine(S, nb, step)
   dim_num = numel(S.dim);
   
   if (nargin==2)
-    step=1;
+    step=0;
   end
       
-  r = i4_sobol_generate ( dim_num, nb, 0 );
+  r = i4_sobol_generate ( dim_num, nb, step );
   r = kron(r, ones(1,size(S.pts,2)));
   
   A = 2*S.epsi;

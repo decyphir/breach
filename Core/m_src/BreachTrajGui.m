@@ -310,18 +310,20 @@ function slider2_Callback(hObject, eventdata, handles)
     tt=strcat('pts ',num2str(handles.current_pts),'/',num2str(handles.nb_pts));
     set(handles.text_pts, 'String', tt );
 
-    content = get(handles.listbox, 'String');
-    Pf = handles.TrajSet;
+    %content = get(handles.listbox, 'String');
+    %Pf = handles.TrajSet;
 
-    for i=1:numel(Pf.dim)
-      st = Pf.ParamList{Pf.dim(i)};
-      st = strcat(st, ':',' ',dbl2str(Pf.pts(Pf.dim(i), handles.current_pts)));
-      content{i+2} = st;
-      content{Pf.dim(i)+6} = st;
-      handles.current_varying_param{i} = st;    
-    end
+    %for i=1:numel(Pf.dim)
+    %  st = Pf.ParamList{Pf.dim(i)};
+    %  st = strcat(st, ':',' ',dbl2str(Pf.pts(Pf.dim(i), handles.current_pts)));
+    %  content{i+2} = st;
+    %  content{Pf.dim(i)+6} = st;
+    %  handles.current_varying_param{i} = st;    
+    %end
 
-    set(handles.listbox, 'String', content);
+    %set(handles.listbox, 'String', content);
+    
+    handles = update_listbox_param(handles,0);
     handles = UpdatePlots(handles);    
     guidata(hObject,handles);
 

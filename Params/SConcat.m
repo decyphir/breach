@@ -39,9 +39,7 @@ function S= SConcat(S,S2)
     if size(S2.traj,1) >1
       S2.traj = S2.traj';
     end
-    
-     S.traj = [S.traj S2.traj];
-    
+        
     if (~isfield(S, 'traj_ref'))
       S.traj_ref= 1:numel(S.traj);
     end
@@ -49,8 +47,11 @@ function S= SConcat(S,S2)
     if (~isfield(S2, 'traj_ref'))
       S2.traj_ref= 1:numel(S2.traj);
     end
+    
+    S.traj_ref = [S.traj_ref S2.traj_ref+numel(S.traj)];
   
-    S.traj_ref = [S.traj_ref S2.traj_ref+size(S2.pts,2)];
+    S.traj = [S.traj S2.traj];
+  
   end
       
   

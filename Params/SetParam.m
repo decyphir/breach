@@ -29,7 +29,11 @@ function S = SetParam(S,ParamList,ParamValues)
     ind = FindParam(S,ParamList);
     new_params = ParamList(ind>numel(S.ParamList));
     S.ParamList = {S.ParamList{:} new_params{:}};
-    S.pts(ind,:) = ParamValues;
+    
+    for ii= 1:numel(ind)
+      S.pts(ind(ii),:) = ParamValues(ii,:);
+    end
+    
     return        
   end
   

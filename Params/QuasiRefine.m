@@ -1,4 +1,4 @@
-function Sh = SobolRefine(S, nb)
+function Sh = SobolRefine(S, nb,step)
 % QUASIREFINE  Sample quasi-uniformly a parameter set 
 % 
 % Synopsis:  Ph = QuasiRefine(S, nb)
@@ -14,8 +14,14 @@ function Sh = SobolRefine(S, nb)
 %
 % TODO optionalize the sequence used - so far Sobol
 %  
-  
-  Sh = SobolRefine(S,nb);
+
+ 
+  if (nargin==2)
+    step=0;
+  end
+ 
+
+  Sh = SobolRefine(S,nb,step);
   
   X = Sh.pts(1:Sh.DimP,:)'; 
   [C,IA,IC] = unique(X,'rows');

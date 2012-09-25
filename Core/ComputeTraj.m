@@ -73,8 +73,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
   if (~isfield(Sys, 'type'))
     Sys.type = '';
   end
-    
-  
+      
   switch Sys.type
    case 'traces' % No model
                  % If system type is only traces, check consistency of params and pts      
@@ -100,6 +99,12 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
           fprintf('^');
           iprog = iprog+1;
         end
+      end
+      
+      if isfield(Sys,'init_u') 
+        U = Sys.init_u(Sys,S0.pts(:,i), tspan);
+        assignin('base','t__',U.t);
+        assignin('base', 'u__',U.u);        
       end
       
       [traj.time traj.X] = Sys.sim(Sys,tspan, S0.pts(:,i));
@@ -134,7 +139,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
         error(err);
       end
       
-      %This is quit ugly...
+      %This is quite ugly...
       Sf = S0;
       Sf.pts = S0.pts(1:S0.DimP, :);
       Sf=cvm(61, Sf,T,u);            

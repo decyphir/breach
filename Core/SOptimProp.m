@@ -1,4 +1,4 @@
-function Sopt = SOptimProp(Sys, S, prop, tspan, lbound, ubound)
+function [val_opt Sopt val_init Sinit]  = SOptimProp(Sys, S, prop, opt)
 %
 % SOPTIMPROP optimizes the satisfaction of a property
 %
@@ -6,43 +6,147 @@ function Sopt = SOptimProp(Sys, S, prop, tspan, lbound, ubound)
 % 
 %    - S0 is a parameter set for Sys
 %    - phi is a QMITL property
-%    - tspan is the time domain computation of the trajectories
-%    - lbound : lower bounds for the search domain
-%    - ubound : upper bounds for the search domain
-%
+%    - opt is an option structure with the following fields :
+%       
+%        - tspan is the time domain computation of the trajectories
+%        - params : variable (search) parameters    
+%        - lbound : lower bounds for the search domain
+%        - ubound : upper bounds for the search domain
+%        - MaxIter : max number of optimization iteration 
+%        - OptimType : 'Max', 'Min' or 'Zero' 
+%  
+
+%% process options
+
+  global Stmp found
+  
+  found = [];
+  if isfield(opt, 'tspan')
+    tspan = opt.tspan;
+  elseif isfield(Sys, 'tspan')
+    tspan = Sys.tspan;
+  elseif isfield(S, 'traj')   
+    tspan = S.traj(1).time;
+  else 
+    tspan = 0:.2:10
+  end  
   
   dim = S.dim;
+        
+  if isfield(opt,'OptimType')
+    OptimType = opt.OptimType;
+  else
+    OptimType = 'Max';
+  end  
+  
+  if isfield(opt,'MaxIter')
+    MaxIter = opt.MaxIter;
+  end
+  
+  if isfield(opt,'StopWhenFound')
+     StopWhenFound = opt.StopWhenFound; 
+  end
+  
   Stmp = Sselect(S,1); 
-  fun = @(x) fun0(x,Sys, Stmp, prop, tspan);
+  
+  switch OptimType 
+   case 'Max'
+    fun = @(x) fun_max(x,Sys, Stmp, prop, tspan);       
+   case 'Min'  
+    fun = @(x) fun_min(x,Sys, Stmp, prop, tspan);       
+   case 'Zero' 
+    fun = @(x) fun_zero(x,Sys, Stmp, prop, tspan);       
+  end
+    
+%% Initial values
+  options = optimset('MaxIter', MaxIter);  
+  S = ComputeTraj(Sys, S, tspan );
+  [Sinit val] = SEvalProp(Sys, S, prop, 0);
+  
+  switch OptimType 
+   case 'Max'
+    [val_init iv] = sort(-val);
+    Sinit = Sselect(Sinit,iv);
+    fun = @(x) fun_max(x,Sys, prop, tspan);       
    
-  Sopt = S;
+   case 'Min'  
+    [val_init iv] = sort(val);
+    Sinit = Sselect(Sinit,iv);
+    fun = @(x) fun_min(x,Sys, prop, tspan);       
+    
+   case 'Zero' 
+    [val_init iv] = sort(abs(val));
+    Sinit = Sselect(Sinit,iv);
+    fun = @(x) fun_zero(x,Sys, prop, tspan);          
+  end
   
-  options = optimset('MaxIter', 100);
+  %% Main Loop
+  
+  Sopt = Sinit;  
+  
   for i = 1:size(S.pts, 2)
-    % ubound = S.pts(dim,i)+S.epsi(:,i);
-    % lbound = S.pts(dim,i)-S.epsi(:,i);
-    
-    disp('\n\n ---------------------- New point ------------------- \n\n')
+    if isfield(opt, 'lbound')
+      lbound = opt.lbound;
+    else
+      lbound = S.pts(dim,i)-S.epsi(:,i);
+    end
+  
+    if isfield(opt, 'ubound')
+      ubound = opt.ubound;
+    else
+      ubound = S.pts(dim,i)+S.epsi(:,i);
+    end
+               
+    fprintf('Optimize from init point %d/%d\n',i, size(S.pts, 2) );
+    rfprintf_reset();
     x0 = S.pts(dim,i); 
-    x = optimize(fun, x0, lbound, ubound,[],[],[],[],[],[],options);
-    Sopt.pts(dim,i) = x;
+    [x val_opt(i)] = optimize(fun, x0, lbound, ubound,[],[],[],[],[],[],options);
+    fprintf('\n');
+    Sopt.pts(dim,i) = x;    
+    Sopt.traj(i) = Stmp.traj;    
   
   end
+end
     
-    
-function val = fun0(x, Sys,Stmp, prop, tspan)
+ 
+function val = fun_max(x, Sys, prop, tspan)
+  global Stmp found
+  if ~isempty(found)
+    val = found;
+  else
+    Stmp.pts(Stmp.dim)=x;
+    Stmp = ComputeTraj(Sys, Stmp, tspan);
+    val = QMITL_Eval(Sys,prop, Stmp, Stmp.traj(1),0);
+  end
   
-  Stmp.pts(Stmp.dim)=x;
-  Sf = ComputeTraj(Sys, Stmp, tspan);
-  val = QMITL_Eval(Sys,prop, Sf.traj(1),0);
-% val = abs(val);
+  status = ['Robustness value: ' num2str(val) ];
+  rfprintf(status);
   val = -val;
-
-% fprintf('x(1): %g x(2): %g val: %g   \n', x(1), x(2), -val);
-  fprintf('x: ');
-  for i= 1:numel(x)
-    fprintf('%g  ', x(i));
-  end
-  fprintf(' val: %g \n', -val);
+end
   
+function val = fun_min(x, Sys, prop, tspan) 
+  global Stmp found
+  
+  if ~isempty(found)
+    val = found;
+  else
+    Stmp.pts(Stmp.dim)=x;
+    Stmp = ComputeTraj(Sys, Stmp, tspan);
+    val = QMITL_Eval(Sys,prop, Stmp, Stmp.traj(1),0);
+  end
+  status = ['Robustness value: ' num2str(val) ];
+  rfprintf(status);
+end
+  
+function val = fun_zero(x, Sys, prop, tspan)
+  global Stmp;
+  Stmp.pts(Stmp.dim)=x;
+  Stmp = ComputeTraj(Sys, Stmp, tspan);
+  val = QMITL_Eval(Sys,prop, Stmp, Stmp.traj(1),0);
+  status = ['Robustness value: ' num2str(val) ];
+  rfprintf(status);
+  val = abs(val);
+end
+  
+ 
                                                       
