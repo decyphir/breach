@@ -67,6 +67,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
     S = ComputeTraj(Sys, S, tspan); 
     Sf = S0;
     Sf.traj = S.traj;   
+    Sf.Xf = S.Xf;
     return;
   end  
             
@@ -83,7 +84,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
     end
     
    case 'Simulink'
-    
+          
     model = Sys.mdl;      
     Sf = S0; 
     ipts = 1:size(S0.pts,2);
@@ -92,8 +93,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
       iprog =0;
     end
       
-    for i= ipts               
-      
+    for i= ipts                     
       if (numel(ipts)>1)
         while (floor(60*i/numel(ipts))>iprog)
           fprintf('^');
@@ -102,7 +102,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
       end
       
       if isfield(Sys,'init_u') 
-        U = Sys.init_u(Sys,S0.pts(:,i), tspan);
+        U = Sys.init_u(Sys.ParamList(Sys.DimX-Sys.DimU+1:Sys.DimX), S0.pts(:,i), tspan);
         assignin('base','t__',U.t);
         assignin('base', 'u__',U.u);        
       end
@@ -116,7 +116,8 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
     if (numel(ipts)>1)
       fprintf('\n');
     end
-          
+    
+    
    otherwise
     
     InitSystem(Sys);

@@ -52,6 +52,7 @@ function BreachGui_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to BreachGui (see VARARGIN)
 
+  handles = info(handles, 'Starting Breach.... (Memory tip: his first name is Millard)');
   crd = pwd;  
   set(hObject, 'Name', ['Breach (' crd  ')']);  
 
@@ -136,9 +137,10 @@ function BreachGui_OpeningFcn(hObject, eventdata, handles, varargin)
   handles.current_plot{3} =[];
   handles.current_marked = [];
 
-
   handles = update_modif_panel(handles);
 
+  handles = info(handles, 'Ready.');
+  
   % Choose default command line output for BreachGui
   handles.output = hObject;
 
@@ -794,7 +796,9 @@ function menu_save_as_Callback(hObject, eventdata, handles)
 
     handles.working_sets_file_name = FileName;
     ws = handles.working_sets;
+    handles = info(handles, 'Saving parameter set...');
     save(FileName, '-struct','ws');
+    handles = info(handles, 'Saving parameter set... Done.');
     handles = update_working_sets_panel(handles);
     guidata(hObject,handles);
   catch 
@@ -1010,8 +1014,13 @@ function menu_save_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
   
+  handles = info(handles, 'Saving parameter set...\n');
+  fprintf('Saving parameter set...');
   ws= handles.working_sets;
   save(handles.working_sets_file_name, '-struct', 'ws');
+  handles = info(handles, 'Saving parameter set... Done');
+  fprintf('Done.\n');
+  guidata(hObject, handles);
 
 % --- Executes on button press in button_save_in.
 function button_save_in_Callback(hObject, eventdata, handles)

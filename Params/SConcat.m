@@ -48,10 +48,9 @@ function S= SConcat(S,S2)
       S2.traj_ref= 1:numel(S2.traj);
     end
     
-    S.traj_ref = [S.traj_ref S2.traj_ref+numel(S.traj)];
-  
+    S.traj_ref = [S.traj_ref S2.traj_ref+numel(S.traj)];  
     S.traj = [S.traj S2.traj];
-  
+    
   end
       
   
