@@ -1,4 +1,4 @@
-function index=  FindParam(Sys,param)
+function index =  FindParam(Sys,param)
 %  
 % FINDPARAM Finds the indices of parameters given by their name for a given system or param set
 %  
@@ -36,7 +36,7 @@ function index=  FindParam(Sys,param)
      test = strcmp(Sys.ParamList{j},param{i});
      if (test)
        found = 1; 
-       index(i)= j;
+       index(i) = j;
      end
    end
    if (~found)
