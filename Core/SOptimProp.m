@@ -84,7 +84,7 @@ function [val_opt Sopt]  = SOptimProp(Sys, S, prop, opt)
     end
     
    case 'Min'  
-    [val_init iv] = sort(val);
+    [val_init iv] = sort(val)
     fun = @(x) fun_min(x,Sys, prop, tspan);
     if val(iv(1))<0
       found = val(iv(1));

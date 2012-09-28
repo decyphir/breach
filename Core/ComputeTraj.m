@@ -102,7 +102,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
       end
       
       if isfield(Sys,'init_u') 
-        U = Sys.init_u(Sys.ParamList(Sys.DimX-Sys.DimU+1:Sys.DimX), S0.pts(:,i), tspan);
+        U = Sys.init_u(Sys.ParamList(Sys.DimX-Sys.DimU+1:Sys.DimX), S0.pts(1:Sys.DimP,i), tspan);
         assignin('base','t__',U.t);
         assignin('base', 'u__',U.u);        
       end

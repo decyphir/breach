@@ -35,7 +35,7 @@ function Sys = CreateSimulinkSystem(mdl, signals, params, inputfn )
 % cs.set_param('SolverType', 'Fixed-step');   % Type 
 
 % Solver pane
-  cs.set_param('FixedStep', 'auto');   % Fixed-step size (fundamental sample time) 
+%  cs.set_param('FixedStep', 'auto');   % Fixed-step size (fundamental sample time) 
 %  cs.set_param('Solver', 'ode5');   % Solver 
   cs.set_param('StartTime', '0.0');   % Start time 
   cs.set_param('StopTime', 'tspan(end)');   % Stop time 
@@ -59,12 +59,14 @@ function Sys = CreateSimulinkSystem(mdl, signals, params, inputfn )
   
   for k = 1:numel(lines)
     bls = get(lines(k), 'SrcBlockHandle');
-    type_bls = get(bls,'BlockType');
+    if (bls ~= -1)
+      type_bls = get(bls,'BlockType');
 
-    % tests if we get an input
-    if strcmp(type_bls, 'Inport')
-      set(lines(k),'DataLoggingName', 'Use signal name', 'DataLogging',1 ,'Name',get(bls,'Name')); 
-    end      
+      % tests if we get an input
+      if strcmp(type_bls, 'Inport')
+        set(lines(k),'DataLoggingName', 'Use signal name', 'DataLogging',1 ,'Name',get(bls,'Name')); 
+      end
+    end
   end    
   
 %% Define Breach signals
@@ -91,39 +93,44 @@ function Sys = CreateSimulinkSystem(mdl, signals, params, inputfn )
     in =  get_param(ins(i),'Name'); 
     sig_in = {sig_in{:} in{1}};
   end  
-
-  [c ia inew] = unique(sig_in);
-  % reorder ...
-  ia = sort(unique(ia));
-  sig_in = sig_in(ia);
   
-  % define the input generation function
-  
-  if ~exist('inputfn')
-    % by default, constant 0
-    init_u =  @(sig_in,pts,tspan)UniStepSimulinkInput(1,sig_in,pts,tspan);
-  else 
-    if isstr(inputfn)
-      eval(['init_u=@' inputfn ';']);
-      
-      pref = 'UniStep';
-
-      if regexp(inputfn, [pref '[0-9]+'])
-        cp = str2num(inputfn(numel(pref)+1:end));
-        init_u =  @(sig_in,pts,tspan)UniStepSimulinkInput(cp ,sig_in,pts,tspan);        
+  if (~isempty(sig_in))
+    [c ia inew] = unique(sig_in);
+    % reorder ...
+    ia = sort(unique(ia));
+    sig_in = sig_in(ia);
+     
+    % define the input generation function
+    
+    if ~exist('inputfn')
+      % by default, constant 0
+      init_u =  @(sig_in,pts,tspan)UniStepSimulinkInput(1,sig_in,pts,tspan);
+    else 
+      if isstr(inputfn)
+        eval(['init_u=@' inputfn ';']);
+        
+        pref = 'UniStep';
+        
+        if regexp(inputfn, [pref '[0-9]+'])
+          cp = str2num(inputfn(numel(pref)+1:end));
+          init_u =  @(sig_in,pts,tspan)UniStepSimulinkInput(cp ,sig_in,pts,tspan);        
+        end
+        
+      else
+        error('Invalid input function.');
       end
-      
-    else
-      error('Invalid input function.');
-    end
-  end  
-  
-  
-
-  U = init_u(sig_in,[],[]);
-  pu  = U.p0;
-  
-%% logged signals, by default none
+    end  
+    
+    U = init_u(sig_in,[],[]);
+    pu  = U.p0;
+    
+  else
+    pu = [];
+    U.params = {};
+    cs.set_param('LoadExternalInput', 'off');   % Input  
+    
+  end
+  %% logged signals, by default none
   if ~exist('signals')
     signals = {};
   end
@@ -135,10 +142,10 @@ function Sys = CreateSimulinkSystem(mdl, signals, params, inputfn )
         [sig_log] = find_signals(mdl_breach);
       catch
         error(['Could not analyze signals in ' mdl '. Check that your model is ' ...
-             'compiling and running.' ]);
+               'compiling and running.' ]);
       end      
     end
-  
+    
   elseif iscell(signals)
     
     for k =  1:numel(signals);
@@ -153,7 +160,7 @@ function Sys = CreateSimulinkSystem(mdl, signals, params, inputfn )
     end
     
   end
-       
+  
   % finds duplicates : signals logged that are inputs or outputs
   keep = ones(1,numel(sig_log));
   for k = 1:numel(sig_log);
@@ -171,26 +178,37 @@ function Sys = CreateSimulinkSystem(mdl, signals, params, inputfn )
   end
   sig_log= sig_log(find(keep));
   
-      
-  % define parameters
-  signals = {sig_out{:} sig_log{:} sig_in{:}};
+  signals = {sig_out{:} sig_log{:} sig_in{:}};     
+ 
+  % define parameters 
   
-  if isempty(params)  
-    exclude = {'tspan','u__','t__'};
-    assignin('base','tspan', 0:1);
-    [params p0] = filter_vars(mdl_breach, exclude);
-  end
+  if exist('params')
+    if (isempty(params))  
+      exclude = {'tspan','u__','t__'};
+      assignin('base','tspan', 0:1);
+      [params p0] = filter_vars(mdl_breach, exclude);
+      
+    else
+        p0 = params.p0;
+        params = {params.Names{:}};
+    end
+  else
+     exclude = {'tspan','u__','t__'};
+     assignin('base','tspan', 0:1);
+     [params p0] = filter_vars(mdl_breach, exclude);  
+  end   
   
   params = {params{:} U.params{:}};
   p0 = [zeros(1,numel(signals)) p0 pu];
-    
     
   Sys = CreateSystem(signals, params, p0'); % define signals and parameters
 
   Sys.DimY = numel(sig_out);
   Sys.DimU = numel(sig_in);  
-    
-  Sys.init_u = init_u;
+  if (exist('init_u'))
+    Sys.init_u = init_u;
+  end
+  
   Sys.type= 'Simulink';
   Sys.sim = @sim_breach; 
   Sys.mdl= [mdl '_breach'];
