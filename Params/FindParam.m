@@ -19,17 +19,17 @@ function index =  FindParam(Sys,param)
 %
 
 if ~isfield(Sys,'ParamList')
-    error('No parameter list ...');
+    error('FindParam:noParamList','No parameter list ...');
 end
 
 if (~iscell(param))
     param = {param};
 end
 
-index = ones(1, numel(param));
+index = zeros(1, numel(param));
 
 newp = Sys.DimP;
-%Why the following code? (size(Sys.pts,1) could be different of Sys.DimP?)
+%NM Why the following code? size(Sys.pts,1) could be different of Sys.DimP?
 if isfield(Sys, 'pts')
     newp = size(Sys.pts,1);
 end
