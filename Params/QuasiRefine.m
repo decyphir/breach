@@ -1,7 +1,8 @@
-function Sh = SobolRefine(S, nb,step)
-% QUASIREFINE  Sample quasi-uniformly a parameter set 
+function Ph = QuasiRefine(P, nb, step)
+% QUASIREFINE  Sample quasi-uniformly a parameter set. The number of
+% uncertain parameters must be lower or equal to 40 (when using Sobol).
 % 
-% Synopsis:  Ph = QuasiRefine(S, nb)
+% Synopsis:  Ph = QuasiRefine(P, nb)
 %  
 % Example: 
 %
@@ -21,20 +22,20 @@ function Sh = SobolRefine(S, nb,step)
   end
  
 
-  Sh = SobolRefine(S,nb,step);
+  Ph = SobolRefine(P,nb,step);
   
-  X = Sh.pts(1:Sh.DimP,:)'; 
-  [C,IA,IC] = unique(X,'rows');
+  X = Ph.pts(1:Ph.DimP,:)'; 
+  [~,IA,IC] = unique(X,'rows');
   
-  Sh.traj_ref= IC';
-  Sh.traj_to_compute = IA';
+  Ph.traj_ref= IC';
+  Ph.traj_to_compute = IA';
   
-  if (isfield(S,'traj'))     
-      Sh.traj = S.traj;
-      Sh.Xf = S.Xf;
-      if ~isequal(S.pts(1:S.DimP,IA), vertcat(S.traj.param))
-          Sh.traj_to_compute = IA';
+  if (isfield(P,'traj'))     
+      Ph.traj = P.traj;
+      Ph.Xf = P.Xf;
+      if ~isequal(P.pts(1:P.DimP,IA), vertcat(P.traj.param))
+          Ph.traj_to_compute = IA';
       end
   else
-      Sh.traj_to_compute = IA';
+      Ph.traj_to_compute = IA';
   end
