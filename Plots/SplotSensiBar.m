@@ -69,16 +69,14 @@ else
 end
 
 if (open_dialog)
-    
     % deal with dialog box for histogram axes
     try
         [iX, iP, tspan, args] = GetArgSensiBar(Sys.DimX, Sys.ParamList, opts.args);
     catch
         try
             [iX, iP, tspan, args] = GetArgSensiBar(Sys.DimX, Sys.ParamList);
-        catch
-            s = lasterror;
-            warndlg(['Problem: ' s.message ', giving up'] );
+        catch ME
+            warndlg(['Problem: ' ME.message ', giving up'] );
             close;
             return;
         end
@@ -86,9 +84,9 @@ if (open_dialog)
     
     if isempty(tspan)
         if isfield(P, 'traj')
-            tspan= P.traj(1).time;
+            tspan = P.traj(1).time;
         else
-            error('No precomputed trajectories.')
+            error('SplotSensiBar:notspan','No precomputed trajectories.')
         end
     end
 else
@@ -128,7 +126,7 @@ end
 
 if (~isnumeric(iX))
     iX = FindParam(P,iX);
-    %NM The previous code should be equivalent to the commented code
+    %NM The previous code line should be equivalent to the commented code
 %     if ischar(iX)
 %         iX={iX};
 %     end
@@ -138,19 +136,19 @@ if (~isnumeric(iX))
 %         ind = FindParam(P,NiX(i));
 %         iX(i) = ind;
 %     end
-    iX = iX(iX<=P.DimP); %remove all non-existing variables
+    iX = iX(iX<=P.DimP); %keep only existing variables
 end
 
 if (~isnumeric(iP))
     iP = FindParam(P,iP);
-    %NM The previous code should be equivalent to the commented code
+    %NM The previous code line should be equivalent to the commented code
 %     NiP = iP;
 %     iP = [];
 %     for i = 1:numel(NiP)
 %         ind = FindParam(P,NiP{i});
 %         iP(i) = ind;
 %     end
-    iP = iP(iP<=P.DimP); %remove all non-existing parameters
+    iP = iP(iP<=P.DimP); %keep only existing parameters
 end
 
 % From now on I shoud have Sys, ipts, tspan, iX, iP, prop, and taus
@@ -158,9 +156,9 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   Recompute trajectories if needed
 
-Ptmp = CreateSampling(Sys, iP);
+Ptmp = CreateParamSet(Sys, iP); 
 Ptmp.pts = P.pts(:,ipts);
-P = ComputeTrajSensi(Sys, Ptmp,  tspan);
+P = ComputeTrajSensi(Sys, Ptmp, tspan);
 
 %  Compute the values for the histo bars
 
@@ -327,7 +325,7 @@ M = max(max(abs(Mend)));
 Mend(abs(Mend)<cutoff*M) = 0;
 
 if plots
-    h = plot_histo(Mend,P, iX,props,iP);
+    plot_histo(Mend,P, iX,props,iP);
 end
 
 function h = plot_histo3d(Mend,S,iX, props, iP)
@@ -364,9 +362,9 @@ set(gca, 'XTickLabel',  xtick_labels );
 set(gca, 'YTickLabel',  ytick_labels );
 axis([0 size(Mend,2)+1 0 size(Mend,1)+1]);
 
-hx = get(gca, 'xlabel')
+hx = get(gca, 'xlabel');
 set(hx, 'Interpreter','none');
-hy = get(gca, 'ylabel')
+hy = get(gca, 'ylabel');
 set(hy, 'Interpreter','none');
 
 shading interp;
