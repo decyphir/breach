@@ -107,15 +107,26 @@ function Sys = CreateSimulinkSystem(mdl, signals, params, inputfn )
       init_u =  @(sig_in,pts,tspan)UniStepSimulinkInput(1,sig_in,pts,tspan);
     else 
       if isstr(inputfn)
-        eval(['init_u=@' inputfn ';']);
         
-        pref = 'UniStep';
-        
+        init_u = [];
+                
+        pref = 'UniStep';        
         if regexp(inputfn, [pref '[0-9]+'])
           cp = str2num(inputfn(numel(pref)+1:end));
           init_u =  @(sig_in,pts,tspan)UniStepSimulinkInput(cp ,sig_in,pts,tspan);        
         end
-        
+      
+        if isempty(init_u)
+          pref = 'VarStep';        
+          if regexp(inputfn, [pref '[0-9]+'])
+            cp = str2num(inputfn(numel(pref)+1:end));
+            init_u =  @(sig_in,pts,tspan)VarStepSimulinkInput(cp ,sig_in,pts,tspan);        
+          end
+        end
+          
+        if isempty(init_u)
+          eval(['init_u=@' inputfn ';']);
+        end              
       else
         error('Invalid input function.');
       end
