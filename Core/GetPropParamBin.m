@@ -25,7 +25,7 @@ function [p rob] = GetPropParamBin(Sys, phi, P, params, optim, p_interval, p_tol
   
   for i= 1:numel(params) 
     
-    if (sign(optim( find(i==abs(optim))))< 0)
+    if (sign(optim( find(i==abs(optim)))) < 0)
       pol(i) = 1;
       pb(i) = p_interval(i,2);
       pw(i) = p_interval(i,1);
@@ -45,10 +45,6 @@ function [p rob] = GetPropParamBin(Sys, phi, P, params, optim, p_interval, p_tol
   if  (min(valb.*valw) > 0)
     
     fprintf('\n Interval contains only sat or unsat params, try larger parameter region \n');
-%    p_interval(:,1) = p_interval(:,1)/2;
-%    p_interval(:,2) = p_interval(:,2)*2;
-%
-%    [p rob] = GetPropParamBin(Sys, phi,P, params, optim, p_interval, p_tol, traj);
     return
   end
       
@@ -93,10 +89,12 @@ function [p rob] = GetPropParamBin(Sys, phi, P, params, optim, p_interval, p_tol
       end               
     
     end % end while
-    
-    p(i_to_optim) = pimax;
+    if (pol(i)>0)
+      p(i_to_optim) = pimax;
+    else
+      p(i_to_optim) = pimin;
+    end
     Pb = SetParam(Pb, params(i_to_optim),pimax');  
-    
   end
   fprintf('\n');
   

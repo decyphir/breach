@@ -37,7 +37,7 @@ if ischar(ParamList)
 
 elseif iscell(ParamList)
     inds = FindParam(P,ParamList);
-    new_params = ParamList(inds>P.DimP);
+    new_params = ParamList(inds>size(P.pts,1));
     P.ParamList = [P.ParamList new_params];
     
     for ii= 1:numel(inds)
@@ -47,6 +47,9 @@ elseif iscell(ParamList)
 
 elseif isnumeric(ParamList)
     for i = 1:numel(ParamList)
+        if ParamList(i) > size(P.pts, 1)
+            error('Indx out of range')
+        end
         P.pts(ParamList(i),:) = ParamValues(i,:);
     end
     return

@@ -74,7 +74,7 @@ function [val_opt Sopt]  = SOptimProp(Sys, S, prop, opt)
   options = optimset('MaxIter', MaxIter);  
   S = ComputeTraj(Sys, S, tspan );
   [S val] = SEvalProp(Sys, S, prop, 0);
-  
+ 
   switch OptimType 
    case 'Max'
     [val_init iv] = sort(-val);  
@@ -98,6 +98,12 @@ function [val_opt Sopt]  = SOptimProp(Sys, S, prop, opt)
   %% Main Loop
   
   Sopt = S;  
+  val_opt = val(iv(1));
+  
+  if (MaxIter==0)
+    return;
+  end
+  
   k=0;
   for i = iv
     k = k+1;
@@ -128,6 +134,10 @@ function [val_opt Sopt]  = SOptimProp(Sys, S, prop, opt)
       break
     end
   end
+
+
+
+
 end
     
  
