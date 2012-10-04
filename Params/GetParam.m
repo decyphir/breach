@@ -1,7 +1,9 @@
 function ParamValues = GetParam(S,ParamList)
 % GETPARAM get the values of parameters in a parameter set. The function
 % return an empty set if a parameter name or a parameter indice is not
-% valid.
+% valid. S can be a system or a parameter set. If S is a system GetParam
+% answers the value for the parameters given when the system had been
+% created.
 %
 % Synopsis: ParamValues = GetParam(P, ParamList)
 %
@@ -22,11 +24,11 @@ function ParamValues = GetParam(S,ParamList)
         p = S.p;
     end
 
-    % case 1 : the ParamList parameter is an array char of one parameter
+    % case 1 : the ParamList argument is an array char of one parameter
     % name
     if ischar(ParamList)
         ind = FindParam(S,ParamList);
-        if(ind<=S.DimP) %check parameter existence
+        if(ind<=size(p,1)) %check parameter existence
             ParamValues = p(ind,:);
         else
             ParamValues = [];
@@ -37,7 +39,7 @@ function ParamValues = GetParam(S,ParamList)
     % case 2 : the ParamList parameter is a list of integer
     if isnumeric(ParamList)
         %check for an error in the list
-        if ~isempty(find(ParamList>S.DimP,1)) || ...
+        if ~isempty(find(ParamList>size(p,1),1)) || ...
                                     ~isempty(find(ParamList<=0,1))
             ParamValues = [];
             return
@@ -54,7 +56,7 @@ function ParamValues = GetParam(S,ParamList)
     % case 3 : the ParamList parameter is a list of parameter name
     inds = FindParam(S,ParamList);
     %initialization
-    if ~isempty(find(inds>S.DimP,1))
+    if ~isempty(find(inds>size(p,1),1))
         ParamValues = [];
         return;
     else

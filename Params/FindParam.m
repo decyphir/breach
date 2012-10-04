@@ -1,6 +1,6 @@
-function index =  FindParam(Sys,param)
-%
-% FINDPARAM Finds the indices of parameters given by their name for a given system or param set
+function index =  FindParam(S,param)
+% FINDPARAM Finds the indices of parameters given by their name for a given
+% system or parameter set.
 %
 % Syntax: index = FindParam(Sys, param)
 %     or  index = FindParam(P, param)
@@ -18,7 +18,7 @@ function index =  FindParam(Sys,param)
 %  idxs = FindParam(Sys, {'a','F','G'});
 %
 
-if ~isfield(Sys,'ParamList')
+if ~isfield(S,'ParamList')
     error('FindParam:noParamList','No parameter list ...');
 end
 
@@ -28,16 +28,15 @@ end
 
 index = zeros(1, numel(param));
 
-newp = Sys.DimP;
-%NM Why the following code? size(Sys.pts,1) could be different of Sys.DimP?
-if isfield(Sys, 'pts')
-    newp = size(Sys.pts,1);
+newp = S.DimP;
+if isfield(S, 'pts') % S.pts can be > S.DimP (due to properties parameters)
+    newp = size(S.pts,1);
 end
 
 for i = 1:numel(param)
     found = 0;
-    for j = 1:numel(Sys.ParamList)
-        test = strcmp(Sys.ParamList{j},param{i});
+    for j = 1:numel(S.ParamList)
+        test = strcmp(S.ParamList{j},param{i});
         if (test)
             found = 1;
             index(i) = j;
