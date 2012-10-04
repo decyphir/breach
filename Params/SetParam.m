@@ -3,7 +3,8 @@ function P = SetParam(P,ParamList,ParamValues)
 % 
 % Synopsis: P = SetParam(P, ParamList, ParamValues)
 % 
-% Note that if the parameter is not present in P, it is created and appended.
+% Note that if the parameter is not present in P, it is created and
+% appended.
 % 
 % Example (for Lorenz84 system):
 % 
@@ -12,8 +13,8 @@ function P = SetParam(P,ParamList,ParamValues)
 %    Pr = Refine(P, 3);
 %    val = GetParam(Pr, 'a');
 %    val10 = 10*val; 
-%    Pr10 = SetParam(Pr, 'a', val10); % values for 'a' in Pr10 are ten times those in Pr
-%
+%    Pr10 = SetParam(Pr, 'a', val10); % values for 'a' in Pr10 are ten
+%                                     % times those in Pr
 % Other example :
 % 
 %    CreateSystem;
@@ -29,7 +30,7 @@ function P = SetParam(P,ParamList,ParamValues)
 
 if ischar(ParamList)
     ind = FindParam(P,ParamList);
-    if (ind>P.DimP)
+    if (ind>size(P.pts,1))
         P.ParamList = [P.ParamList, {ParamList}];
     end
     P.pts(ind,:) = ParamValues;
@@ -48,7 +49,7 @@ elseif iscell(ParamList)
 elseif isnumeric(ParamList)
     for i = 1:numel(ParamList)
         if ParamList(i) > size(P.pts, 1)
-            error('Indx out of range')
+            error('SetParam:index','Index out of range')
         end
         P.pts(ParamList(i),:) = ParamValues(i,:);
     end
