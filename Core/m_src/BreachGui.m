@@ -464,11 +464,13 @@ function edit_default_param_Callback(hObject, eventdata, handles)
     
     set(handles.listbox_default_parameters, 'Value',handles.selected_param);
     
-    if isfield(handles.working_sets.(handles.current_set), 'traj')    
-      tspan=handles.working_sets.(handles.current_set).traj(1).time;   
-      handles= info(handles,'Updating trajectories...');
-      handles.working_sets.(handles.current_set) = ComputeTraj(handles.Sys,rmfield(handles.working_sets.(handles.current_set),'traj'), tspan);        
-      handles= info(handles,'Updating trajectories... Done.');
+    if isfield(handles.working_sets.(handles.current_set), 'traj')
+      if (handles.selected_param <= handles.working_sets.(handles.current_set).DimP) 
+        tspan=handles.working_sets.(handles.current_set).traj(1).time;   
+        handles= info(handles,'Updating trajectories...');
+        handles.working_sets.(handles.current_set) = ComputeTraj(handles.Sys,rmfield(handles.working_sets.(handles.current_set),'traj'), tspan);        
+        handles= info(handles,'Updating trajectories... Done.');      
+      end
     end
 
     if isfield(handles.working_sets.(handles.current_set), 'props')    
@@ -1104,7 +1106,7 @@ end
 % --- Executes on button press in button_check_property.
 function button_check_property_Callback(hObject, eventdata, handles)
   
-  try
+  %try
     prop = handles.properties.(handles.current_prop);
     title = 'Check property options';
     prompt = {'Enter tspan for trajectory computation (empty = existing traj), ',...
@@ -1131,12 +1133,12 @@ function button_check_property_Callback(hObject, eventdata, handles)
     handles = update_properties_panel(handles);    
     guidata(hObject,handles);
 
-  catch 
-    s = lasterror;
-    warndlg(['Problem checking property: ' s.message] );
-    error(s);    
-    return
-  end
+ % catch 
+ %   s = lasterror;
+  %  warndlg(['Problem checking property: ' s.message] );
+  %  error(s);    
+  %  return
+  %end
   
 
 % --- Executes on button press in checkbox_selected.
@@ -1485,7 +1487,8 @@ function handles= plot_pts(handles)
         scatter3(x,y, z, 30, val, 'filled');
       end
       
-      stats = sprintf(['True:' dbl2str(numel(find(val>0))) '/' dbl2str(numel(val))  ... 
+      stats = sprintf(['val:' dbl2str(val(handles.current_pts)) ...  
+                       '\n#True:' dbl2str(numel(find(val>0))) '/' dbl2str(numel(val))  ...              
                        '\nMean:' dbl2str(mean(val)) ...
                        '\nstd:' dbl2str(std(val)) ... 
                        '\nMax:' dbl2str(max(val)) ...
@@ -1493,10 +1496,9 @@ function handles= plot_pts(handles)
       
       legend(stats)
           
-      %prop_cmap;     
+      set(gca, 'CLim', sym_clim(val)); 
       colormap([ 1 0 0; 0 1 0 ]);
-      set(gca, 'CLim', sym_clim(val));
-      
+         
       hold on;
         
       if (~isempty(ipts(2:end)))

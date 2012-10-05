@@ -5,7 +5,7 @@ function cm = prop_cmap(varargin)
   switch nargin 
    case 0
     n0 = nb_col/2;
-    n1 = nb_vol/2;
+    n1 = nb_col/2;
    case 1
     val= varargin{1};
     

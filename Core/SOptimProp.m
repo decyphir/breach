@@ -53,7 +53,7 @@ function [val_opt Sopt]  = SOptimProp(Sys, S, prop, opt)
   if isfield(opt,'StopWhenFoundInit')
     StopWhenFoundInit = opt.StopWhenFoundInit;
   else
-    StopWhenFoundInit = opt.StopWhenFoundInit;
+    StopWhenFoundInit = 0;
   end
   
   Stmp = Sselect(S,1); 
@@ -72,9 +72,44 @@ function [val_opt Sopt]  = SOptimProp(Sys, S, prop, opt)
     
 %% Initial values
   options = optimset('MaxIter', MaxIter);  
-  S = ComputeTraj(Sys, S, tspan );
-  [S val] = SEvalProp(Sys, S, prop, 0);
- 
+
+  if ('StopWhenFoundInit')    
+    rfprintf_reset();    
+    for i = 1:size(S.pts, 2)
+      Stmp = Sselect(S,i); 
+      Stmp = ComputeTraj(Sys, Stmp, tspan );     
+      val(i) = QMITL_Eval(Sys, prop, Stmp, Stmp.traj, 0);
+      status = ['Init ' num2str(i) '/' num2str(size(S.pts, 2)) ' Robustness value: ' num2str(val(i)) ];
+      rfprintf(status);      
+     
+      switch OptimType 
+       case 'Max'
+        if val(i)>0
+          val_opt = val(i);
+          Sopt = Stmp;
+          return;
+        end
+        
+       case 'Min'  
+        if val(i)<0
+          val_opt = val(i);
+          Sopt = Stmp;
+          return;
+        end       
+      end        
+      
+      if i==1
+        Sopt = Stmp;
+      else
+        Sopt = SConcat(Sopt, Stmp);
+      end
+    end     
+  else
+    Sopt = ComputeTraj(Sys, S, tspan );
+    [Sopt val] = SEvalProp(Sys, S, prop, 0);
+  end 
+  
+  
   switch OptimType 
    case 'Max'
     [val_init iv] = sort(-val);  
@@ -96,8 +131,6 @@ function [val_opt Sopt]  = SOptimProp(Sys, S, prop, opt)
   end
   
   %% Main Loop
-  
-  Sopt = S;  
   val_opt = val(iv(1));
   
   if (MaxIter==0)
@@ -119,7 +152,7 @@ function [val_opt Sopt]  = SOptimProp(Sys, S, prop, opt)
       ubound = S.pts(dim,i)+S.epsi(:,i);
     end
                
-    fprintf('Optimize from init point %d/%d Initial value: %g\n',k, numel(iv), val(i) );
+    fprintf('\nOptimize from init point %d/%d Initial value: %g\n',k, numel(iv), val(i) );
     rfprintf_reset();
     x0 = S.pts(dim,i); 
     [x val_opt(k)] = optimize(fun, x0, lbound, ubound,[],[],[],[],[],[],options);

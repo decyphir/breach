@@ -123,7 +123,16 @@ function Sys = CreateSimulinkSystem(mdl, signals, params, inputfn )
             init_u =  @(sig_in,pts,tspan)VarStepSimulinkInput(cp ,sig_in,pts,tspan);        
           end
         end
-          
+    
+        if isempty(init_u)
+          pref = 'UniPWA';        
+          if regexp(inputfn, [pref '[0-9]+'])
+            cp = str2num(inputfn(numel(pref)+1:end));
+            init_u =  @(sig_in,pts,tspan)UniPWASimulinkInput(cp ,sig_in,pts,tspan);        
+          end
+        end
+                
+        
         if isempty(init_u)
           eval(['init_u=@' inputfn ';']);
         end              
@@ -191,14 +200,13 @@ function Sys = CreateSimulinkSystem(mdl, signals, params, inputfn )
   
   signals = {sig_out{:} sig_log{:} sig_in{:}};     
  
-  % define parameters 
+%% define parameters 
   
   if exist('params')
     if (isempty(params))  
       exclude = {'tspan','u__','t__'};
       assignin('base','tspan', 0:1);
-      [params p0] = filter_vars(mdl_breach, exclude);
-      
+      [params p0] = filter_vars(mdl_breach, exclude);      
     else
         p0 = params.p0;
         params = {params.Names{:}};

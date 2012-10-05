@@ -13,6 +13,7 @@ function [vars vals] =  filter_vars(mdl, exclude)
 %
 %
 
+load_system(mdl);
   MAX_EL = 100;
   VarsOut = Simulink.findVars(mdl, 'WorkspaceType', 'base');
   newp = 0; % counts parameters found
@@ -27,7 +28,7 @@ function [vars vals] =  filter_vars(mdl, exclude)
   for i = 1:numel(VarsOut)
     var  = VarsOut(i);     
     vname = var.Name;
-    if ~isempty(regexp(vname, exclude))
+    if any(~cellfun(@isempty, regexp(vname, exclude)))
 %      fprintf('excluding %s\n', vname);
       continue;
     end
@@ -49,8 +50,7 @@ function [vars vals] =  filter_vars(mdl, exclude)
                 vals(newp) = v(i,j);                    
               end
             end
-          end   
-          
+          end             
         end
       end
     end                 

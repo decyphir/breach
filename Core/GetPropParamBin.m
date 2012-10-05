@@ -41,17 +41,33 @@ function [p rob] = GetPropParamBin(Sys, phi, P, params, optim, p_interval, p_tol
        
   valb = QMITL_Eval(Sys, phi, Pb, traj, 0);
   valw = QMITL_Eval(Sys, phi, Pw, traj, 0);
+  
+  
+%% Check if everybody is sat
+
+  if (all(valw>=0))
+    p = pw;
+    rob = min(valw);      
+    fprintf(['\n Warning: Interval contains only sat params, result may be not tight. Try larger parameter ' ...
+               'region. \n']);      
+    return
     
-  if  (min(valb.*valw) > 0)
-    
-    fprintf('\n Interval contains only sat or unsat params, try larger parameter region \n');
+  end
+
+  
+  if (any(valb<0))
+    p = pb;
+    rob = max(valb);      
+    fprintf(['\n Error: Interval contains only unsat params, result not tight. Try larger parameter ' ...
+               'region. \n']);      
     return
   end
-      
+
+  traj= traj(valw<0);
   % Now we know that there are satisfiable values
 
   val = min(valb);
-  
+  rob = inf;
   for i_to_optim = abs(optim)      % optimize independently in the order
                                    % given in optim 
     
@@ -68,7 +84,7 @@ function [p rob] = GetPropParamBin(Sys, phi, P, params, optim, p_interval, p_tol
 
       p_i = (pimax+pimin)/2;            
       Pb = SetParam(Pb, params(i_to_optim),p_i');            
-      valb = pol(i)*QMITL_Eval(Sys, phi, Pb, traj , 0);
+      valb = QMITL_Eval(Sys, phi, Pb, traj , 0);
       val = min(valb);
       
       %fprintf('  pimin: %g  pimax: %g p_i: %g val %g \n', pimin, pimax, p_i, val);
@@ -76,10 +92,18 @@ function [p rob] = GetPropParamBin(Sys, phi, P, params, optim, p_interval, p_tol
       rfprintf(res);
       
       if (val>0)
-        pimax = p_i;
-        rob = val;
+        rob = min(val,rob);
+        if pol(i)<0
+          pimin = p_i;
+        else
+          pimax = p_i;
+        end
       else      
-        pimin = p_i;
+        if pol(i)<0
+          pimax = p_i;
+        else
+          pimin = p_i;
+        end
       end
                  
       timeout =timeout-1;
@@ -89,12 +113,18 @@ function [p rob] = GetPropParamBin(Sys, phi, P, params, optim, p_interval, p_tol
       end               
     
     end % end while
-    if (pol(i)>0)
-      p(i_to_optim) = pimax;
+ 
+    
+    if (val>0)
+      p(i_to_optim) = p_i;
     else
-      p(i_to_optim) = pimin;
+      if pol(i)>0
+        p(i_to_optim) = pimax;
+      else
+        p(i_to_optim) = pimin;
+      end      
     end
-    Pb = SetParam(Pb, params(i_to_optim),pimax');  
+    Pb = SetParam(Pb, params(i_to_optim),p(i_to_optim)');  
   end
   fprintf('\n');
   
