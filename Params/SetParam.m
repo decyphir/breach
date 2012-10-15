@@ -28,6 +28,11 @@ function P = SetParam(P,ParamList,ParamValues)
 % SEE ALSO GETPARAM, CREATEPARAMSET 
 %  
 
+if size(ParamValues,1) == 1
+    ParamValues = ParamValues';
+end
+
+
 if ischar(ParamList)
     ind = FindParam(P,ParamList);
     if (ind>size(P.pts,1))

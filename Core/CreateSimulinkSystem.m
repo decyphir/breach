@@ -25,6 +25,8 @@ function Sys = CreateSimulinkSystem(mdl, signals, params, inputfn )
   cs.set_param('ExpressionFolding', 'on');   % Eliminate superfluous local variables (expression folding) 
   cs.set_param('SaveFinalState', 'off');   % Final states 
   cs.set_param('SignalLogging', 'on');   % Signal logging 
+  cs.set_param('SaveOutput', 'on');   % Output 
+  
   cs.set_param('LimitDataPoints', 'off');   % Limit data points to last 
   cs.set_param('LoadExternalInput', 'on');   % Input 
   cs.set_param('LoadInitialState', 'off');   % Initial state 
