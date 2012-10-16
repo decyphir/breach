@@ -1,9 +1,11 @@
-function Sys = CreateSimulinkSystem(mdl, signals, params, inputfn )
+function Sys = CreateSimulinkSystem(mdl, signals, params, p0,  inputfn )
 % CreateSimulinkSystem  Create a Breach friendly structure from a simulink model
 %  
-% Synopsis: Sys =  CreateSimulinkSystem(mdl, signals, params)
+% Synopsis: Sys =  CreateSimulinkSystem(mdl, signals, params, p0, inputfn)
 %
-    
+% TODO document args
+%  
+
 %% Copy the model into model_breach
 
 % Give it a name 
@@ -209,16 +211,23 @@ function Sys = CreateSimulinkSystem(mdl, signals, params, inputfn )
       exclude = {'tspan','u__','t__'};
       assignin('base','tspan', 0:1);
       [params p0] = filter_vars(mdl_breach, exclude);      
-    else
-        p0 = params.p0;
-        params = {params.Names{:}};
     end
+    
   else
      exclude = {'tspan','u__','t__'};
      assignin('base','tspan', 0:1);
      [params p0] = filter_vars(mdl_breach, exclude);  
   end   
   
+  if ~exist('p0')
+      p0 = zeros(numel(params),1);
+  end
+  
+  if isempty('p0')
+      p0 = zeros(numel(params),1);
+  end
+    
+ 
   params = {params{:} U.params{:}};
   p0 = [zeros(1,numel(signals)) p0 pu];
     
