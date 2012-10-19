@@ -1,8 +1,9 @@
-function [p rob] = GetPropParamBin(Sys, phi, P, params, optim, p_interval, p_tol, traj) 
+function [p rob] = GetPropParamBin(Sys, phi, P, params, monotony, p_interval, p_tol, traj) 
 %  GETPROPPARAMBIN search values for parameters in a formula phi so that
-%  phi is satisfied by a set of traces 
+%  phi is satisfied by a set of traces - assumes monotonicity, to be
+%  specified by the user
 %     
-%  Synopsis: [p rob] = GetPropParamBin(Sys, phi, Paramset, params_to_optim, optim, p_interval, p_tol, traces) 
+%  Synopsis: [p rob] = GetPropParamBin(Sys, phi, Paramset, params_to_optim, monotony, p_interval, p_tol, traces) 
 %   
 %  where : 
 %  
@@ -10,7 +11,7 @@ function [p rob] = GetPropParamBin(Sys, phi, P, params, optim, p_interval, p_tol
 %  - phi             is an STL (QMITL) property
 %  - ParamSet        is a Breach set of parameters with param values for phi 
 %  - params_to_optim is a cell of property param names to find
-%  - optim           is an array specifying whether each parameter should be maximized    
+%  - monotony        is an array specifying the monotonicity of phi wrt each parameter. should be maximized    
 %                    (optim[i] = j) or minimized (optim[i] = -1); in the case of multiple  
 %                    possible satisfying values, the order in which the parameter appears   
 %                    determines the priority order in which they are
@@ -25,15 +26,14 @@ function [p rob] = GetPropParamBin(Sys, phi, P, params, optim, p_interval, p_tol
   
   for i= 1:numel(params) 
     
-    if (sign(optim( find(i==abs(optim)))) < 0)
-      pol(i) = 1;
+    if (monotony(i)>0)
       pb(i) = p_interval(i,2);
       pw(i) = p_interval(i,1);
     else
       pb(i) = p_interval(i,1);
       pw(i) = p_interval(i,2);
-      pol(i) = -1;
     end
+  
   end
       
   Pb = SetParam(P, params, pb');
@@ -54,7 +54,6 @@ function [p rob] = GetPropParamBin(Sys, phi, P, params, optim, p_interval, p_tol
     
   end
 
-  
   if (any(valb<0))
     p = pb;
     rob = max(valb);      
@@ -68,22 +67,22 @@ function [p rob] = GetPropParamBin(Sys, phi, P, params, optim, p_interval, p_tol
 
   val = min(valb);
   rob = inf;
-  for i_to_optim = abs(optim)      % optimize independently in the order
-                                   % given in optim 
+  for i= 1:numel(params)      % optimize independently in the order
+                             % given in params 
     
-    fprintf('\nOptimizing %s ', params{i_to_optim});
+    fprintf('\nOptimizing %s ', params{i});
     
     timeout=100;
-    pimax = p_interval(i_to_optim,2);
-    pimin = p_interval(i_to_optim,1);
+    pimax = p_interval(i,2);
+    pimin = p_interval(i,1);
     
-    err = p_tol(i_to_optim);       
+    err = p_tol(i);       
     
     rfprintf_reset();
     while (abs(pimax-pimin)>err)
 
       p_i = (pimax+pimin)/2;            
-      Pb = SetParam(Pb, params(i_to_optim),p_i');            
+      Pb = SetParam(Pb, params(i),p_i');            
       valb = QMITL_Eval(Sys, phi, Pb, traj , 0);
       val = min(valb);
       
@@ -93,13 +92,13 @@ function [p rob] = GetPropParamBin(Sys, phi, P, params, optim, p_interval, p_tol
       
       if (val>0)
         rob = min(val,rob);
-        if pol(i)<0
+        if monotony(i)<0
           pimin = p_i;
         else
           pimax = p_i;
         end
       else      
-        if pol(i)<0
+        if monotony(i)<0
           pimax = p_i;
         else
           pimin = p_i;
@@ -116,15 +115,15 @@ function [p rob] = GetPropParamBin(Sys, phi, P, params, optim, p_interval, p_tol
  
     
     if (val>0)
-      p(i_to_optim) = p_i;
+      p(i) = p_i;
     else
-      if pol(i)>0
-        p(i_to_optim) = pimax;
+      if monotony(i)>0
+        p(i) = pimax;
       else
-        p(i_to_optim) = pimin;
+        p(i) = pimin;
       end      
     end
-    Pb = SetParam(Pb, params(i_to_optim),p(i_to_optim)');  
+    Pb = SetParam(Pb, params(i),p(i)');  
   end
   fprintf('\n');
   
