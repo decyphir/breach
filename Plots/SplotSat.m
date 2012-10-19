@@ -1,18 +1,19 @@
-function [S,val] =  SplotSat(Sys,S,props, tau, ipts, depth)
+function [S,val] =  SplotSat(Sys,S,props, depth, tau, ipts)
 %
-%   SPlotSat Plots the satisfaction function wrt time of properties for computed trajectories
+%   SplotSat Plots the satisfaction function wrt time of properties for computed trajectories
 %  
-%   Usage: [Pf val] = SPlotSat(Sys, Ptraj ,prop,tau, [ ipt,  depth ])
+%   Usage: [Pf val] = SplotSat(Sys, Ptraj ,prop [, depth, tau,  ipt])
 %   
 %   Inputs: 
 %   
 %    - Sys        system    
 %    - Ptraj      param set with trajectories
 %    - prop       property(ies)  
+%    - depth      computes and plot satisfaction of subformulas up to depth
+%                 (default: 0)
 %    - tau        time instant(s) when to estimate properties
 %    - ipts       trajectories for which to eval properties 
-%    - depth      computes satisfaction of subformulas up to depth
-%                 (default: 0)
+
 %  
 %   Outputs: 
 %  
@@ -22,7 +23,7 @@ function [S,val] =  SplotSat(Sys,S,props, tau, ipts, depth)
          
 % check arguments 
 
-    
+      
   if (~exist('ipts')||isempty(ipts))
     ipts = 1:size(S.pts,2);
   end
@@ -30,7 +31,18 @@ function [S,val] =  SplotSat(Sys,S,props, tau, ipts, depth)
   if (~exist('depth'))
     depth = 0;
   end
-  
+ 
+  if (~exist('tau')||isempty(tau))
+    tau=[];
+  end
+ 
+ if isstr(props)
+    QMITL_Formula('phi_tmp__', props );
+    [S,val] =  SplotSat(Sys,S, phi_tmp__ , depth, tau, ipts)
+    evalin('base', 'clear phi_tmp__'); 
+    return;
+ end
+
   if (depth>0)
     nprops = [];
     for i = 1:numel(props)
@@ -54,12 +66,7 @@ function [S,val] =  SplotSat(Sys,S,props, tau, ipts, depth)
     S.traj_ref =1:numel(S.traj);
   end
   
-  if (~exist('tau')||isempty(tau))
-    tau0=[];
-  else
-    tau0 = tau;
-  end
- 
+  
   % do things
     
   %% setup plots if needed
@@ -105,9 +112,9 @@ function [S,val] =  SplotSat(Sys,S,props, tau, ipts, depth)
       
       traj = S.traj(S.traj_ref(i));
       Ptmp.pts = S.pts(:,i);
-      if (~isempty(tau0))        
-        S.props_values(iprop,i).tau = tau0;
-        S.props_values(iprop,i).val = QMITL_Eval(Sys,prop,Ptmp,traj, tau0);
+      if (~isempty(tau))        
+        S.props_values(iprop,i).tau = tau;
+        S.props_values(iprop,i).val = QMITL_Eval(Sys,prop,Ptmp,traj, tau);
         val(np-npb,i) =  S.props_values(iprop,i).val(1);
       else
         tau = traj.time; 
