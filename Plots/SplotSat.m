@@ -134,10 +134,10 @@ function [S,val] =  SplotSat(Sys,S,props, depth, tau, ipts)
       
     
     end  
-    xlabel('tau');    
+    
     fprintf('\n');
   end
-
+xlabel('time');    
   
 function i = find_prop(S,st)
 
