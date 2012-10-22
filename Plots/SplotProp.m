@@ -33,14 +33,21 @@ function [val XI YI ZI] = SplotProp(Pf, prop, tau, opt)
         Z = val(:,1);
 
         [XI YI ZI] = QuickMeshSf(Pf,Z);         
-        
-        %scatter(Pf.pts(Pf.dim(1),:), Pf.pts(Pf.dim(2),:),20, val);
+         
         
         xlabel(Pf.ParamList{Pf.dim(1)},'Interpreter','none');  
         ylabel(Pf.ParamList{Pf.dim(2)},'Interpreter','none');
-        zlabel(disp(prop, -1),'Interpreter','none');                        
+        zlabel('Quantitative Satisfaction');
+        title(disp(prop, -1),'Interpreter','none');                        
         prop_cmap(val);
         colorbar;
+        
+        try 
+
+          hold on;
+          [c h] = contour(XI,YI,ZI,  [0 0], 'LineWidth',2,'LineColor','k');
+          clabel(c,h);
+        end
         
       end      
       

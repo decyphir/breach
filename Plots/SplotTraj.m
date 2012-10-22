@@ -140,7 +140,7 @@ function SplotTraj(S,proj,ipts,opt,t0)%
         % drawnow
       end
     end
-    drawnow       
+    %drawnow       
       
    case {2}
     hold on;
@@ -168,7 +168,7 @@ function SplotTraj(S,proj,ipts,opt,t0)%
         plot(x,y,opt{:});        
       end 
     end     
-    drawnow            
+    %drawnow            
    
    otherwise
     hold on;
@@ -192,13 +192,13 @@ function SplotTraj(S,proj,ipts,opt,t0)%
     
     for i = ipts
       time = S.traj(i).time;
-      if (~isempty(S.traj(i).time))
+      if (~isempty(time))
         x = S.traj(i).X(proj(1),time>=t0)*rescale;
         y = S.traj(i).X(proj(2),time>=t0)*rescale;
         z = S.traj(i).X(proj(3),time>=t0)*rescale;
         plot3(x,y,z,opt{:});        
       end      
-      drawnow
+      %drawnow
     end
   end
   

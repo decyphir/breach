@@ -60,32 +60,33 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
   if isfield(S0, 'init_fun')
     S0 = S0.init_fun(S0);    
   end
-  
-  if (isfield(S0, 'traj_to_compute'))
-    
-    S = Sselect( S0, S0.traj_to_compute );
-    S = ComputeTraj(Sys, S, tspan); 
-    Sf = S0;
-    Sf.traj = S.traj;   
-    Sf.Xf = S.Xf;
-    return;
-  end  
             
   if (~isfield(Sys, 'type'))
     Sys.type = '';
   end
       
-  switch Sys.type
-   case 'traces' % No model
-                 % If system type is only traces, check consistency of params and pts      
+  if strcmp(Sys.type,'traces') % No model
+                               % If system type is only traces, check consistency of params and pts      
     Sf=S0;
     for (i = 1:numel(Sf.traj))
       Sf.traj(i).param = Sf.pts(1:Sf.DimP,i)';      
     end
+  else 
+    if (isfield(S0, 'traj_to_compute'))
+      S0 = SPurge(S0);
+      S = Sselect(S0, S0.traj_to_compute );
+      S = ComputeTraj(Sys, S, tspan); 
+      Sf = S0;
+      Sf.traj = S.traj;   
+      Sf.Xf = S.Xf;
+      return;
+    end  
+  end
+  
+  switch Sys.type
     
-   case 'Simulink'
-          
-    model = Sys.mdl;      
+   case 'Simulink' 
+    model = Sys.mdl;
     Sf = S0; 
     ipts = 1:size(S0.pts,2);
     if (numel(ipts)>1)
@@ -121,7 +122,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
    otherwise
     
     InitSystem(Sys);
-    
+     
     if iscell(tspan)
       if (numel(tspan)==2)
         T = [tspan{1} tspan{2} tspan{2}];  % not really nice.. should be
@@ -134,12 +135,12 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
     end
     
     if (exist('u'))
-      
+       
       err = check_u(u);
       if (err~=0)
         error(err);
       end
-      
+       
       %This is quite ugly...
       Sf = S0;
       Sf.pts = S0.pts(1:S0.DimP, :);
@@ -156,18 +157,18 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
       Sf.pts = S0.pts;
       
     end    
-  
+    
     CVodeFree();
     
     if output_trajs
       Sf = Sf.traj;
     end        
   end
-
+  
   if isfield(Sys, 'time_mult')
     Sf.time_mult = Sys.time_mult;
   end
-
+  
 end
 
   

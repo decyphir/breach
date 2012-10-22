@@ -77,8 +77,6 @@ function [S,val] =  SplotSat(Sys,S,props, depth, tau, ipts)
   else
       time_mult=1;
   end
-
-  
   
   for np = npb+1:numel(props)+npb
      
@@ -88,7 +86,7 @@ function [S,val] =  SplotSat(Sys,S,props, depth, tau, ipts)
     
     subplot(nb_prop, 1, np-npb);     
     hold on;
-    xlabel('tau');
+   
     title(disp(prop), 'Interpreter','none');
    
     
@@ -128,13 +126,15 @@ function [S,val] =  SplotSat(Sys,S,props, depth, tau, ipts)
       phi_tspan = S.props_values(iprop,i).tau;
       phi_val = S.props_values(iprop,i).val;
       plot(phi_tspan*time_mult, phi_val);
-      plot([phi_tspan(1) phi_tspan(end)]*time_mult, [0 0],'-k');
+      %plot([phi_tspan(1) phi_tspan(end)]*time_mult, [0 0],'-k');
       stairs(phi_tspan*time_mult, (phi_val>0)*max(abs(phi_val))/2,'-r');
+      
+      legend('Quant. sat', 'Bool. sat');
       grid on;
       
     
     end  
-       
+    xlabel('tau');    
     fprintf('\n');
   end
 

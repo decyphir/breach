@@ -27,7 +27,7 @@ function S = SPurge(S)
  % Reset field traj_to_compute 
  
   X = S.pts(1:S.DimP,:)'; 
-  [C,IA,IC] = unique(X,'rows','stable');
+  [C,IA,IC] = unique(X,'rows');
   
-  S.traj_ref= IC;
-  S.traj_to_compute = IA;
+  S.traj_ref= IC';
+  S.traj_to_compute = IA';
