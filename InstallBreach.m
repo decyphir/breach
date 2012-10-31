@@ -31,10 +31,10 @@ fprintf('mex -outdir .. lim_inf_inv.c\n');
 mex -outdir .. lim_inf_inv.c
 fprintf('mex -outdir .. lim_inf_indx.c\n');
 mex -outdir .. lim_inf_indx.c               
-fprintf('mex -outdir .. ltr.c\n');
-mex -outdir .. ltr.c               
-fprintf('mex -outdir .. rtr.c\n');
-mex -outdir .. rtr.c               
+fprintf('mex -outdir ../../../Core/m_src ltr.c\n');
+mex -outdir ../../../Core/m_src/ ltr.c               
+fprintf('mex -outdir ../../../Core/m_src rtr.c\n');
+mex -outdir ../../../Core/m_src/ rtr.c               
 
 cd robustness;
 CompileRobustness;

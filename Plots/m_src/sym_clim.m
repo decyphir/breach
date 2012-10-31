@@ -1,7 +1,7 @@
 function clim = sym_clim(val)
   
-  M = max(val);
-  m = min(val);
+  M = max(max(val));
+  m = min(min(val));
   
   switch (sign(M*m))
    case 1

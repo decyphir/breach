@@ -173,7 +173,6 @@ function [val_opt Sopt]  = SOptimProp(Sys, S, prop, opt)
 
 end
     
- 
 function val = fun_max(x, Sys, prop, tspan)
   global fopt traj_opt found StopWhenFound
   if (~isempty(found)&&StopWhenFound)

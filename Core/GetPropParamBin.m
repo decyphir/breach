@@ -87,7 +87,7 @@ function [p rob] = GetPropParamBin(Sys, phi, P, params, monotony, p_interval, p_
       val = min(valb);
       
       %fprintf('  pimin: %g  pimax: %g p_i: %g val %g \n', pimin, pimax, p_i, val);
-      res = num2str(pimax);
+      res = num2str(p_i);
       rfprintf(res);
       
       if (val>0)

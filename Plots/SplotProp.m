@@ -9,10 +9,33 @@ function [val XI YI ZI] = SplotProp(Pf, prop, tau, opt)
 %  Returns the plotted values.
 %   
   
+%% read options 
+ 
   if (~exist('opt','var'))
-    opt.style = {'-b'};
+    opt = [];
   end
-    
+  
+  if isfield(opt, 'style')
+    style = opt.style;
+  else
+    style = {'-b'};   
+  end
+  
+  if isfield(opt, 'contour')  
+    contour = opt.contour;
+  else
+    contour = 0;
+  end
+  
+  if isfield(opt, 'nb_contour')  
+    nb_contour = opt.nb_contour;
+  else
+    contour = 0;
+  end
+  
+  
+  
+%% plot the thing
   iprop = find_prop(get_id(prop), Pf.props_names);  
   
   if iprop
@@ -20,7 +43,7 @@ function [val XI YI ZI] = SplotProp(Pf, prop, tau, opt)
      case 1
       val = cat(1, Pf.props_values(iprop,:).val);
       val = val(:,1);
-      plot(Pf.pts(Pf.dim,:),val,opt.style{:});
+      plot(Pf.pts(Pf.dim,:),val, style{:});
       xlabel(Pf.ParamList{Pf.dim},'Interpreter','none');  
       ylabel(disp(prop, -1),'Interpreter','none');
      
