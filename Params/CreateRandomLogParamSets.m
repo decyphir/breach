@@ -54,8 +54,7 @@ PRLog = CreateSampling(Sys, params); %pas besoin des intervalles
 PRLog = Refine(PRLog, [N,ones(1,nbParam-1)]);  %On découpe en N points
 
 % if there are null range limits, we replace them by the AbsTol
-posNull = ranges==0;
-ranges(posNull) = Sys.CVodesOptions.AbsTol;
+ranges(ranges==0) = Sys.CVodesOptions.AbsTol;
 
 ranges = log10(ranges);
 
@@ -84,7 +83,7 @@ for i=1:nbParam
 %    sup = 10.^sup; %valeur maximale des nouveaux intervalles en normal
 %    epsi = (sup-inf)/2; %epsi des nouveaux intervalles en normal
 %    value = inf + epsi; %valeur des nouveaux points en normal
-    
+                                                      value 
     PRLog = SetParam(PRLog,params(i),value);
     position = FindParam(Sys,params{i}); %on cherche la position des epsi
     position = PRLog.dim==position;

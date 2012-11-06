@@ -2,7 +2,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
 %  COMPUTETRAJ compute trajectories for a system given initial conditions
 %  and parameters
 %
-%  Synopsis:   Pf = ComputeTraj(Sys,P0,tspan [,u])
+%  Synopsis:   Sf = ComputeTraj(Sys,S0,tspan [,u])
 %
 %   Compute trajectories issued from points in S0 on the
 %   time interval tspan
@@ -11,7 +11,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
 %
 %    -  Sys      System (needs to be compiled)
 %
-%    -  P0       Initial conditions and params given in a parameter set
+%    -  S0       Initial conditions and params given in a parameter set
 %                or in an array of size DimX x nb_traj
 %    -  tspan    interval of the form [t0, tf]; Fixed time instants can
 %                also be specified tspan = [t0 t1 ... tN];
@@ -24,7 +24,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
 %
 %   Outputs:
 %
-%    -  Pf       Sampling structure augmented with the field traj containing
+%    -  Sf       Sampling structure augmented with the field traj containing
 %                 computed trajectories if the input is a param set
 %
 % or - trajs     array of trajectories
@@ -40,7 +40,8 @@ if ~isstruct(S0)
         if (size(S0,2) == Sys.DimP) % be smart, try transpose in case it works
             S0 = S0';
         else
-            error('Second argument must be a parameter set or be of dimension Sys.DimP x ?')
+            error('ComputTraj:S0DimensionError',...
+                        'Second argument must be a parameter set or be of dimension Sys.DimP x ?')
         end
     end
     output_trajs = 1;
@@ -68,7 +69,7 @@ end
 if strcmp(Sys.type,'traces') % No model
     % If system type is only traces, check consistency of params and pts
     Sf=S0;
-    for (i = 1:numel(Sf.traj))
+    for i = 1:numel(Sf.traj)
         Sf.traj(i).param = Sf.pts(1:Sf.DimP,i)';
     end
 else
@@ -90,7 +91,8 @@ switch Sys.type
         Sf = S0;
         ipts = 1:size(S0.pts,2);
         if (numel(ipts)>1)
-            fprintf(['Computing ' num2str(numel(ipts)) ' trajectories of model ' model '\n[             25%%           50%%            75%%               ]\n ']);
+            fprintf(['Computing ' num2str(numel(ipts)) ' trajectories of model ' model '\n'...
+                     '[             25%%           50%%            75%%               ]\n ']);
             iprog =0;
         end
         
@@ -108,7 +110,7 @@ switch Sys.type
                 assignin('base', 'u__',U.u);
             end
             
-            [traj.time traj.X] = Sys.sim(Sys,tspan, S0.pts(:,i));
+            [traj.time, traj.X] = Sys.sim(Sys,tspan, S0.pts(:,i));
             traj.param = S0.pts(1:S0.DimP,i)';
             Sf.traj(i) = traj;
             Sf.Xf(:,i) = traj.X(:,end);
@@ -134,11 +136,11 @@ switch Sys.type
             T = tspan;
         end
         
-        if (exist('u'))
+        if (exist('u','var'))
             
             err = check_u(u);
             if (err~=0)
-                error(err);
+                error('ComputTraj:ErrorWithU',err);
             end
             
             %This is quite ugly...
