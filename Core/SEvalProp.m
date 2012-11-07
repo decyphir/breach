@@ -6,19 +6,19 @@ function [S,val] =  SEvalProp(Sys,S,props, tau, ipts, bool_plot, break_level)
 %
 %   Inputs:
 %
-%    - Sys        system
-%    - Ptraj      param set with trajectories
-%    - prop       property(ies)
-%    - tau        time instant(s) when to estimate properties
-%    - ipts       trajectories for which to eval properties
-%    - bool_plot  side effects plots the values if 1
+%    - Sys         system
+%    - Ptraj       param set with trajectories
+%    - prop        property(ies)
+%    - tau         time instant(s) when to estimate properties
+%    - ipts        trajectories for which to eval properties
+%    - bool_plot   side effects plots the values if 1
 %    - break_level computes satisfaction of subformulas up to break_level
 %
 %
 %   Outputs:
 %
-%    - Pf       param set with prop_values field
-%    - val      quantitative satisfaction of properties
+%    - Pf          param set with prop_values field
+%    - val         quantitative satisfaction of properties
 %
 
 % check arguments
