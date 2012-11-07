@@ -28,7 +28,8 @@ function P = SetParam(P,ParamList,ParamValues)
 % SEE ALSO GETPARAM, CREATEPARAMSET 
 %  
 
-if size(ParamValues,1) == 1
+if size(ParamValues,1) == 1 && numel(ParamList)~=1
+    % in case when we have one value for many parameters
     ParamValues = ParamValues';
 end
 
