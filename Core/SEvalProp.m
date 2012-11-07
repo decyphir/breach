@@ -1,28 +1,33 @@
-function [S,val] =  SEvalProp(Sys,S,props, tau, ipts, bool_plot, break_level)
+function [S, val] = SEvalProp(Sys, S, props, tau, ipts, bool_plot, break_level)
 %
 %   SEVALPROP Eval property for previously computed trajectories
 %
-%   Usage: [Pf val] = SEvalProp(Sys, Ptraj ,prop,tau, [ ipts, bool_plot, break_level ])
+%   Usage: [Pf, val] = SEvalProp(Sys, Ptraj, prop [ , tau, ipts, bool_plot, break_level ])
 %
 %   Inputs:
 %
-%    - Sys        system
-%    - Ptraj      param set with trajectories
-%    - prop       property(ies)
-%    - tau        time instant(s) when to estimate properties
-%    - ipts       trajectories for which to eval properties
-%    - bool_plot  side effects plots the values if 1
-%    - break_level computes satisfaction of subformulas up to break_level
+%    - Sys         system
+%    - Ptraj       param set with trajectories
+%    - prop        property(ies)
+%    - tau         time instant(s) when to estimate properties. If not
+%                     provided, the time step considered for computing the
+%                     trajectory is used.
+%    - ipts        trajectories for which to eval properties
+%    - bool_plot   side effects plots the values if 1
+%    - break_level computes satisfaction of the formula and of the
+%                     subformulas up to break_level
 %
 %
 %   Outputs:
 %
-%    - Pf       param set with prop_values field
-%    - val      quantitative satisfaction of properties
+%    - Pf          param set with prop_values field
+%    - val         an array describing the quantitative satisfaction of
+%                    properties. A line describes the quantitative
+%                    satisfaction of a formula for each trajectory
 %
 
-% check arguments
 
+% check arguments
 
 if (~exist('ipts','var')||isempty(ipts))
     ipts = 1:size(S.pts,2);
@@ -35,14 +40,14 @@ end
 if (break_level>0)
     nprops = [];
     for i = 1:numel(props)
-        nprops =   [nprops QMITL_Break(props(i), break_level) ];
+        nprops = [ nprops QMITL_Break(props(i),break_level) ];
     end
     props = nprops;
 end
 
 if ~isfield(S,'props')
     S.props = [];
-    npb =0;
+    npb = 0;
 else
     npb = numel(S.props);
 end
@@ -52,16 +57,16 @@ if ~isfield(S,'props_names')
 end
 
 if ~isfield(S,'traj_ref')
-    S.traj_ref =1:numel(S.traj);
+    S.traj_ref = 1:numel(S.traj);
 end
 
-if (~exist('tau')||isempty(tau))
-    tau0=[];
+if (~exist('tau','var')||isempty(tau))
+    tau0 = [];
 else
     tau0 = tau;
 end
 
-if (~exist('bool_plot'))
+if (~exist('bool_plot','var'))
     bool_plot = 0;
 end
 
@@ -75,14 +80,14 @@ if (bool_plot)
     if (isfield(Sys,'time_mult'))
         time_mult = Sys.time_mult;
     else
-        time_mult=1;
+        time_mult = 1;
     end
 end
 
-
+val = zeros(numel(props),numel(ipst)); %initialisation du tableau contenant les valeurs de vérité des formules
 for np = npb+1:numel(props)+npb
     
-    prop = props(np-npb);
+    prop = props(np-npb);  % prop est la propriété qu'on traite
     prop_name =  get_id(prop);
     iprop = find_prop(S,prop_name);
     
@@ -94,34 +99,37 @@ for np = npb+1:numel(props)+npb
     end
     
     if ~iprop
-        S.props_names= {S.props_names{:} get_id(prop)};
-        S.props= [S.props prop];
+        % if the property does not exist in S, we add it to S
+        S.props_names = [S.props_names {prop_name}];
+        S.props = [S.props prop];
         iprop = numel(S.props_names);
     end
     
     prop = QMITL_OptimizePredicates(Sys,prop);
-    fprintf(['Checking ' prop_name  '\n[             25%%           50%%            75%%               ]\n ']);
-    iprog =0;
+    fprintf(['Checking ' prop_name  '\n'...
+             '[             25%%           50%%            75%%               ]\n ']);
+    iprog = 0;
     
-    Ptmp = Sselect(S,1);
+    Ptmp = Sselect(S,1); % copie S en ne gardant que le premier parameter set
     
     for i = ipts
+        % on calcul la valeur de vérité de la formule prop pour chaque trajectoire
         while (floor(60*i/numel(ipts))>iprog)
             fprintf('^');
             iprog = iprog+1;
         end
         
         traj = S.traj(S.traj_ref(i));
-        Ptmp.pts = S.pts(:,i);
+        Ptmp.pts = S.pts(:,i); % on copie dans Ptmp le parameter set qui nous intéresse
         if (~isempty(tau0))
             S.props_values(iprop,i).tau = tau0;
             S.props_values(iprop,i).val = QMITL_Eval(Sys,prop,Ptmp,traj, tau0);
-            val(np-npb,i) =  S.props_values(iprop,i).val(1);
+            val(np-npb,i) = S.props_values(iprop,i).val(1);
         else
             tau = traj.time;
             S.props_values(iprop,i).tau = traj.time;
             S.props_values(iprop,i).val = QMITL_Eval(Sys,prop,Ptmp, traj, tau);
-            val(np-npb,i) =  S.props_values(iprop,i).val(1);
+            val(np-npb,i) = S.props_values(iprop,i).val(1);
         end
         
         % plot property values
@@ -142,7 +150,7 @@ end
 
 function i = find_prop(S,st)
 
-i=0;
+i = 0;
 for k = 1:numel(S.props_names)
     if strcmp(st,S.props_names{k})
         i = k;
