@@ -54,7 +54,10 @@ function Sys = CreateSimulinkSystem(mdl, signals, params, p0,  inputfn )
   cs.set_param('SaveCompleteFinalSimState', 'off');   % Save complete SimState in final state 
   cs.set_param('SaveFormat', 'StructureWithTime');   % Format 
   cs.set_param('SignalLoggingName', 'logsout');   % Signal logging name 
-  cs.set_param('SignalLoggingSaveFormat', 'ModelDataLogs');   % Signal logging format 
+
+  if (~verLessThan('matlab','R2011a'))
+    cs.set_param('SignalLoggingSaveFormat', 'ModelDataLogs');   % Signal logging format 
+  end
   cs.set_param('TimeSaveName', 'tout');   % Time 
     
 %% Find and Log input signals 

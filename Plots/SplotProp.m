@@ -54,10 +54,19 @@ function [val XI YI ZI] = SplotProp(Pf, prop, tau, opt)
         plot3(Pf.pts(Pf.dim(1),:), Pf.pts(Pf.dim(2),:), val+.01*abs(val), 'MarkerSize', 14);
       else
         Z = val(:,1);
-
-        [XI YI ZI] = QuickMeshSf(Pf,Z);         
-         
         
+        [XI YI ZI] = QuickMeshSf(Pf,Z);         
+        
+        if contour 
+          cla;
+          contourf(XI,YI,ZI, 256, 'EdgeColor', 'None'); 
+          if (max(val)*min(val)<0)
+            contour(XI,YI,ZI, [0 0], 'LineWidth', 4, 'EdgeColor', 'b', 'LineStyle', '--');
+            legend('sat/unsat', 'boundary') ;
+          end
+        
+        end
+          
         xlabel(Pf.ParamList{Pf.dim(1)},'Interpreter','none');  
         ylabel(Pf.ParamList{Pf.dim(2)},'Interpreter','none');
         zlabel('Quantitative Satisfaction');
