@@ -22,9 +22,9 @@ function [val XI YI ZI] = SplotProp(Pf, prop, tau, opt)
   end
   
   if isfield(opt, 'contour')  
-    contour = opt.contour;
+    use_contour = opt.contour;
   else
-    contour = 0;
+    use_contour = 0;
   end
   
   if isfield(opt, 'nb_contour')  
@@ -53,16 +53,16 @@ function [val XI YI ZI] = SplotProp(Pf, prop, tau, opt)
       else
         Z = val(:,1);
         
-        [XI YI ZI] = QuickMeshSf(Pf,Z);         
-        
-        if contour 
-          cla;
+      
+        [XI YI ZI] = QuickMeshSf(Pf,Z);     
+        if use_contour 
+          clf;
           contourf(XI,YI,ZI, 256, 'EdgeColor', 'None'); 
+          hold on;
           if (max(val)*min(val)<0)
             contour(XI,YI,ZI, [0 0], 'LineWidth', 4, 'EdgeColor', 'b', 'LineStyle', '--');
             legend('sat/unsat', 'boundary') ;
           end
-        
         end
           
         xlabel(Pf.ParamList{Pf.dim(1)},'Interpreter','none');  
@@ -73,7 +73,6 @@ function [val XI YI ZI] = SplotProp(Pf, prop, tau, opt)
         colorbar;
         
         try 
-
           hold on;
           [c h] = contour(XI,YI,ZI,  [0 0], 'LineWidth',2,'LineColor','k');
           clabel(c,h);
