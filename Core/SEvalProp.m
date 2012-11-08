@@ -84,7 +84,7 @@ if (bool_plot)
     end
 end
 
-val = zeros(numel(props),numel(ipst)); %initialisation du tableau contenant les valeurs de vérité des formules
+val = zeros(numel(props),numel(ipts)); %initialisation du tableau contenant les valeurs de vérité des formules
 for np = npb+1:numel(props)+npb
     
     prop = props(np-npb);  % prop est la propriété qu'on traite

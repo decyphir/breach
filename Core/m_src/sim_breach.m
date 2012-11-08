@@ -19,7 +19,7 @@ function [tout X] = sim_breach(Sys, tspan, pts)
   simout= sim(mdl);              
 
   lg = simout.get('logsout');
-  
+ 
   if ~isempty(lg)
     lg.unpack('all');
   end

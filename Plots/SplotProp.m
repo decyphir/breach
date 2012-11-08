@@ -30,11 +30,9 @@ function [val XI YI ZI] = SplotProp(Pf, prop, tau, opt)
   if isfield(opt, 'nb_contour')  
     nb_contour = opt.nb_contour;
   else
-    contour = 0;
+    nb_contour = 0;
   end
-  
-  
-  
+     
 %% plot the thing
   iprop = find_prop(get_id(prop), Pf.props_names);  
   
