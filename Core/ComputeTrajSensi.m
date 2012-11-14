@@ -58,16 +58,17 @@ if (~isfield(S,'XS0'))
     ix0 = dims(dims<=N); % Parameters in x0
     ip = dims(dims>N); % Parameters NOT in x0
     
-    xS0 = [];
+%    xS0 = [];
     yS0 = zeros(N,Ns);
     
     for i=1:numel(ix0); % pour chaque condition initiale incertaine
         yS0(dims(i),i) = 1;
     end
     
-    for i=1:Ns
-        xS0 = [xS0 ; yS0(:,i)];
-    end
+%    for i=1:Ns
+%        xS0 = [xS0 ; yS0(:,i)];
+%    end
+    xS0 = reshape(yS0,N*Ns,1); % on met les colonnes les une au dessus des autres
     
     S.XS0 = repmat(xS0,[1 size(S.pts,2)]);
     
