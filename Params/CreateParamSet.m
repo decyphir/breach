@@ -46,7 +46,7 @@ if (exist('Param','var'))
     
     pts(dim)=0; %initialize all parameters (new and not new) values to 0
     
-    dim_sys = dim(dim<=size(pts,1));
+    dim_sys = dim(dim<=size(Sys.p,1));
     pts(dim_sys) = Sys.p(dim_sys); % copy the not new parameters
     
     epsi = zeros(nbParam,1);

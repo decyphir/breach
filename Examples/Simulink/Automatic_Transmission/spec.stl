@@ -1,0 +1,27 @@
+# predicates
+
+  speed_bnded := speed[t] < vmax  
+  RPM_bnded := RPM[t] < rpm_max
+
+  gear2 := (abs(gear[t] - 2)-.1) < 0 
+  gear3 := (abs(gear[t] - 3)-.1) < 0 
+
+
+# subformulas
+
+  shift2 := (not gear2) and ev_[0,.02](gear2)
+  shiftn3 := (gear3) and ev_[0,.02](not gear3)
+
+# formulas 
+
+  phi1 := (alw (speed_bnded)) and (alw (RPM_bnded))  
+
+  phi_vmaxmin := (alw_[0, 25] (speed[t]<vmax)) and (alw_[25, 50] (speed[t] > vmin))
+
+  phi_brake := (ev_[0, 25] ((speed[t]>100) and (alw (speed[t] > vmin)))) or (alw (speed[t]<100))
+
+  phi_100 := not ( (ev_[0, t1] (speed[t]>100)) and (alw (RPM[t]< rpm_min)) )  
+
+  phi_stay2  := alw ( shift2 => (alw_[0.04, t1+.04] (gear2) ))	
+
+  phi_return3 := alw ( shiftn3 => (alw_[0.1, t1+.1] (not gear3) ))
