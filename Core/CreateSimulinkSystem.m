@@ -56,7 +56,7 @@ function Sys = CreateSimulinkSystem(mdl, signals, params, p0,  inputfn )
   cs.set_param('SignalLoggingName', 'logsout');   % Signal logging name 
 
   if (~verLessThan('matlab','R2011a'))
-    cs.set_param('SignalLoggingSaveFormat', 'ModelDataLogs');   % Signal logging format 
+    cs.set_param('SignalLoggingSaveFormat', 'Dataset');   % Signal logging format 
   end
   cs.set_param('TimeSaveName', 'tout');   % Time 
     

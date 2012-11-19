@@ -19,11 +19,7 @@ function [tout X] = sim_breach(Sys, tspan, pts)
   simout= sim(mdl);              
 
   lg = simout.get('logsout');
- 
-  if ~isempty(lg)
-    lg.unpack('all');
-  end
-  
+   
   tout = simout.get('tout')';
   X = simout.get('yout')';    
   if ~isempty(X)
@@ -31,8 +27,9 @@ function [tout X] = sim_breach(Sys, tspan, pts)
   end
   
   for i = Sys.DimY+1:num_signals
-    sig = Sys.ParamList{i};
-    xdata = eval([sig '.Data']);
-    xtime = eval([sig '.Time']);
-    X = [X; interp1(xtime',double(xdata(:,1)'),tout)];
+    sig = lg.getElement(Sys.ParamList{i});
+    xdata = sig.Values.Data';
+%   xtime = sig.Values.Time';
+    X = [X; xdata(1,:)];   
+    %    X = [X; interp1(xtime',double(xdata(:,1)'),tout)];
   end;  

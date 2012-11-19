@@ -1,25 +1,23 @@
 % This script initializes Breach, in particular adding paths to Breach directories
 
-cdr = pwd;
-dr = which('InitBreach');
-dr =  dr(1:end-13);
+cdr_ = pwd;
+dr_ = which('InitBreach');
+dr_ =  dr_(1:end-13);
 
-cd(dr);
+cd(dr_);
 
-addpath(dr);
-addpath( [dr filesep 'Core']);
-addpath( [dr filesep 'Core' filesep 'm_src']);
-addpath( [dr filesep 'Params']);
-addpath( [dr filesep 'Params' filesep 'm_src']);
-addpath( [dr filesep 'Params' filesep 'm_src' filesep 'sobolqr']);
-addpath( [dr filesep 'Params' filesep 'm_src' filesep 'niederreiter2']);
-addpath( [dr filesep 'Plots']);
-addpath( [dr filesep 'Plots' filesep 'm_src']);
-addpath( [dr filesep 'Toolboxes' filesep 'optimize']);
-addpath( [dr filesep 'Toolboxes' filesep 'sundials' filesep 'sundialsTB' ]);
-addpath( [dr filesep 'Toolboxes' filesep 'sundials' filesep 'sundialsTB' filesep 'cvodes']);
-
-%addpath(genpath(BreachGlobOpt.breach_dir));
+addpath(dr_);
+addpath( [dr_ filesep 'Core']);
+addpath( [dr_ filesep 'Core' filesep 'm_src']);
+addpath( [dr_ filesep 'Params']);
+addpath( [dr_ filesep 'Params' filesep 'm_src']);
+addpath( [dr_ filesep 'Params' filesep 'm_src' filesep 'sobolqr']);
+addpath( [dr_ filesep 'Params' filesep 'm_src' filesep 'niederreiter2']);
+addpath( [dr_ filesep 'Plots']);
+addpath( [dr_ filesep 'Plots' filesep 'm_src']);
+addpath( [dr_ filesep 'Toolboxes' filesep 'optimize']);
+addpath( [dr_ filesep 'Toolboxes' filesep 'sundials' filesep 'sundialsTB' ]);
+addpath( [dr_ filesep 'Toolboxes' filesep 'sundials' filesep 'sundialsTB' filesep 'cvodes']);
 
 %% Init BreachGlobOpt options and fourre-tout global variable
 
@@ -38,7 +36,7 @@ else
 
   if (~exist('BreachGlobOpt','var'))
     global BreachGlobOpt;
-    BreachGlobOpt.breach_dir = dr;  
+    BreachGlobOpt.breach_dir = dr_;  
   end
   
   if (~isfield(BreachGlobOpt,'RobustSemantics'))        
@@ -47,4 +45,5 @@ else
   
 end
 
-cd(cdr);
+cd(cdr_);
+clear cdr_ dr_;
