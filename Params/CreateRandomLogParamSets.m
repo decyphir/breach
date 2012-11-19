@@ -26,10 +26,10 @@ function [PRLog] = CreateRandomLogParamSets(Sys, params, ranges, N)
 %   logarithmicly distributed in [5.0e-9 , 2.0e-4] and 'k2' in [2 , 3]
 %
 
-% A AMELIORER :
+% TO IMPROVE :
 %
-% Utiliser la génération de nombre aléatoire type quasi monte-carlo au lieu
-% du rand proposé par matlab.
+% Use quasi monte-carlo generation to generate random number instead of
+% using the rand operator provided by Matlab.
 
 % we check if all range limits are strictly positive
 if(~isempty(find(sign(ranges)<0,1)))
@@ -50,8 +50,8 @@ if(nbParam~=numel(unique(params)))
             'not be more than one time a parameter']);
 end
 
-PRLog = CreateSampling(Sys, params); %pas besoin des intervalles
-PRLog = Refine(PRLog, [N,ones(1,nbParam-1)]);  %On découpe en N points
+PRLog = CreateSampling(Sys, params); %dont need to provide intervalles
+PRLog = Refine(PRLog, [N,ones(1,nbParam-1)]);  %We split into N points
 
 % if there are null range limits, we replace them by the AbsTol
 ranges(ranges==0) = Sys.CVodesOptions.AbsTol;
@@ -59,34 +59,34 @@ ranges(ranges==0) = Sys.CVodesOptions.AbsTol;
 ranges = log10(ranges);
 
 for i=1:nbParam
-    %Pour chaque param, on défini une position aléatoire
-    epsi = (ranges(i,2)-ranges(i,1))/2; %epsi de l'intervalle initial en log
-    r = ranges(i,1) + 2*epsi*rand(1,N); %on tire au hasard sur l'échelle log
-    epsi = epsi/(N^(1/nbParam)); %epsi des nouveaux intervalles en log
+    %For each parameter, we define a random position
+    epsi = (ranges(i,2)-ranges(i,1))/2; %initial epsi on log scale
+    r = ranges(i,1) + 2*epsi*rand(1,N); %random value on log scale
+    epsi = epsi/(N^(1/nbParam)); %new epsi on log scale
 
     % possibility 1 : define epsi, using the lower bound
-    inf = r - epsi; %valeur minimal des nouveaux intervalles en log
-    value = 10.^r; %valeur des nouveaux points en normal
-    inf = 10.^inf; %valeur minimal des nouveaux intervalles en normal
-    epsi = value - inf; %epsi des nouveaux intervalles en normal
+    inf = r - epsi; %lowest value of new intervalles on log scale
+    value = 10.^r; %value of new points on normal scale
+    inf = 10.^inf; %minimal value of the intervalles on normal scale
+    epsi = value - inf; %compute new epsi in normal scale
 
     %possiblity 2 : define epsi using the higher bound
-%    sup = r + epsi; %valeur maximale des nouveaux intervalles en log
-%    value = 10.^r; %valeur des nouveaux points en normal
-%    sup = 10.^sup; %valeur maximale des nouveaux intervalles en normal
-%    epsi = sup - value; %epsi des nouveaux intervalles en normal
+%    sup = r + epsi; %highest value for new intervalles on log scale
+%    value = 10.^r; %new points on normal scale
+%    sup = 10.^sup; %highest value on normal scale
+%    epsi = sup - value; %compute new epsi on normal scale
 
     %possibility 3 : define value using the lower and higher bounds
-%    inf = r - epsi; %valeur minimal des nouveaux intervalles en log
-%    sup = r + epsi; %valeur maximale des nouveaux intervalles en log
-%    inf = 10.^inf; %valeur minimal des nouveaux intervalles en normal
-%    sup = 10.^sup; %valeur maximale des nouveaux intervalles en normal
-%    epsi = (sup-inf)/2; %epsi des nouveaux intervalles en normal
-%    value = inf + epsi; %valeur des nouveaux points en normal
-                                                      value 
+%    inf = r - epsi; %lowest new value on log scale
+%    sup = r + epsi; %highest new value on log scale
+%    inf = 10.^inf; %lowest new value on normal scale
+%    sup = 10.^sup; %highest new value on normal scale
+%    epsi = (sup-inf)/2; %new epsi on normal scale
+%    value = inf + epsi; %compute new value on normal scale
+
     PRLog = SetParam(PRLog,params(i),value);
-    position = FindParam(Sys,params{i}); %on cherche la position des epsi
-    position = PRLog.dim==position;
+    position = FindParam(Sys,params{i}); %look for epsi index in ParamList
+    position = PRLog.dim==position; %then for the line in the epsi array
     PRLog.epsi(position,:) = epsi;
 end
 
