@@ -2808,8 +2808,11 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+
 function h = info(h,msg)
+% INFO write the message into the information panel.
   set(h.text_info, 'String', msg);
+  drawnow();
     
   
   
