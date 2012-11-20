@@ -16,6 +16,8 @@
 
   phi1 := (alw (speed_bnded)) and (alw (RPM_bnded))  
 
+  phi2 := ev (alw_[0, t1] (gear2))
+
   phi_vmaxmin := (alw_[0, 25] (speed[t]<vmax)) and (alw_[25, 50] (speed[t] > vmin))
 
   phi_brake := (ev_[0, 25] ((speed[t]>100) and (alw (speed[t] > vmin)))) or (alw (speed[t]<100))

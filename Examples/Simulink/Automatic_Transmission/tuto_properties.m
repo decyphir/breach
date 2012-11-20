@@ -28,4 +28,5 @@ SplotSat(Sys, P0, phi1 );
 
 figure;
 depth = 3;
+
 SplotSat(Sys, P0, phi1, depth);
