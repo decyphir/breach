@@ -1,4 +1,4 @@
-function P = CreateParamSet(Sys,Param,Ranges)
+function P = CreateParamSet(Sys,Param,Ranges, Nb_pts)
 %   CREATEPARAMSET Create a parameter set structure for a system. If the
 %   argument Param contains parameters name not existing in the system,
 %   they are added to the parameter set. The value of these parameters is
@@ -16,7 +16,10 @@ function P = CreateParamSet(Sys,Param,Ranges)
 %
 %    -  Sys      System under study
 %    -  Param    List of varying parameters
-%    -  Ranges   Parameters ranges
+%    -  Ranges   Parameters range
+%    -  Nb_pts   Number of points in the parameter set (default: 1) in each
+%                dimension;   same argument as Refine function
+%               
 %
 %   Outputs:
 %
@@ -24,6 +27,7 @@ function P = CreateParamSet(Sys,Param,Ranges)
 %                ranges of the varying parameters and the default value
 %                in Sys.p
 %
+
 
 pts = Sys.p;
 
@@ -81,4 +85,10 @@ end
 P.pts = pts;
 P.epsi = epsi;
 P.ParamList=ParamList;
+
+if exist('Nb_pts', 'var') 
+    P = Refine(P, Nb_pts);
 end
+
+
+    
