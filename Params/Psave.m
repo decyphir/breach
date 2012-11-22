@@ -13,7 +13,7 @@ function Psave(Sys, varargin)
 %
 % Example:
 %
-%  P = CreateSampling(Sys);
+%  P = CreateParamSet(Sys);
 %  Ph = QuasiRefine(P,100);
 %  P2 = Refine(P,2);
 %  Psave(Sys, 'P', 'Ph', 'P2');
@@ -21,7 +21,7 @@ function Psave(Sys, varargin)
 % Other example:
 %
 %  function myFunc()
-%   P = CreateSampling(Sys);
+%   P = CreateParamSet(Sys);
 %   Ph = QuasiRefine(P,100);
 %   Psave(Sys, 'Ph', Ph);
 %  end

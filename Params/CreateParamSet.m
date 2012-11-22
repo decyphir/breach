@@ -10,7 +10,7 @@ function P = CreateParamSet(Sys,Param,Ranges, Nb_pts)
 %   the parameter value, except if the parameter value is 0, in which case,
 %   the range is set to 1.
 %
-%   Synopsis: P = CreateParamSet(Sys [,Param,Ranges] )
+%   Synopsis: P = CreateParamSet(Sys [,Param,Ranges,Nb_pts] )
 %
 %   Inputs:
 %
@@ -26,7 +26,7 @@ function P = CreateParamSet(Sys,Param,Ranges, Nb_pts)
 %    -  P        An initial parameter set with one point in the center of
 %                ranges of the varying parameters and the default value
 %                in Sys.p
-%
+%See also: Refine
 
 
 pts = Sys.p;
