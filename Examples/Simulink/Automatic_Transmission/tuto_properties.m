@@ -15,7 +15,7 @@ QMITL_Formula('phi1', '(alw (speed[t]<vmax)) and (alw (RPM[t]<rpm_max))');
 params_phi.names = {'vmax', 'rpm_max'};
 params_phi.values =  [140 4000];
 
-P0 = SetParam(P0, param_phi.names, params_phi.values);
+P0 = SetParam(P0, params_phi.names, params_phi.values);
 
 % Eval satisfaction function for phi1, P0 and P0.traj at time tau=0
 
@@ -37,7 +37,7 @@ SplotSat(Sys, P0, phi1, depth);
 Pu = CreateParamSet(Sys, {'dt_u0'}, [0 10], 100); % 100 samples with dt_u0 in range [0 10]
 Pu = ComputeTraj(Sys, Pu, Sys.tspan); 
 
-Pu = SetParam(Pu, param_phi.names, params_phi.values);
+Pu = SetParam(Pu, params_phi.names, params_phi.values);
 Pu = SEvalProp(Sys, Pu, phi1);
 
 figure;
