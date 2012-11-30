@@ -1391,6 +1391,8 @@ function handles = update_system_panel(handles)
       return
       case 'Simulink'
       return
+      case 'Extern'
+      return
     end
   end
   

@@ -85,6 +85,41 @@ else
 end
 
 switch Sys.type
+
+    case 'Extern'
+        model = Sys.name;
+        Sf = S0;
+        ipts = 1:size(S0.pts,2);
+        if (numel(ipts)>1)
+            fprintf(['Computing ' num2str(numel(ipts)) ' trajectories of model ' model '\n'...
+                     '[             25%%           50%%            75%%               ]\n ']);
+            iprog =0;
+        end
+        
+        for i= ipts
+            if (numel(ipts)>1)
+                while (floor(60*i/numel(ipts))>iprog)
+                    fprintf('^');
+                    iprog = iprog+1;
+                end
+            end
+            
+            if isfield(Sys,'init_u')
+                U = Sys.init_u(Sys.ParamList(Sys.DimX-Sys.DimU+1:Sys.DimX), S0.pts(1:Sys.DimP,i), tspan);
+                assignin('base','t__',U.t);
+                assignin('base', 'u__',U.u);
+            end
+            
+            [traj.time, traj.X] = Sys.sim(Sys,tspan, S0.pts(:,i));
+            traj.param = S0.pts(1:S0.DimP,i)';
+            Sf.traj(i) = traj;
+            Sf.Xf(:,i) = traj.X(:,end);
+        end
+        
+        if (numel(ipts)>1)
+            fprintf('\n');
+        end
+
     
     case 'Simulink'
         model = Sys.mdl;
