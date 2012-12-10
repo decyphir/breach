@@ -10,13 +10,15 @@ function ParamValues = GetParam(S,ParamList)
 % Example (for Lorenz84 system):
 %
 %    CreateSystem;
-%    P = CreateSampling(Sys, {'a', 'b'}, [0 10; 0 5]);
+%    P = CreateParamSet(Sys, {'a', 'b'}, [0 10; 0 5]);
 %    Pr = Refine(P, 3);
-%    val = GetParam(Pr, 'a' );
-%    val = GetParam(Pr, 'b' );
+%    val = GetParam(Pr, 'a');
+%    val = GetParam(Pr, 'F'); % get an array 1x9 filled with the value of F
+%    val = GetParam(Pr, 'blah'); % return an empty array
 %    val = GetParam(Pr, {'a', 'b'});
-%    val = GetParam(Pr, {'b','a'});
+%    val = GetParam(Pr, {'b', 'a'});
 %
+%See also SetParam
 
     if (isfield(S,'pts'))
         p = S.pts;
