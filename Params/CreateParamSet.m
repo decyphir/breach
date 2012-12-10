@@ -6,9 +6,9 @@ function P = CreateParamSet(Sys,Param,Ranges, Nb_pts)
 %   zero.
 %   If the argument Param is not provided, all the parameters are
 %   considered as varying parameters.
-%   If the argument Ranges is not provided, the range is equal to 1/10th of
+%   If the argument Ranges is not provided, the epsi is equal to 1/10th of
 %   the parameter value, except if the parameter value is 0, in which case,
-%   the range is set to 1.
+%   the epsi is set to 1.
 %
 %   Synopsis: P = CreateParamSet(Sys [,Param,Ranges,Nb_pts] )
 %
@@ -26,6 +26,25 @@ function P = CreateParamSet(Sys,Param,Ranges, Nb_pts)
 %    -  P        An initial parameter set with one point in the center of
 %                ranges of the varying parameters and the default value
 %                in Sys.p
+%   Example 1:
+%     CreateSystem;
+%     P = CreateParamSet(Sys); % x0, x1, x2, a, b, F and G are unknown
+%                              % parameters. There values are (resp.) 0, 0,
+%                              % 0, 0.25, 4, 0.5 and 0.5 and the epsi are
+%                              % 1, 1, 1, 0.025, 0.1 and 0.05 .
+%
+%   Example 2:
+%     CreateSystem;
+%     P = CreateParamSet(Sys,'a'); % only a is an unknown parameter
+%
+%   Example 3:
+%     CreateSystem;
+%     P = CreateParamSet(Sys,{'a','x0'},[0.2,0.4;-0.6,0.6]); % a and x0 are
+%                                      % unknown parameters. The value of a
+%                                      % is 0.3, with an espi of 0.1, and
+%                                      % the value of x0 is 0, with an epsi
+%                                      % of 0.6
+%
 %See also: Refine
 
 

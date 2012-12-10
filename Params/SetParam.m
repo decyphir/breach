@@ -23,12 +23,12 @@ function P = SetParam(P,ParamList,ParamValues)
 %    Pr_2 = SetParam(Pr, {'F','G'}, [0.4; 0.6]); % values for 'F' (resp.
 %                     % 'G') equals to 0.4 (resp 0.6) in the nine points.
 %                     % Values of 'a' and 'b' are equals in Pr and Pr_2.
-%    
+%    Pr_3 = SetParam(Pr, 'a', 5); % a is equal to 5 in the nine points
 %    
 % SEE ALSO GETPARAM, CREATEPARAMSET 
 %  
 
-if size(ParamValues,1) == 1 && numel(ParamList)~=1
+if size(ParamValues,1) == 1 && ~ischar(ParamList) && numel(ParamList)~=1
     % in case when we have one value for many parameters
     ParamValues = ParamValues';
 end
