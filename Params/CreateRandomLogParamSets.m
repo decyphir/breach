@@ -21,9 +21,9 @@ function [PRLog] = CreateRandomLogParamSets(Sys, params, ranges, N)
 %
 %	Example:
 %     CreateSystem;
-%     PLog = CreateRandomLogParamSets(Sys,{'a','b'},[5.0e-9,2.0e-4;2,3],50)
+%     PLog = CreateRandomLogParamSets(Sys,{'a','b'},[1.0e-9,1.0e-4;2,3],50)
 %             % PLog is a parameter set containing 50 parameter values such
-%             % that a is logarithmicly distributed in [5.0e-9 , 2.0e-4]
+%             % that a is logarithmicly distributed in [1.0e-9 , 1.0e-4]
 %             % and b in [2 , 3]
 %     SplotBoxPts(PLog);
 %
@@ -76,8 +76,10 @@ for i=1:nbParam
 %    epsi = sup - value; %compute new epsi on normal scale
     
     %possibility 3 : define value using the lower and higher bounds
-    inf = value - epsi; %lowest new value on log scale
-    sup = value + epsi; %highest new value on log scale
+    %inf = value - epsi; %lowest new value on log scale
+    inf = max( value-epsi , ranges(i,1) );
+    %sup = value + epsi; %highest new value on log scale
+    sup = min( value+epsi , ranges(i,2) );
     inf = 10.^inf; %lowest new value on normal scale
     sup = 10.^sup; %highest new value on normal scale
     epsi = (sup-inf)/2; %new epsi on normal scale

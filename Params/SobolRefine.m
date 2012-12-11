@@ -25,11 +25,11 @@ end
 r = i4_sobol_generate(dim_num, nb, step);
 r = kron(r, ones(1,size(P.pts,2)));
 
-A = 2*P.epsi;
-a = P.pts(P.dim,:)-P.epsi;
+width = 2*P.epsi;
+inf = P.pts(P.dim,:)-P.epsi;
 Ph = P;
 Ph.pts = repmat(P.pts,[1 nb]);
-Ph.pts(P.dim,:) = repmat(A,[1 nb]).*r+repmat(a,[1 nb]);
+Ph.pts(P.dim,:) = repmat(width,[1 nb]).*r+repmat(inf,[1 nb]);
 
 % Why the following line?
 %Sh.epsi = repmat(Sh.epsi,[1 nb])/(floor(nb^(1/dim_num)));
