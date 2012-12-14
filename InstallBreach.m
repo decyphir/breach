@@ -36,8 +36,8 @@ mex -outdir ../../../Core/m_src/ ltr.c
 fprintf('mex -outdir ../../../Core/m_src rtr.c\n');
 mex -outdir ../../../Core/m_src/ rtr.c               
 
-cd robustness;
-CompileRobustness;
+cd robusthom;
+CompileRobusthom;
 
 % compiles cvodes common stuff
 

@@ -2,7 +2,7 @@ function [S, val] = SEvalProp(Sys, S, props, tau, ipts, bool_plot, break_level)
 %
 %   SEVALPROP Eval property for previously computed trajectories
 %
-%   Usage: [Pf, val] = SEvalProp(Sys, Ptraj, prop [ , tau, ipts, bool_plot, break_level ])
+%   Usage: [Pf, val] = SEvalProp(Sys, Ptraj, prop [ , tau, ipts ])
 %
 %   Inputs:
 %
@@ -10,20 +10,16 @@ function [S, val] = SEvalProp(Sys, S, props, tau, ipts, bool_plot, break_level)
 %    - Ptraj       param set with trajectories
 %    - prop        property(ies)
 %    - tau         time instant(s) when to estimate properties. If not
-%                     provided, the time step considered for computing the
-%                     trajectory is used.
-%    - ipts        trajectories for which to eval properties
-%    - bool_plot   side effects plots the values if 1
-%    - break_level computes satisfaction of the formula and of the
-%                     subformulas up to break_level
+%                    provided, the time instants considered for computing the
+%                    trajectory are used.
+%    - ipts        indices of trajectories for which to eval properties
 %
 %
 %   Outputs:
 %
 %    - Pf          param set with prop_values field
-%    - val         an array describing the quantitative satisfaction of
-%                    properties. A line describes the quantitative
-%                    satisfaction of a formula for each trajectory
+%    - val         an array containing the quantitative satisfaction of
+%                    properties for each trajectory
 %
 
 

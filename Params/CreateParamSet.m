@@ -41,12 +41,11 @@ function P = CreateParamSet(Sys,Param,Ranges, Nb_pts)
 %     CreateSystem;
 %     P = CreateParamSet(Sys,{'a','x0'},[0.2,0.4;-0.6,0.6]); % a and x0 are
 %                                      % unknown parameters. The value of a
-%                                      % is 0.3, with an espi of 0.1, and
+%                                      % is 0.3, with an epsi of 0.1, and
 %                                      % the value of x0 is 0, with an epsi
 %                                      % of 0.6
 %
 %See also: Refine
-
 
 pts = Sys.p;
 
@@ -108,6 +107,3 @@ P.ParamList=ParamList;
 if exist('Nb_pts', 'var') 
     P = Refine(P, Nb_pts);
 end
-
-
-    
