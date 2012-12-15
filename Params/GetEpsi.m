@@ -25,8 +25,8 @@ function EpsiValues = GetEpsi(P,ParamList)
     % name
     if ischar(ParamList)
         ind = FindParam(P,ParamList);
-        if(ind<=size(P.pts,1)) %check parameter existence
-            ind = P.dim(P.dim==ind);
+        ind = P.dim(P.dim==ind);
+        if ~isempty(ind) %check epsi existence
             EpsiValues = P.epsi(ind,:);
         else
             EpsiValues = [];
@@ -36,9 +36,8 @@ function EpsiValues = GetEpsi(P,ParamList)
 
     % case 2 : the ParamList parameter is a list of integer
     if isnumeric(ParamList)
-        %check for an error in the list
-        if ~isempty(find(ParamList>size(P.pts,1),1)) || ...
-                                    ~isempty(find(ParamList<=0,1))
+        %check if we ask for unexisting or not unknown parameters
+        if ~isempty(setdiff(ParamList,P.dim))
             EpsiValues = [];
             return
         end
@@ -55,7 +54,7 @@ function EpsiValues = GetEpsi(P,ParamList)
     % case 3 : the ParamList parameter is a list of parameter name
     inds = FindParam(P,ParamList);
     %initialization
-    if ~isempty(find(inds>size(P.pts,1),1))
+    if ~isempty(setdiff(inds,P.dim))
         EpsiValues = [];
         return;
     else
