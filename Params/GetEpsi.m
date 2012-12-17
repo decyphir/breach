@@ -25,7 +25,7 @@ function EpsiValues = GetEpsi(P,ParamList)
     % name
     if ischar(ParamList)
         ind = FindParam(P,ParamList);
-        ind = find(P.dim==ind,1);
+        ind = P.dim==ind;
         if ~isempty(ind) %check epsi existence
             EpsiValues = P.epsi(ind,:);
         else
@@ -41,11 +41,11 @@ function EpsiValues = GetEpsi(P,ParamList)
             EpsiValues = [];
             return
         end
-        %initialize ParamValues
+        %initialize EpsiValues
         EpsiValues = zeros(numel(ParamList),size(P.pts,2));
         %copy the values
         for i = 1:numel(ParamList)
-            ind = find(P.dim==ParamList(i),1);
+            ind = P.dim==ParamList(i);
             EpsiValues(i,:) = P.epsi(ind,:);
         end
         return
@@ -61,7 +61,7 @@ function EpsiValues = GetEpsi(P,ParamList)
         EpsiValues = zeros(numel(ParamList),size(P.pts,2));
     end
     for i = 1:numel(ParamList)
-        ind = find(P.dim==inds(i));
+        ind = P.dim==inds(i);
         EpsiValues(i,:) = P.epsi(ind,:);
     end
 
