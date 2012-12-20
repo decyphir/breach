@@ -1,10 +1,16 @@
 function P = SetParam(P,ParamList,ParamValues)
-% SETPARAM set the values of parameters in a parameter set
+% SETPARAM Sets the values of parameters in a parameter set. Note that if
+% the parameter is not present in P, it is created and appended.
 % 
 % Synopsis: P = SetParam(P, ParamList, ParamValues)
 % 
-% Note that if the parameter is not present in P, it is created and
-% appended.
+% Input:
+%  - P          : the parameter set to modify ;
+%  - ParamList  : the list of parameters for which the value is changed or
+%                   created. If empty, nothing is done :
+%  - ParamValue : the values of the parameters. Its size is either
+%                   (num of param in ParamList , size(P.pts,2)) or
+%                   (num of param in ParamList , 1)
 % 
 % Example (for Lorenz84 system):
 % 
@@ -25,7 +31,7 @@ function P = SetParam(P,ParamList,ParamValues)
 %                     % Values of 'a' and 'b' are equals in Pr and Pr_2.
 %    Pr_3 = SetParam(Pr, 'a', 5); % a is equal to 5 in the nine points
 %    
-% SEE ALSO GETPARAM, CREATEPARAMSET 
+% See also GETPARAM, CREATEPARAMSET 
 %  
 
 if size(ParamValues,1) == 1 && ~ischar(ParamList) && numel(ParamList)~=1
@@ -34,7 +40,7 @@ if size(ParamValues,1) == 1 && ~ischar(ParamList) && numel(ParamList)~=1
 end
 
 
-if ischar(ParamList)
+if ischar(ParamList) && ~isempty(ParamList)
     ind = FindParam(P,ParamList);
     if (ind>size(P.pts,1))
         P.ParamList = [P.ParamList, {ParamList}];
@@ -60,12 +66,6 @@ elseif isnumeric(ParamList)
         P.pts(ParamList(i),:) = ParamValues(i,:);
     end
     return
-end
-
-% Why the following code ??
-for i = 1:numel(ParamList)
-    ind = FindParam(P,ParamList{i});
-    P.pts(ind,:) =  ParamValues(i,:);
 end
 
 end
