@@ -1,10 +1,10 @@
-function [val_opt Sopt]  = SOptimProp(Sys, S, prop, opt)
+function [val_opt Sopt]  = SOptimProp(Sys, P, prop, opt)
 %
 % SOPTIMPROP optimizes the satisfaction of a property
 %
-% Synopsis: Sopt  = SOptimProp(Sys, P0, phi, tspan, lbound, ubound) 
+% Synopsis: Sopt  = SOptimProp(Sys, P0, phi, opt) 
 % 
-%    - S0 is a parameter set for Sys
+%    - P0 is a parameter set for Sys
 %    - phi is a QMITL property
 %    - opt is an option structure with the following fields :
 %       
@@ -13,9 +13,12 @@ function [val_opt Sopt]  = SOptimProp(Sys, S, prop, opt)
 %        - lbound : lower bounds for the search domain
 %        - ubound : upper bounds for the search domain
 %        - MaxIter : max number of optimization iteration 
-%        - OptimType : 'Max', 'Min' or 'Zero' 
-%  
-
+%        - OptimType : 'Max', 'Min' or 'Zero'
+%        - StopWhenFound : compute satisfaction for initial parameters in P0 then stops whenever 
+%                          a positive ('Max') or negative ('Min') solution is found
+%        - StopWhenFoundInit : same as above except that it does not necessarily compute all trajectories in P0 
+%
+  
 %% process options
 
   global Stmp found StopWhenFound fopt traj_opt
@@ -26,13 +29,13 @@ function [val_opt Sopt]  = SOptimProp(Sys, S, prop, opt)
     tspan = opt.tspan;
   elseif isfield(Sys, 'tspan')
     tspan = Sys.tspan;
-  elseif isfield(S, 'traj')   
-    tspan = S.traj(1).time;
+  elseif isfield(P, 'traj')   
+    tspan = P.traj(1).time;
   else 
     tspan = 0:.2:10
   end  
   
-  dim = S.dim;
+  dim = P.dim;
         
   if isfield(opt,'OptimType')
     OptimType = opt.OptimType;
@@ -56,7 +59,7 @@ function [val_opt Sopt]  = SOptimProp(Sys, S, prop, opt)
     StopWhenFoundInit = 0;
   end
   
-  Stmp = Sselect(S,1); 
+  Stmp = Sselect(P,1); 
   
   switch OptimType 
    case 'Max'
@@ -75,11 +78,11 @@ function [val_opt Sopt]  = SOptimProp(Sys, S, prop, opt)
 
   if ('StopWhenFoundInit')    
     rfprintf_reset();    
-    for i = 1:size(S.pts, 2)
-      Stmp = Sselect(S,i); 
+    for i = 1:size(P.pts, 2)
+      Stmp = Sselect(P,i); 
       Stmp = ComputeTraj(Sys, Stmp, tspan );     
       val(i) = QMITL_Eval(Sys, prop, Stmp, Stmp.traj, 0);
-      status = ['Init ' num2str(i) '/' num2str(size(S.pts, 2)) ' Robustness value: ' num2str(val(i)) ];
+      status = ['Init ' num2str(i) '/' num2str(size(P.pts, 2)) ' Robustness value: ' num2str(val(i)) ];
       rfprintf(status);      
      
       switch OptimType 
@@ -105,8 +108,8 @@ function [val_opt Sopt]  = SOptimProp(Sys, S, prop, opt)
       end
     end     
   else
-    Sopt = ComputeTraj(Sys, S, tspan );
-    [Sopt val] = SEvalProp(Sys, S, prop, 0);
+    Sopt = ComputeTraj(Sys, P, tspan );
+    [Sopt val] = SEvalProp(Sys, P, prop, 0);
   end 
   
   
@@ -143,18 +146,18 @@ function [val_opt Sopt]  = SOptimProp(Sys, S, prop, opt)
     if isfield(opt, 'lbound')
       lbound = opt.lbound;
     else
-      lbound = S.pts(dim,i)-S.epsi(:,i);
+      lbound = P.pts(dim,i)-P.epsi(:,i);
     end
   
     if isfield(opt, 'ubound')
       ubound = opt.ubound;
     else
-      ubound = S.pts(dim,i)+S.epsi(:,i);
+      ubound = P.pts(dim,i)+P.epsi(:,i);
     end
                
     fprintf('\nOptimize from init point %d/%d Initial value: %g\n',k, numel(iv), val(i) );
     rfprintf_reset();
-    x0 = S.pts(dim,i); 
+    x0 = P.pts(dim,i); 
     [x val_opt(k)] = optimize(fun, x0, lbound, ubound,[],[],[],[],[],[],options);
     fprintf('\n');    
     Sopt.pts(dim,i) = x;    

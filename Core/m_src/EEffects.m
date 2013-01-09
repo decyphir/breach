@@ -13,7 +13,7 @@ function [mu mustar sigm] = EEffects(Y, D, p)
 %  Pf = ComputeTraj(Sys, Pr, tspan);
 %  Y = GetTrajValues(Pf, indx, Te);
 %
-%  [mu mustar sigm] = EEffects(Y, D, p)
+%  [mu mustar sigm] = EEffects(Y, Pr.D, p)
 
   
 n = size(D,1);

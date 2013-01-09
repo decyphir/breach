@@ -10,8 +10,8 @@ function [S, val] = SEvalProp(Sys, S, props, tau, ipts, bool_plot, break_level)
 %    - Ptraj       param set with trajectories
 %    - prop        property(ies)
 %    - tau         time instant(s) when to estimate properties. If not
-%                    provided, the time instants considered for computing the
-%                    trajectory are used.
+%                  provided, the time instants considered for computing the
+%                  trajectory are used.
 %    - ipts        indices of trajectories for which to eval properties
 %
 %

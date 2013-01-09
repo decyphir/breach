@@ -1,10 +1,10 @@
 function Sys = CreateExternSystem(name, vars, params, p0, simfn)
-% CREATESYSTEM creates a system with or without custom external simulator     
+% CREATEEXTERNSYSTEM creates a system with or without custom external simulator     
 %
-% Synopsis: Sys = CreateSystem(name, vars, params, p0)
+% Synopsis: Sys = CreateExternSystem(name, vars, params, p0)
 %  
 % Creates a system structure Sys to be used with Breach and an external
-% simulator, e.g. Simulink.  
+% simulator. Note: for Simulink, use CreateSimulinkSystem.  
 % 
 % Example:   
 %
@@ -19,6 +19,28 @@ function Sys = CreateExternSystem(name, vars, params, p0, simfn)
 %
   
   Sys.name = name;
+
+  if nargin==3
+      if isscalar(vars)
+          nvars = vars;
+          vars = {};
+          for i=1:nvars
+              vars = {vars{:} ['y' num2str(i)]};
+          end
+      end
+      
+      if isscalar(params)
+          nparams = params;
+          params = {};
+          
+          for i=1:nparams
+              params = {params{:} ['y' num2str(i)]};
+          
+          end          
+      end
+  end
+  
+  
   Sys.DimX = numel(vars);
   Sys.DimU =0; 
   Sys.DimP = numel(vars)+numel(params); 

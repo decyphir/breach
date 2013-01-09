@@ -1,8 +1,8 @@
-function Sf = ComputeTraj(Sys, S0,tspan, u)
+function Pf = ComputeTraj(Sys, P0,tspan, u)
 %  COMPUTETRAJ compute trajectories for a system given initial conditions
 %  and parameters
 %
-%  Synopsis:   Sf = ComputeTraj(Sys,S0,tspan [,u])
+%  Synopsis:   Pf = ComputeTraj(Sys,P0,tspan [,u])
 %
 %   Compute trajectories issued from points in S0 on the
 %   time interval tspan
@@ -11,7 +11,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
 %
 %    -  Sys      System (needs to be compiled)
 %
-%    -  S0       Initial conditions and params given in a parameter set
+%    -  P0       Initial conditions and params given in a parameter set
 %                or in an array of size DimX x nb_traj
 %    -  tspan    interval of the form [t0, tf]; Fixed time instants can
 %                also be specified tspan = [t0 t1 ... tN];
@@ -24,7 +24,7 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
 %
 %   Outputs:
 %
-%    -  Sf       Sampling structure augmented with the field traj containing
+%    -  Pf       Sampling structure augmented with the field traj containing
 %                 computed trajectories if the input is a param set
 %
 % or - trajs     array of trajectories
@@ -34,11 +34,11 @@ function Sf = ComputeTraj(Sys, S0,tspan, u)
 % checks if we have a parameter set or a trajectory
 
 output_trajs = 0;
-if ~isstruct(S0)
+if ~isstruct(P0)
     
-    if (size(S0,1) ~= Sys.DimP)
-        if (size(S0,2) == Sys.DimP) % be smart, try transpose in case it works
-            S0 = S0';
+    if (size(P0,1) ~= Sys.DimP)
+        if (size(P0,2) == Sys.DimP) % be smart, try transpose in case it works
+            P0 = P0';
         else
             error('ComputTraj:S0DimensionError',...
                         'Second argument must be a parameter set or be of dimension Sys.DimP x ?')
@@ -46,20 +46,20 @@ if ~isstruct(S0)
     end
     output_trajs = 1;
     
-    pts = S0;
-    S0 = CreateSampling(Sys,1);
-    S0.pts = pts;
-    S0.epsi = ones(1, size(pts,2));
+    pts = P0;
+    P0 = CreateSampling(Sys,1);
+    P0.pts = pts;
+    P0.epsi = ones(1, size(pts,2));
     
 end
 
 % checks for an initialization function
 if isfield(Sys, 'init_fun')
-    S0 = Sys.init_fun(S0);
+    P0 = Sys.init_fun(P0);
 end
 
-if isfield(S0, 'init_fun')
-    S0 = S0.init_fun(S0);
+if isfield(P0, 'init_fun')
+    P0 = P0.init_fun(P0);
 end
 
 if (~isfield(Sys, 'type'))
@@ -68,18 +68,18 @@ end
 
 if strcmp(Sys.type,'traces') % No model
     % If system type is only traces, check consistency of params and pts
-    Sf=S0;
-    for i = 1:numel(Sf.traj)
-        Sf.traj(i).param = Sf.pts(1:Sf.DimP,i)';
+    Pf=P0;
+    for i = 1:numel(Pf.traj)
+        Pf.traj(i).param = Pf.pts(1:Pf.DimP,i)';
     end
 else
-    if (isfield(S0, 'traj_to_compute'))
-        S0 = SPurge(S0);
-        S = Sselect(S0, S0.traj_to_compute );
+    if (isfield(P0, 'traj_to_compute'))
+        P0 = SPurge(P0);
+        S = Sselect(P0, P0.traj_to_compute );
         S = ComputeTraj(Sys, S, tspan);
-        Sf = S0;
-        Sf.traj = S.traj;
-        Sf.Xf = S.Xf;
+        Pf = P0;
+        Pf.traj = S.traj;
+        Pf.Xf = S.Xf;
         return;
     end
 end
@@ -88,8 +88,8 @@ switch Sys.type
 
     case 'Extern'
         model = Sys.name;
-        Sf = S0;
-        ipts = 1:size(S0.pts,2);
+        Pf = P0;
+        ipts = 1:size(P0.pts,2);
         if (numel(ipts)>1)
             fprintf(['Computing ' num2str(numel(ipts)) ' trajectories of model ' model '\n'...
                      '[             25%%           50%%            75%%               ]\n ']);
@@ -105,15 +105,15 @@ switch Sys.type
             end
             
             if isfield(Sys,'init_u')
-                U = Sys.init_u(Sys.ParamList(Sys.DimX-Sys.DimU+1:Sys.DimX), S0.pts(1:Sys.DimP,i), tspan);
+                U = Sys.init_u(Sys.ParamList(Sys.DimX-Sys.DimU+1:Sys.DimX), P0.pts(1:Sys.DimP,i), tspan);
                 assignin('base','t__',U.t);
                 assignin('base', 'u__',U.u);
             end
             
-            [traj.time, traj.X] = Sys.sim(Sys,tspan, S0.pts(:,i));
-            traj.param = S0.pts(1:S0.DimP,i)';
-            Sf.traj(i) = traj;
-            Sf.Xf(:,i) = traj.X(:,end);
+            [traj.time, traj.X] = Sys.sim(Sys,tspan, P0.pts(:,i));
+            traj.param = P0.pts(1:P0.DimP,i)';
+            Pf.traj(i) = traj;
+            Pf.Xf(:,i) = traj.X(:,end);
         end
         
         if (numel(ipts)>1)
@@ -123,8 +123,8 @@ switch Sys.type
     
     case 'Simulink'
         model = Sys.mdl;
-        Sf = S0;
-        ipts = 1:size(S0.pts,2);
+        Pf = P0;
+        ipts = 1:size(P0.pts,2);
         if (numel(ipts)>1)
             fprintf(['Computing ' num2str(numel(ipts)) ' trajectories of model ' model '\n'...
                      '[             25%%           50%%            75%%               ]\n ']);
@@ -140,15 +140,15 @@ switch Sys.type
             end
             
             if isfield(Sys,'init_u')
-                U = Sys.init_u(Sys.ParamList(Sys.DimX-Sys.DimU+1:Sys.DimX), S0.pts(1:Sys.DimP,i), tspan);
+                U = Sys.init_u(Sys.ParamList(Sys.DimX-Sys.DimU+1:Sys.DimX), P0.pts(1:Sys.DimP,i), tspan);
                 assignin('base','t__',U.t);
                 assignin('base', 'u__',U.u);
             end
             
-            [traj.time, traj.X] = Sys.sim(Sys,tspan, S0.pts(:,i));
-            traj.param = S0.pts(1:S0.DimP,i)';
-            Sf.traj(i) = traj;
-            Sf.Xf(:,i) = traj.X(:,end);
+            [traj.time, traj.X] = Sys.sim(Sys,tspan, P0.pts(:,i));
+            traj.param = P0.pts(1:P0.DimP,i)';
+            Pf.traj(i) = traj;
+            Pf.Xf(:,i) = traj.X(:,end);
         end
         
         if (numel(ipts)>1)
@@ -179,31 +179,31 @@ switch Sys.type
             end
             
             %This is quite ugly...
-            Sf = S0;
-            Sf.pts = S0.pts(1:S0.DimP, :);
-            Sf=cvm(61, Sf,T,u);
-            Sf.pts = S0.pts;
+            Pf = P0;
+            Pf.pts = P0.pts(1:P0.DimP, :);
+            Pf=cvm(61, Pf,T,u);
+            Pf.pts = P0.pts;
             
-            Sf.u = u;
+            Pf.u = u;
             
         else
             
-            Sf = S0;
-            Sf.pts = S0.pts(1:S0.DimP, :);
-            Sf=cvm(61, Sf,T);
-            Sf.pts = S0.pts;
+            Pf = P0;
+            Pf.pts = P0.pts(1:P0.DimP, :);
+            Pf=cvm(61, Pf,T);
+            Pf.pts = P0.pts;
             
         end
         
         CVodeFree();
         
         if output_trajs
-            Sf = Sf.traj;
+            Pf = Pf.traj;
         end
 end
 
 if isfield(Sys, 'time_mult')
-    Sf.time_mult = Sys.time_mult;
+    Pf.time_mult = Sys.time_mult;
 end
 
 end

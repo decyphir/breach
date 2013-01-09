@@ -1,4 +1,4 @@
-function S = pRefine(S,p,r)
+function P = pRefine(P,p,r)
 % 
 % PREFINE   pick initial points for the Morris global sensitivity measure
 %  
@@ -12,7 +12,7 @@ function S = pRefine(S,p,r)
   
 % define the admissible grid and pick points
 
-  n = numel(S.dim);           % dimension
+  n = numel(P.dim);           % dimension
   delta = p/(2*(p-1));        
   ngrid = floor(p*(1-delta));
   
@@ -20,7 +20,7 @@ function S = pRefine(S,p,r)
   Stmp.dim = 1:n;
   Stmp.pts = (ngrid+1)/2*ones(n,1);
   Stmp.epsi = (ngrid+1)/2*ones(n,1);
-  Stmp.DimP = S.DimP;
+  Stmp.DimP = n;
   Stmp.DimX = n;
   
   Stmp = QuasiRefine(Stmp,r);  
@@ -42,10 +42,10 @@ function S = pRefine(S,p,r)
     S2.D = [S2.D D];  
     
   end
-  % Normalize to S ranges
+  % Normalize to P ranges
     
-  S.pts = repmat(S.pts, [1 size(S2.pts,2)]);
-  S.epsi = repmat(S.epsi, [1 size(S2.pts,2)]);
-  S.pts(S.dim,:) = S.pts(S.dim,:) + (2*S2.pts-1).*S.epsi;
-  S.D = S2.D;  
+  P.pts = repmat(P.pts, [1 size(S2.pts,2)]);
+  P.epsi = repmat(P.epsi, [1 size(S2.pts,2)]);
+  P.pts(P.dim,:) = P.pts(P.dim,:) + (2*S2.pts-1).*P.epsi;
+  P.D = S2.D;  
  
