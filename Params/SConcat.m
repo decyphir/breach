@@ -38,8 +38,7 @@ for i = 1:numel(field_list_copy)
     end
 end
 
-field_list= {'XS0', 'Xf', 'ExpaMax', 'XSf', ...
-    'selected','props_values'};
+field_list= {'XS0', 'Xf', 'ExpaMax', 'XSf', 'props_values'};
 
 for i = 1:numel(field_list)
     
@@ -49,6 +48,19 @@ for i = 1:numel(field_list)
         else
             S.(field_list{i}) = [S.(field_list{i}) S2.(field_list{i})];
         end
+    end
+end
+
+% %%%%
+% selected
+% %%%%
+
+if isfield(S2,'selected') && isfield(S,'pts')
+    S2.selected = S2.selected+size(S.pts,2);
+    if isfield(S,'selected')
+        S.selected = [S.selected,S2.selected];
+    else
+        S.selected = S2.selected;
     end
 end
 
@@ -92,19 +104,6 @@ if isfield(S,'epsi') && isfield(S2,'epsi')
         else
             S.epsi(idx_p,nb_pts_S+1:end) = S2.epsi(i,:);
         end
-    end
-end
-
-% %%%%
-% selected
-% %%%%
-
-if isfield(S2,'selected') && isfield(S,'pts')
-    S2.selected = S2.selected+size(S.pts,2);
-    if isfield(S,'selected')
-        S.selected = [S.selected,S2.selected];
-    else
-        S.selected = S2.selected;
     end
 end
 
