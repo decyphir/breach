@@ -46,12 +46,7 @@ if (exist('opts','var'))
     if isfield(opts,'open_dialog')
         open_dialog = opts.open_dialog;
     end
-    
-    % what type of computation do we do (default: average) - NM defined later
-%    if isfield(opts,'stat_type')
-%        stat_type = opts.stat_type;
-%    end
-    
+        
     % cut off limit in percentage of the highest value (default: 0)
     if isfield(opts,'cutoff')
         cutoff = opts.cutoff;
@@ -126,29 +121,12 @@ end
 
 if (~isnumeric(iX))
     iX = FindParam(P,iX);
-    %NM The previous code line should be equivalent to the commented code
-%     if ischar(iX)
-%         iX={iX};
-%     end
-%     NiX = iX;
-%     iX = [];
-%     for i = 1:numel(NiX)
-%         ind = FindParam(P,NiX(i));
-%         iX(i) = ind;
-%     end
-    iX = iX(iX<=P.DimP); %keep only existing variables
+    iX = iX(iX<=P.DimX); %keep only existing variables
 end
 
 if (~isnumeric(iP))
     iP = FindParam(P,iP);
-    %NM The previous code line should be equivalent to the commented code
-%     NiP = iP;
-%     iP = [];
-%     for i = 1:numel(NiP)
-%         ind = FindParam(P,NiP{i});
-%         iP(i) = ind;
-%     end
-    iP = iP(iP<=P.DimP); %keep only existing parameters
+    iP = iP(iP<=size(P.pts,1)); %keep only existing parameters
 end
 
 % From now on I shoud have Sys, ipts, tspan, iX, iP, prop, and taus
@@ -328,6 +306,8 @@ if plots
     plot_histo(Mend,P, iX,props,iP);
 end
 
+end
+
 function h = plot_histo3d(Mend,S,iX, props, iP)
 
 h = figure;
@@ -376,6 +356,7 @@ for i = 1:length(h)
     set(h,'EdgeColor','k');
 end
 
+end
 
 function h = plot_histo1(M,S,iX, props, iP)
 
@@ -403,4 +384,4 @@ set(hy, 'Interpreter','none');
 
 legend(S.ParamList{iX});
 
-
+end

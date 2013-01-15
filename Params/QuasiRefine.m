@@ -2,13 +2,13 @@ function Ph = QuasiRefine(P, nb, step)
 % QUASIREFINE  Sample quasi-uniformly a parameter set. The number of
 % uncertain parameters must be lower or equal to 40 (when using Sobol).
 %
-% Synopsis:  Ph = QuasiRefine(P, nb)
+% Synopsis:  Ph = QuasiRefine(P, nb [,step] )
 %
 % Example:
 %
 %   CreateSystem;
 %   P = CreateSampling(Sys); % Create default parameter set for system Sys
-%   Ph = SobolRefine(P, 1000); % Sample with 1000 points
+%   Ph = QuasiRefine(P, 1000); % Sample with 1000 points
 %
 %   SplotBoxPts(P); % Parameter set before sampling
 %   SplotPts(Ph);   % plots the generated points

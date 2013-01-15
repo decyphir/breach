@@ -13,7 +13,7 @@ function P = pRefine(P, p, r)
 %         To get the sensitivity, we compute between a simulation and the
 %         simulation obtained by adding or removing p/(2(p+1)) to one
 %         parameter
-%   - r   the number of points to generate
+%   - r   the number of initial points for paths to generate
 %
 % Output:
 %   - Pr  the refined parameter set
