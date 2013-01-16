@@ -6,7 +6,7 @@ function [PRLog] = CreateRandomLogParamSets(Sys, params, ranges, N)
 %   It must not be two (or more) times the same parameter in the params
 %   argument.
 %
-%   Syntax: PRLog = RandomLogSampling(Sys, params, ranges, N)
+%   Syntax: PRLog = CreateRandomLogParamSets(Sys, params, ranges, N)
 %
 %   Inputs:
 %
@@ -31,7 +31,7 @@ function [PRLog] = CreateRandomLogParamSets(Sys, params, ranges, N)
 % we check if all range limits are strictly positive
 if(~isempty(find(sign(ranges)<0,1)))
     %return;
-    error('RandomLogSampling:rangeBound','Range limits must be positive or null.');
+    error('CreateRandomLogParamSets:rangeBound','Range limits must be positive or null.');
 end
 
 if(ischar(params))
@@ -43,7 +43,7 @@ nbParam = numel(params);
 % check for duplicates in params
 if(nbParam~=numel(unique(params)))
     %return ;
-    error('RandomLogSampling:duplicateParam',['When refining, it must '...
+    error('CreateRandomLogParamSets:duplicateParam',['When refining, it must '...
             'not be more than one time a parameter']);
 end
 

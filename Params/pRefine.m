@@ -18,7 +18,7 @@ function P = pRefine(P, p, r)
 % Output:
 %   - Pr  the refined parameter set
 
-% The method consists to generate r paths of n+1 (or n?) parameter sets
+% The method consists to generate r paths of n+1 parameter sets
 % (where n is the number of parameters), such that :
 %  1/ only one parameter differs between two consecutive steps ;
 %  2/ this parameter differs by p/(2(p+1)) times the size of the interval
