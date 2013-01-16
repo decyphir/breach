@@ -10,7 +10,7 @@ function [mu, mustar, sigm] = SPropSensi(Sys, P, phi,  opt)
 %    - opt is an option structure with the following fields :
 %
 %        - tspan   time domain computation of the trajectories
-%        - tprop   time instant ( scalar ) when to eval prop satisfaction ( default 0 )
+%        - tprop   time instant (scalar) when to eval prop satisfaction (default tspan(1))
 %        - params  variable parameters
 %        - lbound  lower bounds for the search domain
 %        - ubound  upper bounds for the search domain
@@ -32,7 +32,7 @@ function [mu, mustar, sigm] = SPropSensi(Sys, P, phi,  opt)
 %   % P = SetParam(P, {'x1h', 'x1l', 'T'}, [.3, -.3, 5]);
 %   % oscil_prop_names = QMITL_ReadFile('oscil_prop.stl');
 %   % phi = QMITL_Formula(oscil_prop_names{end});
-%   opt.tspan = 0:0.1:10;
+%   opt.tspan = 2:0.1:5;
 %   opt.params = {'a','F'};
 %   opt.lbound = [0.15, 5];
 %   opt.ubound = [0.35, 25];
@@ -56,7 +56,7 @@ end
 if isfield(opt, 'tprop')
     tprop = opt.tprop;
 else
-    tprop = 0;
+    tprop = tspan(1);
 end
 
 if isfield(opt, 'p')
