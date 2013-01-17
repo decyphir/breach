@@ -94,18 +94,21 @@ if opt.plot
     [Mu, isort] = sort(abs(mu));
     h = figure;
     subplot(3,1,1);
-    barh(mu(isort));
-    set(gca, 'YTick', 1:numel(opt.params), 'YTickLabel',  opt.params(isort));
+    barh(Mu);
+    title('Mu')
+    set(gca, 'YTick', 1:numel(opt.params), 'YTickLabel', opt.params(isort));
     
     subplot(3,1,2);
     barh(mustar(isort));
-    set(gca, 'YTick', 1:numel(opt.params), 'YTickLabel',  opt.params(isort));
+    title('Mustar')
+    set(gca, 'YTick', 1:numel(opt.params), 'YTickLabel', opt.params(isort));
     
     subplot(3,1,3);
     barh(sigm(isort));
-    set(gca, 'YTick', 1:numel(opt.params), 'YTickLabel',  opt.params(isort));
+    title('Sigm')
+    set(gca, 'YTick', 1:numel(opt.params), 'YTickLabel', opt.params(isort));
     
-    fig_resize(h,1,2)
+    fig_resize(h,1,2.5)
 end
 
 end
