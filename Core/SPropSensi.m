@@ -1,11 +1,12 @@
-function [mu, mustar, sigm] = SPropSensi(Sys, P, phi,  opt)
+function [mu, mustar, sigm] = SPropSensi(Sys, P, phi, opt)
 %
 % SPROPSENSI estimates the sensitivity of a property wrt some parameters (Morris method)
 %
-% Synopsis: [mu, mustar, sigm]  = SPropSensi(Sys, P, phi, opt)
+% Synopsis: [mu, mustar, sigm] = SPropSensi(Sys, P, phi, opt)
 %
 % Input:
-%    - P is a parameter set for Sys
+%    - P  is a parameter set for Sys. The value of all parameters of P, not
+%         in opt.params is defined by the first parameters values in P.
 %    - phi is an STL property
 %    - opt is an option structure with the following fields :
 %
@@ -74,6 +75,14 @@ Sys.p = P.pts(:,1);
 Pr = CreateParamSet(Sys, opt.params, [opt.lbound' opt.ubound']);
 
 Pr = pRefine(Pr,opt.p, opt.k);
+
+%NM : we must compute the truth value of phi at time=tprop
+if tprop < tspan(1)
+    tspan = [tprop,tspan];
+%elseif tprop > tspan(end)
+%    tspan = [tspan, tprop];
+end
+
 Pr = ComputeTraj(Sys, Pr, tspan);
 
 [Pr, Y] = SEvalProp(Sys, Pr, phi, tprop);
