@@ -95,17 +95,17 @@ if opt.plot
     h = figure;
     subplot(3,1,1);
     barh(Mu);
-    title('Mu')
+    title('Expectation of elementary effects (mu)')
     set(gca, 'YTick', 1:numel(opt.params), 'YTickLabel', opt.params(isort));
     
     subplot(3,1,2);
     barh(mustar(isort));
-    title('Mustar')
+    title('Expectation of absolute values of elementary effects (mu*)')
     set(gca, 'YTick', 1:numel(opt.params), 'YTickLabel', opt.params(isort));
     
     subplot(3,1,3);
     barh(sigm(isort));
-    title('Sigm')
+    title('Variance of elementary effects (sigm)')
     set(gca, 'YTick', 1:numel(opt.params), 'YTickLabel', opt.params(isort));
     
     fig_resize(h,1,2.5)

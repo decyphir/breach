@@ -13,9 +13,9 @@ function [mu, mustar, sigm] = EEffects(Y, D, p)
 %   - p  the grid level
 %
 % Output:
-%   - mu     
-%   - mustar 
-%   - sigm   
+%   - mu      expectation of elementary effects
+%   - mustar  expectation of absolute values of elementary effects
+%   - sig     variance of elementary effects
 %
 % Example (Lorentz84):
 %
