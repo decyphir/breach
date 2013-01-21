@@ -10,14 +10,20 @@ function [mu, mustar, sigm] = SPropSensi(Sys, P, phi, opt)
 %    - phi is an STL property
 %    - opt is an option structure with the following fields :
 %
-%        - tspan   time domain computation of the trajectories
-%        - tprop   time instant (scalar) when to eval prop satisfaction (default tspan(1))
-%        - params  variable parameters
-%        - lbound  lower bounds for the search domain
-%        - ubound  upper bounds for the search domain
-%        - p       number of levels (p-grid) (default 4)
-%        - k       number of trajectories (default 10)
-%        - plot    if 1, plots histograms (default 0)
+%        - tspan       time domain computation of the trajectories
+%        - tprop       time instant (scalar) when to eval prop satisfaction (default tspan(1))
+%        - params      variable parameters
+%        - lbound      lower bounds for the search domain
+%        - ubound      upper bounds for the search domain
+%        - p           number of levels (p-grid) (default 4)
+%        - k           number of trajectories (default 10)
+%        - plot        if 1, plots histograms (default 0)
+%        - muGraphOpt      if plot=1, define graphical options for mu graph
+%                          (optional)
+%        - mustarGraphOpt  if plot=1, graphical options for mu* graph
+%                          (optional)
+%        - sigmGraphOpt    if plot=1, graphical options for sigm graph
+%                          (optional)
 %
 % Output:
 %   - mu      expectation of elementary effects
@@ -38,6 +44,7 @@ function [mu, mustar, sigm] = SPropSensi(Sys, P, phi, opt)
 %   opt.lbound = [0.15, 5];
 %   opt.ubound = [0.35, 25];
 %   opt.plot = 1;
+%   opt.muGraphOpt = {'XScale','log'};
 %   [mu, mustar, sigm] = SPropSensi(Sys, P, phi,  opt);
 %
 %  See also pRefine, EE_traj, EEffects
@@ -95,18 +102,27 @@ if opt.plot
     h = figure;
     subplot(3,1,1);
     barh(Mu);
-    title('Mu')
+    title('Expectation of elementary effects (mu)')
     set(gca, 'YTick', 1:numel(opt.params), 'YTickLabel', opt.params(isort));
+    if isfield(opt,'muGraphOpt')
+        set(gca,opt.muGraphOpt{:});
+    end
     
     subplot(3,1,2);
     barh(mustar(isort));
-    title('Mustar')
+    title('Expectation of absolute values of elementary effects (mu*)')
     set(gca, 'YTick', 1:numel(opt.params), 'YTickLabel', opt.params(isort));
+    if isfield(opt,'mustarGraphOpt')
+        set(gca,opt.mustarGraphOpt{:});
+    end
     
     subplot(3,1,3);
     barh(sigm(isort));
-    title('Sigm')
+    title('Variance of elementary effects (sigm)')
     set(gca, 'YTick', 1:numel(opt.params), 'YTickLabel', opt.params(isort));
+    if isfield(opt,'sigmGraphOpt')
+        set(gca,opt.sigmGraphOpt{:});
+    end
     
     fig_resize(h,1,2.5)
 end
