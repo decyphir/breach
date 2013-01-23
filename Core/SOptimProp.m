@@ -1,22 +1,24 @@
-function [val_opt Sopt]  = SOptimProp(Sys, P, prop, opt)
+function [val_opt, Sopt]  = SOptimProp(Sys, P, prop, opt)
 %
 % SOPTIMPROP optimizes the satisfaction of a property
 %
-% Synopsis: Sopt  = SOptimProp(Sys, P0, phi, opt) 
+% Synopsis: [val_opt, Sopt]  = SOptimProp(Sys, P0, phi, opt) 
 % 
 %    - P0 is a parameter set for Sys
 %    - phi is a QMITL property
 %    - opt is an option structure with the following fields :
 %       
 %        - tspan is the time domain computation of the trajectories
-%        - params : variable (search) parameters    
-%        - lbound : lower bounds for the search domain
-%        - ubound : upper bounds for the search domain
-%        - MaxIter : max number of optimization iteration 
-%        - OptimType : 'Max', 'Min' or 'Zero'
-%        - StopWhenFound : compute satisfaction for initial parameters in P0 then stops whenever 
-%                          a positive ('Max') or negative ('Min') solution is found
-%        - StopWhenFoundInit : same as above except that it does not necessarily compute all trajectories in P0 
+%        - params : (mandatory) variable (search) parameters    
+%        - lbound : (mandatory) lower bounds for the search domain
+%        - ubound : (mandatory) upper bounds for the search domain
+%        - MaxIter : (mandatory) max number of optimization iteration 
+%        - OptimType : 'Max' (default), 'Min' or 'Zero'
+%        - StopWhenFound : set to 1 to compute satisfaction for initial parameters
+%                          in P0 then stops whenever  a positive ('Max') or
+%                          negative ('Min') solution is found
+%        - StopWhenFoundInit : same as above except that it does not necessarily
+%                              compute all trajectories in P0 
 %
   
 %% process options
@@ -32,7 +34,7 @@ function [val_opt Sopt]  = SOptimProp(Sys, P, prop, opt)
   elseif isfield(P, 'traj')   
     tspan = P.traj(1).time;
   else 
-    tspan = 0:.2:10
+    tspan = 0:.2:10;
   end  
   
   dim = P.dim;
@@ -63,21 +65,22 @@ function [val_opt Sopt]  = SOptimProp(Sys, P, prop, opt)
   
   switch OptimType 
    case 'Max'
-    fun = @(x) fun_max(x,Sys, Stmp, prop, tspan);   
+    fun = @(x) fun_max(x, Sys, Stmp, prop, tspan);   
     fopt = -inf;
    case 'Min'  
-    fun = @(x) fun_min(x,Sys, Stmp, prop, tspan);       
+    fun = @(x) fun_min(x, Sys, Stmp, prop, tspan);       
     fopt = inf;
-    case 'Zero' 
-    fopt  =inf;
-    fun = @(x) fun_zero(x,Sys, Stmp, prop, tspan);       
+  case 'Zero' 
+    fopt = inf;
+    fun = @(x) fun_zero(x, Sys, Stmp, prop, tspan);       
   end
     
 %% Initial values
   options = optimset('MaxIter', MaxIter);  
 
-  if ('StopWhenFoundInit')    
-    rfprintf_reset();    
+  if (StopWhenFoundInit)    
+    rfprintf_reset();
+    val = zeros(1,size(P.pts,2));
     for i = 1:size(P.pts, 2)
       Stmp = Sselect(P,i); 
       Stmp = ComputeTraj(Sys, Stmp, tspan );     
@@ -108,29 +111,29 @@ function [val_opt Sopt]  = SOptimProp(Sys, P, prop, opt)
       end
     end     
   else
-    Sopt = ComputeTraj(Sys, P, tspan );
-    [Sopt val] = SEvalProp(Sys, P, prop, 0);
+    Sopt = ComputeTraj(Sys, P, tspan);
+    [Sopt, val] = SEvalProp(Sys, Sopt, prop, 0);
   end 
   
   
   switch OptimType 
    case 'Max'
-    [val_init iv] = sort(-val);  
-    fun = @(x) fun_max(x,Sys, prop, tspan);             
+    [val_init, iv] = sort(-val);  
+    fun = @(x) fun_max(x, Sys, prop, tspan);             
     if val(iv(1))>0
       found = val(iv(1));
     end
     
    case 'Min'  
-    [val_init iv] = sort(val);
-    fun = @(x) fun_min(x,Sys, prop, tspan);
+    [val_init, iv] = sort(val);
+    fun = @(x) fun_min(x, Sys, prop, tspan);
     if val(iv(1))<0
       found = val(iv(1));
     end
     
    case 'Zero' 
-    [val_init iv] = sort(abs(val));   
-    fun = @(x) fun_zero(x,Sys, prop, tspan);          
+    [val_init, iv] = sort(abs(val));   
+    fun = @(x) fun_zero(x, Sys, prop, tspan);          
   end
   
   %% Main Loop
@@ -158,7 +161,7 @@ function [val_opt Sopt]  = SOptimProp(Sys, P, prop, opt)
     fprintf('\nOptimize from init point %d/%d Initial value: %g\n',k, numel(iv), val(i) );
     rfprintf_reset();
     x0 = P.pts(dim,i); 
-    [x val_opt(k)] = optimize(fun, x0, lbound, ubound,[],[],[],[],[],[],options);
+    [x, val_opt(k)] = optimize(fun, x0, lbound, ubound,[],[],[],[],[],[],options);
     fprintf('\n');    
     Sopt.pts(dim,i) = x;    
     Sopt.traj(Sopt.traj_ref(i)) = traj_opt;
@@ -177,7 +180,7 @@ function [val_opt Sopt]  = SOptimProp(Sys, P, prop, opt)
 end
     
 function val = fun_max(x, Sys, prop, tspan)
-  global fopt traj_opt found StopWhenFound
+  global Stmp fopt traj_opt found StopWhenFound
   if (~isempty(found)&&StopWhenFound)
     val = found;
   else
