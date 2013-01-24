@@ -1,9 +1,10 @@
-function [val_opt, Sopt]  = SOptimProp(Sys, P, prop, opt)
+function [val_opt, Popt]  = SOptimProp(Sys, P, prop, opt)
 %
 % SOPTIMPROP optimizes the satisfaction of a property
 %
-% Synopsis: [val_opt, Sopt]  = SOptimProp(Sys, P0, phi, opt)
+% Synopsis: [val_opt, Popt]  = SOptimProp(Sys, P0, phi, opt)
 %
+% Input:
 %    - P0 is a parameter set for Sys
 %    - phi is a QMITL property
 %    - opt is an option structure with the following fields :
@@ -20,13 +21,24 @@ function [val_opt, Sopt]  = SOptimProp(Sys, P, prop, opt)
 %        - StopWhenFoundInit : same as above except that it does not necessarily
 %                              compute all trajectories in P0
 %
+% Output:
+%    - val_opt : the truth value of phi for the param set Sopt. It is a
+%                scalar if StopWhenFound or StopWhenFoundInit it sets to 1.
+%                Otherwize, it is a vector of size 1 x size(P.pts,2).
+
+%    - Popt    : if StopWhenFound or StopWhenFoundInit is set to 1, and a
+%                set of parameter values leading to a negative (resp.
+%                positive) truth value of phi is found, Popt is this
+%                parameter set.
+%                Otherwize, it contains the optimum found for each set of
+%                parameter values in P.
 
 %% process options
 
 global Stmp found StopWhenFound fopt traj_opt
 
 found = [];
-traj_opt=[];
+traj_opt = [];
 if isfield(opt, 'tspan')
     tspan = opt.tspan;
 elseif isfield(Sys, 'tspan')
@@ -40,9 +52,9 @@ end
 dim = P.dim;
 
 if isfield(opt,'OptimType')
-    OptimType = opt.OptimType;
+    OptimType = lower(opt.OptimType); % to avoid case mistake, we convert to lower case
 else
-    OptimType = 'Max';
+    OptimType = 'max';
 end
 
 if isfield(opt,'MaxIter')
@@ -57,6 +69,7 @@ end
 
 if isfield(opt,'StopWhenFoundInit')
     StopWhenFoundInit = opt.StopWhenFoundInit;
+    StopWhenFound = 1;
 else
     StopWhenFoundInit = 0;
 end
@@ -64,13 +77,13 @@ end
 Stmp = Sselect(P,1);
 
 switch OptimType
-    case 'Max'
+    case 'max'
         fun = @(x) fun_max(x, Sys, Stmp, prop, tspan);
         fopt = -inf;
-    case 'Min'
+    case 'min'
         fun = @(x) fun_min(x, Sys, Stmp, prop, tspan);
         fopt = inf;
-    case 'Zero'
+    case 'zero'
         fopt = inf;
         fun = @(x) fun_zero(x, Sys, Stmp, prop, tspan);
 end
@@ -83,57 +96,63 @@ if (StopWhenFoundInit)
     val = zeros(1,size(P.pts,2));
     for i = 1:size(P.pts, 2)
         Stmp = Sselect(P,i);
-        Stmp = ComputeTraj(Sys, Stmp, tspan );
+        Stmp = ComputeTraj(Sys, Stmp, tspan);
         val(i) = QMITL_Eval(Sys, prop, Stmp, Stmp.traj, 0);
-        status = ['Init ' num2str(i) '/' num2str(size(P.pts, 2)) ' Robustness value: ' num2str(val(i)) ];
+        status = ['Init ' num2str(i) '/' num2str(size(P.pts, 2)) ' Robustness value: ' num2str(val(i))];
         rfprintf(status);
         
         switch OptimType
-            case 'Max'
+            case 'max'
                 if val(i)>0
                     val_opt = val(i);
-                    Sopt = Stmp;
+                    Popt = Stmp;
                     return;
                 end
                 
-            case 'Min'
+            case 'min'
                 if val(i)<0
                     val_opt = val(i);
-                    Sopt = Stmp;
+                    Popt = Stmp;
                     return;
                 end
         end
         
         if i==1
-            Sopt = Stmp;
+            Popt = Stmp;
         else
-            Sopt = SConcat(Sopt, Stmp);
+            Popt = SConcat(Popt, Stmp);
         end
     end
 else
-    Sopt = ComputeTraj(Sys, P, tspan);
-    [Sopt, val] = SEvalProp(Sys, Sopt, prop, 0);
+    Popt = ComputeTraj(Sys, P, tspan);
+    [Popt, val] = SEvalProp(Sys, Popt, prop, 0);
 end
 
 
 switch OptimType
-    case 'Max'
-        [val_init, iv] = sort(-val);
+    case 'max'
+        [~, iv] = sort(-val);
         fun = @(x) fun_max(x, Sys, prop, tspan);
-        if val(iv(1))>0
+        if val(iv(1))>0 % if the highest value is positive
             found = val(iv(1));
         end
         
-    case 'Min'
-        [val_init, iv] = sort(val);
+    case 'min'
+        [~, iv] = sort(val);
         fun = @(x) fun_min(x, Sys, prop, tspan);
-        if val(iv(1))<0
+        if val(iv(1))<0 % if the lowest value is negative
             found = val(iv(1));
         end
         
-    case 'Zero'
-        [val_init, iv] = sort(abs(val));
+    case 'zero'
+        [~, iv] = sort(abs(val));
         fun = @(x) fun_zero(x, Sys, prop, tspan);
+end
+
+if (StopWhenFound)&&(~isempty(found))
+    Popt = Sselect(Popt,i);
+    val_opt = found;
+    return ;
 end
 
 %% Main Loop
@@ -158,36 +177,36 @@ for i = iv
         ubound = P.pts(dim,i)+P.epsi(:,i);
     end
     
-    fprintf('\nOptimize from init point %d/%d Initial value: %g\n',k, numel(iv), val(i) );
+    fprintf('\nOptimize from init point %d/%d Initial value: %g\n', k, numel(iv), val(i));
     rfprintf_reset();
     x0 = P.pts(dim,i);
-    [x, val_opt(k)] = optimize(fun, x0, lbound, ubound,[],[],[],[],[],[],options);
+    [x, val_opt(k)] = optimize(fun,x0,lbound,ubound,[],[],[],[],[],[],options);
     fprintf('\n');
-    Sopt.pts(dim,i) = x;
-    Sopt.traj(Sopt.traj_ref(i)) = traj_opt;
-    Sopt.Xf(:,i) = traj_opt.X(:,end);
+    Popt.pts(dim,i) = x;
+    Popt.traj(Popt.traj_ref(i)) = traj_opt;
+    Popt.Xf(:,i) = traj_opt.X(:,end);
     
-    if (StopWhenFoundInit)&&(~isempty(found))
-        Sopt = Sselect(Sopt,i);
+    if (StopWhenFound)&&(~isempty(found))
+        Popt = Sselect(Popt,i);
         val_opt = val_opt(k);
-        break
+        break ;
     end
 end
-
-
 
 
 end
 
 function val = fun_max(x, Sys, prop, tspan)
 global Stmp fopt traj_opt found StopWhenFound
-if (~isempty(found)&&StopWhenFound)
-    val = found;
-else
-    Stmp.pts(Stmp.dim)=x;
-    Stmp = ComputeTraj(Sys, Stmp, tspan);
-    val = QMITL_Eval(Sys,prop, Stmp, Stmp.traj(1),0);
+
+if (~isempty(found)&&StopWhenFound) %positive value found, do not need to continue
+    val = -found; % optimize tries to minimize the objective function, so
+    return ;          % we provide it -val instead of val
 end
+
+Stmp.pts(Stmp.dim)=x;
+Stmp = ComputeTraj(Sys, Stmp, tspan);
+val = QMITL_Eval(Sys,prop, Stmp, Stmp.traj(1),0);
 
 if (val>0)
     found = val;
@@ -198,21 +217,23 @@ if (val>fopt)
     traj_opt = Stmp.traj;
 end
 
-status = ['Robustness value: ' num2str(val) 'Current optimal: ' num2str(fopt)];
+status = ['Robustness value: ' num2str(val) ' Current optimal: ' num2str(fopt)];
 rfprintf(status);
-val = -val;
+val = -val; % optimize tries to minimize the objective function, so we
+            % provide it -val instead of val
 end
 
 function val = fun_min(x, Sys, prop, tspan)
 global Stmp found StopWhenFound fopt traj_opt
 
-if (~isempty(found)&&StopWhenFound)
+if (~isempty(found)&&StopWhenFound) %negative value found, do not need to continue
     val = found;
-else
-    Stmp.pts(Stmp.dim)=x;
-    Stmp = ComputeTraj(Sys, Stmp, tspan);
-    val = QMITL_Eval(Sys,prop, Stmp, Stmp.traj(1),0);
+    return ;
 end
+
+Stmp.pts(Stmp.dim)=x;
+Stmp = ComputeTraj(Sys, Stmp, tspan);
+val = QMITL_Eval(Sys,prop, Stmp, Stmp.traj(1),0);
 
 if (val<0)
     found = val;
@@ -223,7 +244,7 @@ if (val<fopt)
     traj_opt = Stmp.traj;
 end
 
-status = ['Robustness value: ' num2str(val) '  Current optimal: ' num2str(fopt)];
+status = ['Robustness value: ' num2str(val) ' Current optimal: ' num2str(fopt)];
 rfprintf(status);
 end
 
@@ -241,7 +262,5 @@ end
 
 val = abs(val);
 
-
 end
-
 
