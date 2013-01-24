@@ -74,20 +74,6 @@ else
     StopWhenFoundInit = 0;
 end
 
-Stmp = Sselect(P,1);
-
-switch OptimType
-    case 'max'
-        fun = @(x) fun_max(x, Sys, Stmp, prop, tspan);
-        fopt = -inf;
-    case 'min'
-        fun = @(x) fun_min(x, Sys, Stmp, prop, tspan);
-        fopt = inf;
-    case 'zero'
-        fopt = inf;
-        fun = @(x) fun_zero(x, Sys, Stmp, prop, tspan);
-end
-
 %% Initial values
 options = optimset('MaxIter', MaxIter);
 
@@ -133,6 +119,8 @@ switch OptimType
     case 'max'
         [~, iv] = sort(-val);
         fun = @(x) fun_max(x, Sys, prop, tspan);
+        fopt = val(iv(1));
+        traj_opt = Sselect(P,iv(1)).traj;
         if val(iv(1))>0 % if the highest value is positive
             found = val(iv(1));
         end
@@ -140,12 +128,16 @@ switch OptimType
     case 'min'
         [~, iv] = sort(val);
         fun = @(x) fun_min(x, Sys, prop, tspan);
+        fopt = val(iv(1));
+        traj_opt = Sselect(P,iv(1)).traj;
         if val(iv(1))<0 % if the lowest value is negative
             found = val(iv(1));
         end
         
     case 'zero'
         [~, iv] = sort(abs(val));
+        fopt = val(iv(1));
+        traj_opt = Sselect(P,iv(1)).traj;
         fun = @(x) fun_zero(x, Sys, prop, tspan);
 end
 
@@ -162,6 +154,7 @@ if (MaxIter==0)
     return;
 end
 
+val_opt = zeros(numel(iv)); % avoid to increase val_opt size in the loop
 k=0;
 for i = iv
     k = k+1;
@@ -188,9 +181,18 @@ for i = iv
     
     if (StopWhenFound)&&(~isempty(found))
         Popt = Sselect(Popt,i);
-        val_opt = val_opt(k);
+        if strcmp(OptimType,'max')
+            val_opt = -val_opt(k);
+        else
+            val_opt = val_opt(k);
+        end
         break ;
     end
+end
+
+% max function returns the opposite of the truth value
+if strcmp(OptimType,'max')
+    val_opt = -val_opt;
 end
 
 
@@ -206,7 +208,7 @@ end
 
 Stmp.pts(Stmp.dim)=x;
 Stmp = ComputeTraj(Sys, Stmp, tspan);
-val = QMITL_Eval(Sys,prop, Stmp, Stmp.traj(1),0);
+val = QMITL_Eval(Sys, prop, Stmp, Stmp.traj(1), 0);
 
 if (val>0)
     found = val;
