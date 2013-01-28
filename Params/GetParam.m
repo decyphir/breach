@@ -1,11 +1,19 @@
 function ParamValues = GetParam(S,ParamList)
-% GETPARAM get the values of parameters in a parameter set. The function
-% return an empty set if a parameter name or a parameter indice is not
-% valid. S can be a system or a parameter set. If S is a system GetParam
-% answers the value for the parameters given when the system had been
+% GETPARAM answers a matrix containing the values of parameters in the
+% parameter set S. Each line contains the values of one parameter. The
+% function returns an empty matrix if a parameter name or a parameter
+% indice is not valid. S can be a system or a parameter set. If S is a
+% system, GetParam answers the value provided when the system had been
 % created.
 %
-% Synopsis: ParamValues = GetParam(P, ParamList)
+% Synopsis: ParamValues = GetParam(S, ParamList)
+%
+% Input :
+%   - S         : a system or a parameter set
+%   - ParamList : either a cell matrix containing the name of the
+%                 parameters to get, or an array containing the indexes of
+%                 the parameters, or a string containing the name of the
+%                 parameter.
 %
 % Example (for Lorenz84 system):
 %
