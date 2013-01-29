@@ -10,7 +10,9 @@ function [val_opt, Popt]  = SOptimProp(Sys, P, prop, opt)
 %    - phi is a QMITL property
 %    - opt is an option structure with the following fields :
 %
-%        - tspan is the time domain computation of the trajectories
+%        - tspan  : the time domain computation of the trajectories
+%        - tau    : time for the evaluation of phi (default first tspan
+%                   value)
 %        - params : (mandatory) variable (search) parameters
 %        - lbound : (mandatory) lower bounds for the search domain
 %        - ubound : (mandatory) upper bounds for the search domain
@@ -53,6 +55,15 @@ else
     tspan = 0:.2:10;
 end
 
+if isfield(opt,'tau')
+    tau = opt.tau;
+    if tspan(1) > tau
+        tspan = [tau tspan];
+    end
+else
+    tau = tspan(1);
+end
+
 if isfield(opt,'params')
     dim = FindParam(P,opt.params);
     dim = dim(dim<size(P.pts,1)); % keep only existing parameters (either system or constraint parameter)
@@ -78,7 +89,7 @@ end
 
 if isfield(opt,'StopWhenFoundInit')
     StopWhenFoundInit = opt.StopWhenFoundInit;
-    StopWhenFound = 1;
+    StopWhenFound = StopWhenFound | StopWhenFoundInit;
 else
     StopWhenFoundInit = 0;
 end
@@ -92,7 +103,7 @@ if (StopWhenFoundInit)
     for i = 1:size(P.pts, 2)
         Ptmp = Sselect(P,i);
         Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-        val(i) = QMITL_Eval(Sys, prop, Ptmp, Ptmp.traj, 0);
+        val(i) = QMITL_Eval(Sys, prop, Ptmp, Ptmp.traj, tau);
         status = ['Init ' num2str(i) '/' num2str(size(P.pts, 2)) ' Robustness value: ' num2str(val(i))];
         rfprintf(status);
         
@@ -120,28 +131,28 @@ if (StopWhenFoundInit)
     end
 else
     Popt = ComputeTraj(Sys, P, tspan);
-    [Popt, val] = SEvalProp(Sys, Popt, prop, 0);
+    [Popt, val] = SEvalProp(Sys, Popt, prop, tau);
 end
 
 
 switch OptimType
     case 'max'
         [~, iv] = sort(-val);
-        fun = @(x) fun_max(x, Sys, prop, tspan);
+        fun = @(x) fun_max(x, Sys, prop, tspan, tau);
         if val(iv(1))>0 % if the highest value is positive
             found = val(iv(1));
         end
         
     case 'min'
         [~, iv] = sort(val);
-        fun = @(x) fun_min(x, Sys, prop, tspan);
+        fun = @(x) fun_min(x, Sys, prop, tspan, tau);
         if val(iv(1))<0 % if the lowest value is negative
             found = val(iv(1));
         end
         
     case 'zero'
         [~, iv] = sort(abs(val));
-        fun = @(x) fun_zero(x, Sys, prop, tspan);
+        fun = @(x) fun_zero(x, Sys, prop, tspan, tau);
 end
 
 if (StopWhenFound)&&(~isempty(found))
@@ -203,7 +214,7 @@ end
 
 end
 
-function val = fun_max(x, Sys, prop, tspan)
+function val = fun_max(x, Sys, prop, tspan, tau)
 global Ptmp fopt traj_opt found StopWhenFound
 
 if (~isempty(found)&&StopWhenFound) %positive value found, do not need to continue
@@ -213,7 +224,7 @@ end
 
 Ptmp.pts(Ptmp.dim)=x;
 Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-val = QMITL_Eval(Sys, prop, Ptmp, Ptmp.traj(1), 0);
+val = QMITL_Eval(Sys, prop, Ptmp, Ptmp.traj(1), tau);
 
 if (val>0)
     found = val;
@@ -230,7 +241,7 @@ val = -val; % optimize tries to minimize the objective function, so we
             % provide it -val instead of val
 end
 
-function val = fun_min(x, Sys, prop, tspan)
+function val = fun_min(x, Sys, prop, tspan, tau)
 global Ptmp found StopWhenFound fopt traj_opt
 
 if (~isempty(found)&&StopWhenFound) %negative value found, do not need to continue
@@ -240,7 +251,7 @@ end
 
 Ptmp.pts(Ptmp.dim)=x;
 Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-val = QMITL_Eval(Sys,prop, Ptmp, Ptmp.traj(1),0);
+val = QMITL_Eval(Sys, prop, Ptmp, Ptmp.traj(1), tau);
 
 if (val<0)
     found = val;
@@ -255,11 +266,11 @@ status = ['Robustness value: ' num2str(val) ' Current optimal: ' num2str(fopt)];
 rfprintf(status);
 end
 
-function val = fun_zero(x, Sys, prop, tspan)
+function val = fun_zero(x, Sys, prop, tspan, tau)
 global Ptmp fopt traj_opt
 Ptmp.pts(Ptmp.dim)=x;
 Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-val = QMITL_Eval(Sys,prop, Ptmp, Ptmp.traj(1),0);
+val = QMITL_Eval(Sys, prop, Ptmp, Ptmp.traj(1), tau);
 status = ['Robustness value: ' num2str(val) ];
 rfprintf(status);
 if (abs(val)<fopt)

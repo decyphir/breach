@@ -26,7 +26,7 @@ function ParamValues = GetParam(S,ParamList)
 %    val = GetParam(Pr, {'a', 'b'});
 %    val = GetParam(Pr, {'b', 'a'});
 %
-%See also SetParam
+%See also SetParam, GetEpsi
 
     if (isfield(S,'pts'))
         p = S.pts;

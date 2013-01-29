@@ -1,7 +1,7 @@
 function EpsiValues = GetEpsi(P,ParamList)
-% GETEPSI get the epsi of parameters in a parameter set. The function
-% return an empty set if a parameter name or a parameter indice is not
-% valid.
+% GETEPSI get the epsi of parameters in a parameter set. Each line contains
+% the epsi of one parameter. The function return an empty set if a
+% parameter name or a parameter indice is not valid.
 %
 % Synopsis: EpsiValues = GetEpsi(P, ParamList)
 %
