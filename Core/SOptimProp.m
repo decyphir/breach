@@ -132,6 +132,7 @@ if (StopWhenFoundInit)
 else
     Popt = ComputeTraj(Sys, P, tspan);
     [Popt, val] = SEvalProp(Sys, Popt, prop, tau);
+    Ptmp = Sselect(Popt,1);
 end
 
 

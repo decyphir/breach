@@ -9,5 +9,5 @@ function S = SXf2X0(S0)
   S = S0;
   S.pts(1:DimX,:) = S.Xf;
   S = SPurge(S);
-  S = SPurge_Props(S);  
+  S = SPurge_props(S);  
   

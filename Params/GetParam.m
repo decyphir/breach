@@ -1,9 +1,9 @@
 function ParamValues = GetParam(S,ParamList)
-% GETPARAM answers a matrix containing the values of parameters in the
+% GETPARAM returns a matrix containing the values of parameters in the
 % parameter set S. Each line contains the values of one parameter. The
 % function returns an empty matrix if a parameter name or a parameter
 % indice is not valid. S can be a system or a parameter set. If S is a
-% system, GetParam answers the value provided when the system had been
+% system, GetParam returns the value provided when the system has been
 % created.
 %
 % Synopsis: ParamValues = GetParam(S, ParamList)

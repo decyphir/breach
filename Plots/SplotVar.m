@@ -30,6 +30,7 @@ function SplotVar(S,iX,ipts,opt, bool_same_axe)
 
   if (~isfield(S,'traj'))
     disp('No trajectory computed for this set')
+    return;
   end
   
   
