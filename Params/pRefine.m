@@ -41,18 +41,18 @@ Stmp.DimX = n;
 Stmp = QuasiRefine(Stmp,r);
 Stmp.pts = floor(Stmp.pts)/(p-1);
 
-% can be improved
+%intialize to avoir growth when in loop
 S2 = Stmp;
-S2.pts = [];
-S2.epsi = [];
-S2.D = [];
+S2.pts = zeros(n,(n+1)*r);
+S2.epsi = zeros(n,(n+1)*r);
+S2.D = zeros(n,n*r);
 
 % generate the elementary effects "trajectories"
 for k=1:r
     [X, D] = EE_traj(Stmp.pts(:,k), p, n);
-    S2.pts =  [S2.pts X];
-    S2.epsi =  [S2.epsi repmat(Stmp.epsi(:,k), [1 n+1] )];
-    S2.D = [S2.D D];
+    S2.pts(:,(k-1)*(n+1)+1:k*(n+1)) = X;  % define S2.pts with r bloc of (n+1) x n
+    S2.epsi(:,(k-1)*(n+1)+1:k*(n+1)) = repmat(Stmp.epsi(:,k), [1,n+1]);
+    S2.D(:,(k-1)*n+1:k*n) = D;  % fill S2.d with r bloc of n x n
     
 end
 
