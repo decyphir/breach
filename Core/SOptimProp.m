@@ -132,6 +132,7 @@ if (StopWhenFoundInit)
 else
     Popt = ComputeTraj(Sys, P, tspan);
     [Popt, val] = SEvalProp(Sys, Popt, prop, tau);
+    Ptmp = Sselect(Popt,1);
 end
 
 
@@ -189,7 +190,7 @@ for i = iv
     x0 = P.pts(dim,i);
     fopt = val(i); % we initialize with the only truth value computed for this set of values
     traj_opt = Popt.traj(Popt.traj_ref(i));           % <--- !!! NOT SURE OF THAT (but I guess it is correct)
-    [x, val_opt(k)] = optimize(fun,x0,lbound,ubound,[],[],[],[],[],[],options);
+    [x, val_opt(k)] = optimize(fun,x0,lbound,ubound,[],[],[],[],[],[],options,'NelderMead');
     fprintf('\n');
     Popt.pts(dim,i) = x;
     Popt.traj(Popt.traj_ref(i)) = traj_opt;
@@ -197,11 +198,7 @@ for i = iv
     
     if (StopWhenFound)&&(~isempty(found))
         Popt = Sselect(Popt,i);
-        if strcmp(OptimType,'max')
-            val_opt = -val_opt(k);
-        else
-            val_opt = val_opt(k);
-        end
+        val_opt = val_opt(k);
         break ;
     end
 end

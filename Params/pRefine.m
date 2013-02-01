@@ -8,7 +8,10 @@ function P = pRefine(P, p, r)
 % Usage:  Pr = pRefine(P, p, r)
 %
 % Input:
-%   - P   the initial parameter set
+%   - P   the initial parameter set. Only the first set of value of P will
+%         be considered. The parameter not in P.dim are equals in all the
+%         generated parameter sets. There value is provided by the first
+%         set of value in P.
 %   - p   indicates in how many the interval of each parameter is splitted.
 %         To get the sensitivity, we compute between a simulation and the
 %         simulation obtained by adding or removing p/(2(p+1)) to one
@@ -16,7 +19,7 @@ function P = pRefine(P, p, r)
 %   - r   the number of initial points for paths to generate
 %
 % Output:
-%   - Pr  the refined parameter set
+%   - Pr  the refined parameter set containing P.dim*r parameter sets
 
 % The method consists to generate r paths of n+1 parameter sets
 % (where n is the number of parameters), such that :
@@ -41,25 +44,26 @@ Stmp.DimX = n;
 Stmp = QuasiRefine(Stmp,r);
 Stmp.pts = floor(Stmp.pts)/(p-1);
 
-% can be improved
+%intialize to avoir growth when in loop
 S2 = Stmp;
-S2.pts = [];
-S2.epsi = [];
-S2.D = [];
+S2.pts = zeros(n,(n+1)*r);
+S2.epsi = zeros(n,(n+1)*r);
+S2.D = zeros(n,n*r);
 
 % generate the elementary effects "trajectories"
 for k=1:r
     [X, D] = EE_traj(Stmp.pts(:,k), p, n);
-    S2.pts =  [S2.pts X];
-    S2.epsi =  [S2.epsi repmat(Stmp.epsi(:,k), [1 n+1] )];
-    S2.D = [S2.D D];
+    S2.pts(:,(k-1)*(n+1)+1:k*(n+1)) = X;  % define S2.pts with r bloc of (n+1) x n
+    S2.epsi(:,(k-1)*(n+1)+1:k*(n+1)) = repmat(Stmp.epsi(:,k), [1,n+1]);
+    S2.D(:,(k-1)*n+1:k*n) = D;  % fill S2.d with r bloc of n x n
     
 end
 
 % Normalize to P ranges
-P.pts = repmat(P.pts, [1 size(S2.pts,2)]);
-P.epsi = repmat(P.epsi, [1 size(S2.pts,2)]);
+P.pts = repmat(P.pts(:,1), [1 size(S2.pts,2)]);
+P.epsi = repmat(P.epsi(:,1), [1 size(S2.pts,2)]);
 P.pts(P.dim,:) = P.pts(P.dim,:) + (2*S2.pts-1).*P.epsi;
+P.epsi = P.epsi*delta;   % <-- NOT SURE OF THAT
 P.D = S2.D;
 
 end

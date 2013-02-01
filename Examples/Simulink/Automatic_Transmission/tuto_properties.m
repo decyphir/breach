@@ -25,13 +25,13 @@ val = QMITL_Eval(Sys, phi1, P0, P0.traj);
 
 figure;
 SplotSat(Sys, P0, phi1 );
-  
+pause  
 % plot satisfaction function with sub formula 
 
 figure;
 depth = 3;
 SplotSat(Sys, P0, phi1, depth);
-
+pause
 % plot satisfaction function as a function of the system input
 
 Pu = CreateParamSet(Sys, {'dt_u0'}, [0 10], 100); % 100 samples with dt_u0 in range [0 10]
