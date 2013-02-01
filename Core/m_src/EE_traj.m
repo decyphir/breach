@@ -19,7 +19,7 @@ function [X, D] = EE_traj(X0, p, k)
 % Note that X0 components should be one in {0, 1/(p-1), 2/(p-1), ..., 1-Delta}
 % so that the trajectory remains in [0 1]^n
 
-X0 = X0'; %NM : or reshape(X0,numel(X0),1) to ensure we got a column array
+X0 = reshape(X0,numel(X0),1); % to ensure we got a column array
 Delta = p/(2*(p-1));
 B = tril(~eye(k+1)); % triangular lower matrix
 B = B(:,1:k);
