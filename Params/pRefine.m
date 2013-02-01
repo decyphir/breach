@@ -8,7 +8,10 @@ function P = pRefine(P, p, r)
 % Usage:  Pr = pRefine(P, p, r)
 %
 % Input:
-%   - P   the initial parameter set
+%   - P   the initial parameter set. Only the first set of value of P will
+%         be considered. The parameter not in P.dim are equals in all the
+%         generated parameter sets. There value is provided by the first
+%         set of value in P.
 %   - p   indicates in how many the interval of each parameter is splitted.
 %         To get the sensitivity, we compute between a simulation and the
 %         simulation obtained by adding or removing p/(2(p+1)) to one
@@ -16,7 +19,7 @@ function P = pRefine(P, p, r)
 %   - r   the number of initial points for paths to generate
 %
 % Output:
-%   - Pr  the refined parameter set
+%   - Pr  the refined parameter set containing P.dim*r parameter sets
 
 % The method consists to generate r paths of n+1 parameter sets
 % (where n is the number of parameters), such that :
@@ -57,9 +60,10 @@ for k=1:r
 end
 
 % Normalize to P ranges
-P.pts = repmat(P.pts, [1 size(S2.pts,2)]);
-P.epsi = repmat(P.epsi, [1 size(S2.pts,2)]);
+P.pts = repmat(P.pts(:,1), [1 size(S2.pts,2)]);
+P.epsi = repmat(P.epsi(:,1), [1 size(S2.pts,2)]);
 P.pts(P.dim,:) = P.pts(P.dim,:) + (2*S2.pts-1).*P.epsi;
+P.epsi = P.epsi*delta;   % <-- NOT SURE OF THAT
 P.D = S2.D;
 
 end
