@@ -1,4 +1,4 @@
-function Pf = ComputeTraj(Sys, P0,tspan, u)
+function Pf = ComputeTraj(Sys, P0, tspan, u)
 %  COMPUTETRAJ compute trajectories for a system given initial conditions
 %  and parameters
 %
@@ -47,7 +47,7 @@ if ~isstruct(P0)
     output_trajs = 1;
     
     pts = P0;
-    P0 = CreateSampling(Sys,1);
+    P0 = CreateParamSet(Sys,1);
     P0.pts = pts;
     P0.epsi = ones(1, size(pts,2));
     
@@ -75,7 +75,7 @@ if strcmp(Sys.type,'traces') % No model
 else
     if (isfield(P0, 'traj_to_compute'))
         P0 = SPurge(P0);
-        S = Sselect(P0, P0.traj_to_compute );
+        S = Sselect(P0, P0.traj_to_compute);
         S = ComputeTraj(Sys, S, tspan);
         Pf = P0;
         Pf.traj = S.traj;
@@ -110,7 +110,7 @@ switch Sys.type
                 assignin('base', 'u__',U.u);
             end
             
-            [traj.time, traj.X] = Sys.sim(Sys,tspan, P0.pts(:,i));
+            [traj.time, traj.X] = Sys.sim(Sys, tspan, P0.pts(:,i));
             traj.param = P0.pts(1:P0.DimP,i)';
             Pf.traj(i) = traj;
             Pf.Xf(:,i) = traj.X(:,end);
@@ -145,7 +145,7 @@ switch Sys.type
                 assignin('base', 'u__',U.u);
             end
             
-            [traj.time, traj.X] = Sys.sim(Sys,tspan, P0.pts(:,i));
+            [traj.time, traj.X] = Sys.sim(Sys, tspan, P0.pts(:,i));
             traj.param = P0.pts(1:P0.DimP,i)';
             Pf.traj(i) = traj;
             Pf.Xf(:,i) = traj.X(:,end);
@@ -181,7 +181,7 @@ switch Sys.type
             %This is quite ugly...
             Pf = P0;
             Pf.pts = P0.pts(1:P0.DimP, :);
-            Pf=cvm(61, Pf,T,u);
+            Pf=cvm(61, Pf, T, u);
             Pf.pts = P0.pts;
             
             Pf.u = u;
@@ -190,8 +190,12 @@ switch Sys.type
             
             Pf = P0;
             Pf.pts = P0.pts(1:P0.DimP, :);
-            Pf=cvm(61, Pf,T);
+            Pf=cvm(61, Pf, T);
             Pf.pts = P0.pts;
+            
+            if ~isfield(Pf, 'traj_ref') % PLEASE VERIFY THESE THREE LINES
+                Pf.traj_ref = 1:numel(Pf.traj);
+            end
             
         end
         
@@ -242,4 +246,5 @@ if  numel(u.time) ~= size(u.values, 2)
     err = 'numel(u.time) should be equal to size(u.values, 2)';
     return;
 end
+
 end
