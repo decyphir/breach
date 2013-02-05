@@ -43,9 +43,6 @@ end
 
 if ~isfield(S,'props')
     S.props = [];
-    npb = 0;
-else
-    npb = numel(S.props);
 end
 
 if ~isfield(S,'props_names')
@@ -80,15 +77,15 @@ if (bool_plot)
     end
 end
 
-val = zeros(numel(props),numel(ipts)); %initialisation du tableau contenant les valeurs de vérité des formules
-for np = npb+1:numel(props)+npb
+val = zeros(numel(props),numel(ipts)); %initialize array containing truth values for each property and each param set
+for np = 1:numel(props) % for each property
     
-    prop = props(np-npb);  % prop est la propriété qu'on traite
+    prop = props(np);  % prop = current property
     prop_name =  get_id(prop);
     iprop = find_prop(S,prop_name);
     
     if (bool_plot)
-        subplot(nb_prop, 1, np-npb);
+        subplot(nb_prop, 1, np);
         hold on;
         xlabel('tau');
         title(disp(prop), 'Interpreter','none');
@@ -104,29 +101,24 @@ for np = npb+1:numel(props)+npb
     prop = QMITL_OptimizePredicates(Sys,prop);
     fprintf(['Checking ' prop_name  '\n'...
              '[             25%%           50%%            75%%               ]\n ']);
-    iprog = 0;
+    iprog = 0; %idx of progression bar
     
     Ptmp = Sselect(S,1); % copie S en ne gardant que le premier parameter set
     
-    for i = ipts
-        % on calcul la valeur de vérité de la formule prop pour chaque trajectoire
+    for i = ipts % we compute the truch value of prop for each param set
         while (floor(60*i/numel(ipts))>iprog)
             fprintf('^');
             iprog = iprog+1;
         end
         
         traj = S.traj(S.traj_ref(i));
-        Ptmp.pts = S.pts(:,i); % on copie dans Ptmp le parameter set qui nous intéresse
-        if (~isempty(tau0))
-            S.props_values(iprop,i).tau = tau0;
-            S.props_values(iprop,i).val = QMITL_Eval(Sys,prop,Ptmp,traj, tau0);
-            val(np-npb,i) = S.props_values(iprop,i).val(1);
-        else
-            tau = traj.time;
-            S.props_values(iprop,i).tau = traj.time;
-            S.props_values(iprop,i).val = QMITL_Eval(Sys,prop,Ptmp, traj, tau);
-            val(np-npb,i) = S.props_values(iprop,i).val(1);
+        Ptmp.pts = S.pts(:,i); % we copy in Ptmp the ith param set ; BETTER TO USE Ptmp = Sselect(S,i) ???
+        if isempty(tau0)
+            tau = traj.time; % no need of "else tau=tau0" because tau0 is a copy of tau
         end
+        S.props_values(iprop,i).tau = tau;
+        S.props_values(iprop,i).val = QMITL_Eval(Sys,prop,Ptmp, traj, tau);
+        val(np,i) = S.props_values(iprop,i).val(1);
         
         % plot property values
         if (bool_plot)
