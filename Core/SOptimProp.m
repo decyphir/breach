@@ -23,6 +23,8 @@ function [val_opt, Popt]  = SOptimProp(Sys, P, prop, opt)
 %                          ('Max') or negative ('Min') solution is found
 %        - StopWhenFoundInit : same as above except that it does not
 %                              necessarily compute all trajectories in P0
+%        - Ninit : tries the Ninit best initial pts    
+% 
 %
 % Output:
 %    - val_opt : the truth value of phi for the param set Sopt. It is a
@@ -94,6 +96,14 @@ else
     StopWhenFoundInit = 0;
 end
 
+if isfield(opt,'Ninit')
+    Ninit = opt.Ninit;
+else
+    Ninit = size(P.pts, 2);
+end
+
+
+
 %% Initial values
 options = optimset('MaxIter', MaxIter);
 
@@ -157,9 +167,13 @@ switch OptimType
 end
 
 if (StopWhenFound)&&(~isempty(found))
-    Popt = Sselect(Popt,i);
+    Popt = Sselect(Popt,iv(1));
     val_opt = found;
-    return ;
+
+    if strcmp(OptimType,'max')
+        val_opt = -val_opt;
+    end
+    
 end
 
 %% Main Loop
@@ -169,9 +183,9 @@ if (MaxIter==0)
     return;
 end
 
-val_opt = zeros(numel(iv)); % avoid to increase val_opt size in the loop
+val_opt = zeros(numel(Ninit)); 
 k=0;
-for i = iv
+for i = iv(1:Ninit)
     k = k+1;
     if isfield(opt, 'lbound')
         lbound = opt.lbound;
@@ -199,9 +213,14 @@ for i = iv
     if (StopWhenFound)&&(~isempty(found))
         Popt = Sselect(Popt,i);
         val_opt = val_opt(k);
-        break ;
+        if strcmp(OptimType,'max')
+            val_opt = -val_opt;
+        end
+        return;
     end
 end
+
+Popt = Sselect(Popt, iv(1:Ninit));
 
 % max function returns the opposite of the truth value
 if strcmp(OptimType,'max')

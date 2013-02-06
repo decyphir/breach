@@ -47,7 +47,7 @@ dY = dY(idx);
 DY = repmat(dY/delta,[n 1]);
 
 EE = DY.*D;
-r = numel(Y)/n;
+r = numel(dY)/n;
 
 mu = 1/r*sum(EE, 2);
 mustar = 1/r* sum(abs(EE), 2);

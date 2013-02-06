@@ -119,7 +119,9 @@ for np = 1:numel(props) % for each property
         S.props_values(iprop,i).tau = tau;
         S.props_values(iprop,i).val = QMITL_Eval(Sys,prop,Ptmp, traj, tau);
         val(np,i) = S.props_values(iprop,i).val(1);
-        
+        if (isnan(val(np,i)))
+            disp('Warning: property evaluated to NaN');
+        end
         % plot property values
         if (bool_plot)
             phi_tspan = S.props_values(iprop,i).tau;
