@@ -108,12 +108,23 @@ end
 options = optimset('MaxIter', MaxIter);
 
 if (StopWhenFoundInit)
+    nb_errors = 0; % number of CVODES errors
     rfprintf_reset();
     val = zeros(1,size(P.pts,2));
     for i = 1:size(P.pts, 2)
         Ptmp = Sselect(P,i);
-        Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-        val(i) = QMITL_Eval(Sys, prop, Ptmp, Ptmp.traj, tau);
+        try
+            Ptmp = ComputeTraj(Sys, Ptmp, tspan);
+            val(i) = QMITL_Eval(Sys, prop, Ptmp, Ptmp.traj, tau);
+        catch % in case an error occurs during computation of ComputeTraj
+            warning('SOptimProp:CVODESerror','Error during computation of an initial trajectory, keep continue.');
+            if strcmp(OptimType,'max')
+                val(i) = -inf;
+            else
+                val(i) = inf;
+            end
+            nb_errors = nb_errors + 1;
+        end
         status = ['Init ' num2str(i) '/' num2str(size(P.pts, 2)) ' Robustness value: ' num2str(val(i))];
         rfprintf(status);
         
@@ -122,6 +133,7 @@ if (StopWhenFoundInit)
                 if val(i)>0
                     val_opt = val(i);
                     Popt = Ptmp;
+                    fprintf('\n'); % to have a pretty display
                     return;
                 end
                 
@@ -129,6 +141,7 @@ if (StopWhenFoundInit)
                 if val(i)<0
                     val_opt = val(i);
                     Popt = Ptmp;
+                    fprintf('\n'); % to have a pretty display
                     return;
                 end
         end
@@ -139,8 +152,13 @@ if (StopWhenFoundInit)
             Popt = SConcat(Popt, Ptmp);
         end
     end
+    Ninit = min(Ninit,size(P.pts,2)-nb_errors); % we dont consider parameter sets generating an error of CVODES
 else
-    Popt = ComputeTraj(Sys, P, tspan);
+    try
+        Popt = ComputeTraj(Sys, P, tspan);
+    catch
+        error('SOptimProp:CVODESerror','Error during computation of initial trajectories. Try with opt.StopWhenFoundInit=1.')
+    end
     [Popt, val] = SEvalProp(Sys, Popt, prop, tau);
     Ptmp = Sselect(Popt,1);
 end
@@ -149,41 +167,33 @@ end
 switch OptimType
     case 'max'
         [~, iv] = sort(-val);
-        fun = @(x) fun_max(x, Sys, prop, tspan, tau);
         if val(iv(1))>0 % if the highest value is positive
             found = val(iv(1));
         end
+        fun = @(x) fun_max(x, Sys, prop, tspan, tau);
         
     case 'min'
         [~, iv] = sort(val);
-        fun = @(x) fun_min(x, Sys, prop, tspan, tau);
         if val(iv(1))<0 % if the lowest value is negative
             found = val(iv(1));
         end
+        fun = @(x) fun_min(x, Sys, prop, tspan, tau);
         
     case 'zero'
         [~, iv] = sort(abs(val));
         fun = @(x) fun_zero(x, Sys, prop, tspan, tau);
 end
 
-if (StopWhenFound)&&(~isempty(found))
+if ((StopWhenFound)&&(~isempty(found))) || (MaxIter==0)
     Popt = Sselect(Popt,iv(1));
     val_opt = found;
-
-    if strcmp(OptimType,'max')
-        val_opt = -val_opt;
-    end
-    
+    return ;
 end
 
 %% Main Loop
-val_opt = val(iv(1));
 
-if (MaxIter==0)
-    return;
-end
-
-val_opt = zeros(numel(Ninit)); 
+Ninit = max(Ninit,numel(iv));
+val_opt = zeros(1,Ninit); 
 k=0;
 for i = iv(1:Ninit)
     k = k+1;
@@ -231,6 +241,7 @@ end
 end
 
 function val = fun_max(x, Sys, prop, tspan, tau)
+%% function fun_max
 global Ptmp fopt traj_opt found StopWhenFound
 
 if (~isempty(found)&&StopWhenFound) %positive value found, do not need to continue
@@ -239,8 +250,14 @@ if (~isempty(found)&&StopWhenFound) %positive value found, do not need to contin
 end
 
 Ptmp.pts(Ptmp.dim)=x;
-Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-val = QMITL_Eval(Sys, prop, Ptmp, Ptmp.traj(1), tau);
+try
+    Ptmp = ComputeTraj(Sys, Ptmp, tspan);
+    val = QMITL_Eval(Sys, prop, Ptmp, Ptmp.traj(1), tau);
+catch 
+    warning('SOptimProp:CVODESerror','Error during trajectory computation when optimizing. Keep continue.')
+    val = inf; % NaN?
+    return ; % wa can also set val=-inf and let the function terminates
+end
 
 if (val>0)
     found = val;
@@ -258,6 +275,7 @@ val = -val; % optimize tries to minimize the objective function, so we
 end
 
 function val = fun_min(x, Sys, prop, tspan, tau)
+%% function fun_min
 global Ptmp found StopWhenFound fopt traj_opt
 
 if (~isempty(found)&&StopWhenFound) %negative value found, do not need to continue
@@ -266,8 +284,14 @@ if (~isempty(found)&&StopWhenFound) %negative value found, do not need to contin
 end
 
 Ptmp.pts(Ptmp.dim)=x;
-Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-val = QMITL_Eval(Sys, prop, Ptmp, Ptmp.traj(1), tau);
+try
+    Ptmp = ComputeTraj(Sys, Ptmp, tspan);
+    val = QMITL_Eval(Sys, prop, Ptmp, Ptmp.traj(1), tau);
+catch 
+    warning('SOptimProp:CVODESerror','Error during trajectory computation when optimizing. Keep continue.')
+    val = inf; % NaN?
+    return ; % wa can also let the function terminates
+end
 
 if (val<0)
     found = val;
@@ -283,18 +307,27 @@ rfprintf(status);
 end
 
 function val = fun_zero(x, Sys, prop, tspan, tau)
+%% function fun_zero
 global Ptmp fopt traj_opt
 Ptmp.pts(Ptmp.dim)=x;
-Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-val = QMITL_Eval(Sys, prop, Ptmp, Ptmp.traj(1), tau);
+try
+    Ptmp = ComputeTraj(Sys, Ptmp, tspan);
+    val = QMITL_Eval(Sys, prop, Ptmp, Ptmp.traj(1), tau);
+catch
+    warning('SOptimProp:CVODESerror','Error during trajectory computation when optimizing. Keep continue.')
+     val = inf; % NaN?
+    return ; % wa can also let the function terminates
+end
+   
 status = ['Robustness value: ' num2str(val) ];
 rfprintf(status);
-if (abs(val)<fopt)
-    fopt = abs(val);
+
+val = abs(val);
+if val<fopt
+    fopt = val;
     traj_opt = Ptmp.traj;
 end
 
-val = abs(val);
 
 end
 
