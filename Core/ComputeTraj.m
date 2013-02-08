@@ -190,7 +190,7 @@ switch Sys.type
             
             Pf = P0;
             Pf.pts = P0.pts(1:P0.DimP, :);
-            Pf=cvm(61, Pf, T);
+            Pf=cvm(61, Pf, T); % <- NM: I would love to know how it how inside!
             Pf.pts = P0.pts;
             
             if ~isfield(Pf, 'traj_ref') % PLEASE VERIFY THESE THREE LINES

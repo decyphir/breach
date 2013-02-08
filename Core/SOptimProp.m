@@ -1,4 +1,4 @@
-function [val_opt, Popt]  = SOptimProp(Sys, P, prop, opt)
+function [val_opt, Popt]  = SOptimProp(Sys, P, phi, opt)
 %
 % SOPTIMPROP optimizes the satisfaction of a property
 %
@@ -45,6 +45,7 @@ global found; % non empty if we found a positive or negative truth value of prop
 global StopWhenFound; % cf doc
 global fopt; % best truth value of prop found for the current initial set of value in P
 global traj_opt; % trajectory leading to fopt truth value of prop
+global xopt; % parameter set leading to the trajectory traj_opt
 
 found = [];
 if isfield(opt, 'tspan')
@@ -115,7 +116,7 @@ if (StopWhenFoundInit)
         Ptmp = Sselect(P,i);
         try
             Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-            val(i) = QMITL_Eval(Sys, prop, Ptmp, Ptmp.traj, tau);
+            val(i) = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj, tau);
         catch % in case an error occurs during computation of ComputeTraj
             warning('SOptimProp:CVODESerror','Error during computation of an initial trajectory, keep continue.');
             if strcmp(OptimType,'max')
@@ -159,7 +160,7 @@ else
     catch
         error('SOptimProp:CVODESerror','Error during computation of initial trajectories. Try with opt.StopWhenFoundInit=1.')
     end
-    [Popt, val] = SEvalProp(Sys, Popt, prop, tau);
+    [Popt, val] = SEvalProp(Sys, Popt, phi, tau);
     Ptmp = Sselect(Popt,1);
 end
 
@@ -170,18 +171,18 @@ switch OptimType
         if val(iv(1))>0 % if the highest value is positive
             found = val(iv(1));
         end
-        fun = @(x) fun_max(x, Sys, prop, tspan, tau);
+        fun = @(x) fun_max(x, Sys, phi, tspan, tau);
         
     case 'min'
         [~, iv] = sort(val);
         if val(iv(1))<0 % if the lowest value is negative
             found = val(iv(1));
         end
-        fun = @(x) fun_min(x, Sys, prop, tspan, tau);
+        fun = @(x) fun_min(x, Sys, phi, tspan, tau);
         
     case 'zero'
         [~, iv] = sort(abs(val));
-        fun = @(x) fun_zero(x, Sys, prop, tspan, tau);
+        fun = @(x) fun_zero(x, Sys, phi, tspan, tau);
 end
 
 if ((StopWhenFound)&&(~isempty(found))) || (MaxIter==0)
@@ -214,9 +215,10 @@ for i = iv(1:Ninit)
     x0 = P.pts(dim,i);
     fopt = val(i); % we initialize with the only truth value computed for this set of values
     traj_opt = Popt.traj(Popt.traj_ref(i));           % <--- !!! NOT SURE OF THAT (but I guess it is correct)
-    [x, val_opt(k)] = optimize(fun,x0,lbound,ubound,[],[],[],[],[],[],options,'NelderMead');
+    xopt = Popt.pts(dim,i);
+    [~, val_opt(k)] = optimize(fun,x0,lbound,ubound,[],[],[],[],[],[],options,'NelderMead');
     fprintf('\n');
-    Popt.pts(dim,i) = x;
+    Popt.pts(dim,i) = xopt;
     Popt.traj(Popt.traj_ref(i)) = traj_opt;
     Popt.Xf(:,i) = traj_opt.X(:,end);
     
@@ -240,23 +242,23 @@ end
 
 end
 
-function val = fun_max(x, Sys, prop, tspan, tau)
+function val = fun_max(x, Sys, phi, tspan, tau)
 %% function fun_max
-global Ptmp fopt traj_opt found StopWhenFound
+global Ptmp fopt traj_opt found StopWhenFound xopt
 
 if (~isempty(found)&&StopWhenFound) %positive value found, do not need to continue
     val = -found; % optimize tries to minimize the objective function, so
-    return ;          % we provide it -val instead of val
+    return ;          % we provide it -val instead of val --- ISN'T IT BETTER TO GIVE 0 ???
 end
 
-Ptmp.pts(Ptmp.dim)=x;
+Ptmp.pts(Ptmp.dim,1)=x;
 try
     Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-    val = QMITL_Eval(Sys, prop, Ptmp, Ptmp.traj(1), tau);
+    val = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
 catch 
     warning('SOptimProp:CVODESerror','Error during trajectory computation when optimizing. Keep continue.')
     val = inf; % NaN?
-    return ; % wa can also set val=-inf and let the function terminates
+    return ; % we can also set val=-inf and let the function terminates
 end
 
 if (val>0)
@@ -265,7 +267,8 @@ end
 
 if (val>fopt)
     fopt = val;
-    traj_opt = Ptmp.traj;
+    traj_opt = Ptmp.traj; % we can improve that by using only Ptmp instead of traj_opt and xopt
+    xopt = x;
 end
 
 status = ['Robustness value: ' num2str(val) ' Current optimal: ' num2str(fopt)];
@@ -274,23 +277,23 @@ val = -val; % optimize tries to minimize the objective function, so we
             % provide it -val instead of val
 end
 
-function val = fun_min(x, Sys, prop, tspan, tau)
+function val = fun_min(x, Sys, phi, tspan, tau)
 %% function fun_min
-global Ptmp found StopWhenFound fopt traj_opt
+global Ptmp found StopWhenFound fopt traj_opt xopt
 
 if (~isempty(found)&&StopWhenFound) %negative value found, do not need to continue
-    val = found;
+    val = found;  % --- ISN'T IT BETTER TO GIVE 0 ???
     return ;
 end
 
-Ptmp.pts(Ptmp.dim)=x;
+Ptmp.pts(Ptmp.dim,1)=x;
 try
     Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-    val = QMITL_Eval(Sys, prop, Ptmp, Ptmp.traj(1), tau);
+    val = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
 catch 
     warning('SOptimProp:CVODESerror','Error during trajectory computation when optimizing. Keep continue.')
     val = inf; % NaN?
-    return ; % wa can also let the function terminates
+    return ; % we can also let the function terminates
 end
 
 if (val<0)
@@ -300,23 +303,24 @@ end
 if (val<fopt)
     fopt = val;
     traj_opt = Ptmp.traj;
+    xopt = x;
 end
 
 status = ['Robustness value: ' num2str(val) ' Current optimal: ' num2str(fopt)];
 rfprintf(status);
 end
 
-function val = fun_zero(x, Sys, prop, tspan, tau)
+function val = fun_zero(x, Sys, phi, tspan, tau)
 %% function fun_zero
-global Ptmp fopt traj_opt
-Ptmp.pts(Ptmp.dim)=x;
+global Ptmp fopt traj_opt xopt
+Ptmp.pts(Ptmp.dim,1)=x;
 try
     Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-    val = QMITL_Eval(Sys, prop, Ptmp, Ptmp.traj(1), tau);
+    val = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
 catch
     warning('SOptimProp:CVODESerror','Error during trajectory computation when optimizing. Keep continue.')
      val = inf; % NaN?
-    return ; % wa can also let the function terminates
+    return ; % we can also let the function terminates
 end
    
 status = ['Robustness value: ' num2str(val) ];
@@ -326,6 +330,7 @@ val = abs(val);
 if val<fopt
     fopt = val;
     traj_opt = Ptmp.traj;
+    xopt = x;
 end
 
 
