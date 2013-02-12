@@ -193,7 +193,7 @@ end
 
 %% Main Loop
 
-Ninit = max(Ninit,numel(iv));
+Ninit = min(Ninit,numel(iv));
 val_opt = zeros(1,Ninit); 
 k=0;
 for i = iv(1:Ninit)
@@ -212,7 +212,7 @@ for i = iv(1:Ninit)
     
     fprintf('\nOptimize from init point %d/%d Initial value: %g\n', k, numel(iv), val(i));
     rfprintf_reset();
-    x0 = P.pts(dim,i);
+    x0 = Popt.pts(dim,i);
     fopt = val(i); % we initialize with the only truth value computed for this set of values
     traj_opt = Popt.traj(Popt.traj_ref(i));           % <--- !!! NOT SURE OF THAT (but I guess it is correct)
     xopt = Popt.pts(dim,i);
@@ -224,6 +224,12 @@ for i = iv(1:Ninit)
     
     if (StopWhenFound)&&(~isempty(found))
         Popt = Sselect(Popt,i);
+        if isfield(Sys, 'init_fun') % init_fun can modify non-uncertain parameters
+            Popt = Sys.init_fun(Popt);
+        end
+        if isfield(Popt, 'init_fun')
+            Popt = Popt.init_fun(Popt);
+        end
         val_opt = val_opt(k);
         if strcmp(OptimType,'max')
             val_opt = -val_opt;
@@ -233,6 +239,12 @@ for i = iv(1:Ninit)
 end
 
 Popt = Sselect(Popt, iv(1:Ninit));
+if isfield(Sys, 'init_fun') % init_fun can modify non-uncertain parameters
+    Popt = Sys.init_fun(Popt);
+end
+if isfield(Popt, 'init_fun')
+    Popt = Popt.init_fun(Popt);
+end
 
 % max function returns the opposite of the truth value
 if strcmp(OptimType,'max')
@@ -268,7 +280,7 @@ end
 if (val>fopt)
     fopt = val;
     traj_opt = Ptmp.traj; % we can improve that by using only Ptmp instead of traj_opt and xopt
-    xopt = x;
+    xopt = Ptmp.pts(Ptmp.dim,1); % as ComputeTraj launch init_fun, Ptmp.pts can be different than x
 end
 
 status = ['Robustness value: ' num2str(val) ' Current optimal: ' num2str(fopt)];
@@ -303,7 +315,7 @@ end
 if (val<fopt)
     fopt = val;
     traj_opt = Ptmp.traj;
-    xopt = x;
+    xopt = Ptmp.pts(Ptmp.dim,1);
 end
 
 status = ['Robustness value: ' num2str(val) ' Current optimal: ' num2str(fopt)];
@@ -330,7 +342,7 @@ val = abs(val);
 if val<fopt
     fopt = val;
     traj_opt = Ptmp.traj;
-    xopt = x;
+    xopt = Ptmp.pts(Ptmp.dim,1);
 end
 
 

@@ -20,10 +20,10 @@ function Psave(Sys, varargin)
 %
 % Other example:
 %
-%  function myFunc()
-%   P = CreateParamSet(Sys);
-%   Ph = QuasiRefine(P,100);
-%   Psave(Sys, 'Ph', Ph);
+%  function myFunc(Sys)
+%      P = CreateParamSet(Sys);
+%      Ph = QuasiRefine(P,100);
+%      Psave(Sys, 'Ph', Ph);
 %  end
 %
 
