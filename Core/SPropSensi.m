@@ -1,8 +1,8 @@
-function [mu, mustar, sigm] = SPropSensi(Sys, P, phi, opt)
+function [mu, mustar, sigma] = SPropSensi(Sys, P, phi, opt)
 %
 % SPROPSENSI estimates the sensitivity of a property wrt some parameters (Morris method)
 %
-% Synopsis: [mu, mustar, sigm] = SPropSensi(Sys, P, phi, opt)
+% Synopsis: [mu, mustar, sigma] = SPropSensi(Sys, P, phi, opt)
 %
 % Input:
 %    - P  is a parameter set for Sys. The value of all parameters of P, not
@@ -15,8 +15,9 @@ function [mu, mustar, sigm] = SPropSensi(Sys, P, phi, opt)
 %        - params      variable parameters
 %        - lbound      lower bounds for the search domain
 %        - ubound      upper bounds for the search domain
-%        - p           number of levels (p-grid) (default 4)
-%        - k           number of trajectories (default 10)
+%        - p           number of levels (p-grid). Recommended to be even (default 4)
+%        - r           number of trajectories (default 10)
+%        - k           OBSOLETE ; REPLACED BY r
 %        - plot        if 1, plots histograms (default 0)
 %        - muGraphOpt      if plot=1, define graphical options for mu graph
 %                          (optional)
@@ -28,7 +29,7 @@ function [mu, mustar, sigm] = SPropSensi(Sys, P, phi, opt)
 % Output:
 %   - mu      expectation of elementary effects
 %   - mustar  expectation of absolute values of elementary effects
-%   - sig     variance of elementary effects
+%   - sigma   variance of elementary effects
 %
 %  adapted from the strategy described in "Global Sensitivity Analysis, A Primer", Saltelli et al, p113++
 %
@@ -45,7 +46,7 @@ function [mu, mustar, sigm] = SPropSensi(Sys, P, phi, opt)
 %   opt.ubound = [0.35, 25];
 %   opt.plot = 1;
 %   opt.muGraphOpt = {'XScale','log'};
-%   [mu, mustar, sigm] = SPropSensi(Sys, P, phi,  opt);
+%   [mu, mustar, sigma] = SPropSensi(Sys, P, phi,  opt);
 %
 %  See also pRefine, EE_traj, EEffects
 %
@@ -74,14 +75,18 @@ else
     opt.p = 4;
 end
 
-if ~isfield(opt, 'k')
-    opt.k = 10;
+if ~isfield(opt, 'r')
+    if isfield(opt,'k')
+        opt.r = opt.k;
+    else
+        opt.r = 10;
+    end
 end
 
 Sys.p = P.pts(:,1);
 Pr = CreateParamSet(Sys, opt.params, [opt.lbound' opt.ubound']);
 
-Pr = pRefine(Pr,opt.p, opt.k);
+Pr = pRefine(Pr,opt.p, opt.r);
 
 %NM : we must compute the truth value of phi at time=tprop
 if tprop < tspan(1)
@@ -94,7 +99,7 @@ Pr = ComputeTraj(Sys, Pr, tspan);
 
 [Pr, Y] = SEvalProp(Sys, Pr, phi, tprop);
 
-[mu, mustar, sigm] = EEffects(Y, Pr.D, p);
+[mu, mustar, sigma] = EEffects(Y, Pr.D, p);
 
 
 if opt.plot
@@ -117,8 +122,8 @@ if opt.plot
     end
     
     subplot(3,1,3);
-    barh(sigm(isort));
-    title('Variance of elementary effects (sigm)')
+    barh(sigma(isort));
+    title('Standart deviation of elementary effects (sigma)')
     set(gca, 'YTick', 1:numel(opt.params), 'YTickLabel', opt.params(isort));
     if isfield(opt,'sigmGraphOpt')
         set(gca,opt.sigmGraphOpt{:});
