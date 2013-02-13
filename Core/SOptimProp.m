@@ -30,13 +30,16 @@ function [val_opt, Popt]  = SOptimProp(Sys, P, phi, opt)
 %    - val_opt : the truth value of phi for the param set Sopt. It is a
 %                scalar if StopWhenFound or StopWhenFoundInit it sets to 1.
 %                Otherwize, it is a vector of size 1 x size(P.pts,2).
-
+%
 %    - Popt    : if StopWhenFound or StopWhenFoundInit is set to 1, and a
 %                set of parameter values leading to a negative (resp.
 %                positive) truth value of phi is found, Popt is this
 %                parameter set.
 %                Otherwize, it contains the optimum found for each set of
 %                parameter values in P.
+%
+% See also SOptimPropLog
+%
 
 %% process options
 
