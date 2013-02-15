@@ -23,7 +23,7 @@ function [mu, mustar, sigma] = SPropSensi(Sys, P, phi, opt)
 %                          (optional)
 %        - mustarGraphOpt  if plot=1, graphical options for mu* graph
 %                          (optional)
-%        - sigmGraphOpt    if plot=1, graphical options for sigm graph
+%        - sigmaGraphOpt   if plot=1, graphical options for sigma graph
 %                          (optional)
 %
 % Output:
@@ -125,8 +125,8 @@ if opt.plot
     barh(sigma(isort));
     title('Standart deviation of elementary effects (sigma)')
     set(gca, 'YTick', 1:numel(opt.params), 'YTickLabel', opt.params(isort));
-    if isfield(opt,'sigmGraphOpt')
-        set(gca,opt.sigmGraphOpt{:});
+    if isfield(opt,'sigmaGraphOpt')
+        set(gca,opt.sigmaGraphOpt{:});
     end
     
     fig_resize(h,1,2.5)
