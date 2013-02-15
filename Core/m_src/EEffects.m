@@ -27,7 +27,7 @@ function [mu, mustar, sigma] = EEffects(Y, D, p)
 %
 %  [mu, mustar, sigma] = EEffects(Y', Pr.D, p)
 %
-%See also: pRefine, EE_traj
+%See also: pRefine, EE_traj, SPropSensi
 %
 
 n = size(D,1);
@@ -43,6 +43,12 @@ idx = 1:size(Y,2);
 idx = idx(mod(idx,n+1)~=0); % abracadabra
 
 dY = dY(idx);
+
+% To plot all the EEffects of the Nth parameter
+% is_EE_N = D(N,:)~=0;
+% EE_N = dY(is_EE_N);
+% plot([1:numel(EE_N)],EE_N,'.','LineWidth',0.1)
+%
 
 DY = repmat(dY/delta,[n 1]);
 

@@ -160,7 +160,8 @@ if (StopWhenFoundInit)
 else
     try
         Popt = ComputeTraj(Sys, P, tspan);
-    catch
+    catch err
+        fprintf([err.message,'\n']);
         error('SOptimProp:CVODESerror','Error during computation of initial trajectories. Try with opt.StopWhenFoundInit=1.')
     end
     [Popt, val] = SEvalProp(Sys, Popt, phi, tau);

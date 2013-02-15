@@ -1,32 +1,34 @@
-function [S, val] = SEvalProp(Sys, S, props, tau, ipts, bool_plot, break_level)
+function [P, val] = SEvalProp(Sys, P, props, tau, ipts, bool_plot, break_level)
 %
 %   SEVALPROP Eval property for previously computed trajectories
 %
-%   Usage: [Pf, val] = SEvalProp(Sys, Ptraj, prop [ , tau, ipts ])
+%   Usage: [Pf, val] = SEvalProp(Sys, P, prop [ , tau, ipts, bool_plot, break_level ])
 %
 %   Inputs:
 %
 %    - Sys         system
-%    - Ptraj       param set with trajectories
+%    - P           param set with trajectories
 %    - prop        property(ies)
 %    - tau         time instant(s) when to estimate properties. If not
 %                  provided, the time instants considered for computing the
 %                  trajectory are used.
-%    - ipts        indices of trajectories for which to eval properties
+%    - ipts        indices of param sets for which to eval properties.
+%                  (Default= all parameter sets)
 %
 %
 %   Outputs:
 %
 %    - Pf          param set with prop_values field
 %    - val         an array containing the quantitative satisfaction of
-%                    properties for each trajectory
+%                    properties for each trajectory. The dimension of val
+%                    is numel(props) x numel(ipts)
 %
 
 
 % check arguments
 
 if (~exist('ipts','var')||isempty(ipts))
-    ipts = 1:size(S.pts,2);
+    ipts = 1:size(P.pts,2);
 end
 
 if (~exist('break_level','var'))
@@ -41,16 +43,16 @@ if (break_level>0)
     props = nprops;
 end
 
-if ~isfield(S,'props')
-    S.props = [];
+if ~isfield(P,'props')
+    P.props = [];
 end
 
-if ~isfield(S,'props_names')
-    S.props_names = {} ;
+if ~isfield(P,'props_names')
+    P.props_names = {} ;
 end
 
-if ~isfield(S,'traj_ref')
-    S.traj_ref = 1:numel(S.traj);
+if ~isfield(P,'traj_ref')
+    P.traj_ref = 1:numel(P.traj);
 end
 
 if (~exist('tau','var')||isempty(tau))
@@ -82,7 +84,7 @@ for np = 1:numel(props) % for each property
     
     prop = props(np);  % prop = current property
     prop_name =  get_id(prop);
-    iprop = find_prop(S,prop_name);
+    iprop = find_prop(P,prop_name);
     
     if (bool_plot)
         subplot(nb_prop, 1, np);
@@ -93,9 +95,9 @@ for np = 1:numel(props) % for each property
     
     if ~iprop
         % if the property does not exist in S, we add it to S
-        S.props_names = [S.props_names {prop_name}];
-        S.props = [S.props prop];
-        iprop = numel(S.props_names);
+        P.props_names = [P.props_names {prop_name}];
+        P.props = [P.props prop];
+        iprop = numel(P.props_names);
     end
     
     prop = QMITL_OptimizePredicates(Sys,prop);
@@ -103,7 +105,7 @@ for np = 1:numel(props) % for each property
              '[             25%%           50%%            75%%               ]\n ']);
     iprog = 0; %idx of progression bar
     
-    Ptmp = Sselect(S,1); % copie S en ne gardant que le premier parameter set
+    Ptmp = Sselect(P,1); % copie S en ne gardant que le premier parameter set
     
     for i = ipts % we compute the truch value of prop for each param set
         while (floor(60*i/numel(ipts))>iprog)
@@ -111,21 +113,21 @@ for np = 1:numel(props) % for each property
             iprog = iprog+1;
         end
         
-        traj = S.traj(S.traj_ref(i));
-        Ptmp.pts = S.pts(:,i); % we copy in Ptmp the ith param set ; BETTER TO USE Ptmp = Sselect(S,i) ???
+        traj = P.traj(P.traj_ref(i));
+        Ptmp.pts = P.pts(:,i); % we copy in Ptmp the ith param set ; BETTER TO USE Ptmp = Sselect(S,i) ???
         if isempty(tau0)
             tau = traj.time; % no need of "else tau=tau0" because tau0 is a copy of tau
         end
-        S.props_values(iprop,i).tau = tau;
-        S.props_values(iprop,i).val = QMITL_Eval(Sys,prop,Ptmp, traj, tau);
-        val(np,i) = S.props_values(iprop,i).val(1);
+        P.props_values(iprop,i).tau = tau;
+        P.props_values(iprop,i).val = QMITL_Eval(Sys,prop,Ptmp, traj, tau);
+        val(np,i) = P.props_values(iprop,i).val(1);
         if (isnan(val(np,i)))
             disp('Warning: property evaluated to NaN');
         end
         % plot property values
         if (bool_plot)
-            phi_tspan = S.props_values(iprop,i).tau;
-            phi_val = S.props_values(iprop,i).val;
+            phi_tspan = P.props_values(iprop,i).tau;
+            phi_val = P.props_values(iprop,i).val;
             plot(phi_tspan*time_mult, phi_val);
             plot([phi_tspan(1) phi_tspan(end)]*time_mult, [0 0],'-k');
             stairs(phi_tspan*time_mult, (phi_val>0)*max(abs(phi_val))/2,'-r');

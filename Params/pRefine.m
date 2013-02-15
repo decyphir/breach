@@ -19,43 +19,43 @@ function P = pRefine(P, p, r)
 %   - r   the number of initial points for paths to generate
 %
 % Output:
-%   - Pr  the refined parameter set containing P.dim*r parameter sets
+%   - Pr  the refined parameter set containing (P.dim+1)*r parameter sets
 
 % The method consists to generate r paths of n+1 parameter sets
 % (where n is the number of parameters), such that :
 %  1/ only one parameter differs between two consecutive steps ;
 %  2/ this parameter differs by p/(2(p+1)) times the size of the interval
 % of the changing parameter
-%  3/ all the parameters change once along the path
+%  3/ all the parameters change exactly once along the path
 
 % define the admissible grid and pick points
 
-n = numel(P.dim);           % dimension
+k = numel(P.dim);           % dimension
 delta = p/(2*(p-1));
 ngrid = floor(p*(1-delta));
 
 % we define the space for the initial points of the paths, in the unity box
-Stmp.dim = 1:n;
-Stmp.pts = (ngrid+1)/2*ones(n,1);
-Stmp.epsi = (ngrid+1)/2*ones(n,1);
-Stmp.DimP = n;
-Stmp.DimX = n;
+Stmp.dim = 1:k;
+Stmp.pts = (ngrid+1)/2*ones(k,1);
+Stmp.epsi = (ngrid+1)/2*ones(k,1);
+Stmp.DimP = k;
+Stmp.DimX = k;
 
 Stmp = QuasiRefine(Stmp,r);
 Stmp.pts = floor(Stmp.pts)/(p-1);
 
-%intialize to avoir growth when in loop
+%intialization to avoid growth when in loop
 S2 = Stmp;
-S2.pts = zeros(n,(n+1)*r);
-S2.epsi = zeros(n,(n+1)*r);
-S2.D = zeros(n,n*r);
+S2.pts = zeros(k,(k+1)*r);
+S2.epsi = zeros(k,(k+1)*r);
+S2.D = zeros(k,k*r);
 
 % generate the elementary effects "trajectories"
-for k=1:r
-    [X, D] = EE_traj(Stmp.pts(:,k), p, n);
-    S2.pts(:,(k-1)*(n+1)+1:k*(n+1)) = X;  % define S2.pts with r bloc of (n+1) x n
-    S2.epsi(:,(k-1)*(n+1)+1:k*(n+1)) = repmat(Stmp.epsi(:,k), [1,n+1]);
-    S2.D(:,(k-1)*n+1:k*n) = D;  % fill S2.d with r bloc of n x n
+for ii=1:r
+    [X, D] = EE_traj(Stmp.pts(:,ii), p, k);
+    S2.pts(:,(ii-1)*(k+1)+1:ii*(k+1)) = X;  % define S2.pts with r bloc of k x (k+1)
+    S2.epsi(:,(ii-1)*(k+1)+1:ii*(k+1)) = repmat(Stmp.epsi(:,ii), [1,k+1]);
+    S2.D(:,(ii-1)*k+1:ii*k) = D;  % fill S2.D with r bloc of k x k
     
 end
 
