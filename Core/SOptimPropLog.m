@@ -41,7 +41,9 @@ function [Pbest,val_best] = SOptimPropLog(Sys, phi, opts, verbose)
 %                    parameter sets verifying phi.
 %      - val_best: contains the truth value of phi for the parameters set in
 %                    Pbest
+%
 %See also SOptimProp
+%
 
 %% check inputs
 if isfield(opts, 'tspan')

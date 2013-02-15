@@ -94,7 +94,7 @@ for np = 1:numel(props) % for each property
     end
     
     if ~iprop
-        % if the property does not exist in S, we add it to S
+        % if the property does not exist in P, we add it to P
         P.props_names = [P.props_names {prop_name}];
         P.props = [P.props prop];
         iprop = numel(P.props_names);
@@ -105,7 +105,7 @@ for np = 1:numel(props) % for each property
              '[             25%%           50%%            75%%               ]\n ']);
     iprog = 0; %idx of progression bar
     
-    Ptmp = Sselect(P,1); % copie S en ne gardant que le premier parameter set
+    Ptmp = Sselect(P,1); % copie P en ne gardant que le premier parameter set
     
     for i = ipts % we compute the truch value of prop for each param set
         while (floor(60*i/numel(ipts))>iprog)
@@ -114,7 +114,7 @@ for np = 1:numel(props) % for each property
         end
         
         traj = P.traj(P.traj_ref(i));
-        Ptmp.pts = P.pts(:,i); % we copy in Ptmp the ith param set ; BETTER TO USE Ptmp = Sselect(S,i) ???
+        Ptmp.pts = P.pts(:,i); % we copy in Ptmp the ith param set ; BETTER TO USE Ptmp = Sselect(P,i) ???
         if isempty(tau0)
             tau = traj.time; % no need of "else tau=tau0" because tau0 is a copy of tau
         end
