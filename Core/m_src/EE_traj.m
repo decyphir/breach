@@ -22,6 +22,7 @@ function [X, D] = EE_traj(X0, p, k)
 % {0, 1/(p-1), 2/(p-1), ..., 1-Delta} so that the trajectory remains in
 % [0 1]^n
 %
+% See also SPropSensi, pRefine, EEffects
 
 X0 = reshape(X0,1,numel(X0)); % to ensure we got a line array
 Delta = p/(2*(p-1));

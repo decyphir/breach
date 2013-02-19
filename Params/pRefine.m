@@ -20,6 +20,8 @@ function P = pRefine(P, p, r)
 %
 % Output:
 %   - Pr  the refined parameter set containing (P.dim+1)*r parameter sets
+%
+% See also SPropSensi, EE_traj, EEffects
 
 % The method consists to generate r paths of n+1 parameter sets
 % (where n is the number of parameters), such that :
