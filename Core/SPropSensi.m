@@ -1,4 +1,4 @@
-function [mu, mustar, sigma] = SPropSensi(Sys, P, phi, opt)
+function [mu, mustar, sigma, Pr] = SPropSensi(Sys, P, phi, opt)
 % SPROPSENSI estimates the sensitivity of a property wrt some parameters
 % (Morris method). This function is adapted from the strategy described in
 % "Global Sensitivity Analysis, A Primer", Saltelli et al, p113++
@@ -103,6 +103,7 @@ Pr = ComputeTraj(Sys, Pr, tspan);
 
 if opt.plot
     [Mu, isort] = sort(abs(mu));
+    Mu = mu(isort);
     h = figure;
     subplot(3,1,1);
     barh(Mu);
