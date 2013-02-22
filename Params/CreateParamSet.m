@@ -1,4 +1,4 @@
-function P = CreateParamSet(Sys,Param,Ranges, Nb_pts)
+function P = CreateParamSet(Sys, Param, Ranges, Nb_pts)
 %   CREATEPARAMSET Create a parameter set structure for a system. If the
 %   argument Param contains parameters name not existing in the system,
 %   they are added to the parameter set. The value of these parameters is
@@ -45,7 +45,8 @@ function P = CreateParamSet(Sys,Param,Ranges, Nb_pts)
 %                                      % the value of x0 is 0, with an epsi
 %                                      % of 0.6
 %
-%See also: Refine
+%See also: Refine SetParam
+%
 
 pts = Sys.p;
 

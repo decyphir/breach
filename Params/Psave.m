@@ -26,6 +26,8 @@ function Psave(Sys, varargin)
 %      Psave(Sys, 'Ph', Ph);
 %  end
 %
+%See also Propsave
+%
 
 filename = [Sys.Dir filesep SysName(Sys) '_param_sets.mat'];
 

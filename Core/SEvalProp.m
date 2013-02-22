@@ -14,6 +14,10 @@ function [P, val] = SEvalProp(Sys, P, props, tau, ipts, bool_plot, break_level)
 %                  trajectory are used.
 %    - ipts        indices of param sets for which to eval properties.
 %                  (Default= all parameter sets)
+%    - break_level (Optional) defines the deep of breaking of props. If
+%                  lower or equal to 1, it is ignored. If greater or equal
+%                  to two, SEvalProp answers the evaluation of the props
+%                  and all sub-formula of props until the deep provided.
 %
 %
 %   Outputs:
@@ -23,6 +27,7 @@ function [P, val] = SEvalProp(Sys, P, props, tau, ipts, bool_plot, break_level)
 %                    properties for each trajectory. The dimension of val
 %                    is numel(props) x numel(ipts)
 %
+%See also QMITL_Formula CreateParamSet ComputeTraj Sselect
 
 
 % check arguments

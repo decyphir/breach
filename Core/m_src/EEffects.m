@@ -30,7 +30,7 @@ function [mu, mustar, sigma] = EEffects(Y, D, p)
 %See also: pRefine, EE_traj, SPropSensi
 %
 
-n = size(D,1);
+k = size(D,1); % number of parameters
 delta = p/(2*(p-1));
 
 % computes diff
@@ -38,22 +38,26 @@ dY = diff(Y);
 
 idx = 1:size(Y,2);
 
-% size should be some multiple k of n+1 whereas D is some multiple of n. We
-% need to remove indices n+1, 2(n+1), ..., (k-1)*n-1 in dY
-idx = idx(mod(idx,n+1)~=0); % abracadabra
+% size(Y,2) should be some multiple n of k+1 whereas D is some multiple of
+% k. We need to remove indices k+1, 2(k+1), ..., (n-1)*k-1 in dY
+idx = idx(mod(idx,k+1)~=0); % abracadabra
 
 dY = dY(idx);
 
+
+%
 % To plot all the EEffects of the Nth parameter
+% N = 1;    %      --> set N here <--
 % is_EE_N = D(N,:)~=0;
 % EE_N = dY(is_EE_N);
-% plot([1:numel(EE_N)],EE_N,'.','LineWidth',0.1)
+% figure ; plot([1:numel(EE_N)],EE_N,'.','LineWidth',0.1);
 %
 
-DY = repmat(dY/delta,[n 1]);
+
+DY = repmat(dY/delta,[k 1]);
 
 EE = DY.*D;
-r = numel(dY)/n;
+r = numel(dY)/k;
 
 mu = 1/r*sum(EE, 2);
 mustar = 1/r* sum(abs(EE), 2);

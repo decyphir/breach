@@ -1,5 +1,4 @@
 function P = pRefine(P, p, r)
-%
 % PREFINE refines the parameter set P by picking r initial points for the
 % Morris global sensitivity measure. These points are randomly chosen in
 % the grid with p levels (See Saltelli's Books, chapter 3 or 4). We use the
@@ -19,12 +18,16 @@ function P = pRefine(P, p, r)
 %   - r   the number of initial points for paths to generate
 %
 % Output:
-%   - Pr  the refined parameter set containing (P.dim+1)*r parameter sets
+%   - Pr  the refined parameter set containing (k+1)*r parameter sets,
+%         where k=numel(P.dim). A field D is set in Pr, which indicates
+%         which parameter changes of value between two consecutive
+%         trajectories. The size of D is k x k*r.
 %
 % See also SPropSensi, EE_traj, EEffects
+%
 
-% The method consists to generate r paths of n+1 parameter sets
-% (where n is the number of parameters), such that :
+% The method consists to generate r paths of k+1 parameter sets
+% (where k is the number of parameters), such that :
 %  1/ only one parameter differs between two consecutive steps ;
 %  2/ this parameter differs by p/(2(p+1)) times the size of the interval
 % of the changing parameter

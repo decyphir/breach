@@ -1,6 +1,7 @@
 function [mu, mustar, sigma] = SPropSensi(Sys, P, phi, opt)
-%
-% SPROPSENSI estimates the sensitivity of a property wrt some parameters (Morris method)
+% SPROPSENSI estimates the sensitivity of a property wrt some parameters
+% (Morris method). This function is adapted from the strategy described in
+% "Global Sensitivity Analysis, A Primer", Saltelli et al, p113++
 %
 % Synopsis: [mu, mustar, sigma] = SPropSensi(Sys, P, phi, opt)
 %
@@ -31,8 +32,6 @@ function [mu, mustar, sigma] = SPropSensi(Sys, P, phi, opt)
 %   - mustar  expectation of absolute values of elementary effects
 %   - sigma   variance of elementary effects
 %
-%  adapted from the strategy described in "Global Sensitivity Analysis, A Primer", Saltelli et al, p113++
-%
 % Example (Lorentz84):
 %   CreateSystem;
 %   P = CreateParamSet(Sys);
@@ -48,7 +47,7 @@ function [mu, mustar, sigma] = SPropSensi(Sys, P, phi, opt)
 %   opt.muGraphOpt = {'XScale','log'};
 %   [mu, mustar, sigma] = SPropSensi(Sys, P, phi,  opt);
 %
-%  See also pRefine, EE_traj, EEffects
+%See also QMITL_Formula CreateParamSet
 %
 
 
