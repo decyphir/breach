@@ -85,7 +85,7 @@ end
 Sys.p = P.pts(:,1);
 Pr = CreateParamSet(Sys, opt.params, [opt.lbound' opt.ubound']);
 
-Pr = pRefine(Pr,opt.p, opt.r);
+Pr = pRefine(Pr, opt.p, opt.r);
 
 %NM : we must compute the truth value of phi at time=tprop
 if tprop < tspan(1)
@@ -102,7 +102,7 @@ Pr = ComputeTraj(Sys, Pr, tspan);
 
 
 if opt.plot
-    [Mu, isort] = sort(abs(mu));
+    [~,isort] = sort(abs(mu));
     Mu = mu(isort);
     h = figure;
     subplot(3,1,1);
