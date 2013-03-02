@@ -28,7 +28,7 @@ function InitSensi(Sys,S)
       pscales = AbsTol*1e6*ones(Ns,1);
     else
       if ~isempty(ix0)
-        pscales(dims<=N) = Abstol(dims<=N)*1e6;
+        pscales(dims<=N) = AbsTol(dims<=N)*1e6;
       else
         pscales(dims>N) = 1;
       end

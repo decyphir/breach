@@ -103,10 +103,9 @@ Pr = ComputeTraj(Sys, Pr, tspan);
 
 if opt.plot
     [~,isort] = sort(abs(mu));
-    Mu = mu(isort);
     h = figure;
     subplot(3,1,1);
-    barh(Mu);
+    barh(mu(isort));
     title('Expectation of elementary effects (mu)')
     set(gca, 'YTick', 1:numel(opt.params), 'YTickLabel', opt.params(isort));
     if isfield(opt,'muGraphOpt')
