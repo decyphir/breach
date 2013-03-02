@@ -1,17 +1,29 @@
-function S = SDelUncertainParam(S, is,dims)
-  
-% does not remove dims 
-  
-  if ~exist('dims')
+function P = SDelUncertainParam(P, idx, dims)
+%SDELUNCERTAINPARAM removes uncertains parameters indexed by is in P
+% excepted of those contained in dims.
+%
+%Synopsis : P = SDelUncertainParam(P, is, dims)
+%
+%See also SAddUncertainParam
+%
+
+% does not remove dims
+
+if ~exist('dims','var')
     dims = [];
-  end
-    
-  
-  for (i = is)
-    if (isempty(find(dims==i)))
-      idx = find(S.dim~=i);
-      S.dim = S.dim(idx);
-      S.epsi = S.epsi(idx,:);    
-    end
-  end
-  
+end
+
+idx_remove = setdiff(idx,dims,'stable'); % index of uncertains parameter to remove
+idx = setdiff(P.dim,idx_remove,'stable'); % index of uncertains parameter to keep
+P.dim = P.dim(idx);
+P.epsi = P.epsi(idx,:);
+
+% for ii=idx
+%     if isempty(find(dims==ii,1))
+%         idx = find(P.dim~=ii);
+%         P.dim = P.dim(idx);
+%         P.epsi = P.epsi(idx,:);
+%     end
+% end
+
+end

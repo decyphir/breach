@@ -6,7 +6,10 @@ function [Mend, opts] =  SplotSensiBar(Sys, P, ipts, opts)
 % Input:
 %   - Sys  : the system
 %   - P    : a parameter set containing a field pts
-%   - ipts : indexes of the parameter sets of P 
+%   - ipts : array of the indexes of the parameter sets of P to consider
+%            for computing the sensitivity. The sensitivity is averaged
+%            over all the parameter sets. If empty, we use all parameter
+%            sets of P.
 %   - opts : argument describing the options. It can contains the fields:
 %        -- args        : not considered if open_dialog is set to one. It
 %                         must contains the fields:
@@ -48,7 +51,7 @@ function [Mend, opts] =  SplotSensiBar(Sys, P, ipts, opts)
 %                         selected in ipts. The sensitivity of the
 %                         properties provided in opts.props is computed (TO
 %                         UPDATE: THE FUNCTION QMITL_SEVALDIFF IS NOT UP TO
-%                         DATE) ; or 'aver_max' ... TODO
+%                         DATE) ; or 'aver_max' ... TOWRITE
 %
 % Outputs:
 %   - M    : the values of sensitivities. The dimension of M is
@@ -168,13 +171,13 @@ end
 
 if ~isnumeric(iX)
     iX = FindParam(P,iX);
-    iX = iX(iX<=P.DimX); %keep only existing variables
 end
+iX = iX(iX<=P.DimX); %keep only existing variables
 
 if ~isnumeric(iP)
     iP = FindParam(P,iP);
-    iP = iP(iP<=size(P.pts,1)); %keep only existing parameters
 end
+iP = iP(iP<=size(P.pts,1)); %keep only existing parameters
 
 % From now on I shoud have Sys, ipts, tspan, iX, iP, prop, and taus
 
@@ -193,30 +196,29 @@ switch (stat_type)
     case {'aver_sum'}  % integrate local sensitivities over the trajectories and average
         
         % 1/ Compute bars for variable sensitivities
-        for i = 1:numel(ipts)
-            
-            traj = P.traj(i); %NM : shouldn't we use the traj_ref field? I don't think so, at least,
+        for ii = 1:numel(ipts)
+            traj = P.traj(ii); %NM : shouldn't we use the traj_ref field? I don't think so, at least,
             time = traj.time;             % until we update ComputeTrajSensi
             
-            for j = 1:numel(iX)
-                for k = 1:numel(iP)
-                    is = (find(P.dim==iP(k))-1)*size(traj.X,1)+iX(j);
+            for jj = 1:numel(iX)
+                for kk = 1:numel(iP)
+                    is = (find(P.dim==iP(kk))-1)*size(traj.X,1)+iX(jj);
                     
                     dx = traj.XS(is,:);  % dX/dp[t]
-                    x = traj.X(iX(j),:);  % X[t]
+                    x = traj.X(iX(jj),:);  % X[t]
                     
                     % replace zeros by small quantities
                     ind = find(abs(x)<1e-16);
                     x(ind) = sign(x(ind))*1e-16;
                     x(x==0) = 1e-16;
                     
-                    p = traj.param(iP(k));    % p
+                    p = traj.param(iP(kk));    % p
                     xs = (dx*p)./abs(x);
                     
                     XS =  trapz(time, xs)/time(end); % computes the sum
                     
                     % Compute the sum
-                    Mend(j,k) = Mend(j,k)+XS;
+                    Mend(jj,kk) = Mend(jj,kk)+XS;
                 end
             end
         end  % end i = ipts
@@ -232,26 +234,26 @@ switch (stat_type)
     case {'aver_end'}
         
         % 1/ Compute bars for variable sensitivities
-        for i = 1:numel(ipts)
-            traj = P.traj(i); %NM : shouldn't we use the traj_ref field? I don't think so, at least,
+        for ii = 1:numel(ipts)
+            traj = P.traj(ii); %NM : shouldn't we use the traj_ref field? I don't think so, at least,
                                             % until we update ComputeTrajSensi
-            for j = 1:numel(iX)
-                for k = 1:numel(iP)
-                    is = (find(P.dim==iP(k))-1)*size(traj.X,1)+iX(j);
+            for jj = 1:numel(iX)
+                for kk = 1:numel(iP)
+                    is = (find(P.dim==iP(kk))-1)*size(traj.X,1)+iX(jj);
                     
                     dx = traj.XS(is,end);  % dX/dp[t]
-                    x = traj.X(iX(j),end);  % X[t]
+                    x = traj.X(iX(jj),end);  % X[t]
                     
                     % replace zeros by small quantities
                     ind = find(abs(x)<1e-16);
                     x(ind) = sign(x(ind))*1e-16;
                     x(x==0) = 1e-16;
                     
-                    p = traj.param(iP(k));    % p
+                    p = traj.param(iP(kk));    % p
                     xs = (dx*p)./abs(x);
                     
                     % Compute the average
-                    Mend(j,k) = Mend(j,k)+xs;
+                    Mend(jj,kk) = Mend(jj,kk)+xs;
                 end
             end
         end  % end i = ipts
@@ -259,13 +261,14 @@ switch (stat_type)
         Mend = Mend/numel(ipts);
         
         % 2/ Compute bars for properties sensitivities
-        for j = 1:numel(props)
-            for k = 1:numel(iP)
+        %NM : do not compute an average over all param set in ipts?!!
+        for jj = 1:numel(props)
+            for kk = 1:numel(iP)
                 %NM : should we compute the sensitivity at time tau or at
                 %     the end of the simulation? I personally believe that
                 %     we should compute the sensitivity at the end of the
                 %     simulation.
-                [p, x, dx] = QMITL_SEvalDiff(Sys, props{j}, P,  tspan, iP(k), taus(j)); %NM: use traj.time(end) instead of taus(j)?
+                [p, x, dx] = QMITL_SEvalDiff(Sys, props{jj}, P,  tspan, iP(kk), taus(jj)); %NM: use traj.time(end) instead of taus(j)?
                 
                 % replace zeros by small quantities
                 ind = find(abs(x)<1e-16);
@@ -275,7 +278,7 @@ switch (stat_type)
                 xs = (dx.*p)./abs(x);
                 
                 % Compute the average
-                Mend(numel(iX)+j,k) = mean(xs);
+                Mend(numel(iX)+jj,kk) = mean(xs);
                 
             end
             
@@ -284,29 +287,29 @@ switch (stat_type)
     case {'aver_max'}
         
         % 1/ Compute bars for variable sensitivities
-        for i = 1:numel(ipts)
-            traj = P.traj(i);
+        for ii = 1:numel(ipts)
+            traj = P.traj(ii);
             
-            for j = 1:numel(iX)
-                for k = 1:numel(iP)
-                    is = (find(P.dim==iP(k))-1)*size(traj.X,1)+iX(j);
+            for jj = 1:numel(iX)
+                for kk = 1:numel(iP)
+                    is = (find(P.dim==iP(kk))-1)*size(traj.X,1)+iX(jj);
                     %[dx idx] = max(abs(traj.XS(is,:)));
                     
                     dx = traj.XS(is, :);  % dX/dp[t]
-                    x = traj.X(iX(j),:);  % X[t]
+                    x = traj.X(iX(jj),:);  % X[t]
                     
                     % replace zeros by small quantities
                     ind = find(abs(x)<1e-16);
                     x(ind) = sign(x(ind))*1e-16;
                     x(x==0) = 1e-16;
                     
-                    p = traj.param(iP(k));    % p
+                    p = traj.param(iP(kk));    % p
                     xs = (dx*p)./abs(x);
                     [~,idx] = max(abs(xs));
                     xs = xs(idx);
                     
                     % Compute the average
-                    Mend(j,k) = Mend(j,k)+xs;
+                    Mend(jj,kk) = Mend(jj,kk)+xs;
                 end
             end
         end  % end i = ipts
@@ -314,9 +317,10 @@ switch (stat_type)
         Mend = Mend/numel(ipts);
         
         % 2/ Compute bars for properties sensitivities
-        for j = 1:numel(props)
-            for k = 1:numel(iP)
-                [p, x, dx] = QMITL_SEvalDiff(Sys, props{j}, P,  tspan, iP(k), taus(j)); %NM : shouldn't we compute all over tspan?
+        %NM : do not compute an average over all param set in ipts?!!
+        for jj = 1:numel(props)
+            for kk = 1:numel(iP)
+                [p, x, dx] = QMITL_SEvalDiff(Sys, props{jj}, P,  tspan, iP(kk), taus(jj)); %NM : shouldn't we compute all over tspan?
                 
                 % replace zeros by small quantities
                 ind = find(abs(x)<1e-16);
@@ -326,7 +330,7 @@ switch (stat_type)
                 xs = (dx.*p)./abs(x);
                 
                 % Compute the average
-                Mend(numel(iX)+j,k) = mean(xs); %NM: the mean, really? not the max?
+                Mend(numel(iX)+jj,kk) = mean(xs); %NM: the mean, really? not the max?
             end
         end
 end % end switch

@@ -1,4 +1,4 @@
-function Sf = ComputeTrajSensi(Sys, S, tspan, is)
+function Pf = ComputeTrajSensi(Sys, P, tspan, is)
 %COMPUTETRAJSENSI compute trajectories with sensitivities
 %
 %  Synopsis:  Pf = ComputeTrajSensi(Sys, P0, tspan [ , is])
@@ -11,7 +11,8 @@ function Sf = ComputeTrajSensi(Sys, S, tspan, is)
 %    -  Sys      System (needs to be compiled)
 %    -  P0       Initial parameter set
 %    -  tspan    interval of the form [t0, tf], t0:dt:tf, etc
-%    -  is       Parameter sensitivities to compute, if absent uses uncertain parameters in P
+%    -  is       Parameter sensitivities to compute, if absent uses
+%                uncertain parameters in P
 %
 %   Outputs:
 %
@@ -19,18 +20,21 @@ function Sf = ComputeTrajSensi(Sys, S, tspan, is)
 %                containing computed trajectories with sensitivities
 %
 %  NEEDS UPDATE TO HANDLE TRAJ_REF AND PROPERTIES
+%
 
-
-if exist('is','var')
-    org_dims = S.dim; % on sauvegarde pour ne garder que ceux-la à la fin
-    S = SAddUncertainParam(S,is);
-end
 
 if isfield(Sys, 'type')
-    if (strcmp(Sys.type,'traces')==1)
-        Sf = S;
-        return;
+    if strcmp(Sys.type,'traces')
+        Pf = P;
+        return ;
     end
+end
+
+if exist('is','var')
+    org_dims = P.dim; % we save original dim and epsi
+    org_epsi = P.epsi;
+    P = SAddUncertainParam(P,is);
+    P = SDelUncertainParam(P,org_dims,is);
 end
 
 if iscell(tspan)
@@ -43,18 +47,18 @@ else
     T = tspan;
 end
 
-InitSensi(Sys,S);
+InitSensi(Sys,P);
 
-if isfield(S,'XS0')
-    if isempty(S.XS0)
-        S = rmfield(S,'XS0');
+if isfield(P,'XS0')
+    if isempty(P.XS0)
+        P = rmfield(P,'XS0');
     end
 end
 
-if ~isfield(S,'XS0')
-    dims = S.dim;
+if ~isfield(P,'XS0')
+    dims = P.dim;
     Ns = numel(dims);
-    N = S.DimX;
+    N = P.DimX;
     ix0 = dims(dims<=N); % Parameters in x0
     
     yS0 = zeros(N,Ns);
@@ -65,13 +69,17 @@ if ~isfield(S,'XS0')
     
     xS0 = reshape(yS0,N*Ns,1); % we stack columns of yS0
     
-    S.XS0 = repmat(xS0,[1 size(S.pts,2)]);
+    P.XS0 = repmat(xS0,[1 size(P.pts,2)]);
     
 end
 
-Sf = cvm(93,S,T);
+Pf = cvm(93,P,T);
 CVodeFree();
 
 if exist('is','var')
-    Sf = SDelUncertainParam(Sf,is,org_dims);
+    Pf = SAddUncertainParam(Pf,org_dims);
+    Pf = SDelUncertainParam(Pf,is,org_dims);
+    Pf.epsi = org_epsi; %NM : not sure of that (wonder if cvm makes changes on epsi - I guess no)
+end
+
 end
