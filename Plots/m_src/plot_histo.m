@@ -3,6 +3,12 @@ function h = plot_histo(M, S, iX, props, iP)
 %
 % Synopsis : h = plot_histo(M, S, iX, props, iP)
 %
+% Inputs:
+%  - M     : the matrix containing data
+%  - S     : the parameter set
+%  - iX    : 
+%  - props : 
+%  - iP    : indexs of parameters
 %
 
 h = figure;
