@@ -3,7 +3,7 @@ function P = SDelUncertainParam(P, ParamList, Exception, Verbose)
 % excepted of those contained in Exception. If P will contain no uncertain
 % parameters, nothing is done.
 %
-% Synopsis: P = SDelUncertainParam(P, ParamList [ , Exception, Verbose])
+% Synopsis: P = SDelUncertainParam(P, ParamList [ , Exception, Verbose ])
 %
 % Input:
 %   - P         : the parameter set to modify
@@ -13,7 +13,7 @@ function P = SDelUncertainParam(P, ParamList, Exception, Verbose)
 %   - Exception : (Optional) Indexes or names of parameters not to remove.
 %                 Indexes or names not valid are ignored. (default=[])
 %   - Verbose   : If set to one, the function shows a warning if the
-%                 uncertain parameters are not removed.
+%                 uncertain parameters are not removed (default=1).
 % Output:
 %   - P : the modified parameter set
 %
@@ -28,7 +28,7 @@ function P = SDelUncertainParam(P, ParamList, Exception, Verbose)
 %See also SAddUncertainParam, CreateParamSet
 %
 
-% Check input
+% Check inputs
 
 if iscell(ParamList) || ischar(ParamList)
     ParamList = FindParam(P,ParamList);
@@ -44,10 +44,14 @@ elseif iscell(Exception) || ischar(Exception)
     Exception = FindParam(P,Exception);
 end
 
+if ~exist('Verbose','var')
+    Verbose = 1;
+end
+
 % does not remove Exception
 
-idx_remove = setdiff(ParamList,Exception,'stable'); % index of uncertains parameter to remove
-[ParamList, idx] = setdiff(P.dim,idx_remove,'stable'); % index of uncertains parameter to keep
+idx_remove = setdiff(ParamList,Exception,'stable'); % indexes of uncertain parameters to remove
+[ParamList, idx] = setdiff(P.dim,idx_remove,'stable'); % indexes of uncertain parameters to keep
 if ~isempty(ParamList)
     P.epsi = P.epsi(idx,:);
     P.dim = ParamList;

@@ -1,4 +1,4 @@
-function P = SetParam(P,ParamList,ParamValues)
+function P = SetParam(P, ParamList, ParamValues)
 % SETPARAM Sets the values of parameters in a parameter set. Note that if
 % the parameter is not present in P, it is created and appended.
 % 
@@ -31,7 +31,7 @@ function P = SetParam(P,ParamList,ParamValues)
 %                     % Values of 'a' and 'b' are equals in Pr and Pr_2.
 %    Pr_3 = SetParam(Pr, 'a', 5); % a is equal to 5 in the nine points
 %    
-% See also GETPARAM, CREATEPARAMSET 
+%See also GetParam CreateParamSet 
 %  
 
 if size(ParamValues,1) == 1 && ~ischar(ParamList) && numel(ParamList)~=1
