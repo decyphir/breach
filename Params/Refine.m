@@ -1,9 +1,9 @@
-function S = Refine(S0,delta)
-%      
-%   REFINE Generates grid points in a N-dimensional parameter set 
+function P = Refine(P0, delta)
+%REFINE Generates grid points in a N-dimensional parameter set 
 %  
-%   Usage: P = Refine(P0,delta)
+% Synopsis: P = Refine(P0, delta)
 %
+% Inputs:
 %   - P0       is a parameter set
 %
 %   - delta    should be a scalar or a vector of dimension size(P0.dim). If it
@@ -31,35 +31,37 @@ function S = Refine(S0,delta)
 %   Refine(P0 [.1 .2]) % creates a grid with resolution (.1,.2)
 %
 %   Refine(P0 [1.1 1.2]) % returns P0
-%  
+%
+%See also CreateParamSet RandomLogRefine
+%
 
   if (delta ==1)
-   S = S0;
+   P = P0;
    return;
   end
 
-  n = numel(S0.dim);
+  n = numel(P0.dim);
   
   if (isscalar(delta))
-    delta = delta*ones(numel(S0.dim),1);
+    delta = delta*ones(numel(P0.dim),1);
     
   elseif (size(delta,1)==1)
     delta=delta';
   end
   
-  if (numel(delta)>numel(S0.dim))
-    delta = delta(S0.dim);
+  if (numel(delta)>numel(P0.dim))
+    delta = delta(P0.dim);
   end;
   
-  S.dim = S0.dim;
-  S.pts =[];
-  S.epsi = [];
+  P.dim = P0.dim;
+  P.pts =[];
+  P.epsi = [];
   
-  for i = 1:size(S0.pts,2)  
+  for i = 1:size(P0.pts,2)  
     deltai=delta;
     if (sum(abs(deltai-floor(deltai))));
-      deltai(deltai>2*S0.epsi(:,i))=2*S0.epsi(deltai>2*S0.epsi(:,i));
-      deltai = ceil(2*S0.epsi(:,i)./deltai);
+      deltai(deltai>2*P0.epsi(:,i))=2*P0.epsi(deltai>2*P0.epsi(:,i));
+      deltai = ceil(2*P0.epsi(:,i)./deltai);
     end
   
     nb_new = prod(deltai);
@@ -67,62 +69,64 @@ function S = Refine(S0,delta)
     if (nb_new > 1)
     
       l = N2Nn(n,deltai);
-      xlim = [ S0.pts(S0.dim,i)-S0.epsi(:,i)  S0.pts(S0.dim,i)+S0.epsi(:,i) ];
-      X = repmat(S0.pts(:,i),1,nb_new);
-      nepsi = repmat(S0.epsi(:,i)./(deltai),1,size(X,2));
+      xlim = [ P0.pts(P0.dim,i)-P0.epsi(:,i)  P0.pts(P0.dim,i)+P0.epsi(:,i) ];
+      X = repmat(P0.pts(:,i),1,nb_new);
+      nepsi = repmat(P0.epsi(:,i)./(deltai),1,size(X,2));
     
       for j=1:n
         if (deltai(j)>1)
           d1 = xlim(j,1);
           d2 = xlim(j,2);
           dx(j) = (d2-d1)./(deltai(j));
-          X(S0.dim(j),:) = l(j,:)*dx(j)+d1-dx(j)/2; 
+          X(P0.dim(j),:) = l(j,:)*dx(j)+d1-dx(j)/2; 
         end
       end
     
-      S.pts = [S.pts X];
-      S.epsi = [S.epsi nepsi];
+      P.pts = [P.pts X];
+      P.epsi = [P.epsi nepsi];
     end
   
   end
 
-  if (isfield(S0,'traj_plot_opt'))
-    S.traj_plot_opt = S0.traj_plot_opt;
+  if (isfield(P0,'traj_plot_opt'))
+    P.traj_plot_opt = P0.traj_plot_opt;
   end
   
-  if (isfield(S0,'X0plot_opt'))
-    S.X0plot_opt = S0.X0plot_opt;
+  if (isfield(P0,'X0plot_opt'))
+    P.X0plot_opt = P0.X0plot_opt;
   end
   
-  if (isfield(S0,'plot_proj'))
-    S.plot_proj = S0.plot_proj;
+  if (isfield(P0,'plot_proj'))
+    P.plot_proj = P0.plot_proj;
   end
   
-  if (isfield(S0,'ParamList'))
-    S.ParamList = S0.ParamList;
+  if isfield(P0,'ParamList')
+    P.ParamList = P0.ParamList;
   end
   
-  if (isfield(S0,'selected'))
-    S.selected = zeros(1, size(S.pts,2));    
+  if isfield(P0,'selected')
+    P.selected = zeros(1, size(P.pts,2));    
   end
 
-  S.DimX= S0.DimX;
-  S.DimP= S0.DimP;
+  P.DimX= P0.DimX;
+  P.DimP= P0.DimP;
 
   %  Checks for pts sharing the sames systems parameters 
   
-  X = S.pts(1:S.DimP,:)'; 
+  X = P.pts(1:P.DimP,:)'; 
   [C,IA,IC] = unique(X,'rows');
   
-  S.traj_ref= IC';
+  P.traj_ref= IC';
  
-  if (isfield(S0,'traj'))
+  if (isfield(P0,'traj'))
       
-    S.traj = S0.traj;
-    S.Xf = S0.Xf;
-    if ~isequal(S.pts(1:S.DimP,IA), vertcat(S.traj.param))
-        S.traj_to_compute = IA';
+    P.traj = P0.traj;
+    P.Xf = P0.Xf;
+    if ~isequal(P.pts(1:P.DimP,IA), vertcat(P.traj.param))
+        P.traj_to_compute = IA';
     end    
   else
-    S.traj_to_compute = IA';  
+    P.traj_to_compute = IA';  
   end
+
+end

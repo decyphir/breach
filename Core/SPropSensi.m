@@ -122,7 +122,7 @@ if opt.plot
     
     subplot(3,1,3);
     barh(sigma(isort));
-    title('Standart deviation of elementary effects (sigma)')
+    title('Standard deviation of elementary effects (sigma)')
     set(gca, 'YTick', 1:numel(opt.params), 'YTickLabel', opt.params(isort));
     if isfield(opt,'sigmaGraphOpt')
         set(gca,opt.sigmaGraphOpt{:});

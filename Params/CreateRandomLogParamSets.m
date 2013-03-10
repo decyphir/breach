@@ -6,32 +6,35 @@ function [PRLog] = CreateRandomLogParamSets(Sys, params, ranges, N)
 %   It must not be two (or more) times the same parameter in the params
 %   argument.
 %
-%   Syntax: PRLog = CreateRandomLogParamSets(Sys, params, ranges, N)
+% Syntax: PRLog = CreateRandomLogParamSets(Sys, params, ranges, N)
 %
-%   Inputs:
+% Inputs:
 %
 %    -  Sys       The considered system
 %    -  params    List of varying parameters
 %    -  ranges    Parameters ranges
 %    -  N         Number of random generated points
 %
-%   Outputs:
+% Outputs:
 %
 %    -  PRLog    A random logarithmic sampling of N points
 %
-%	Example:
-%     CreateSystem;
-%     PLog = CreateRandomLogParamSets(Sys,{'a','b'},[1.0e-9,1.0e-4;2,3],50)
-%             % PLog is a parameter set containing 50 parameter values such
-%             % that a is logarithmicly distributed in [1.0e-9 , 1.0e-4]
-%             % and b in [2 , 3]
-%     SplotBoxPts(PLog);
+% Example (Lorentz84):
+%    CreateSystem;
+%    PLog = CreateRandomLogParamSets(Sys,{'a','b'},[1.0e-3,1.0e2;3,5],50);
+%            % PLog is a parameter set containing 50 parameter values such
+%            % that a is logarithmicly distributed in [1.0e-3 , 1.0e2]
+%            % and b in [3 , 5]
+%    SplotBoxPts(PLog);
+%
+%See also CreateParamSet RandomLogRefine SAddUncertainParam
 %
 
 % we check if all range limits are strictly positive
-if(~isempty(find(sign(ranges)<0,1)))
+if ~isempty(find(sign(ranges)<0,1))
     %return;
-    error('CreateRandomLogParamSets:rangeBound','Range limits must be positive or null.');
+    error('CreateRandomLogParamSets:rangeBound',...
+            'Range limits must be positive or null.');
 end
 
 if(ischar(params))
@@ -43,8 +46,9 @@ nbParam = numel(params);
 % check for duplicates in params
 if(nbParam~=numel(unique(params)))
     %return ;
-    error('CreateRandomLogParamSets:duplicateParam',['When refining, it must '...
-            'not be more than one time a parameter']);
+    error('CreateRandomLogParamSets:duplicateParam',...
+            ['When refining, it must not be more than one time a '...
+            'parameter']);
 end
 
 % if there are null range limits, we replace them by the AbsTol

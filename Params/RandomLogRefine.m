@@ -6,29 +6,29 @@ function [PRLog] = RandomLogRefine(P, N, minValue)
 %   recommended to use CreateRandomLogParamSets or you risk to face error
 %   due to null interval limit.
 %
-%   Syntax: PRLog = RandomLogSampling(P, N [,minValue] )
+% Syntax: PRLog = RandomLogSampling(P, N [, minValue] )
 %
-%   Inputs:
+% Inputs:
 %
 %    -  P         The parameter set to refine
 %    -  N         Number of random generated points
 %    -  minValue  If there are parameters with intervals such that
 %                 "pts-epsi<=0", if minValue exists, the lower possible
-%                 value for this parameter is set to minValue, otherwize, a
-%                 error is thrown
+%                 value for this parameter is set to minValue, otherwize,
+%                 an error is thrown
 %
-%   Outputs:
+% Outputs:
 %
 %    -  PRLog    A random logarithmic sampling of N points
 %
-%	Example (lorentz84):
+% Example (lorentz84):
 %
 %   CreateSystem;
 %   P = CreateParamSet(Sys);
 %   PRLog = RandomLogRefine(P,10);
 %   SplotBoxPts(PRLog);    % Parameter set after sampling
 %
-% SEE ALSO CREATERANDOMLOGPARAMSETS
+%See also CreateRandomLogParamSets Refine
 %
 
 

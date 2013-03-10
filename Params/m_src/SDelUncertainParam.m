@@ -1,28 +1,63 @@
-function P = SDelUncertainParam(P, idx, dims)
-%SDELUNCERTAINPARAM removes uncertains parameters indexed by is in P
-% excepted of those contained in dims.
+function P = SDelUncertainParam(P, ParamList, Exception, Verbose)
+%SDELUNCERTAINPARAM removes uncertains parameters of ParamList in P
+% excepted of those contained in Exception. If P will contain no uncertain
+% parameters, nothing is done.
 %
-%Synopsis : P = SDelUncertainParam(P, is, dims)
+% Synopsis: P = SDelUncertainParam(P, ParamList [ , Exception, Verbose])
 %
-%See also SAddUncertainParam
+% Input:
+%   - P         : the parameter set to modify
+%   - ParamList : indexes or names of parameters to remove from P (excepted
+%                 if they are also in Exception). Indexes or names not
+%                 valid are ignored.
+%   - Exception : (Optional) Indexes or names of parameters not to remove.
+%                 Indexes or names not valid are ignored. (default=[])
+%   - Verbose   : If set to one, the function shows a warning if the
+%                 uncertain parameters are not removed.
+% Output:
+%   - P : the modified parameter set
+%
+% Examples (Lorentz84):
+%
+%   CreateSystem;
+%   P = CreateParamSet(Sys,{'a','b'});
+%   fprintf('%s\n',P.ParamList{P.dim}); % output: a and b
+%   P = SDelUncertainParam(P,{'a','F','blah'});
+%   fprintf('%s\n',P.ParamList{P.dim});  % output: only b
+%
+%See also SAddUncertainParam, CreateParamSet
 %
 
-% does not remove dims
+% Check input
 
-if ~exist('dims','var')
-    dims = [];
+if iscell(ParamList) || ischar(ParamList)
+    ParamList = FindParam(P,ParamList);
 end
 
-idx_remove = setdiff(idx,dims,'stable'); % index of uncertains parameter to remove
-idx = setdiff(P.dim,idx_remove,'stable'); % index of uncertains parameter to keep
-P.dim = P.dim(idx);
-P.epsi = P.epsi(idx,:);
+if ~exist('dims','var')
+    Exception = [];
+elseif iscell(Exception) || ischar(Exception)
+    Exception = FindParam(P,Exception);
+end
 
-% for ii=idx
-%     if isempty(find(dims==ii,1))
-%         idx = find(P.dim~=ii);
-%         P.dim = P.dim(idx);
-%         P.epsi = P.epsi(idx,:);
+% does not remove Exception
+
+idx_remove = setdiff(ParamList,Exception,'stable'); % index of uncertains parameter to remove
+[ParamList, idx] = setdiff(P.dim,idx_remove,'stable'); % index of uncertains parameter to keep
+if ~isempty(ParamList)
+    P.epsi = P.epsi(idx,:);
+    P.dim = ParamList;
+elseif(Verbose>=1)
+    warning('SDelUncertainParam:NoUncertainParam',...
+            ['No uncertain parameters are remaining, the command has' ...
+             ' been skipped\n']);
+end
+
+% for ii=ParamList
+%     if isempty(find(Exception==ii,1))
+%         ParamList = find(P.dim~=ii);
+%         P.dim = P.dim(ParamList);
+%         P.epsi = P.epsi(ParamList,:);
 %     end
 % end
 

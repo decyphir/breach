@@ -1,5 +1,5 @@
 function P = CreateParamSet(Sys, Param, Ranges, Nb_pts)
-%   CREATEPARAMSET Create a parameter set structure for a system. If the
+%CREATEPARAMSET Create a parameter set structure for a system. If the
 %   argument Param contains parameters name not existing in the system,
 %   they are added to the parameter set. The value of these parameters is
 %   either the median point of the ranges, if the range if provided, or
@@ -10,9 +10,9 @@ function P = CreateParamSet(Sys, Param, Ranges, Nb_pts)
 %   the parameter value, except if the parameter value is 0, in which case,
 %   the epsi is set to 1.
 %
-%   Synopsis: P = CreateParamSet(Sys [,Param,Ranges,Nb_pts] )
+% Synopsis: P = CreateParamSet(Sys [,Param,Ranges,Nb_pts] )
 %
-%   Inputs:
+% Inputs:
 %
 %    -  Sys      System under study
 %    -  Param    List of varying parameters
@@ -21,23 +21,23 @@ function P = CreateParamSet(Sys, Param, Ranges, Nb_pts)
 %                dimension;   same argument as Refine function
 %               
 %
-%   Outputs:
+% Outputs:
 %
 %    -  P        An initial parameter set with one point in the center of
 %                ranges of the varying parameters and the default value
 %                in Sys.p
-%   Example 1:
+% Example 1:
 %     CreateSystem;
 %     P = CreateParamSet(Sys); % x0, x1, x2, a, b, F and G are unknown
 %                              % parameters. There values are (resp.) 0, 0,
 %                              % 0, 0.25, 4, 0.5 and 0.5 and the epsi are
 %                              % 1, 1, 1, 0.025, 0.1 and 0.05 .
 %
-%   Example 2:
+% Example 2:
 %     CreateSystem;
 %     P = CreateParamSet(Sys,'a'); % only a is an unknown parameter
 %
-%   Example 3:
+% Example 3:
 %     CreateSystem;
 %     P = CreateParamSet(Sys,{'a','x0'},[0.2,0.4;-0.6,0.6]); % a and x0 are
 %                                      % unknown parameters. The value of a
@@ -45,7 +45,7 @@ function P = CreateParamSet(Sys, Param, Ranges, Nb_pts)
 %                                      % the value of x0 is 0, with an epsi
 %                                      % of 0.6
 %
-%See also: Refine SetParam
+%See also: Refine SetParam SAddUncertainParam
 %
 
 pts = Sys.p;

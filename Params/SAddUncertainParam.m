@@ -20,7 +20,7 @@ function P = SAddUncertainParam(P, idx)
 %    P = CreateParamSet(Sys,{'a'},[0.1 0.8]);
 %    P = SAddUncertainParam(P, FindParam(P,{'b','F'}));
 %
-%See also SDelUncertainParam
+%See also SDelUncertainParam CreateParamSet
 %
 
 if ~isempty(find(idx<0,1))
