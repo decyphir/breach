@@ -34,7 +34,11 @@ if iscell(ParamList) || ischar(ParamList)
     ParamList = FindParam(P,ParamList);
 end
 
-if ~exist('dims','var')
+if iscell(Exception) || ischar(Exception)
+    Exception = FindParam(P,Exception);
+end
+
+if ~exist('Exception','var')
     Exception = [];
 elseif iscell(Exception) || ischar(Exception)
     Exception = FindParam(P,Exception);
