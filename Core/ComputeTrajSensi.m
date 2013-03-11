@@ -16,12 +16,25 @@ function Pf = ComputeTrajSensi(Sys, P, tspan, is)
 %
 %   Outputs:
 %
-%    -  Pf       Sampling structure augmented with the field traj
+%    -  Pf       Parameter set augmented with the field traj
 %                containing computed trajectories with sensitivities
 %
 %  NEEDS UPDATE TO HANDLE TRAJ_REF AND PROPERTIES
 %
 
+
+% checks for an initialization function
+if isfield(Sys, 'init_fun')
+    P = Sys.init_fun(P);
+end
+
+if isfield(P, 'init_fun')
+    P = P.init_fun(P0);
+end
+
+if (~isfield(Sys, 'type'))
+    Sys.type = '';
+end
 
 if isfield(Sys, 'type')
     if strcmp(Sys.type,'traces')
