@@ -30,6 +30,13 @@ if isfield(Sys, 'type')
     end
 end
 
+if isfield(Sys,'init_fun')
+    P = Sys.init_fun(P);
+end
+if isfield(P,'init_fun')
+    P = P.init_fun(P);
+end
+
 if exist('is','var')
     org_dims = P.dim; % we save original dim and epsi
     org_epsi = P.epsi;

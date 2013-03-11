@@ -1,7 +1,8 @@
 function [mu, mustar, sigma, Pr] = SPropSensi(Sys, P, phi, opt)
-% SPROPSENSI estimates the sensitivity of a property wrt some parameters
-% (Morris method). This function is adapted from the strategy described in
-% "Global Sensitivity Analysis, A Primer", Saltelli et al, p113++
+% SPROPSENSI estimates the global sensitivity of a property wrt some
+% parameters (Morris method). This function is adapted from the strategy
+% described in "Global Sensitivity Analysis, A Primer", Saltelli et al,
+% p113++
 %
 % Synopsis: [mu, mustar, sigma] = SPropSensi(Sys, P, phi, opt)
 %
