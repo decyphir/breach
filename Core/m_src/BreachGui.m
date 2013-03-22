@@ -405,6 +405,8 @@ function button_compute_traj_Callback(hObject, eventdata, handles)
     
     handles = update_working_sets_panel(handles);
     guidata(hObject, handles);
+    h = BreachTrajGui('varargin', handles);
+ 
   catch 
     s = lasterror;
     warndlg(['Problem computing traj: ' s.message] );

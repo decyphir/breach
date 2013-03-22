@@ -24,7 +24,7 @@ function Pf = ComputeTraj(Sys, P0, tspan, u)
 %
 %   Outputs:
 %
-%    -  Pf       Sampling structure augmented with the field traj containing
+%    -  Pf       Parameter set augmented with the field traj containing
 %                 computed trajectories if the input is a param set
 %
 % or - trajs     array of trajectories
