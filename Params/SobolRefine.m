@@ -1,19 +1,26 @@
 function Ph = SobolRefine(P, nb, step)
 % SOBOLREFINE  Sample quasi-uniformly a parameter set using Sobol sequence
 %
-% Synopsis:  Ph = SobolRefine(P, nb)
+% Credit:  John Burkardt, 2006
 %
-% Example:
+% Synopsis:  Ph = SobolRefine(P, nb, step)
+%
+% Example (Lorentz84):
 %
 %   CreateSystem;
-%   P = CreateSampling(Sys); % Create default parameter set for system Sys
+%   P = CreateParamSet(Sys,{'F','G'},[1,100;0,5]);
 %   Ph = SobolRefine(P, 1000); % Sample with 1000 points
 %
 %   SplotBoxPts(P); % Parameter set before sampling
 %   SplotPts(Ph);   % plots the generated points
 %
-% Credit:  John Burkardt, 2006
+%See also QuasiRefine Refine RandomLogRefine
 %
+
+if(nb<=1)
+    Ph = P;
+    return ;
+end
 
 dim_num = numel(P.dim);
 

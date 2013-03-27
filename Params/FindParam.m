@@ -11,7 +11,7 @@ function index =  FindParam(S,param)
 % different for each parameter and the smaller index is equal to the higher
 % known parameter index + 1).
 %
-% Example:
+% Example (Lorentz84):
 %
 %  CreateSystem;
 %  idx = FindParam(Sys, 'a');
@@ -22,7 +22,7 @@ if ~isfield(S,'ParamList')
     error('FindParam:noParamList','No parameter list ...');
 end
 
-if (~iscell(param))
+if ~iscell(param)
     param = {param};
 end
 

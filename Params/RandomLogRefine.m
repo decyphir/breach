@@ -39,21 +39,21 @@ PRLog = P;
 for i=1:numel(P.dim)
     epsi = P.epsi(i,:);
     val = P.pts(P.dim(i),:);
-    inf = val-epsi; %we assume inf<=sup
+    mini = val-epsi; %we assume inf<=sup
     
-    if any(inf<=0)
+    if any(mini<=0)
         %return;
         if exist('minValue','var')
-            inf(inf<=0)=minValue;
+            mini(mini<=0)=minValue;
         else
-            error('RandomLogSampling:rangeBound','Range limits must be strictly positive.');
+            error('RandomLogRefine:rangeBound','Range limits must be strictly positive.');
         end
     end
     
-    inf = log10(inf);
-    sup = log10(val+epsi);
-    PRLog.pts(PRLog.dim(i),:) = (sup+inf)/2;
-    PRLog.epsi(i,:) = (sup-inf)/2;
+    mini = log10(mini);
+    maxi = log10(val+epsi);
+    PRLog.pts(PRLog.dim(i),:) = (maxi+mini)/2;
+    PRLog.epsi(i,:) = (maxi-mini)/2;
 end
 
 
@@ -65,10 +65,10 @@ PRLog = QuasiRefine(PRLog, N);
 for i=1:numel(PRLog.dim)
     epsi = PRLog.epsi(i,:);
     val = PRLog.pts(PRLog.dim(i),:);
-    inf = 10.^(val-epsi);
-    sup = 10.^(val+epsi);
-    PRLog.pts(PRLog.dim(i),:) = (sup+inf)/2;
-    PRLog.epsi(i,:) = (sup-inf)/2;
+    mini = 10.^(val-epsi);
+    maxi = 10.^(val+epsi);
+    PRLog.pts(PRLog.dim(i),:) = (maxi+mini)/2;
+    PRLog.epsi(i,:) = (maxi-mini)/2;
 end
 
 

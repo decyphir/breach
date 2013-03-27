@@ -1,6 +1,7 @@
 function P = SetParam(P, ParamList, ParamValues)
 % SETPARAM Sets the values of parameters in a parameter set. Note that if
-% the parameter is not present in P, it is created and appended.
+% the parameter is not present in P, it is created and appended. The epsi
+% are neither modified nor created.
 % 
 % Synopsis: P = SetParam(P, ParamList, ParamValues)
 % 
@@ -9,13 +10,13 @@ function P = SetParam(P, ParamList, ParamValues)
 %  - ParamList  : the list of parameters for which the value is changed or
 %                   created. If empty, nothing is done :
 %  - ParamValue : the values of the parameters. Its size is either
-%                   (num of param in ParamList , size(P.pts,2)) or
-%                   (num of param in ParamList , 1)
+%                   ( numel(ParamList) , size(P.pts,2) ) or
+%                   ( numel(ParamList) , 1 )
 % 
 % Example (for Lorenz84 system):
 % 
 %    CreateSystem;
-%    P = CreateSampling(Sys, {'a', 'b'}, [0 10; 0 5]);
+%    P = CreateParamSet(Sys, {'a', 'b'}, [0 10; 0 5]);
 %    Pr = Refine(P, 3);
 %    val = GetParam(Pr, 'a');
 %    val10 = 10*val; 
@@ -24,7 +25,7 @@ function P = SetParam(P, ParamList, ParamValues)
 % Other example :
 % 
 %    CreateSystem;
-%    P = CreateSampling(Sys, {'a', 'b'}, [0 10; 0 5]);
+%    P = CreateParamSet(Sys, {'a', 'b'}, [0 10; 0 5]);
 %    Pr = Refine(P, 3);
 %    Pr_2 = SetParam(Pr, {'F','G'}, [0.4; 0.6]); % values for 'F' (resp.
 %                     % 'G') equals to 0.4 (resp 0.6) in the nine points.
