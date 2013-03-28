@@ -193,7 +193,7 @@ switch Sys.type
             Pf=cvm(61, Pf, T); % <- NM: I would love to know how it works inside!
             Pf.pts = P0.pts;
             
-            if ~isfield(Pf, 'traj_ref') % PLEASE VERIFY THESE THREE LINES
+            if ~isfield(Pf, 'traj_ref') % create field traj_ref (one to one mapping) 
                 Pf.traj_ref = 1:numel(Pf.traj);
             end
             
