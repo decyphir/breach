@@ -1,17 +1,18 @@
 function Sys = CreateExternSystem(name, vars, params, p0, simfn)
 % CREATEEXTERNSYSTEM creates a system with or without custom external simulator     
 %
-% Synopsis: Sys = CreateExternSystem(name, vars, params, p0)
+% Synopsis: Sys = CreateExternSystem(name, vars, params, p0, simfn)
 %  
-% Creates a system structure Sys to be used with Breach and an external
+% Creates a system structure Sys to be used with Breach and a potential external
 % simulator. Note: for Simulink, use CreateSimulinkSystem.  
 % 
 % Example:   
 %
+%   name = 'blacky'     %  some name for the system
+%
 %   signals = {'s0','s1'};  % variables for signals values
 %
-%   params = {'p0','p1','p2'};  % parameters related to signal or to be
-%                               % used in temporal logic formulas
+%   params = {'p0','p1','p2'};  % system's parameters 
 %
 %   p0 = [0 0 0 ];    % default for parameters p0,p1 and p2
 %

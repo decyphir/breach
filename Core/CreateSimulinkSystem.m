@@ -1,10 +1,17 @@
 function Sys = CreateSimulinkSystem(mdl, signals, params, p0,  inputfn )
-% CreateSimulinkSystem  Create a Breach friendly structure from a simulink model
+% CreateSimulinkSystem  Create a Breach system structure from a simulink model
 %  
 % Synopsis: Sys =  CreateSimulinkSystem(mdl, signals, params, p0, inputfn)
 %
-% TODO document args
-%  
+%  - mdl       name of the Simulink model - note that breach will use its own copy of this model
+%  - signals   can be either 'logged' or {'s1','s2', ..., 'sn'} where s1, s2,..., sn are logged signals in the model  
+%              if signals=='logged', Breach will find and use all logged signals in the model 
+%  - params    {'p1',...,'pn'} where pi are tunable parameters in mdl. If
+%              empty or absent, Breach will try to find tunable parameters
+%  - p0        default values for the tunable parameters
+%  - inputfn   'UniStepXX' | 'VarStepXX' | 'UniPWAXX' where XX is a number
+%              (eg. UniStep5 will use piecewise constant input functions with 5 different values 
+%               and a constant time step depending on the simulation time)  
 
 %% Copy the model into model_breach
 
