@@ -29,10 +29,10 @@ function Pn = Sselect(P, kn)
 % val = QMITL_Eval(Sys, phi, P, P.traj, 0);     % this code also works for
 % Pvalid = Sselect(P, P.traj_ref(find(val>0))); % selecting valid parameter sets
 
-if (nargin==1)
+if(nargin==1)
     try
         kn = find(P.selected~=0);
-    catch
+    catch %#ok<CTCH>
         Pn = P;
         return;
     end

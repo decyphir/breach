@@ -32,7 +32,7 @@ function P = SetParam(P, ParamList, ParamValues)
 %                     % Values of 'a' and 'b' are equals in Pr and Pr_2.
 %    Pr_3 = SetParam(Pr, 'a', 5); % a is equal to 5 in the nine points
 %    
-%See also GetParam CreateParamSet 
+%See also GetParam CreateParamSet SetEpsi
 %  
 
 if size(ParamValues,1) == 1 && ~ischar(ParamList) && numel(ParamList)~=1

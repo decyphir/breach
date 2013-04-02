@@ -38,7 +38,7 @@ for i = 1:numel(field_list_copy)
     end
 end
 
-field_list= {'XS0', 'Xf', 'ExpaMax', 'XSf', 'props_values'};
+field_list = {'XS0', 'Xf', 'ExpaMax', 'XSf', 'props_values'};
 
 for i = 1:numel(field_list)
     

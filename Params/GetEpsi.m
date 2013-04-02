@@ -5,7 +5,8 @@ function EpsiValues = GetEpsi(P,ParamList)
 %
 % Synopsis: EpsiValues = GetEpsi(P, ParamList)
 %
-%See also GetParam
+%See also GetParam SetEpsi
+%
 
 %
 % Example (for Lorenz84 system):
