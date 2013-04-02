@@ -25,7 +25,7 @@ function P = SDelUncertainParam(P, ParamList, Exception, Verbose)
 %   P = SDelUncertainParam(P,{'a','F','blah'});
 %   fprintf('%s\n',P.ParamList{P.dim});  % output: only b
 %
-%See also SAddUncertainParam, CreateParamSet
+%See also SAddUncertainParam CreateParamSet SetEpsi GetEpsi
 %
 
 % Check inputs

@@ -5,7 +5,7 @@ function P = SetEpsi(P, ParamList, EpsiValues)
 % 
 % Input:
 %  - P          : the parameter set to modify ;
-%  - ParamList  : the list of parameters for which the epsi value is
+%  - ParamList  : the list of parameter names for which the epsi value is
 %                 modified. If empty, nothing is done ;
 %  - EpsiValue  : the values of the epsi. Its size is either
 %                 ( numel(ParamList) , size(P.pts,2) ) or
@@ -29,7 +29,7 @@ function P = SetEpsi(P, ParamList, EpsiValues)
 %                     % epsilon for 'a'is set to 0.4 for the nine parameter
 %                     % sets. Nothing has changed for 'G'.
 %    
-%See also GetEpsi CreateParamSet SetParam
+%See also GetEpsi CreateParamSet SetParam SAddUncertainParam SDelUncertainParam
 %  
 
 if isempty(ParamList)
