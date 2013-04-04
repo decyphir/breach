@@ -1,4 +1,4 @@
-function [PRLog] = RandomLogRefine(P, N, minValue)
+function [P] = RandomLogRefine(P, N, minValue)
 %RANDOMLOGREFINE Create a logarithmic random sampling of parameters. If P
 %   contains many points, each of them is divided into N new points. All
 %   ranges (ie : [value-epsi ; value+epsi] must be strictly positive. When
@@ -32,44 +32,37 @@ function [PRLog] = RandomLogRefine(P, N, minValue)
 %
 
 
-PRLog = P;
+% 1/ convert from unity scale to log scale
+epsi = P.epsi;
+val = P.pts(P.dim,:);
+mini = val-epsi; %we assume inf<=sup
 
-
-% convert from unity scale to log scale
-for i=1:numel(P.dim)
-    epsi = P.epsi(i,:);
-    val = P.pts(P.dim(i),:);
-    mini = val-epsi; %we assume inf<=sup
-    
-    if any(mini<=0)
-        %return;
-        if exist('minValue','var')
-            mini(mini<=0)=minValue;
-        else
-            error('RandomLogRefine:rangeBound','Range limits must be strictly positive.');
-        end
+if any(mini<=0)
+    %return;
+    if exist('minValue','var')
+        mini(mini<=0)=minValue;
+    else
+        error('RandomLogRefine:rangeBound','Range limits must be strictly positive.');
     end
-    
-    mini = log10(mini);
-    maxi = log10(val+epsi);
-    PRLog.pts(PRLog.dim(i),:) = (maxi+mini)/2;
-    PRLog.epsi(i,:) = (maxi-mini)/2;
 end
 
+mini = log10(mini);
+maxi = log10(val+epsi);
+P.pts(P.dim,:) = (maxi+mini)/2;
+P.epsi = (maxi-mini)/2;
 
-% compute quasi-refine on log scale
-PRLog = QuasiRefine(PRLog, N);
+
+% 2/ compute quasi-refine on log scale
+P = QuasiRefine(P, N);
 
 
-% convert back from log scale to unity scale
-for i=1:numel(PRLog.dim)
-    epsi = PRLog.epsi(i,:);
-    val = PRLog.pts(PRLog.dim(i),:);
-    mini = 10.^(val-epsi);
-    maxi = 10.^(val+epsi);
-    PRLog.pts(PRLog.dim(i),:) = (maxi+mini)/2;
-    PRLog.epsi(i,:) = (maxi-mini)/2;
-end
+% 3/ convert back from log scale to unity scale
+epsi = P.epsi;
+val = P.pts(P.dim,:);
+mini = 10.^(val-epsi);
+maxi = 10.^(val+epsi);
+P.pts(P.dim,:) = (maxi+mini)/2;
+P.epsi = (maxi-mini)/2;
 
 
 end

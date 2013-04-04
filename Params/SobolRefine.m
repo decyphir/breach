@@ -38,10 +38,10 @@ Ph = P;
 Ph.pts = repmat(P.pts,[1 nb]);
 Ph.pts(P.dim,:) = repmat(width,[1 nb]).*r+repmat(inf,[1 nb]);
 
-% Why the following line?
-%Sh.epsi = repmat(Sh.epsi,[1 nb])/(floor(nb^(1/dim_num)));
+Ph.epsi = repmat(Ph.epsi,[1 nb])/(floor(nb^(1/dim_num)));
 
-Ph.epsi = kron(Ph.epsi,ones(1,size(Ph.pts,2)))/(floor(nb^(1/dim_num)));
+% Wrong : the dimension of epsi differs from the dimension of pts
+%Ph.epsi = kron(Ph.epsi,ones(1,size(Ph.pts,2)))/(floor(nb^(1/dim_num)));
 
 % used to avoid superposition of square when selectionned and shown in 2
 % dimension ; it is not really correct because space is "lost"
