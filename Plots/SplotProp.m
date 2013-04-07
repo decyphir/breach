@@ -32,7 +32,8 @@ function [val XI YI ZI] = SplotProp(Pf, prop, tau, opt)
   else
     nb_contour = 0;
   end
-     
+  
+  
 %% plot the thing
   iprop = find_prop(get_id(prop), Pf.props_names);  
   
