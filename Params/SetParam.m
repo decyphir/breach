@@ -41,12 +41,20 @@ if size(ParamValues,1) == 1 && ~ischar(ParamList) && numel(ParamList)~=1
 end
 
 
+if (isfield(P,'pts'))        % if P is a parameter set
+    pts = 'pts';
+else
+    pts = 'p';
+end
+
 if ischar(ParamList) && ~isempty(ParamList)
     ind = FindParam(P,ParamList);
-    if (ind>size(P.pts,1))
-        P.ParamList = [P.ParamList, {ParamList}];
-    end
-    P.pts(ind,:) = ParamValues;
+    
+     if (ind>size(P.pts,1))
+         P.ParamList = [P.ParamList, {ParamList}];
+     end
+      
+    P.(pts)(ind,:) = ParamValues;
     return
 
 elseif iscell(ParamList)
@@ -55,7 +63,7 @@ elseif iscell(ParamList)
     P.ParamList = [P.ParamList new_params];
     
     for ii= 1:numel(inds)
-        P.pts(inds(ii),:) = ParamValues(ii,:);
+        P.(pts)(inds(ii),:) = ParamValues(ii,:);
     end
     return
 
@@ -64,7 +72,7 @@ elseif isnumeric(ParamList)
         if ParamList(i) > size(P.pts, 1)
             error('SetParam:index','Index out of range')
         end
-        P.pts(ParamList(i),:) = ParamValues(i,:);
+        P.(pts)(ParamList(i),:) = ParamValues(i,:);
     end
     return
 end
