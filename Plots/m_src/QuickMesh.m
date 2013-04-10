@@ -15,7 +15,9 @@ ey = log10(min(yrange(1)))+1;
 e = max(ex,ey);
 
 if (e>=-6)
-    e=1
+   e =0;
+else
+    warning('Warning: axis have been scaled by a factor of 1e6');
 end
 surf(XI*10^(-e),YI*10^(-e),ZI,'EdgeColor','None');
 

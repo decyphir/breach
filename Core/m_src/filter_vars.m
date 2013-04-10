@@ -22,9 +22,11 @@ load_system(mdl);
     exclude= 'tspan';
   end
   
-  vars = {'dumb_par_ignore'};
-  vals = [0];
+ % vars = {'dumb_par_ignore'};
+ % vals = [0];
   
+ vars ={};
+ vals = [];
   for i = 1:numel(VarsOut)
     var  = VarsOut(i);     
     vname = var.Name;

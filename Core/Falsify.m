@@ -1,4 +1,4 @@
-function Pr = Falsify (Sys, phi, falsif_opt, params_prop)
+function Pf = Falsify (Sys, phi, falsif_opt, params_prop)
 %
 %  FALSIFY Tries to falsify property phi 
 %
@@ -46,14 +46,14 @@ function Pr = Falsify (Sys, phi, falsif_opt, params_prop)
   Pr_new = QuasiRefine(Pu, nb_init);  
     
   % Falsification step 
-  [val_opt Propt] = SOptimProp(Sys, Pr_new, phi, opt);
+  [val_opt, Propt] = SOptimProp(Sys, Pr_new, phi, opt);
   ifalse = find(val_opt<0);
     
   if ~isempty(ifalse)
-    Pfals = Sselect(Propt, ifalse);        
+    Pf = Sselect(Propt, ifalse);        
     fprintf('  ---- Falsified !');    
-    Pf = SConcat(Pr_new,Pfals);
-  else 
+  else
+    Pf = Propt;  
     fprintf(['\nStopped. Final robustness: ' num2str(val_opt)]);  
     fprintf('\n');
     return

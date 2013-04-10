@@ -11,11 +11,11 @@ function h = SplotReach(Sys, S, timespan, facecolor, edgecolor, alph, maxf)
   end
   
   if (~exist('facecolor'))
-    facecolor= 'none';
+    facecolor= 'blue';
   end
   
   if (~exist('edgecolor')||isempty(edgecolor))
-    edgecolor = 'k';
+    edgecolor = 'none';
   end 
   
   if (~exist('maxf'))

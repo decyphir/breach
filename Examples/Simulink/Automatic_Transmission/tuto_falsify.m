@@ -8,7 +8,7 @@ Sys.tspan = 0:.01:50;
 QMITL_Formula('phi1', '(alw (speed[t]<vmax)) and (alw (RPM[t]<rpm_max))');
 
 params_prop.names = {'vmax', 'rpm_max'};
-params_prop.values = [160 5000];
+params_prop.values = [160 4500];
 
 falsif_opt.params = {'throttle_u0'};
 falsif_opt.ranges = [0 100];

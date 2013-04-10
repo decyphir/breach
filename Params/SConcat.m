@@ -29,6 +29,14 @@ if ~isempty(setdiff(S.ParamList(1:S.DimP),S2.ParamList(1:S2.DimP)))
     error('SConcat:ParamList','The system parameters are not the same');
 end
 
+if isempty(S2.pts)
+    return
+end
+
+if isempty(S.pts)
+    S = S2;
+    return;
+end
 
 field_list_copy = {'props_names', 'props',  'time_mult'};
 

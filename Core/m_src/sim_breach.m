@@ -16,20 +16,28 @@ function [tout X] = sim_breach(Sys, tspan, pts)
   set_param(mdl, 'OutputTimes', 'tspan',...
                      'OutputOption', 'SpecifiedOutputTimes'); 
   
-  simout= sim(mdl);              
-
+  try                
+    simout= sim(mdl);
+  catch
+    simout= sim(mdl, 'SimulationMode', 'normal'); 
+  end
   lg = simout.get('logsout');
    
   tout = simout.get('tout')';
-  X = simout.get('yout')';    
-  if ~isempty(X)
-    X = [X.signals.values]';
+  Y = simout.get('yout');    
+  X = [];
+  if ~isempty(Y)
+    for i=1:numel(Y.signals)
+      xx = interp1(tout', Y.signals(i).values, tspan')';
+      X = [X; xx];
+    end
   end
   
   for i = Sys.DimY+1:num_signals
     sig = lg.getElement(Sys.ParamList{i});
-    xdata = sig.Values.Data';
-%   xtime = sig.Values.Time';
-    X = [X; xdata(1,:)];   
-    %    X = [X; interp1(xtime',double(xdata(:,1)'),tout)];
-  end;  
+    xdata = interp1(sig.Values.Time',double(sig.Values.Data(:,1)),tspan, 'linear','extrap');   
+    X = [X ; xdata(1,:)]; %% FIXME: SUPPORT FOR MULTIDIMENSIONAL SIGNALS
+   
+  end;
+  
+  tout = tspan;
