@@ -5,10 +5,11 @@ function Pn = Sselect(P, kn)
 %
 % Inputs:
 %  - P : the parameter set from which we extract a sub-parameter set
-%  - kn: (Optional) the indices of the set of values to extract from P. If
-%         kn is not given, looks for a 'selected' field in P and returns
-%         Sselect(P,find(P.selected~=0)) if this field exists or P itself
-%         otherwize.
+%
+%  - kn: (Optional, defaut = find(P.selected~=0)) the indices of the set of
+%        values to extract from P. If kn is not given and P does not have a
+%        field selected, Pn is P. If kn is empty, Pn is P and a warning is
+%        thrown.
 %
 % Output:
 %  - Pn: parameter set containing the kn set of values of P
@@ -29,12 +30,18 @@ function Pn = Sselect(P, kn)
 % val = QMITL_Eval(Sys, phi, P, P.traj, 0);     % this code also works for
 % Pvalid = Sselect(P, P.traj_ref(find(val>0))); % selecting valid parameter sets
 
-if(nargin==1)
+if exist('kn','var')
+    if isempty(kn)
+        warning('Sselect:EmptyKn','The optional parameter ''kn'' is empty. Pn is defined as P.');
+      Pn = P;
+      return ;
+    end
+else
     try
         kn = find(P.selected~=0);
     catch %#ok<CTCH>
         Pn = P;
-        return;
+        return ;
     end
 end
 
