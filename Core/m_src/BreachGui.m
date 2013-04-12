@@ -56,11 +56,11 @@ function BreachGui_OpeningFcn(hObject, eventdata, handles, varargin)
   crd = pwd;  
   set(hObject, 'Name', ['Breach (' crd  ')']);  
 
-  % used to memorize previous entries
+  %% used to memorize previous entries
   handles.last_options =[];
   handles.check_prop_options =[];
     
-  % Init system panel  
+  %% Init system panel  
   Sys = varargin{2};
   SysName = varargin{3};
   handles.Sys=Sys;
@@ -82,7 +82,7 @@ function BreachGui_OpeningFcn(hObject, eventdata, handles, varargin)
   handles = update_system_panel(handles);  
   handles.figp=[];
 
-  % Init working sets panel
+  %% Init working sets panel
 
   handles.working_sets_file_name = [SysName '_param_sets.mat'];
   try 
@@ -102,7 +102,7 @@ function BreachGui_OpeningFcn(hObject, eventdata, handles, varargin)
   handles.working_sets.(handles.current_set).selected = zeros(1,nb_pts);
   handles = update_working_sets_panel(handles);
 
-  % Init properties panel
+  %% Init properties panel
 
   handles.properties_file_name = [SysName '_properties.mat'];
   try
@@ -118,7 +118,7 @@ function BreachGui_OpeningFcn(hObject, eventdata, handles, varargin)
   handles.idx_prop= 1;
   handles = update_properties_panel(handles);
 
-  % Init modif panel
+  %% Init modif panel
 
   handles.current_pts=1;
   handles.refine = 1;
@@ -171,7 +171,13 @@ function listbox_default_parameters_Callback(hObject, eventdata, handles)
   handles.selected_param = val;
   
   if (val<= handles.Sys.DimX)
-    whatisit = 'an initial condition.';
+    if isfield(handles.Sys, 'type')
+      if strcmp(handles.Sys.type, 'Simulink')
+        whatisit = 'a signal.';
+      end
+    else
+      whatisit = 'an initial condition.';
+    end
   elseif val<= handles.Sys.DimP
     whatisit = 'a system parameter.';
   else
@@ -283,7 +289,16 @@ function listbox_system_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
  
   ival = get(hObject,'Value');
-  
+  if strcmp(handles.Sys.type, 'Simulink')
+    switch(ival)
+      case 3
+        if  strcmp(questdlg(['Open model ' handles.Sys.mdl ' ?'],'Question'), 'Yes');
+          open(handles.Sys.mdl);
+        end
+        return
+    end
+  end
+ 
   switch(ival)
    case 3    
     set(handles.edit_system_param,'String', dbl2str(handles.Sys.CVodesOptions.RelTol));
@@ -1280,6 +1295,7 @@ function handles = update_modif_panel(handles)
   % parameters listbox
      
   nb_pts = size(handles.working_sets.(handles.current_set).pts,2);
+  DimX = handles.working_sets.(handles.current_set).DimX;
   DimP = handles.working_sets.(handles.current_set).DimP;
   ParamList = handles.working_sets.(handles.current_set).ParamList;
   dim = handles.working_sets.(handles.current_set).dim;
@@ -1295,8 +1311,23 @@ function handles = update_modif_panel(handles)
   handles.current_pts = min(handles.current_pts, nb_pts);
   k = handles.current_pts;
   
+  %% update content
   content = {};  
-  for i=1:numel(ParamList)
+  
+  for i=1:DimX
+    st = ParamList{i};
+    if isfield(handles.Sys, 'type')
+      switch handles.Sys.type
+        case 'Simulink'
+          st = strcat(st, ':','--');
+      end
+    else
+      st = strcat(st, '[0]:',' ',dbl2str(handles.working_sets.(handles.current_set).pts(i,k)));
+    end
+    content = {content{:} st};
+  
+  end
+  for i=DimX+1:numel(ParamList)
     st = ParamList{i};
     st = strcat(st, ':',' ',dbl2str(handles.working_sets.(handles.current_set).pts(i,k)));
     content = {content{:} st};
@@ -1311,7 +1342,7 @@ function handles = update_modif_panel(handles)
   set(handles.edit_default_param, 'String', dbl2str(handles.working_sets.(handles.current_set).pts(handles.selected_param,k)));
   set(handles.edit30, 'String', handles.working_sets.(handles.current_set).ParamList(handles.selected_param));
 
-  % Varying parameters listbox  
+  %% Varying parameters listbox  
     
   content ={};
 
@@ -1376,6 +1407,9 @@ function handles = update_modif_panel(handles)
     set(handles.popup_pts3,'Value', 1);  
   end
 
+  if (DimP ~= handles.Sys.DimP)||(DimX ~= handles.Sys.DimX)
+    handles= info(handles, 'WARNING: Dimensions of System and Parameter set are inconsistent - This parameter set was probably created for another system configuration');
+  end
   handles =  plot_pts(handles);   
   
 function handles = update_system_panel(handles)
@@ -1392,7 +1426,11 @@ function handles = update_system_panel(handles)
       case 'traces'   
       return
       case 'Simulink'
-      return
+        st_system_listbox = {'Simulink System'; '----------------';...
+          ['Open ' handles.Sys.mdl '_breach'];...
+          };
+        set(handles.listbox_system, 'String', st_system_listbox);
+        return
       case 'Extern'
       return
     end
@@ -1401,7 +1439,7 @@ function handles = update_system_panel(handles)
   st_system_listbox = {'Integrator options'; '----------------';...
                       ['RelTol : ' dbl2str(Sys.CVodesOptions.RelTol) ];...
                       ['AbsTol : ' dbl2str(Sys.CVodesOptions.AbsTol) ];...
-                      ['MinStep : ' Sys.CVodesOptions.MinStep ]; 
+                      ['MinStep : ' Sys.CVodesOptions.MinStep ]; ...
                       ''; 'Sensitivity options'; '----------------'; ...
                       ['Method : ''' Sys.CVodesSensiOptions.method '''']; ...
                       ['ParamScales : ' dbl2str(Sys.CVodesSensiOptions.FSAoptions.ParamScales')];...
