@@ -22,7 +22,7 @@ function varargout = BreachGui(varargin)
 
 % Edit the above text to modify the response to help BreachGui
 
-% Last Modified by GUIDE v2.5 21-Sep-2012 18:13:22
+% Last Modified by GUIDE v2.5 26-Apr-2013 17:08:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -96,6 +96,7 @@ function BreachGui_OpeningFcn(hObject, eventdata, handles, varargin)
   fnames = fieldnames(handles.working_sets);
   handles.current_set = fnames{1};
   set(handles.working_sets_listbox, 'Value', 1);
+  set(handles.autosave_checkbox, 'Value', 1);
   
   P = handles.working_sets.(handles.current_set);
   nb_pts = size(handles.working_sets.(handles.current_set).pts, 2);
@@ -1260,6 +1261,12 @@ function handles = update_working_sets_panel(handles)
         
     set(handles.working_sets_listbox,'String', fn);
     set(handles.edit_rename,'String',handles.current_set);
+    if (get(handles.autosave_checkbox, 'Value'))
+        handles = info(handles, 'Autosaving parameter sets...');
+        ws= handles.working_sets;
+        save(handles.working_sets_file_name, '-struct', 'ws');
+        handles = info(handles, 'Parameter sets saved.');
+    end
   catch 
     return    
   end  
@@ -2826,9 +2833,7 @@ function menu_select_satisfied_Callback(hObject, eventdata, handles)
     error(s);    
     return
   end
-
-
-
+  
 function edit30_Callback(hObject, eventdata, handles)
 % hObject    handle to edit30 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -2846,15 +2851,23 @@ function edit30_CreateFcn(hObject, eventdata, handles)
 
 % Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+  if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
-end
+  end
+  
 
 
 function h = info(h,msg)
 % INFO write the message into the information panel.
   set(h.text_info, 'String', msg);
   drawnow();
-    
-  
-  
+      
+
+
+% --- Executes on button press in autosave_checkbox.
+function autosave_checkbox_Callback(hObject, eventdata, handles)
+% hObject    handle to autosave_checkbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of autosave_checkbox

@@ -9,9 +9,30 @@ function Sys = CreateSimulinkSystem(mdl, signals, params, p0,  inputfn )
 %  - params    {'p1',...,'pn'} where pi are tunable parameters in mdl. If
 %              empty or absent, Breach will try to find tunable parameters
 %  - p0        default values for the tunable parameters
-%  - inputfn   'UniStepXX' | 'VarStepXX' | 'UniPWAXX' where XX is a number
-%              (eg. UniStep5 will use piecewise constant input functions with 5 different values 
-%               and a constant time step depending on the simulation time)  
+%  - inputfn   'UniStepXX' | 'VarStepXX' | 'UniPWAXX' where XX is a number (defaut is UniStep1)
+%               E.g. UniStep5 will use piecewise constant input functions with 5 different values 
+%               and a constant time step depending on the simulation time.  
+%
+
+%% default arguments
+
+switch nargin
+    case 1
+        signals ='logged';
+        params={};
+        p0=[];
+        inputfn = 'UniStep1';
+    case 2
+        params={};
+        p0=[];
+        inputfn = 'UniStep1';
+    case 3
+        p0=[];
+        inputfn = 'UniStep1';
+    case 4    
+        inputfn = 'UniStep1';
+end
+
 
 %% Copy the model into model_breach
 
