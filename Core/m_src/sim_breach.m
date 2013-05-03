@@ -4,6 +4,7 @@ function [tout X] = sim_breach(Sys, tspan, pts)
 %
 
   mdl = Sys.mdl;
+  load_system(mdl);
   num_signals = Sys.DimX;  
   params = Sys.ParamList;
      

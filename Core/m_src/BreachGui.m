@@ -1254,9 +1254,17 @@ function handles = update_working_sets_panel(handles)
     fn = fieldnames(handles.working_sets);
     
     for i=1:numel(fn)            
-      if isfield(handles.working_sets.(fn{i}),'traj');
-        fn{i} = ['*' fn{i}];
+      pref = '';
+      if (handles.working_sets.(fn{i}).DimP ~=handles.Sys.DimP)
+        pref = ['!'];
       end
+  
+      if isfield(handles.working_sets.(fn{i}),'traj');
+        pref = [pref '*'];
+      end
+      
+      fn{i} = [pref fn{i}];
+      
     end
         
     set(handles.working_sets_listbox,'String', fn);
@@ -1265,7 +1273,7 @@ function handles = update_working_sets_panel(handles)
         handles = info(handles, 'Autosaving parameter sets...');
         ws= handles.working_sets;
         save(handles.working_sets_file_name, '-struct', 'ws');
-        handles = info(handles, 'Parameter sets saved.');
+        handles = info(handles, '');
     end
   catch 
     return    
