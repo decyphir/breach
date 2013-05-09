@@ -145,7 +145,7 @@ end
         
         init_u = [];
                 
-        pref = 'UniStep';        
+        pref = 'UniStep';  % FIXME find a way to set interpolate data for each input block      
         if regexp(inputfn, [pref '[0-9]+'])
           cp = str2num(inputfn(numel(pref)+1:end));
           init_u =  @(sig_in,pts,tspan)UniStepSimulinkInput(cp ,sig_in,pts,tspan);        
@@ -159,8 +159,8 @@ end
           end
         end
     
-        if isempty(init_u)
-          pref = 'UniPWA';        
+        if isempty(init_u) 
+          pref = 'UniPWA';  % FIXME find a way to set interpolate data for each input block       
           if regexp(inputfn, [pref '[0-9]+'])
             cp = str2num(inputfn(numel(pref)+1:end));
             init_u =  @(sig_in,pts,tspan)UniPWASimulinkInput(cp ,sig_in,pts,tspan);        

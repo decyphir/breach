@@ -20,3 +20,9 @@ falsif_opt.nb_init = 10;
 falsif_opt.nb_iter = 100;
 
 Pf = Falsify(Sys, phi1, falsif_opt, params_prop);
+
+figure;
+SplotVar(Pf);
+
+figure;
+SplotSat(Sys, Pf, phi1,3); 
