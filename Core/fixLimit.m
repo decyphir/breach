@@ -71,7 +71,7 @@ if ~ischar(line)
     return;
 end
 
-new_file = [new_file, '    switch (data->q) {\n    case 0 : //normal case\n'];
+new_file = [new_file, '    switch (__data->q) {\n    case 0 : //normal case\n'];
 %**** new_file = [new_file, '    if(!(', condition, ')) {\n'];
 
 %we copy all the definition of Ith, for both normal and degenerated cases
@@ -121,7 +121,7 @@ if ~ischar(line)
 end
 
 %just before the end of the function, we add the initialisation of the gard value
-new_file = [new_file, '    data->q = 0; // we start in the normal case\n'];
+new_file = [new_file, '    __data->q = 0; // we start in the normal case\n'];
 
 % We look for UpdateFdata
 while(ischar(line) && isempty(strfind(line,'UpdateFdata(')))
@@ -137,9 +137,9 @@ end
 
 new_file = [new_file, line];
 new_file = [new_file, declaration];
-new_file = [new_file, '    int prev_q = data->q;\n'];
+new_file = [new_file, '    int prev_q = __data->q;\n'];
 new_file = [new_file, '    if(', condition, ') {\n'];
-new_file = [new_file, '        data->q = 1;\n'];
+new_file = [new_file, '        __data->q = 1;\n'];
 new_file = [new_file, '    }\n'];
 
 %and we copy the end of the function until the return
@@ -156,7 +156,7 @@ if ~ischar(line)
 end
 
 %and we specify the return value
-new_file = [new_file, '    return prev_q != data->q;\n'];
+new_file = [new_file, '    return prev_q != __data->q;\n'];
 line = fgets(fid); % we skip the previous return
 
 %now, the function g
@@ -174,7 +174,7 @@ end
 % we set the value for gout[0]
 new_file = [new_file, line];
 new_file = [new_file, declaration];
-new_file = [new_file, '    if(',condition,') {\n        gout[0] = -1;\n    } else {\n        gout[0] = 1;\n    }\n'];
+new_file = [new_file, '    if(',condition,') {\n        __gout[0] = -1;\n    } else {\n        __gout[0] = 1;\n    }\n'];
 
 %and we copy the end of the file
 line = fgets(fid);

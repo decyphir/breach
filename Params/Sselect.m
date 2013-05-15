@@ -84,3 +84,5 @@ for i = 1:numel(field_list_traj_ref_select2)
         Pn.(field_list_traj_ref_select2{i}) = P.(field_list_traj_ref_select2{i})(:,P.traj_ref(kn));
     end
 end
+
+end

@@ -37,7 +37,7 @@ if ~isempty(find(sign(ranges)<0,1))
             'Range limits must be positive or null.');
 end
 
-if(ischar(params))
+if ischar(params)
     params={params};
 end
 

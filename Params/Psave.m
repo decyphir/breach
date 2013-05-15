@@ -40,7 +40,6 @@ if(numel(varargin)==2)
         else
             save(filename, '-append', varargin{1});
         end
-        
         return ;
     end
 end
@@ -50,7 +49,7 @@ end
 for i = 1:numel(varargin)
     P___ = varargin{i};
     
-    if (~ischar(P___))
+    if ~ischar(P___)
         error('Psave:parameters',['Arguments should be a system ' ...
             'structure and strings naming parameter sets' ]);
     end
@@ -62,4 +61,7 @@ for i = 1:numel(varargin)
         save(filename, '-append', P___);
     end
 end
+
+end
+
 

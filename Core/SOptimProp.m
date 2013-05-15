@@ -23,8 +23,8 @@ function [val_opt, Popt]  = SOptimProp(Sys, P, phi, opt)
 %                          ('Max') or negative ('Min') solution is found
 %        - StopWhenFoundInit : same as above except that it does not
 %                              necessarily compute all trajectories in P0
-%        - Ninit : tries the Ninit best initial pts    
-% 
+%        - Ninit : tries the Ninit best initial pts
+%
 %
 % Output:
 %    - val_opt : the truth value of phi for the param set Sopt. It is a
@@ -111,93 +111,92 @@ end
 options = optimset('MaxIter', MaxIter);
 
 if (StopWhenFoundInit)
-  nb_errors = 0; % number of ComputeTraj errors
-  rfprintf_reset();
-  val = zeros(1,size(P.pts,2));
-  for i = 1:size(P.pts, 2)
-    Ptmp = Sselect(P,i);
-    try
-      Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-      val(i) = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj, tau);
-    catch % in case an error occurs during computation of ComputeTraj
-      warning('SOptimProp:ComputeTraj','Error during computation of an initial trajectory, keep going.');
-      if strcmp(OptimType,'max')
-        val(i) = -inf;
-      else
-        val(i) = inf;
-      end
-      nb_errors = nb_errors + 1;
-    end
-    status = ['Init ' num2str(i) '/' num2str(size(P.pts, 2)) ' Robustness value: ' num2str(val(i))];
-    rfprintf(status);
-      
-    switch OptimType
-      case 'max'
-        if val(i)>0
-          val_opt = val(i);
-          Popt = Ptmp;
-          fprintf('\n'); % to have a pretty display
-          return;
+    nb_errors = 0; % number of ComputeTraj errors
+    rfprintf_reset();
+    val = zeros(1,size(P.pts,2));
+    for i = 1:size(P.pts, 2)
+        Ptmp = Sselect(P,i);
+        try
+            Ptmp = ComputeTraj(Sys, Ptmp, tspan);
+            val(i) = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj, tau);
+        catch % in case an error occurs during computation of ComputeTraj
+            warning('SOptimProp:ComputeTraj','Error during computation of an initial trajectory, keep going.');
+            if strcmp(OptimType,'max')
+                val(i) = -inf;
+            else
+                val(i) = inf;
+            end
+            nb_errors = nb_errors + 1;
+        end
+        status = ['Init ' num2str(i) '/' num2str(size(P.pts, 2)) ' Robustness value: ' num2str(val(i))];
+        rfprintf(status);
+        
+        switch OptimType
+            case 'max'
+                if val(i)>0
+                    val_opt = val(i);
+                    Popt = Ptmp;
+                    fprintf('\n'); % to have a pretty display
+                    return;
+                end
+            case 'min'
+                if val(i)<0
+                    val_opt = val(i);
+                    Popt = Ptmp;
+                    fprintf('\n'); % to have a pretty display
+                    return;
+                end
         end
         
-      case 'min'
-        if val(i)<0
-          val_opt = val(i);
-          Popt = Ptmp;
-          fprintf('\n'); % to have a pretty display
-          return;
+        if i==1
+            Popt = Ptmp;
+        else
+            Popt = SConcat(Popt, Ptmp);
         end
     end
-    
-    if i==1
-      Popt = Ptmp;
-    else
-      Popt = SConcat(Popt, Ptmp);
-    end
-  end
-  Ninit = min(Ninit,size(P.pts,2)-nb_errors); % we dont consider parameter sets generating an error of ComputeTraj
+    Ninit = min(Ninit,size(P.pts,2)-nb_errors); % we dont consider parameter sets generating an error of ComputeTraj
 else
-  try
-    Popt = ComputeTraj(Sys, P, tspan);
-  catch err
-    fprintf([err.message,'\n']);
-    error('SOptimProp:ComputeTraj','Error during computation of initial trajectories. Try with opt.StopWhenFoundInit=1.')
-  end
-  [Popt, val] = SEvalProp(Sys, Popt, phi, tau);
-  Ptmp = Sselect(Popt,1);
+    try
+        Popt = ComputeTraj(Sys, P, tspan);
+    catch err
+        fprintf([err.message,'\n']);
+        error('SOptimProp:ComputeTraj','Error during computation of initial trajectories. Try with opt.StopWhenFoundInit=1.')
+    end
+    [Popt, val] = SEvalProp(Sys, Popt, phi, tau);
+    Ptmp = Sselect(Popt,1);
 end
 
 
 switch OptimType
-  case 'max'
-    [~, iv] = sort(-val);
-    if val(iv(1))>0 % if the highest value is positive
-      found = val(iv(1));
-    end
-    fun = @(x) fun_max(x, Sys, phi, tspan, tau);
-    
-  case 'min'
-    [~, iv] = sort(val);
-    if val(iv(1))<0 % if the lowest value is negative
-      found = val(iv(1));
-    end
-    fun = @(x) fun_min(x, Sys, phi, tspan, tau);
-    
-  case 'zero'
-    [~, iv] = sort(abs(val));
-    fun = @(x) fun_zero(x, Sys, phi, tspan, tau);
+    case 'max'
+        [~, iv] = sort(-val);
+        if val(iv(1))>0 % if the highest value is positive
+            found = val(iv(1));
+        end
+        fun = @(x) fun_max(x, Sys, phi, tspan, tau);
+        
+    case 'min'
+        [~, iv] = sort(val);
+        if val(iv(1))<0 % if the lowest value is negative
+            found = val(iv(1));
+        end
+        fun = @(x) fun_min(x, Sys, phi, tspan, tau);
+        
+    case 'zero'
+        [~, iv] = sort(abs(val));
+        fun = @(x) fun_zero(x, Sys, phi, tspan, tau);
 end
 
 if ((StopWhenFound)&&(~isempty(found))) || (MaxIter==0)
-  Popt = Sselect(Popt,iv(1));
-  val_opt = found;
-  return ;
+    Popt = Sselect(Popt,iv(1));
+    val_opt = found;
+    return ;
 end
 
 %% Main Loop
 
 Ninit = min(Ninit,numel(iv));
-val_opt = zeros(1,Ninit); 
+val_opt = zeros(1,Ninit);
 k=0;
 for i = iv(1:Ninit)
     k = k+1;
@@ -261,30 +260,30 @@ function val = fun_max(x, Sys, phi, tspan, tau)
 %% function fun_max
 global Ptmp fopt traj_opt found StopWhenFound xopt
 
-if (~isempty(found)&&StopWhenFound) %positive value found, do not need to continue
-  val = -found; % optimize tries to minimize the objective function, so
-  return ;          % we provide it -val instead of val --- ISN'T IT BETTER TO GIVE 0 ???
+if(StopWhenFound&&~isempty(found)) %positive value found, do not need to continue
+    val = -found; % optimize tries to minimize the objective function, so
+    return ;          % we provide it the opposite of the truth value
 end
 
 Ptmp.pts(Ptmp.dim,1)=x;
 try
-  Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-catch 
-  warning('SOptimProp:ComputeTraj','Error during trajectory computation when optimizing. Keep going.')
-  val = inf; % NaN?
-  return ; % we can also set val=-inf and let the function terminates
+    Ptmp = ComputeTraj(Sys, Ptmp, tspan);
+catch  %#ok<CTCH>
+    warning('SOptimProp:ComputeTraj','Error during trajectory computation when optimizing. Keep going.')
+    val = inf; % do not care of the exit condition -3 for nelder-mead algo, it only happens when using global optim
+    return ; % we can also set val=-inf and let the function terminates
 end
 
 val = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
 
-if (val>0)
-  found = val;
+if(val>0)
+    found = val;
 end
 
-if (val>fopt)
-  fopt = val;
-  traj_opt = Ptmp.traj; % we can improve that by using only Ptmp instead of traj_opt and xopt
-  xopt = Ptmp.pts(Ptmp.dim,1); % as ComputeTraj launch init_fun, Ptmp.pts can be different than x
+if(val>fopt)
+    fopt = val;
+    traj_opt = Ptmp.traj; % we can improve that by using only Ptmp instead of traj_opt and xopt
+    xopt = Ptmp.pts(Ptmp.dim,1); % as ComputeTraj launch init_fun, Ptmp.pts can be different than x
 end
 
 status = ['Robustness value: ' num2str(val) ' Current optimal: ' num2str(fopt)];
@@ -297,28 +296,28 @@ function val = fun_min(x, Sys, phi, tspan, tau)
 %% function fun_min
 global Ptmp found StopWhenFound fopt traj_opt xopt
 
-if (~isempty(found)&&StopWhenFound) %negative value found, do not need to continue
-    val = found;  % --- ISN'T IT BETTER TO GIVE 0 ???
+if(StopWhenFound&&~isempty(found)) %negative value found, do not need to continue
+    val = found;
     return ;
 end
 
 Ptmp.pts(Ptmp.dim,1)=x;
 try
-  Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-catch
-  warning('SOptimProp:ComputeTraj','Error during trajectory computation when optimizing. Keep going.')
-  val = inf; % NaN?
-  return ; % we can also let the function terminates
+    Ptmp = ComputeTraj(Sys, Ptmp, tspan);
+catch %#ok<CTCH>
+    warning('SOptimProp:ComputeTraj','Error during trajectory computation when optimizing. Keep going.')
+    val = inf; % do not care of the exit condition -3 for nelder-mead algo, it only happens when using global optim
+    return ; % we can also let the function terminates
 end
 
 val = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
 
 
-if (val<0)
-  found = val;
+if(val<0)
+    found = val;
 end
 
-if (val<fopt)
+if(val<fopt)
     fopt = val;
     traj_opt = Ptmp.traj;
     xopt = Ptmp.pts(Ptmp.dim,1);
@@ -334,9 +333,9 @@ global Ptmp fopt traj_opt xopt
 Ptmp.pts(Ptmp.dim,1)=x;
 try
     Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-catch
+catch %#ok<CTCH>
     warning('SOptimProp:ComputeTraj','Error during trajectory computation when optimizing. Keep going.')
-     val = inf; % NaN?
+    val = inf; % do not care of the exit condition -3 for nelder-mead algo, it only happens when using global optim
     return ; % we can also let the function terminates
 end
 
@@ -345,12 +344,11 @@ status = ['Robustness value: ' num2str(val) ];
 rfprintf(status);
 
 val = abs(val);
-if val<fopt
+if(val<fopt)
     fopt = val;
     traj_opt = Ptmp.traj;
     xopt = Ptmp.pts(Ptmp.dim,1);
 end
-
 
 end
 

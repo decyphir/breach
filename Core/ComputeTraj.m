@@ -50,7 +50,6 @@ if ~isstruct(P0)
     P0 = CreateParamSet(Sys,1);
     P0.pts = pts;
     P0.epsi = ones(1, size(pts,2));
-    
 end
 
 % checks for an initialization function
@@ -62,7 +61,7 @@ if isfield(P0, 'init_fun')
     P0 = P0.init_fun(P0);
 end
 
-if (~isfield(Sys, 'type'))
+if ~isfield(Sys, 'type')
     Sys.type = '';
 end
 
@@ -72,16 +71,14 @@ if strcmp(Sys.type,'traces') % No model
     for i = 1:numel(Pf.traj)
         Pf.traj(i).param = Pf.pts(1:Pf.DimP,i)';
     end
-else
-    if (isfield(P0, 'traj_to_compute'))
-        P0 = SPurge(P0);
-        S = Sselect(P0, P0.traj_to_compute);
-        S = ComputeTraj(Sys, S, tspan);
-        Pf = P0;
-        Pf.traj = S.traj;
-        Pf.Xf = S.Xf;
-        return;
-    end
+elseif isfield(P0, 'traj_to_compute') && ~isempty(P0.traj_to_compute)
+    P0 = SPurge(P0);
+    S = Sselect(P0, P0.traj_to_compute);
+    S = ComputeTraj(Sys, S, tspan);
+    Pf = P0;
+    Pf.traj = S.traj;
+    Pf.Xf = S.Xf;
+    return;
 end
 
 switch Sys.type
@@ -174,7 +171,6 @@ switch Sys.type
         end
         
         if (exist('u','var'))
-            
             err = check_u(u);
             if (err~=0)
                 error('ComputTraj:ErrorWithU',err);
@@ -189,7 +185,6 @@ switch Sys.type
             Pf.u = u;
             
         else
-            
             Pf = P0;
             Pf.pts = P0.pts(1:P0.DimP, :);
             Pf=cvm(61, Pf, T); % <- NM: I would love to know how it works inside!
