@@ -39,3 +39,5 @@ if (isfield(P,'traj'))
 else
     Ph.traj_to_compute = IA';
 end
+
+end

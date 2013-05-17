@@ -10,8 +10,11 @@ function [P] = RandomLogRefine(P, N, minValue)
 %
 % Inputs:
 %
-%    -  P         The parameter set to refine
-%    -  N         Number of random generated points
+%    -  P         The parameter set to refine. If the number of uncertain
+%                 parameters higher than 40, the function may thrown an
+%                 error.
+%    -  N         Number of random generated points. Best practice is to
+%                 provide N >= 10
 %    -  minValue  If there are parameters with intervals such that
 %                 "pts-epsi<=0", if minValue exists, the lower possible
 %                 value for this parameter is set to minValue, otherwize,
