@@ -1,46 +1,43 @@
 function [P, val] = SEvalProp(Sys, P, props, tau, ipts, bool_plot, break_level)
+%SEVALPROP Eval property for previously computed trajectories
 %
-%   SEVALPROP Eval property for previously computed trajectories
+% Usage: [Pf, val] = SEvalProp(Sys, P, prop [ , tau, ipts, bool_plot, break_level ])
 %
-%   Usage: [Pf, val] = SEvalProp(Sys, P, prop [ , tau, ipts, bool_plot, break_level ])
+% Inputs:
+%  - Sys         system
+%  - P           param set with trajectories
+%  - prop        property(ies)
+%  - tau         time instant(s) when to estimate properties. If not
+%                provided, the time instants considered for computing the
+%                trajectory are used.
+%  - ipts        indices of param sets for which to eval properties.
+%                (Default= all parameter sets)
+%  - break_level (Optional) defines the deep of breaking of props. If
+%                lower or equal to 1, it is ignored. If greater or equal to
+%                two, SEvalProp answers the evaluation of the props and all
+%                sub-formula of props until the deep provided.
 %
-%   Inputs:
-%
-%    - Sys         system
-%    - P           param set with trajectories
-%    - prop        property(ies)
-%    - tau         time instant(s) when to estimate properties. If not
-%                  provided, the time instants considered for computing the
-%                  trajectory are used.
-%    - ipts        indices of param sets for which to eval properties.
-%                  (Default= all parameter sets)
-%    - break_level (Optional) defines the deep of breaking of props. If
-%                  lower or equal to 1, it is ignored. If greater or equal
-%                  to two, SEvalProp answers the evaluation of the props
-%                  and all sub-formula of props until the deep provided.
-%
-%
-%   Outputs:
-%
-%    - Pf          param set with prop_values field
-%    - val         an array containing the quantitative satisfaction of
-%                    properties for each trajectory. The dimension of val
-%                    is numel(props) x numel(ipts)
+% Outputs:
+%  - Pf          param set with prop_values field
+%  - val         an array containing the quantitative satisfaction of
+%                properties for each trajectory. The dimension of val is
+%                numel(props) x numel(ipts)
 %
 %See also QMITL_Formula CreateParamSet ComputeTraj Sselect
+%
 
 
 % check arguments
 
-if (~exist('ipts','var')||isempty(ipts))
+if(~exist('ipts','var')||isempty(ipts))
     ipts = 1:size(P.pts,2);
 end
 
-if (~exist('break_level','var'))
+if(~exist('break_level','var'))
     break_level = 0;
 end
 
-if (break_level>0)
+if(break_level>0)
     nprops = [];
     for i = 1:numel(props)
         nprops = [ nprops QMITL_Break(props(i),break_level) ];
@@ -60,13 +57,13 @@ if ~isfield(P,'traj_ref')
     P.traj_ref = 1:numel(P.traj);
 end
 
-if (~exist('tau','var')||isempty(tau))
+if(~exist('tau','var')||isempty(tau))
     tau0 = [];
 else
     tau0 = tau;
 end
 
-if (~exist('bool_plot','var'))
+if ~exist('bool_plot','var')
     bool_plot = 0;
 end
 
@@ -126,7 +123,7 @@ for np = 1:numel(props) % for each property
         P.props_values(iprop,i).tau = tau;
         P.props_values(iprop,i).val = QMITL_Eval(Sys,prop,Ptmp, traj, tau);
         val(np,i) = P.props_values(iprop,i).val(1);
-        if (isnan(val(np,i)))
+        if isnan(val(np,i))
             disp('Warning: property evaluated to NaN');
         end
         % plot property values
