@@ -8,11 +8,14 @@ function P = SetParam(P, ParamList, ParamValues)
 % Input:
 %  - P          : the parameter set to modify ;
 %  - ParamList  : the list of parameters for which the value is changed or
-%                   created. If empty, nothing is done :
+%                 created. If empty, nothing is done :
 %  - ParamValue : the values of the parameters. Its size is either
-%                   ( numel(ParamList) , size(P.pts,2) ) or
-%                   ( numel(ParamList) , 1 )
+%                 ( numel(ParamList) , size(P.pts,2) ) or
+%                 ( numel(ParamList) , 1 )
 % 
+% Output:
+%  - P : the modified parameter set
+%
 % Example (for Lorenz84 system):
 % 
 %    CreateSystem;
@@ -22,7 +25,7 @@ function P = SetParam(P, ParamList, ParamValues)
 %    val10 = 10*val; 
 %    Pr10 = SetParam(Pr, 'a', val10); % values for 'a' in Pr10 are ten
 %                                     % times those in Pr
-% Other example :
+% Other example:
 % 
 %    CreateSystem;
 %    P = CreateParamSet(Sys, {'a', 'b'}, [0 10; 0 5]);
@@ -35,19 +38,19 @@ function P = SetParam(P, ParamList, ParamValues)
 %See also GetParam CreateParamSet SetEpsi
 %  
 
-if size(ParamValues,1) == 1 && ~ischar(ParamList) && numel(ParamList)~=1
+if(size(ParamValues,1) == 1 && ~ischar(ParamList) && numel(ParamList)~=1)
     % in case when we have one value for many parameters
     ParamValues = ParamValues';
 end
 
 
-if (isfield(P,'pts'))        % if P is a parameter set
+if isfield(P,'pts')        % if P is a parameter set
     pts = 'pts';
 else
     pts = 'p';
 end
 
-if ischar(ParamList) && ~isempty(ParamList)
+if(ischar(ParamList) && ~isempty(ParamList))
     ind = FindParam(P,ParamList);
     
      if (ind>size(P.pts,1))
@@ -55,7 +58,7 @@ if ischar(ParamList) && ~isempty(ParamList)
      end
       
     P.(pts)(ind,:) = ParamValues;
-    return
+    return;
 
 elseif iscell(ParamList)
     inds = FindParam(P,ParamList);
@@ -65,7 +68,7 @@ elseif iscell(ParamList)
     for ii= 1:numel(inds)
         P.(pts)(inds(ii),:) = ParamValues(ii,:);
     end
-    return
+    return;
 
 elseif isnumeric(ParamList)
     for i = 1:numel(ParamList)
@@ -74,7 +77,7 @@ elseif isnumeric(ParamList)
         end
         P.(pts)(ParamList(i),:) = ParamValues(i,:);
     end
-    return
+    return;
 end
 
 end

@@ -47,7 +47,7 @@ function [val_opt, Popt]  = SOptimProp(Sys, P, phi, opt)
 %                Otherwize, it contains the optimum found for each set of
 %                parameter values in P.
 %
-% See also SOptimPropLog
+% See also SOptimPropLog Falsify
 %
 
 %% process options
@@ -116,6 +116,8 @@ if isfield(opt,'Ninit')
 else
     Ninit = size(P.pts, 2);
 end
+
+phi = QMITL_OptimizePredicates(Sys,phi); % optimization of the predicates
 
 
 %% Initial values
