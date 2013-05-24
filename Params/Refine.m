@@ -32,7 +32,7 @@ function P = Refine(P0, delta)
 %
 %   Refine(P0 [1.1 1.2]) % returns P0
 %
-%See also CreateParamSet RandomLogRefine
+%See also CreateParamSet RandomLogRefine QuasiRefine
 %
 
 if(delta==1)

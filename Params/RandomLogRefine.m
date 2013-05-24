@@ -31,6 +31,9 @@ function [P] = RandomLogRefine(P, N, minValue)
 %   PRLog = RandomLogRefine(P,10);
 %   SplotBoxPts(PRLog);    % Parameter set after sampling
 %
+%TODO : THIS FUNCTION DOES NOT MANAGE THE TRAJ_REF AND TRAJ_TO_COMPUTE
+% FIELDS
+%
 %See also CreateRandomLogParamSets Refine
 %
 
