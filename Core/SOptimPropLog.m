@@ -143,8 +143,8 @@ if(OptimizeNInitPoints)
     Prl = CreateRandomLogParamSets(Sys,opts.params,[opts.lbound;opts.ubound]',nbSplit);
     [val_tmp,Ptmp] = SOptimProp(Sys,Prl,phi,opts);
     
-    if strcmp(OptimType,'max')
-        idx_val = find(val_tmp>0); % keep the best or the positive ones
+    if strcmp(OptimType,'max') % keep the positive ones or the best if all negative
+        idx_val = find(val_tmp>0);
         if ~isempty(idx_val)
             if(val_best>0)
                 val_best = [val_best,val_tmp(idx_val)];
@@ -160,8 +160,8 @@ if(OptimizeNInitPoints)
                 Pbest = Sselect(Ptmp,idx_tmp);
             end
         end
-    elseif strcmp(OptimType,'min')
-        idx_val = find(val_tmp<0); % keep the lowest or the negative ones
+    elseif strcmp(OptimType,'min') % keep the negative ones or the lowest if all positive
+        idx_val = find(val_tmp<0);
         if ~isempty(idx_val)
             if(val_best<0)
                 val_best = [val_best,val_tmp(idx_val)];
@@ -228,7 +228,7 @@ if(OptimizeNBoxes)
         switch OptimType
             case 'max'
                 if(val_tmp>0) % found a valid parameter set
-                    if(val_best(1)>0)
+                    if(val_best(1)>0) % val_best may be an array
                         Pbest = SConcat(Pbest,Ptmp);
                         val_best = [val_best,val_tmp]; %#ok<AGROW>
                     else
@@ -236,7 +236,7 @@ if(OptimizeNBoxes)
                         val_best = val_tmp;
                     end
                 elseif(val_best<=0 && val_tmp>val_best)
-                    Pbest = Ptmp; % Pbest and Ptmp are not valid, keep the best one
+                    Pbest = Ptmp; % Pbest and Ptmp are both negative, keep the best one
                     val_best = val_tmp;
                 end
                 if(val_best(1)>0 && StopWhenFound)

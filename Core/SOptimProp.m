@@ -10,20 +10,29 @@ function [val_opt, Popt]  = SOptimProp(Sys, P, phi, opt)
 %    - phi is a QMITL property
 %    - opt is an option structure with the following fields :
 %
-%        - tspan  : the time domain computation of the trajectories
-%        - tau    : time for the evaluation of phi (default first tspan
-%                   value)
-%        - params : (mandatory) variable (search) parameters
-%        - lbound : (mandatory) lower bounds for the search domain
-%        - ubound : (mandatory) upper bounds for the search domain
-%        - MaxIter : (mandatory) max number of optimization iteration
-%        - OptimType : 'Max' (default), 'Min' or 'Zero'
+%        - tspan   : the time domain computation of the trajectories. If
+%                    not provided, either Sys must have a tspan field, or P
+%                    must contains computed trajectories. Otherwise, an
+%                    error is thrown.
+%        - tau     : time for the evaluation of phi (default = first tspan
+%                    value)
+%        - params  : variable (search) parameters. If not provided, params
+%                    is based on P.dim.
+%        - lbound  : lower bounds for the search domain. If not provided,
+%                    all parameters in params must be uncertain parameters
+%                    of P, and lbound is defined as P.pts-P.epsi.
+%        - ubound  : upper bounds for the search domain. If not provided,
+%                    all parameters in params must be uncertain parameters
+%                    of P, ans ubound is defined as P.pts+P.epsi.
+%        - MaxIter : (mandatory) max number of optimization iteration. If
+%                    not provided, an error is thrown.
+%        - OptimType : 'Max' (default), 'Min' or 'Zero'.
 %        - StopWhenFound : set to 1 to compute satisfaction for initial
 %                          parameters in P0 then stops whenever  a positive
 %                          ('Max') or negative ('Min') solution is found
 %        - StopWhenFoundInit : same as above except that it does not
 %                              necessarily compute all trajectories in P0
-%        - Ninit : tries the Ninit best initial pts
+%        - Ninit   : tries the Ninit best initial pts
 %
 %
 % Output:
@@ -58,7 +67,7 @@ elseif isfield(Sys, 'tspan')
 elseif isfield(P, 'traj')
     tspan = P.traj(1).time;
 else
-    tspan = 0:.2:10;
+    error('SOptimeProp:noTspan','The field opt.tspan is not provided.');
 end
 
 if isfield(opt,'tau')
@@ -85,6 +94,8 @@ end
 
 if isfield(opt,'MaxIter')
     MaxIter = opt.MaxIter;
+else
+    error('SOptimProp:noMaxIter','The field opt.MaxIter is not provided.');
 end
 
 if isfield(opt,'StopWhenFound')
@@ -110,46 +121,46 @@ end
 %% Initial values
 options = optimset('MaxIter', MaxIter);
 
-if (StopWhenFoundInit)
+if(StopWhenFoundInit)
     nb_errors = 0; % number of ComputeTraj errors
     rfprintf_reset();
     val = zeros(1,size(P.pts,2));
-    for i = 1:size(P.pts, 2)
-        Ptmp = Sselect(P,i);
+    for ii = 1:size(P.pts, 2)
+        Ptmp = Sselect(P,ii);
         try
             Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-            val(i) = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj, tau);
-        catch % in case an error occurs during computation of ComputeTraj
+            val(ii) = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj, tau);
+        catch %#ok<CTCH> % in case an error occurs during computation of ComputeTraj
             warning('SOptimProp:ComputeTraj','Error during computation of an initial trajectory, keep going.');
             if strcmp(OptimType,'max')
-                val(i) = -inf;
+                val(ii) = -inf;
             else
-                val(i) = inf;
+                val(ii) = inf;
             end
             nb_errors = nb_errors + 1;
         end
-        status = ['Init ' num2str(i) '/' num2str(size(P.pts, 2)) ' Robustness value: ' num2str(val(i))];
+        status = ['Init ' num2str(ii) '/' num2str(size(P.pts, 2)) ' Robustness value: ' num2str(val(ii))];
         rfprintf(status);
         
         switch OptimType
             case 'max'
-                if val(i)>0
-                    val_opt = val(i);
+                if(val(ii)>0)
+                    val_opt = val(ii);
                     Popt = Ptmp;
                     fprintf('\n'); % to have a pretty display
                     return;
                 end
             case 'min'
-                if val(i)<0
-                    val_opt = val(i);
+                if(val(ii)<0)
+                    val_opt = val(ii);
                     Popt = Ptmp;
                     fprintf('\n'); % to have a pretty display
                     return;
                 end
         end
         
-        if i==1
-            Popt = Ptmp;
+        if(ii==1)
+            Popt = Ptmp; % first time in the loop, do affectation, not concatenatation
         else
             Popt = SConcat(Popt, Ptmp);
         end
@@ -163,21 +174,21 @@ else
         error('SOptimProp:ComputeTraj','Error during computation of initial trajectories. Try with opt.StopWhenFoundInit=1.')
     end
     [Popt, val] = SEvalProp(Sys, Popt, phi, tau);
-    Ptmp = Sselect(Popt,1);
+    Ptmp = Sselect(Popt,1); % Initialisation of Ptmp
 end
 
 
 switch OptimType
     case 'max'
         [~, iv] = sort(-val);
-        if val(iv(1))>0 % if the highest value is positive
+        if(val(iv(1))>0) % if the highest value is positive
             found = val(iv(1));
         end
         fun = @(x) fun_max(x, Sys, phi, tspan, tau);
         
     case 'min'
         [~, iv] = sort(val);
-        if val(iv(1))<0 % if the lowest value is negative
+        if(val(iv(1))<0) % if the lowest value is negative
             found = val(iv(1));
         end
         fun = @(x) fun_min(x, Sys, phi, tspan, tau);
@@ -187,7 +198,7 @@ switch OptimType
         fun = @(x) fun_zero(x, Sys, phi, tspan, tau);
 end
 
-if ((StopWhenFound)&&(~isempty(found))) || (MaxIter==0)
+if( ((StopWhenFound)&&(~isempty(found))) || (MaxIter==0) )
     Popt = Sselect(Popt,iv(1));
     val_opt = found;
     return ;
@@ -197,42 +208,56 @@ end
 
 Ninit = min(Ninit,numel(iv));
 val_opt = zeros(1,Ninit);
-k=0;
-for i = iv(1:Ninit)
-    k = k+1;
+kk=0;
+for ii = iv(1:Ninit)
+    kk = kk+1;
     if isfield(opt, 'lbound')
         lbound = opt.lbound;
     else
-        lbound = P.pts(dim,i)-P.epsi(:,i);  % ERROR : THE ORDER OF params AND P.dim MAY DIFFER !!
+        if ~isempty(setdiff(dim,P.dim))
+            error('SOptimProp:InvalidParam',...
+                'A parameter in opt.param is not in P.dim. Provide opt.lbound or modify P.');
+        end
+        [~,~,idim] = intersect(dim,P.dim,'stable'); % get indexes for epsi
+        lbound = P.pts(dim,ii)-P.epsi(idim,ii);
     end
     
     if isfield(opt, 'ubound')
         ubound = opt.ubound;
     else
-        ubound = P.pts(dim,i)+P.epsi(:,i);  % ERROR : THE ORDER OF params AND P.dim MAY DIFFER !!
+        if ~isempty(setdiff(dim,P.dim))
+            error('SOptimProp:InvalidParam',...
+                'A parameter in opt.param is not in P.dim. Provide opt.ubound or modify P.');
+        end
+        [~,~,idim] = intersect(dim,P.dim,'stable'); % get indexes for epsi
+        ubound = P.pts(dim,ii)+P.epsi(idim,ii);
     end
     
-    fprintf('\nOptimize from init point %d/%d Initial value: %g\n', k, numel(iv), val(i));
-    rfprintf_reset();
-    x0 = Popt.pts(dim,i);
-    fopt = val(i); % we initialize with the only truth value computed for this set of values
-    traj_opt = Popt.traj(Popt.traj_ref(i));           % <--- !!! NOT SURE OF THAT (but I guess it is correct)
-    xopt = Popt.pts(dim,i);
-    [~, val_opt(k)] = optimize(fun,x0,lbound,ubound,[],[],[],[],[],[],options,'NelderMead');
-    fprintf('\n');
-    Popt.pts(dim,i) = xopt;
-    Popt.traj(Popt.traj_ref(i)) = traj_opt;
-    Popt.Xf(:,i) = traj_opt.X(:,end);
+    if any(lbound>ubound)
+        error('SOptimProp:badIntervals','A lower bound is higher than the corresponding upper one.');
+    end
     
-    if (StopWhenFound)&&(~isempty(found))
-        Popt = Sselect(Popt,i);
+    fprintf('\nOptimize from init point %d/%d Initial value: %g\n', kk, numel(iv), val(ii));
+    rfprintf_reset();
+    x0 = Popt.pts(dim,ii);
+    fopt = val(ii); % we initialize with the only truth value computed for this set of values
+    traj_opt = Popt.traj(Popt.traj_ref(ii));           % <--- !!! NOT SURE OF THAT (but I guess it is correct)
+    xopt = Popt.pts(dim,ii);
+    [~, val_opt(kk)] = optimize(fun,x0,lbound,ubound,[],[],[],[],[],[],options,'NelderMead');
+    fprintf('\n');
+    Popt.pts(dim,ii) = xopt;
+    Popt.traj(Popt.traj_ref(ii)) = traj_opt;
+    Popt.Xf(:,ii) = traj_opt.X(:,end);
+    
+    if((StopWhenFound)&&(~isempty(found)))
+        Popt = Sselect(Popt,ii);
         if isfield(Sys, 'init_fun') % init_fun can modify non-uncertain parameters
             Popt = Sys.init_fun(Popt);
         end
         if isfield(Popt, 'init_fun')
             Popt = Popt.init_fun(Popt);
         end
-        val_opt = val_opt(k);
+        val_opt = val_opt(kk);
         if strcmp(OptimType,'max')
             val_opt = -val_opt;
         end
