@@ -13,8 +13,8 @@ function [P] = RandomLogRefine(P, N, minValue)
 %    -  P         The parameter set to refine. If the number of uncertain
 %                 parameters higher than 40, the function may thrown an
 %                 error.
-%    -  N         Number of random generated points. Best practice is to
-%                 provide N >= 10
+%    -  N         Number of random generated points. If N is lower or equal
+%                 to one, nothing is done.
 %    -  minValue  If there are parameters with intervals such that
 %                 "pts-epsi<=0", if minValue exists, the lower possible
 %                 value for this parameter is set to minValue, otherwize,
@@ -33,6 +33,11 @@ function [P] = RandomLogRefine(P, N, minValue)
 %
 %See also CreateRandomLogParamSets Refine
 %
+
+% 0/ check for input
+if(N<=1)
+    return;
+end
 
 
 % 1/ convert from unity scale to log scale
@@ -56,7 +61,11 @@ P.epsi = (maxi-mini)/2;
 
 
 % 2/ compute quasi-refine on log scale
-P = QuasiRefine(P, N);
+ii=0; % look for highest power of 2 lower than N
+while(2^ii<N) % N is > 1
+    ii = ii + 1;
+end
+P = QuasiRefine(P, N, 2^(ii-1));
 
 
 % 3/ convert back from log scale to unity scale

@@ -56,7 +56,7 @@ end
 
 if isfield(opts,'tau')
     tau = opts.tau;
-    if tspan(1) > tau
+    if(tspan(1) > tau)
         tspan = [tau tspan];
     end
 else
@@ -97,7 +97,7 @@ else
     OptimizeNBoxes = 0;
 end
 
-if OptimizeNInitPoints==1 || OptimizeNBoxes==1
+if(OptimizeNInitPoints==1 || OptimizeNBoxes==1)
     if ~isfield(opts,'nbSplit')
         error('SOptimPropLog:noNbSplit',...
                 'There are no field nbSplit in opts, despite there is a field OptimizeNBoxes or OptimizeNInitPoints.');
@@ -111,62 +111,85 @@ if ~exist('verbose','var')
 end
 
 phi = QMITL_OptimizePredicates(Sys,phi); % optimization of the predicates
-val_best = -inf;
+if strcmp(OptimType,'min')
+    val_best = inf;
+else
+    val_best = -inf;
+end
 
 
 %% OptimizeGlobally
-if OptimizeGlobally == 1
+if(OptimizeGlobally)
     if(verbose>=1)
         fprintf('\n  Global optimization :\n');
     end
     Pall = CreateParamSet(Sys,opts.params,[opts.lbound;opts.ubound]');
     [val_best,Pbest] = SOptimProp(Sys,Pall,phi,opts);
     
-    if StopWhenFound % check if we have found a solution
-        if strcmp(OptimType,'max') && val_best>0
+    if(StopWhenFound) % check if we have found a solution
+        if(strcmp(OptimType,'max') && val_best>0)
             return ;
-        elseif strcmp(OptimType,'min') && val_best<0
+        elseif(strcmp(OptimType,'min') && val_best<0)
             return ;
         end
     end
 end
 
 %% OptimizeNInitPoints
-if OptimizeNInitPoints==1
+if(OptimizeNInitPoints)
     if(verbose>=1)
         fprintf('\n  Global optimization with %d initial values:\n',nbSplit);
     end
     Prl = CreateRandomLogParamSets(Sys,opts.params,[opts.lbound;opts.ubound]',nbSplit);
     [val_tmp,Ptmp] = SOptimProp(Sys,Prl,phi,opts);
     
-    idx_pos = find(val_tmp>0); % keep the best or the positive ones
-    if ~isempty(idx_pos)
-        if(val_best>0)
-            val_best = [val_best,val_tmp(idx_pos)];
-            Pbest = SConcat(Pbest,Sselect(Ptmp,idx_pos));
-        else
-            val_best = val_tmp(idx_pos);
-            Pbest = Sselect(Ptmp,idx_pos);
+    if strcmp(OptimType,'max')
+        idx_val = find(val_tmp>0); % keep the best or the positive ones
+        if ~isempty(idx_val)
+            if(val_best>0)
+                val_best = [val_best,val_tmp(idx_val)];
+                Pbest = SConcat(Pbest,Sselect(Ptmp,idx_val));
+            else
+                val_best = val_tmp(idx_val);
+                Pbest = Sselect(Ptmp,idx_val);
+            end
+        elseif(val_best<=0)% no positive in val_tmp, compare only if val_best is negative
+            [val_tmp,idx_tmp] = max(val_tmp);
+            if(val_tmp>val_best)
+                val_best = val_tmp;
+                Pbest = Sselect(Ptmp,idx_tmp);
+            end
         end
-    elseif(val_best<=0)% no positive in val_tmp, compare only if val_best is negative
-        [val_tmp,idx_tmp] = max(val_tmp);
-        if(val_tmp>val_best)
-            val_best = val_tmp;
-            Pbest = Sselect(Ptmp,idx_tmp);
+    elseif strcmp(OptimType,'min')
+        idx_val = find(val_tmp<0); % keep the lowest or the negative ones
+        if ~isempty(idx_val)
+            if(val_best<0)
+                val_best = [val_best,val_tmp(idx_val)];
+                Pbest = SConcat(Pbest,Sselect(Ptmp,idx_val));
+            else
+                val_best = val_tmp(idx_val);
+                Pbest = Sselect(Ptmp,idx_val);
+            end
+        elseif(val_best>=0)% no negative in val_tmp, compare only if val_best is positive
+            [val_tmp,idx_tmp] = max(val_tmp);
+            if(val_tmp<val_best)
+                val_best = val_tmp;
+                Pbest = Sselect(Ptmp,idx_tmp);
+            end
         end
     end
     
     if StopWhenFound % check if we have found a solution
-        if strcmp(OptimType,'max') && val_best(1)>0
+        if(strcmp(OptimType,'max') && val_best(1)>0)
             return ;
-        elseif strcmp(OptimType,'min') && val_best(1)<0
+        elseif(strcmp(OptimType,'min') && val_best(1)<0)
             return ;
         end
     end
 end
 
 %% OptimizeNBoxes
-if OptimizeNBoxes==1
+if(OptimizeNBoxes)
     if(verbose>=1)
         fprintf('\n  Global optimization in %d sub-spaces.\n',nbSplit);
     end
@@ -175,7 +198,7 @@ if OptimizeNBoxes==1
         %TODO : IF opt.StopWhenFoundInit IS SET TO 1, COMPUTE TRAJECTORIES
         % ONE BY ONE (see SOptimProp)
         Prl = ComputeTraj(Sys,Prl,tspan);
-    catch
+    catch %#ok<CTCH>
         error('SOptimPropLog:CVODESerror','Error during computation of initial trajectories. Try with opts.OptimizeNBoxes=0.');
     end
     [Prl,val_tmp] = SEvalProp(Sys, Prl, phi, tau);
@@ -190,13 +213,13 @@ if OptimizeNBoxes==1
             [~, iv] = sort(abs(val_tmp));
     end
     
-    k=0;
-    for i=iv
-        k=k+1;
+    kk=0;
+    for ii=iv
+        kk=kk+1;
         if(verbose>=2)
-            fprintf('\n  Optimization of subspace %d/%d :\n', k, numel(iv));
+            fprintf('\n  Optimization of subspace %d/%d :\n', kk, numel(iv));
         end
-        Ptmp = Sselect(Prl,i);
+        Ptmp = Sselect(Prl,ii);
         val = GetParam(Ptmp,params);
         epsi = GetEpsi(Ptmp,params);
         opts.lbound = (val-epsi)';
@@ -204,23 +227,39 @@ if OptimizeNBoxes==1
         [val_tmp,Ptmp] = SOptimProp(Sys,Ptmp,phi,opts);
         switch OptimType
             case 'max'
-                if(val_tmp > val_best)
-                    Pbest = Ptmp;
+                if(val_tmp>0) % found a valid parameter set
+                    if(val_best(1)>0)
+                        Pbest = SConcat(Pbest,Ptmp);
+                        val_best = [val_best,val_tmp]; %#ok<AGROW>
+                    else
+                        Pbest = Ptmp;
+                        val_best = val_tmp;
+                    end
+                elseif(val_best<=0 && val_tmp>val_best)
+                    Pbest = Ptmp; % Pbest and Ptmp are not valid, keep the best one
                     val_best = val_tmp;
                 end
-                if(val_best>0 && StopWhenFound)
+                if(val_best(1)>0 && StopWhenFound)
                     return;
                 end
             case 'min'
-                if(val_tmp < val_best)
-                    Pbest = Ptmp;
+                if(val_tmp<0) % found a valid parameter set
+                    if(val_best(1)<0)
+                        Pbest = SConcat(Pbest,Ptmp);
+                        val_best = [val_best,val_tmp]; %#ok<AGROW>
+                    else
+                        Pbest = Ptmp;
+                        val_best = val_tmp;
+                    end
+                elseif(val_best>=0 && val_tmp<val_best)
+                    Pbest = Ptmp; % Pbest and Ptmp are not valid, keep the best one
                     val_best = val_tmp;
                 end
-                if(val_best<0 && StopWhenFound)
+                if(val_best(1)<0 && StopWhenFound)
                     return;
                 end
             case 'zero'
-                if(abs(val_tmp) < abs(val_best))
+                if(abs(val_tmp) < abs(val_best)) % keep the closest one to zero
                     Pbest = Ptmp;
                     val_best = val_tmp;
                 end

@@ -3,19 +3,29 @@ function P = SobolRefine(P, nb, step)
 %
 % Credit:  John Burkardt, 2006
 %
-% Synopsis:  Ph = SobolRefine(P, nb, step)
+% Synopsis:  P = SobolRefine(P, nb, step)
+%
+% Input:
+%  - P    : the parameter set to refine. It may contains one or many
+%           set of parameter values
+%  - nb   : the number of new set of parameter to generate for each
+%           parameter set in P.
+%  - step : number of initial generated values by sobol generator to skip.
+%
+% Output:
+%  - P : 
 %
 % Example (Lorentz84):
 %
 %   CreateSystem;
 %   P = CreateParamSet(Sys,{'F','G'},[1,100;0,5]);
-%   Ph = SobolRefine(P, 1000); % Sample with 1000 points
+%   Pr = SobolRefine(P, 1000); % Sample with 1000 points
 %   
-%   Ph2 = Refine(P, 2); % 4 parameters sets
-%   Ph2 = SobolRefine(Ph2, 250) % also 1000 parameter sets
+%   Pr2 = Refine(P, 2); % 4 parameters sets
+%   Pr2 = SobolRefine(Pr2, 250) % also 1000 parameter sets
 %
 %   SplotBoxPts(P); % Parameter set before sampling
-%   SplotPts(Ph2);   % plots the generated points
+%   SplotPts(Pr2);   % plots the generated points
 %
 %See also QuasiRefine Refine RandomLogRefine
 %
@@ -26,29 +36,32 @@ end
 
 dim_num = numel(P.dim);
 
-if (nargin==2)
+if(nargin==2)
     step=0;
 end
 
 %generate random values between 0 and 1
-r = i4_sobol_generate(dim_num, nb, step);
+r = i4_sobol_generate(dim_num, nb, step); % generate nb point of dim_num dimensions
 r = kron(r, ones(1,size(P.pts,2)));
 
-width = 2*P.epsi;   % NM : TODO make modifications to avoid parameter sets out of the initial interval
-inf = P.pts(P.dim,:)-P.epsi;   % NM : TODO make modifications to avoid parameter sets out of the initial interval
-P.pts = repmat(P.pts,[1 nb]);
-P.pts(P.dim,:) = repmat(width,[1 nb]).*r+repmat(inf,[1 nb]);
-
-P.epsi = repmat(P.epsi,[1 nb])/(floor(nb^(1/dim_num)));
-
-% Wrong : the dimension of epsi differs from the dimension of pts
-%Ph.epsi = kron(Ph.epsi,ones(1,size(Ph.pts,2)))/(floor(nb^(1/dim_num)));
-
+old_epsi = P.epsi;
+new_epsi = P.epsi/(nb^(1/dim_num));
+P.epsi = repmat(new_epsi,[1 nb]);
+% old version
+%P.epsi = repmat(P.epsi,[1 nb])/(floor(nb^(1/dim_num)));
 % used to avoid superposition of square when selectionned and shown in 2
 % dimension ; it is not really correct because space is "lost"
 %Sh.epsi = kron(Sh.epsi, ones(1,size(Sh.pts,2)))/nb;
 
-if (isfield(P,'selected'))
+%we scale the random generated value to make then fit the intervals. New
+% generated parameter sets are strictly inside the initial one.
+width = 2*(old_epsi - new_epsi);
+inf = P.pts(P.dim,:) - (old_epsi - new_epsi);
+P.pts = repmat(P.pts,[1 nb]);
+P.pts(P.dim,:) = repmat(width,[1 nb]).*r+repmat(inf,[1 nb]);
+
+
+if isfield(P,'selected')
     P.selected = zeros(1, size(P.pts,2));
 end
 
