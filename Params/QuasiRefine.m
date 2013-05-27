@@ -24,7 +24,7 @@ function Ph = QuasiRefine(P, nb, step)
 % TODO optionalize the sequence used - so far Sobol
 %
 %See also RandomLogRefine LogNRefine Refine
-
+%
 
 if(nargin==2)
     step=0;

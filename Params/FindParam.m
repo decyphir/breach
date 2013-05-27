@@ -33,18 +33,19 @@ if isfield(S, 'pts') % S.pts can be > S.DimP (due to properties parameters)
     newp = size(S.pts,1);
 end
 
-for i = 1:numel(param)
+for ii = 1:numel(param)
     found = 0;
-    for j = 1:numel(S.ParamList)
-        test = strcmp(S.ParamList{j},param{i});
-        if (test)
+    for jj = 1:numel(S.ParamList)
+        same = strcmp(S.ParamList{jj},param{ii});
+        if (same)
             found = 1;
-            index(i) = j;
+            index(ii) = jj;
+            break; % index found, no need to try other names of S.ParamList
         end
     end
     if (~found)
         newp = newp+1;
-        index(i) = newp;
+        index(ii) = newp;
     end
 end
 
