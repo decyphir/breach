@@ -7,7 +7,7 @@ function Ph = QuasiRefine(P, nb, step)
 % Input:
 %  - P    : 
 %  - nb   : 
-%  - step : number of generated parameter to skip (default=0)
+%  - step : number of generated parameter to skip (optional, default=0)
 %
 % Output:
 %  - Ph :
@@ -39,7 +39,7 @@ end
 X = Ph.pts(1:Ph.DimP,:)';
 [~,IA,IC] = unique(X,'rows');
 
-Ph.traj_ref= IC';
+Ph.traj_ref = IC';
 Ph.traj_to_compute = IA';
 
 if isfield(P,'traj')

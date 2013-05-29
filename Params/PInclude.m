@@ -21,11 +21,14 @@ function [include, info] = PInclude(Pin, P, EPSI)
 %              parameter set of P, false otherwise.
 %  - info    : provides more details if Pin is not included in P. If the
 %              parameters in P and in Pin are not the same, info is set to
-%              -1. Otherwise, info indicates the number of the first
-%              parameter set in Pin which is not included in P.
+%              -1. Otherwise, info indicates the indexes of the parameter
+%              set in Pin which are not included in P. If Pin is included
+%              in P, info is set to 0.
 %
 %See also SConcat SSelect
 %
+
+include = true;
 
 if ~isempty(setdiff(Pin.ParamList,P.ParamList)) % we check that all parameter in Pin are in P
     include = false;
@@ -67,6 +70,7 @@ paramOrder = FindParam(Pin,P.ParamList([P.dim,setdiff(1:numPparam,P.dim,'stable'
 % Pin.pts(fixedParamOrderPts,:) correspond to the same param than
 % Pinterv(fixedParamOrderVal,:,:)
 
+info = [];
 for ii = 1:size(Pin.pts,2)
     PinValue = zeros(numPparam,1,2); % PinValue contains the intervals for the ii-th param set in Pin
     PinValue(uncertainParamOrder,1,1) = Pin.pts(Pin.dim,ii) - Pin.epsi(:,ii);
@@ -77,15 +81,16 @@ for ii = 1:size(Pin.pts,2)
     PinValue = repmat(PinValue,[1,size(P.pts,2),1]); % replicate PinValue, so it has the same size than Pinterv
     
     if ~any(all(Pinterv(:,:,1)-EPSI <= PinValue(:,:,1) & PinValue(:,:,2) <= Pinterv(:,:,2)+EPSI , 1))
-        info = ii;
+        info = [info,ii]; %#ok<AGROW>
         include = false;
-        return;
+%        return;
     end
     
 end
 
-info = 0;
-include = true;
+if(include)
+    info = 0;
+end
 
 end
 
