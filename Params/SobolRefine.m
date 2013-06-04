@@ -60,7 +60,7 @@ function P = SobolRefine(P, nb, varargin)
 %   SplotBoxPts(P);
 %   SplotPts(Pr4);
 %
-%See also QuasiRefine Refine RandomLogRefine
+%See also QuasiRefine Refine RandomLogRefine LogNRefine
 %
 
 if(nb<=1)
@@ -83,7 +83,6 @@ else
     striclyInside = true;
 end
 
-
 dim_num = numel(P.dim);
 
 %generate random values between 0 and 1
@@ -97,7 +96,7 @@ P.epsi = repmat(new_epsi,[1 nb]);
 %P.epsi = repmat(P.epsi,[1 nb])/(floor(nb^(1/dim_num)));
 % used to avoid superposition of square when selectionned and shown in 2
 % dimension ; it is not really correct because space is "lost"
-%Sh.epsi = kron(Sh.epsi, ones(1,size(Sh.pts,2)))/nb;
+%P.epsi = kron(P.epsi, ones(1,size(P.pts,2)))/nb;
 
 %we scale the random generated value to make then fit the intervals. New
 % generated parameter sets are strictly inside the initial one.

@@ -50,13 +50,13 @@ function P = CreateParamSet(Sys, Param, Ranges, Nb_pts)
 
 pts = Sys.p;
 
-if (exist('Param','var'))
+if exist('Param','var')
     if ischar(Param)
         Param = {Param};
     end
     nbParam = numel(Param);
     if isnumeric(Param)
-        dim = Param(1:nbParam); % ensure that dim is a vector (NM:even for Param(1:1)??)
+        dim = reshape(Param,1,nbParam); % ensure that dim is a vector
         ParamList = Sys.ParamList;
     else
         ind = FindParam(Sys,Param);
@@ -73,7 +73,7 @@ if (exist('Param','var'))
     pts(dim_sys) = Sys.p(dim_sys); % copy the not new parameters
     
     epsi = zeros(nbParam,1);
-    if (exist('Ranges','var'))
+    if exist('Ranges','var')
         pts(dim) = (Ranges(:,2)+Ranges(:,1))/2;
         epsi(:,1) = Ranges(:,2)-pts(dim);
     else
@@ -94,17 +94,19 @@ end
 P.DimX = Sys.DimX;
 P.DimP = Sys.DimP;
 P.dim = dim;
-if (size(pts,2)>size(pts,1))
-    pts = pts';
+if(size(pts,2)>size(pts,1))
+    pts = pts'; % we want a column vector
 end
-if (size(epsi,2)>size(epsi,1))
-    epsi = epsi';
+if(size(epsi,2)>size(epsi,1))
+    epsi = epsi'; % we want a column vector
 end
 
 P.pts = pts;
 P.epsi = epsi;
-P.ParamList=ParamList;
+P.ParamList = ParamList;
 
 if exist('Nb_pts', 'var') 
     P = Refine(P, Nb_pts);
+end
+
 end

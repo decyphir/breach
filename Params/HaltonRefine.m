@@ -1,15 +1,23 @@
-function P = HaltonRefine(P, nb, step)
-% HALTONREFINE  Sample quasi-uniformly a parameter set using Halton sequence
+function P = HaltonRefine(P, nb, varargin)
+%HALTONREFINE  Sample quasi-uniformly a parameter set using Halton sequence
 %
-% Synopsis:  P = HaltonRefine(P, nb [, step] )
+% Synopsis:  P = HaltonRefine(P, nb [, step] [, 'strictlyInside'] )
 %
-% Input:
-%  - P    : 
-%  - nb   : 
-%  - step : 
+% Inputs:
+%  - P    : a parameter set. It may contain one or many set of values for
+%           the parameters
+%  - nb   : the number of parameter set to generate for each set of values
+%           for the parameters
+%  - step : (optional, default=1)
+%  - 'strictlyInside' : (optional, not set by default) If the string
+%                      'striclyInside' is provided, the generated
+%                      parameter sets are such that all new boxes are
+%                      stricly inside the initial one. Otherwise, the
+%                      centers of the new boxes are in the initial one, but
+%                      some part of the boxes may overtake the initial one.
 %
 % Output:
-%  - P : 
+%  - P : the new parameter set
 %
 % Example:
 %
@@ -22,16 +30,31 @@ function P = HaltonRefine(P, nb, step)
 %
 % Credit:  John Burkardt, 2003
 %
+%See also QuasiRefine Refine RandomLogRefine LogNRefine
+%
 
 if(nb<=1)
     return;
 end
 
-dim_num = numel(P.dim);
-
 if(nargin==2)
-    step=1;
+    step = 1;
+    strictlyInside = false;
+elseif(nargin==3)
+    if ischar(varargin{1})
+        strictlyInside = strcmpi(varargin{1},'strictlyinside');
+        step = 1;
+    else
+        strictlyInside = false;
+        step = varargin{1};
+    end
+else
+    step = varargin{1};
+    strictlyInside = strcmpi(varargin{2},'strictlyinside');
 end
+
+
+dim_num = numel(P.dim);
 
 seed = 1*ones(dim_num,1);
 leap = ones(dim_num,1);
@@ -42,16 +65,26 @@ base = base(1:dim_num);
 r = halton_sequence(dim_num,nb, step, seed, leap, base);
 r = kron(r, ones(1,size(P.pts,2)));
 
-width = 2*P.epsi; % NM: TODO : update such that all new parameter set are included
-mini = P.pts(P.dim,:)-P.epsi;  % into the initial ones
 
-P.pts = repmat(P.pts,[1 nb]);
-
-P.pts(P.dim,:) = repmat(width,[1 nb]).*r+repmat(mini,[1 nb]);
-
-P.epsi = repmat(P.epsi,[1 nb])/(nb^(1/dim_num));
+old_epsi = P.epsi;
+new_epsi = P.epsi/(nb^(1/dim_num));
+P.epsi = repmat(new_epsi,[1 nb]);
+% old version
 %P.epsi = repmat(P.epsi,[1 nb])/(floor(nb^(1/dim_num)));
-%P.epsi = repmat(P.epsi, [1 nb])/nb;
+% used to avoid superposition of square when selectionned and shown in 2
+% dimension ; it is not really correct because space is "lost"
+%P.epsi = kron(P.epsi, ones(1,size(P.pts,2)))/nb;
+
+
+if(strictlyInside)
+    width = 2*(old_epsi - new_epsi);
+    mini = P.pts(P.dim,:) - (old_epsi - new_epsi);
+else
+    width = 2 * old_epsi;
+    mini = P.pts(P.dim,:) - old_epsi;
+end
+P.pts = repmat(P.pts,[1 nb]);
+P.pts(P.dim,:) = repmat(width,[1 nb]).*r+repmat(mini,[1 nb]);
 
 if isfield(P,'selected')
     P.selected = zeros(1, size(P.pts,2));
@@ -60,7 +93,6 @@ end
 end
 
 function r = halton_sequence ( dim_num, n, step, seed, leap, base )
-
 %% was originally I4_TO_HALTON_SEQUENCE: N elements of an DIM_NUM-dimensional Halton sequence.
 %
 %  Author:John Burkardt
