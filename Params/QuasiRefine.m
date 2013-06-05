@@ -87,9 +87,9 @@ else % all optional parameters
     end
 end
 
-if(strcmpi(algo,'sobol') && numel(P.dim)<=40)
+if(strcmpi(algo,'sobol') && numel(P.dim)>40)
     warning('QuasiRefine:InappropriateAlgo',...
-        'The sobol algorithm is usable up to dimension 40, switched to halton algorithm');
+        'The sobol algorithm is usable up to dimension 40, switched to halton algorithm.');
     algo = 'halton';
 end
 
@@ -99,7 +99,7 @@ if strcmpi(algo,'sobol')
     else
         Ph = SobolRefine(P,nb,step);
     end
-elseif strcmpi(algo,'halton')
+else % default = halton
     if (strictlyInside)
         Ph = HaltonRefine(P,nb,step,'strictlyInside');
     else
