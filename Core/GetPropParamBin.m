@@ -90,10 +90,11 @@ for ii = 1:num_params      % optimize independently in the order
         
         p_i = (pimax+pimin)/2;
         Pb = SetParam(Pb, params(ii), p_i');
+              
         valb = QMITL_Eval(Sys, phi, Pb, traj, 0);
         val = min(valb);
         
-        %fprintf('  pimin: %g  pimax: %g p_i: %g val %g \n', pimin, pimax, p_i, val);
+%        fprintf('  pimin: %g  pimax: %g p_i: %g val %g \n', pimin, pimax, p_i, val);
         res = num2str(p_i);
         rfprintf(res);
         
