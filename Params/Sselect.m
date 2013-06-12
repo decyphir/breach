@@ -35,7 +35,7 @@ if exist('kn','var')
     warning('Sselect:EmptyKn','The optional parameter ''kn'' is empty. Pn is defined as P.');
     Pn = P;
     return ;
-  elseif ((kn==1)&&(size(P.pts,2)==1))
+  elseif (isequal(kn,1)&&(size(P.pts,2)==1))
     Pn = P;
     return;
   end
