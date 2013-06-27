@@ -85,7 +85,8 @@ function SplotVar(S,iX,ipts,opt, bool_same_axe)
   % Plot options
   
   colors = hsv(numel(ipts));
-
+  colors = colors(:,[3 2 1]);
+  
   if (~exist('opt')||isempty(opt))
     if (isfield(S,'traj_plot_opt'))
       opt = S.traj_plot_opt;
@@ -145,12 +146,12 @@ function SplotVar(S,iX,ipts,opt, bool_same_axe)
         
         x = S.traj(i).X(iX(j),:);       
         if isempty(opt)
-            ci=ci+1;
-            plot(time*time_mult,x,'Color', colors(i,:)); 
+            plot(time*time_mult,x,'Color', colors(ci,:));   
         else
           plot(time*time_mult,x,opt{:});
         end
-      end      
+      end
+    ci = ci+1;  
     end
     hold off;
     xlabel('time')  
