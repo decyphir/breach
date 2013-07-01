@@ -185,6 +185,7 @@ end
     cs.set_param('LoadExternalInput', 'off');   % Input  
     
   end
+  
   %% logged signals, by default none
   if ~exist('signals')
     signals = {};
@@ -275,6 +276,7 @@ end
   Sys.mdl= [mdl '_breach'];
   Sys.Dir= pwd;
   
-  save_system(mdl_breach);   
+  save_system(mdl_breach);  
+  close_system(mdl_breach);
 
   

@@ -132,8 +132,10 @@ if(StopWhenFoundInit)
         try
             Ptmp = ComputeTraj(Sys, Ptmp, tspan);
             val(ii) = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj, tau);
-        catch %#ok<CTCH> % in case an error occurs during computation of ComputeTraj
-            warning('SOptimProp:ComputeTraj','Error during computation of an initial trajectory, keep going.');
+        catch Me %#ok<CTCH> % in case an error occurs during computation of ComputeTraj
+            warning('SOptimProp:','Error during computation of an initial trajectory, keep going.\n');
+            disp(Me.getReport);
+            
             if strcmp(OptimType,'max')
                 val(ii) = -inf;
             else

@@ -45,7 +45,7 @@ function P = CreateParamSet(Sys, Param, Ranges, Nb_pts)
 %                                      % the value of x0 is 0, with an epsi
 %                                      % of 0.6
 %
-%See also: Refine SetParam SAddUncertainParam
+% See also: Refine SetParam SAddUncertainParam
 %
 
 pts = Sys.p;

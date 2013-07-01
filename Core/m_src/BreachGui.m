@@ -88,7 +88,7 @@ function BreachGui_OpeningFcn(hObject, eventdata, handles, varargin)
   try 
     handles.working_sets = load(handles.working_sets_file_name);
   catch
-    P0 = CreateSampling(Sys,1);
+    P0 = CreateSampling(Sys,min(Sys.DimX+1, Sys.DimP));
     save([SysName '_param_sets.mat'], 'P0');
     handles.working_sets = load(handles.working_sets_file_name);
   end
@@ -386,6 +386,14 @@ function button_add_param_Callback(hObject, eventdata, handles)
     epsi = .1;
   end
 
+  if strcmp(handles.Sys.type, 'Simulink')
+    if (ind<= P.DimX)
+      handles= info(handles,'Cannot modify initial condition for a Simulink signal (must use an explicit parameter)');
+      return
+    end
+  end
+  
+  
   P.dim = [P.dim ind];
   P.epsi(end+1,:) = epsi;
   
@@ -667,7 +675,7 @@ function button_new_set_Callback(hObject, eventdata, handles)
  try
   names = fieldnames(handles.working_sets);
   new_name =  genvarname('P',names);
-  P = CreateSampling(handles.Sys,1);
+  P = CreateSampling(handles.Sys,min([handles.Sys.DimP handles.Sys.DimX+1]));
   P.selected = 0;
   handles.working_sets = setfield(handles.working_sets, new_name, P);
   handles = update_working_sets_panel(handles);  
@@ -2474,25 +2482,29 @@ function button_go_refine_Callback(hObject, eventdata, handles)
       end
       nnb_pts = size(Pr.pts,2);
       Pr.selected = zeros(1, nnb_pts);
+      
       nipts = find(~handles.working_sets.(handles.current_set).selected);
       if ipts == handles.current_pts
         nipts = nipts(nipts~=handles.current_pts);    
       end
     
+      if (isempty(nipts))
+        Pf = Pr;
+      else
+        P = Sselect(handles.working_sets.(handles.current_set), nipts);
+        P = SPurge(P);
+        P = SPurge_props(P);
+        Sf =  SConcat(Pr,P);
+      end
       
-      P =  Sselect(handles.working_sets.(handles.current_set), nipts);                
-      P = SPurge(P);
-      P = SPurge_props(P);
-
-      Sf =  SConcat(Pr,P);
       if (restore_traj)
-        Sf.traj = repmat(traj(1), [1 size(Sf.pts,2)]);
-        for j = 1:numel(Sf.traj)
-          Sf.traj(j).param = Sf.pts(:,j);
+        Pf.traj = repmat(traj(1), [1 size(Pf.pts,2)]);
+        for j = 1:numel(Pf.traj)
+          Pf.traj(j).param = Pf.pts(:,j);
         end
       end
       
-      handles.working_sets.(handles.current_set) = Sf;
+      handles.working_sets.(handles.current_set) = Pf;
       
   end
   
