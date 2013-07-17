@@ -2612,8 +2612,21 @@ try
   
   P = handles.working_sets.(handles.current_set);
   info = 'Find max robust satisfaction ';  
-  answers = {'','',''};
-  ins = inputdlg({'Enter tspan for trajectories', ...
+ 
+  dim = P.dim;
+  pts = P.pts(:,handles.current_pts);
+  epsi = P.epsi(:,handles.current_pts);
+  
+  lbstr = '';
+  ustr  = ''; 
+  
+  for i=1:numel(pts)
+    lbstr = ['' num2str(pts(dim(i)+epsi(1,i)))];
+    upstr = ['' num2str(pts(dim(i)+epsi(2,i)))];
+  end
+  
+  answers = {'',lbstr,upstr};
+  ins = inputdlg({'Enter tspan for trajectories (default: computed trajectory)', ...
                   'Enter lower bounds', ...
                   'Enter upper bounds'}, info,1, answers );
   if isempty(ins)
@@ -2625,9 +2638,9 @@ try
   else
     tspan = eval(ins{1});
   end        
-
-  lbound = eval(ins{2});
-  ubound = eval(ins{3});
+  
+  opt.lbound = eval(ins{2});
+  opt.ubound = eval(ins{3});
   
   prop_name = handles.current_prop;
   prop = handles.properties.(prop_name);

@@ -112,7 +112,7 @@ for ii = 1:num_params      % optimize independently in the order
                 pimin = p_i;
             end
         end
-        
+       
         timeout = timeout-1;
         if(timeout==0)
             fprintf('Time out !!');

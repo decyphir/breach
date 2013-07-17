@@ -7,10 +7,10 @@
   gear3 := (abs(gear[t] - 3)-.1) < 0 
 
 
-# subformulas
+# subformulas (next event)
 
-  shift2 := (not gear2) and ev_[0,.02](gear2)
-  shiftn3 := (gear3) and ev_[0,.02](not gear3)
+  shift2 := (not gear2) and ev_[0.01,.02](gear2)
+  shiftn3 := (gear3) and ev_[0.01,.02](not gear3)
 
 # formulas 
 

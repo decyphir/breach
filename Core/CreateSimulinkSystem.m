@@ -206,7 +206,7 @@ end
     
     for k =  1:numel(signals);
       sig = signals{k};
-      l = find_system(mdl,'FindAll','on', 'type','line', 'Name', sig);
+      l = find_system(mdl_breach,'FindAll','on', 'type','line', 'Name', sig);
       if ~isempty(l)        
         %ensure that it is logged
         set(lines(k),'DataLoggingName', 'Use signal name', 'DataLogging',1 ,'Name',sig); 
@@ -234,8 +234,11 @@ end
   end
   sig_log= sig_log(find(keep));
   
-  signals = {sig_out{:} sig_log{:} sig_in{:}};     
+  signals = {sig_out{:} sig_log{:} sig_in{:}};
  
+  %% TODO For all signals, check wether it's multi-dimensional
+       
+  
 %% define parameters 
   
   if exist('params')

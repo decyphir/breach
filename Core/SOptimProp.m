@@ -37,14 +37,14 @@ function [val_opt, Popt]  = SOptimProp(Sys, P, phi, opt)
 %
 % Output:
 %    - val_opt : the truth value of phi for the param set Sopt. It is a
-%                scalar if StopWhenFound or StopWhenFoundInit it sets to 1.
-%                Otherwize, it is a vector of size 1 x size(P.pts,2).
+%                scalar if StopWhenFound or StopWhenFoundInit is set to 1.
+%                Otherwise, it is a vector of size 1 x size(P.pts,2).
 %
 %    - Popt    : if StopWhenFound or StopWhenFoundInit is set to 1, and a
 %                set of parameter values leading to a negative (resp.
 %                positive) truth value of phi is found, Popt is this
 %                parameter set.
-%                Otherwize, it contains the optimum found for each set of
+%                Otherwise, it contains the optimum found for each set of
 %                parameter values in P.
 %
 % See also SOptimPropLog Falsify
@@ -181,7 +181,7 @@ else
     Ptmp = Sselect(Popt,1); % Initialisation of Ptmp
 end
 
-
+% sorts initial values (most promising to least promising)
 switch OptimType
     case 'max'
         [~, iv] = sort(-val);
@@ -204,7 +204,7 @@ end
 
 if( ((StopWhenFound)&&(~isempty(found))) || (MaxIter==0) )
     Popt = Sselect(Popt,iv(1));
-    val_opt = found;
+    val_opt = val(iv(1)); 
     return ;
 end
 
@@ -246,7 +246,7 @@ for ii = iv(1:Ninit)
     x0 = Popt.pts(dim,ii);
     fopt = val(ii); % we initialize with the only truth value computed for this set of values
     traj_opt = Popt.traj(Popt.traj_ref(ii));           % <--- !!! NOT SURE OF THAT (but I guess it is correct)
-    xopt = Popt.pts(dim,ii);
+    xopt = Popt.pts(dim,ii);   
     [~, val_opt(kk)] = optimize(fun,x0,lbound,ubound,[],[],[],[],[],[],options,'NelderMead');
     fprintf('\n');
     Popt.pts(dim,ii) = xopt;
