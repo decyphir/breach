@@ -34,10 +34,16 @@ function [tout X] = sim_breach(Sys, tspan, pts)
     end
   end
   
+  if ~isempty(lg)
+    lg.unpack('all');
+  end
   
   for i = Sys.DimY+1:num_signals
-    sig = lg.getElement(Sys.ParamList{i});
-    xdata = interp1(sig.Values.Time',double(sig.Values.Data(:,1)),tspan, 'linear','extrap');   
+  
+    sig = Sys.ParamList{i};
+    xdata = eval([sig '.Data']);
+    xtime = eval([sig '.Time']);
+    xdata = interp1(xtime',xdata(:,1),tspan, 'linear','extrap');   
     X = [X ; xdata(1,:)]; %% FIXME: SUPPORT FOR MULTIDIMENSIONAL SIGNALS
    
   end;

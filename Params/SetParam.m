@@ -62,7 +62,7 @@ if(ischar(ParamList) && ~isempty(ParamList))
 
 elseif iscell(ParamList)
     inds = FindParam(P,ParamList);
-    new_params = ParamList(inds>size(P.pts,1));
+    new_params = ParamList(inds>size(P.(pts),1));
     P.ParamList = [P.ParamList new_params];
     
     for ii= 1:numel(inds)

@@ -85,6 +85,9 @@ end
 
   if (~verLessThan('matlab','R2011a'))
     cs.set_param('SignalLoggingSaveFormat', 'Dataset');   % Signal logging format 
+    simfn = 'sim_breach';
+  else
+    simfn = 'sim_breach_old_ver';   % call a different sim function for older versions of Simulink 
   end
   cs.set_param('TimeSaveName', 'tout');   % Time 
     
@@ -275,7 +278,7 @@ end
   end
   
   Sys.type= 'Simulink';
-  Sys.sim = @sim_breach; 
+  eval(['Sys.sim = @' simfn]); 
   Sys.mdl= [mdl '_breach'];
   Sys.Dir= pwd;
   
