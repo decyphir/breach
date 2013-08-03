@@ -5,6 +5,7 @@ function [val_opt, Popt]  = SOptimProp(Sys, P, phi, opt)
 % Synopsis: [val_opt, Popt]  = SOptimProp(Sys, P0, phi, opt)
 %
 % Input:
+%    - Sys is a system
 %    - P0 is a parameter set for Sys. Parameter values in P0 are used for
 %                  initializing the optimization algorithm
 %    - phi is a QMITL property
@@ -52,7 +53,7 @@ function [val_opt, Popt]  = SOptimProp(Sys, P, phi, opt)
 
 %% process options
 
-global Ptmp; % temporary param set used to get non variables parameter values in optim func
+global Ptmp; % temporary param set used to get non-variables parameter values in optim func
 global found; % non empty if we found a positive or negative truth value of prop
 global StopWhenFound; % cf doc
 global fopt; % best truth value of prop found for the current initial set of value in P
@@ -121,8 +122,6 @@ phi = QMITL_OptimizePredicates(Sys,phi); % optimization of the predicates
 
 
 %% Initial values
-options = optimset('MaxIter', MaxIter);
-
 if(StopWhenFoundInit)
     nb_errors = 0; % number of ComputeTraj errors
     rfprintf_reset();
@@ -132,8 +131,8 @@ if(StopWhenFoundInit)
         try
             Ptmp = ComputeTraj(Sys, Ptmp, tspan);
             val(ii) = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj, tau);
-        catch Me %#ok<CTCH> % in case an error occurs during computation of ComputeTraj
-            warning('SOptimProp:','Error during computation of an initial trajectory, keep going.\n');
+        catch Me % in case an error occurs during computation of ComputeTraj
+            warning('SOptimProp:ComputeTraj','Error during computation of an initial trajectory, keep going.\n');
             disp(Me.getReport);
             
             if strcmp(OptimType,'max')
@@ -210,6 +209,24 @@ end
 
 %% Main Loop
 
+% Check param again (eventually generate idim)
+if ~isfield(opt,'lbound')
+    if ~isempty(setdiff(dim,P.dim))
+        error('SOptimProp:InvalidParam',...
+            'A parameter in opt.param is not in P.dim. Provide opt.lbound or modify P.');
+    end
+    [~,~,idim] = intersect(dim,P.dim,'stable'); % get indexes for epsi
+end
+if ~isfield(opt,'ubound')
+    if ~isempty(setdiff(dim,P.dim))
+        error('SOptimProp:InvalidParam',...
+            'A parameter in opt.param is not in P.dim. Provide opt.ubound or modify P.');
+    end
+    [~,~,idim] = intersect(dim,P.dim,'stable'); % get indexes for epsi
+end
+  
+% Loop itself
+options = optimset('MaxIter', MaxIter);
 Ninit = min(Ninit,numel(iv));
 val_opt = zeros(1,Ninit);
 kk=0;
@@ -218,22 +235,12 @@ for ii = iv(1:Ninit)
     if isfield(opt, 'lbound')
         lbound = opt.lbound;
     else
-        if ~isempty(setdiff(dim,P.dim))
-            error('SOptimProp:InvalidParam',...
-                'A parameter in opt.param is not in P.dim. Provide opt.lbound or modify P.');
-        end
-        [~,~,idim] = intersect(dim,P.dim,'stable'); % get indexes for epsi
         lbound = P.pts(dim,ii)-P.epsi(idim,ii);
     end
     
     if isfield(opt, 'ubound')
         ubound = opt.ubound;
     else
-        if ~isempty(setdiff(dim,P.dim))
-            error('SOptimProp:InvalidParam',...
-                'A parameter in opt.param is not in P.dim. Provide opt.ubound or modify P.');
-        end
-        [~,~,idim] = intersect(dim,P.dim,'stable'); % get indexes for epsi
         ubound = P.pts(dim,ii)+P.epsi(idim,ii);
     end
     
@@ -245,8 +252,8 @@ for ii = iv(1:Ninit)
     rfprintf_reset();
     x0 = Popt.pts(dim,ii);
     fopt = val(ii); % we initialize with the only truth value computed for this set of values
-    traj_opt = Popt.traj(Popt.traj_ref(ii));           % <--- !!! NOT SURE OF THAT (but I guess it is correct)
-    xopt = Popt.pts(dim,ii);   
+    traj_opt = Popt.traj(Popt.traj_ref(ii));
+    xopt = Popt.pts(dim,ii);
     [~, val_opt(kk)] = optimize(fun,x0,lbound,ubound,[],[],[],[],[],[],options,'NelderMead');
     fprintf('\n');
     Popt.pts(dim,ii) = xopt;

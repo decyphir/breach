@@ -1,5 +1,5 @@
 function [Mend, opts] =  SplotSensiBar(Sys, P, ipts, opts)
-%SPLOTSENSIBAR plots an histogram of sensitivities
+%SPLOTSENSIBAR plots an histogram of local sensitivities
 %
 % Synopsis:  [M, opts] = SplotSensiBar(Sys, P, ipts [, opts])
 %

@@ -31,14 +31,14 @@ function Pn = Sselect(P, kn)
 % Pvalid = Sselect(P, P.traj_ref(find(val>0))); % selecting valid parameter sets
 
 if exist('kn','var')
-  if isempty(kn)
-    warning('Sselect:EmptyKn','The optional parameter ''kn'' is empty. Pn is defined as P.');
-    Pn = P;
-    return ;
-  elseif (isequal(kn,1)&&(size(P.pts,2)==1))
-    Pn = P;
-    return;
-  end
+    if isempty(kn)
+        warning('Sselect:EmptyKn','The optional parameter ''kn'' is empty. Pn is defined as P.');
+        Pn = P;
+        return ;
+    elseif(isequal(kn,1)&&(size(P.pts,2)==1))
+        Pn = P;
+        return;
+    end
 else
     try
         kn = find(P.selected~=0);

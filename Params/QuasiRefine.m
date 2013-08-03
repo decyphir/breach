@@ -8,7 +8,8 @@ function Ph = QuasiRefine(P, nb, varargin)
 %  - P    : The parameter set to refine. May contains many set of parameter
 %           values
 %  - nb   : how many parameter set are generated for each set of parameter
-%           values. If lower or equal to one, nothing is done.
+%           values. If lower or equal to one, nothing is done. If nb is not
+%           an integer, it is rounded toward 0.
 %  - step : number of generated parameter to skip (optional, default=0)
 %  - strictlyInside : (Optional, default=not set) If set (aka, write
 %                     'strictlyInside' in the function call), all generated
@@ -40,6 +41,7 @@ function Ph = QuasiRefine(P, nb, varargin)
 if(nb<=1)
     return;
 end
+nb = floor(nb);
 
 if(nargin==2) % no optional parameter
     step = 1;
