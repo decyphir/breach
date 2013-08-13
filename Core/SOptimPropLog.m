@@ -8,7 +8,8 @@ function [Pbest,val_best] = SOptimPropLog(Sys, phi, opts, verbose)
 % Synopsis: [Pbest,val_best] = SOptimPropLog(Sys, phi, opts [, verbose])
 %
 % Inputs:
-%   - phi
+%   - Sys  : the considered system
+%   - phi  : the STL formula to verify
 %   - opts : describes the options. It contains the following fields:
 %      - tspan          See SOptimProp
 %      - tau            See SOptimProp (default= first time point of tspan)

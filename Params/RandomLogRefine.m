@@ -2,7 +2,8 @@ function [P] = RandomLogRefine(P, N, minValue)
 %RANDOMLOGREFINE Create a logarithmic random sampling of parameters. If P
 %   contains many points, each of them is divided into N new points. All
 %   ranges (ie : [value-epsi ; value+epsi] must be strictly positive. When
-%   there is more than 16 ordre of magnitude (with Matlab R2012), it is
+%   there is more than 16 ordres of magnitude (with Matlab R2012) between
+%   the lower bound (value-epsi) and the upper bound (value+epsi), it is
 %   recommended to use CreateRandomLogParamSets or you risk to face error
 %   due to null interval limit.
 %
@@ -14,11 +15,12 @@ function [P] = RandomLogRefine(P, N, minValue)
 %                 parameters higher than 40, the function may thrown an
 %                 error.
 %    -  N         Number of random generated points. If N is lower or equal
-%                 to one, nothing is done.
+%                 to one, nothing is done. If N is not an integer, it is
+%                 rounded toward 0.
 %    -  minValue  If there are parameters with intervals such that
 %                 "pts-epsi<=0", if minValue exists, the lower possible
 %                 value for this parameter is set to minValue, otherwize,
-%                 an error is thrown
+%                 an error is thrown.
 %
 % Outputs:
 %
@@ -41,6 +43,8 @@ function [P] = RandomLogRefine(P, N, minValue)
 if(N<=1)
     return;
 end
+
+N = floor(N);
 
 
 % 1/ convert from unity scale to log scale

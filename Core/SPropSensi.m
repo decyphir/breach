@@ -19,7 +19,7 @@ function [mu, mustar, sigma, Pr] = SPropSensi(Sys, P, phi, opt)
 %        - ubound      upper bounds for the search domain
 %        - p           number of levels (p-grid). Recommended to be even (default 4)
 %        - r           number of trajectories (default 10)
-%        - k           OBSOLETE ; REPLACED BY r
+%        - k           DEPRECATED ; REPLACED BY r
 %        - plot        if 1, plots histograms (default 0)
 %        - muGraphOpt      if plot=1, define graphical options for mu graph
 %                          (optional)
@@ -88,11 +88,11 @@ Pr = CreateParamSet(Sys, opt.params, [opt.lbound' opt.ubound']);
 
 Pr = pRefine(Pr, opt.p, opt.r);
 
-%NM : we must compute the truth value of phi at time=tprop
+%NM : it is better to compute the truth value of phi at time=tprop
 if tprop < tspan(1)
     tspan = [tprop,tspan];
-%elseif tprop > tspan(end)
-%    tspan = [tspan, tprop];
+%elseif tprop > tspan(end)    % don't compute it in case it is too far from
+%    tspan = [tspan, tprop];  % the last time instant computed
 end
 
 Pr = ComputeTraj(Sys, Pr, tspan);
