@@ -173,7 +173,7 @@ function listbox_default_parameters_Callback(hObject, eventdata, handles)
   
   if (val<= handles.Sys.DimX)
     if isfield(handles.Sys, 'type')
-      if strcmp(handles.Sys.type, 'Simulink')
+      if (strcmp(handles.Sys.type, 'Simulink')||(strcmp(handles.Sys.type, 'Extern')))
         whatisit = 'a signal.';
       end
     else
@@ -2112,37 +2112,46 @@ function menu_load_properties_Callback(hObject, eventdata, handles)
 
   try
     
-    [FileName,PathName,FilterIndex] = uigetfile('*.mat','Load Properties Set...');    
+    [FileName,PathName,FilterIndex] = uigetfile('*.mat; *.stl','Load Properties Set...');    
 
     if (FileName ==0)
       return 
     end
-      
-    props = load(FileName);
-    fnames = fieldnames(props);
+
+    [~,~,ext] = fileparts(FileName);
     
-    % find properties in the file loaded
-    nprops = []; 
+   if strcmp(ext,'.mat')  
+     props = load(FileName);
+     fnames = fieldnames(props);
+     
+     % find properties in the file loaded
+     nprops = [];
+     
+     for j = 1:numel(fnames)
+       if (isa(props.(fnames{j}), 'QMITL_Formula'))
+         nprops = [ nprops props.(fnames{j}) ];
+       end
+     end
     
-    for j = 1:numel(fnames)
-      if (isa(props.(fnames{j}), 'QMITL_Formula'))    
-        nprops = [ nprops props.(fnames{j}) ];
-      end
-    end
-    
-    if isempty(nprops)
-      warndlg('No properties in this file');
-      return
-    else
-      handles.properties = nprops;
-    end
-    
-    handles.properties_file_name = FileName;    
-    handles.current_prop = fnames{1};
-    handles.idx_prop= 1;
-    set(handles.listbox_prop, 'Value', 1);
-    handles = update_properties_panel(handles);
-    guidata(hObject,handles);
+     if isempty(nprops)
+       warndlg('No properties in this file');
+       return
+     else
+       handles.properties = nprops;
+     end
+     handles.properties_file_name = FileName;
+     handles.current_prop = fnames{1};
+     handles.idx_prop= 1;
+ 
+   elseif (strcmp(ext,'.stl'))
+     formulas = QMITL_ReadFile(FileName);
+     Propsave(handles.Sys, formulas{:});
+     
+   end
+     
+     set(handles.listbox_prop, 'Value', 1);
+     handles = update_properties_panel(handles);
+     guidata(hObject,handles);
 
   catch 
     

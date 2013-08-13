@@ -53,7 +53,7 @@ end
 if(ischar(ParamList) && ~isempty(ParamList))
     ind = FindParam(P,ParamList);
     
-     if (ind>size(P.pts,1))
+     if (ind>size(P.(pts),1))
          P.ParamList = [P.ParamList, {ParamList}];
      end
       
@@ -72,7 +72,7 @@ elseif iscell(ParamList)
 
 elseif isnumeric(ParamList)
     for i = 1:numel(ParamList)
-        if ParamList(i) > size(P.pts, 1)
+        if ParamList(i) > size(P.(pts), 1)
             error('SetParam:index','Index out of range')
         end
         P.(pts)(ParamList(i),:) = ParamValues(i,:);

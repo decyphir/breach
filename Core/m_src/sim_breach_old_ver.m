@@ -1,6 +1,6 @@
 function [tout X] = sim_breach(Sys, tspan, pts)
 %
-%
+% SIM_BREACH breach interface with sim Simulink command
 %
 
   mdl = Sys.mdl;
