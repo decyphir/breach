@@ -230,13 +230,15 @@ switch (stat_type)
         % TODO
     
     %NM : maybe rename 'aver_end' in 'aver_time' or any name expressing
-    % that the sensitivity is computed at a specific time
+    % that the sensitivity is computed at a specific time and not
+    % specificly at the end of the trajectory
     case {'aver_end'}
         
         % 1/ Compute bars for variable sensitivities
         for ii = 1:numel(ipts)
-            traj = P.traj(ii); %NM : shouldn't we use the traj_ref field? I don't think so, at least,
-                                            % until we update ComputeTrajSensi
+            traj = P.traj(ii); %NM : 1/ isn't it P.traj(ipts(ii)) ?  2/ shouldn't
+                               % we use the traj_ref field? (I don't think so,
+                               % at least, until we update ComputeTrajSensi)
             for jj = 1:numel(iX)
                 for kk = 1:numel(iP)
                     is = (find(P.dim==iP(kk))-1)*size(traj.X,1)+iX(jj);
@@ -252,7 +254,7 @@ switch (stat_type)
                     p = traj.param(iP(kk));    % p
                     xs = (dx*p)./abs(x);
                     
-                    % Compute the average
+                    % Sum all to compute the average
                     Mend(jj,kk) = Mend(jj,kk)+xs;
                 end
             end
@@ -261,14 +263,9 @@ switch (stat_type)
         Mend = Mend/numel(ipts);
         
         % 2/ Compute bars for properties sensitivities
-        %NM : do not compute an average over all param set in ipts?!!
         for jj = 1:numel(props)
-            for kk = 1:numel(iP)
-                %NM : should we compute the sensitivity at time tau or at
-                %     the end of the simulation? I personally believe that
-                %     we should compute the sensitivity at the end of the
-                %     simulation.
-                [p, x, dx] = QMITL_SEvalDiff(Sys, props{jj}, P,  tspan, iP(kk), taus(jj)); %NM: use traj.time(end) instead of taus(j)?
+            for kk = 1:numel(iP) % for each parameter
+                [p, x, dx] = QMITL_SEvalDiff(Sys, props{jj}, P, tspan, iP(kk), taus(jj));
                 
                 % replace zeros by small quantities
                 ind = find(abs(x)<1e-16);
@@ -277,9 +274,8 @@ switch (stat_type)
                 
                 xs = (dx.*p)./abs(x);
                 
-                % Compute the average
+                % Compute the average over all trajectories
                 Mend(numel(iX)+jj,kk) = mean(xs);
-                
             end
             
         end % end case aver_end
@@ -288,7 +284,7 @@ switch (stat_type)
         
         % 1/ Compute bars for variable sensitivities
         for ii = 1:numel(ipts)
-            traj = P.traj(ii);
+            traj = P.traj(ii); % NM: isn't it P.traj(ipts(ii)) ?
             
             for jj = 1:numel(iX)
                 for kk = 1:numel(iP)
@@ -320,7 +316,8 @@ switch (stat_type)
         %NM : do not compute an average over all param set in ipts?!!
         for jj = 1:numel(props)
             for kk = 1:numel(iP)
-                [p, x, dx] = QMITL_SEvalDiff(Sys, props{jj}, P,  tspan, iP(kk), taus(jj)); %NM : shouldn't we compute all over tspan?
+                  %NM : shouldn't we compute all over tspan? and then keep the max? :
+                [p, x, dx] = QMITL_SEvalDiff(Sys, props{jj}, P, tspan, iP(kk), taus(jj));
                 
                 % replace zeros by small quantities
                 ind = find(abs(x)<1e-16);
@@ -330,7 +327,7 @@ switch (stat_type)
                 xs = (dx.*p)./abs(x);
                 
                 % Compute the average
-                Mend(numel(iX)+jj,kk) = mean(xs); %NM: the mean, really? not the max?
+                Mend(numel(iX)+jj,kk) = mean(xs); %NM: the mean, really? not the max over all the trajectory?
             end
         end
 end % end switch

@@ -1,14 +1,14 @@
-function returnValue = fixLimit(condition)
+function returnValue = fixLimit(errorCondition)
 %FIXLIMIT leads the system to freeze (all derivatives to zero) if the
-%provided condition is not respected. The system must be compiled after
-%calling this method. This method modifies dynamics.cpp and dynamics.h. Use
-%this method only on a non-hybrid system.
+%errorCondition becomes true. The system must be compiled after calling
+%this method. This method modifies dynamics.cpp and dynamics.h. Use this
+%method only on a non-hybrid system.
 %
-% Synopsis : returnValue = fixLimit(condition)
+% Synopsis : returnValue = fixLimit(errorCondition)
 %
 % Input :
-%   - conditions : a string containing a valid C test. If this test is not
-%                  respected, the system is freezed.
+%   - errorCondition : a string containing a valid C test. If this
+%                      condition becomes true, the system is freezed.
 %
 % Output :
 %  - returnValue : an error code. The method returns 0 if it succeeds.
@@ -138,7 +138,7 @@ end
 new_file = [new_file, line];
 new_file = [new_file, declaration];
 new_file = [new_file, '    int prev_q = __data->q;\n'];
-new_file = [new_file, '    if(', condition, ') {\n'];
+new_file = [new_file, '    if(', errorCondition, ') {\n'];
 new_file = [new_file, '        __data->q = 1;\n'];
 new_file = [new_file, '    }\n'];
 
@@ -174,7 +174,7 @@ end
 % we set the value for gout[0]
 new_file = [new_file, line];
 new_file = [new_file, declaration];
-new_file = [new_file, '    if(',condition,') {\n        __gout[0] = -1;\n    } else {\n        __gout[0] = 1;\n    }\n'];
+new_file = [new_file, '    if(',errorCondition,') {\n        __gout[0] = -1;\n    } else {\n        __gout[0] = 1;\n    }\n'];
 
 %and we copy the end of the file
 line = fgets(fid);

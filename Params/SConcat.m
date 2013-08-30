@@ -49,9 +49,8 @@ end
 field_list = {'XS0', 'Xf', 'ExpaMax', 'XSf', 'props_values'};
 
 for i = 1:numel(field_list)
-    
-    if ((isfield(S,field_list{i}))&&(isfield(S2,field_list{i})))
-        if (numel(S.(field_list{i}))==0)
+    if isfield(S,field_list{i}) && isfield(S2,field_list{i})
+        if(numel(S.(field_list{i}))==0)
             S.(field_list{i}) = S2.(field_list{i});
         else
             S.(field_list{i}) = [S.(field_list{i}) S2.(field_list{i})];
@@ -141,3 +140,4 @@ if (isfield(S, 'traj')&&(isfield(S2,'traj')))
     
 end
 
+end
