@@ -59,6 +59,7 @@ global StopWhenFound; % cf doc
 global fopt; % best truth value of prop found for the current initial set of value in P
 global traj_opt; % trajectory leading to fopt truth value of prop
 global xopt; % parameter set leading to the trajectory traj_opt
+global timeout;
 
 found = [];
 if isfield(opt, 'tspan')
@@ -83,6 +84,12 @@ end
 if isfield(opt,'params')
     dim = FindParam(P,opt.params);
     dim = dim(dim<size(P.pts,1)); % keep only existing parameters (either system or constraint parameter)
+
+    P0 = CreateParamSet(Sys, dim);
+    P0 = QuasiRefine(P0, size(P.pts,2));
+    P0.pts = P.pts;
+    P  = P0;
+
 else
     dim = P.dim;
 end
@@ -118,8 +125,15 @@ else
     Ninit = size(P.pts, 2);
 end
 
-phi = QMITL_OptimizePredicates(Sys,phi); % optimization of the predicates
+if isfield(opt,'timeout')
+  timeout=opt.timeout;
+else
+  timeout=inf;
+end
 
+tic;
+
+phi = QMITL_OptimizePredicates(Sys,phi); % optimization of the predicates
 
 %% Initial values
 if(StopWhenFoundInit)
@@ -294,11 +308,17 @@ end
 
 function val = fun_max(x, Sys, phi, tspan, tau)
 %% function fun_max
-global Ptmp fopt traj_opt found StopWhenFound xopt
+global Ptmp fopt traj_opt found StopWhenFound xopt timeout
 
 if(StopWhenFound&&~isempty(found)) %positive value found, do not need to continue
     val = -found; % optimize tries to minimize the objective function, so
     return ;          % we provide it the opposite of the truth value
+end
+
+ct= toc;
+if (ct>timeout)
+  val = -fopt;     %forces convergence of the optimizer in case timeout occured;
+  return;
 end
 
 Ptmp.pts(Ptmp.dim,1)=x;
@@ -330,12 +350,19 @@ end
 
 function val = fun_min(x, Sys, phi, tspan, tau)
 %% function fun_min
-global Ptmp found StopWhenFound fopt traj_opt xopt
+global Ptmp found StopWhenFound fopt traj_opt xopt timeout
 
 if(StopWhenFound&&~isempty(found)) %negative value found, do not need to continue
     val = found;
     return ;
 end
+
+ct= toc; 
+if (ct>timeout)
+  val = fopt;     %forces convergence of the optimizer in case timeout occured;
+  return;
+end
+
 
 Ptmp.pts(Ptmp.dim,1)=x;
 try
@@ -348,9 +375,9 @@ end
 
 val = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
 
-
 if(val<0)
     found = val;
+    return;
 end
 
 if(val<fopt)
@@ -365,7 +392,7 @@ end
 
 function val = fun_zero(x, Sys, phi, tspan, tau)
 %% function fun_zero
-global Ptmp fopt traj_opt xopt
+global Ptmp fopt traj_opt xopt timeout
 Ptmp.pts(Ptmp.dim,1)=x;
 try
     Ptmp = ComputeTraj(Sys, Ptmp, tspan);
@@ -373,6 +400,11 @@ catch %#ok<CTCH>
     warning('SOptimProp:ComputeTraj','Error during trajectory computation when optimizing. Keep going.')
     val = inf; % do not care of the exit condition -3 for nelder-mead algo, it only happens when using global optim
     return ; % we can also let the function terminates
+end
+
+ct= toc; 
+if (ct>timeout)
+  val = fopt;     %forces convergence of the optimizer in case timeout occured;
 end
 
 val = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);

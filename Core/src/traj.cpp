@@ -403,1150 +403,1167 @@ int CVM_ComputeTraj(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) 
 void trajectory::ComputeTraj(Array1D& tspan) {
 
 #if _DEBUG >= 1
-  cout << "Entering traj::ComputeTraj ..." <<endl;
+	cout << "Entering traj::ComputeTraj ..." <<endl;
 #endif
- 
-  /* CVodes Reinitialization */
- 
-#if _DEBUG >= 2
-  cout << "Init CVodes..." << endl;
-#endif  
- 
-  //  InitFdata(f_data, cvm_Mdata->mx_data);
-  int status;
-  int itask = CV_ONE_STEP_TSTOP;
-  int dimu;
-  double tlast,tret,h;
-  booleantype iret = FALSE;
 
-  Fdata* data = (Fdata*) f_data;
-  realtype *xdata = N_VGetArrayPointer(y);
-  Array1D x(xdata,shape(N));
-  Array1D p(data->p,shape(data->dimp));
-
-  double t0 = tspan(0);
-  double tout;
-
-  /* control */ 
+	/* CVodes Reinitialization */
 
 #if _DEBUG >= 2
-  cout << "Control Variable ..." << endl;
+	cout << "Init CVodes..." << endl;
 #endif  
 
-  void * u_data;
-  u_data = (Array1D*) new Array1D(0);  
-  GetU(f_data,  u_data);
-  Array1D* u = (Array1D*) u_data;
-  dimu = (*u).extent(0);
+	//  InitFdata(f_data, cvm_Mdata->mx_data);
+	int status;
+	int itask = CV_ONE_STEP_TSTOP;
+	int dimu;
+	double tlast,tret,h;
+	booleantype iret = FALSE;
 
-  /* working variables */
+	Fdata* data = (Fdata*) f_data;
+	realtype *xdata = N_VGetArrayPointer(y);
+	Array1D x(xdata,shape(N));
+	Array1D p(data->p,shape(data->dimp));
 
-  Range Rx(0,N-1);
-  Range All = Range::all();   
+	double t0 = tspan(0);
+	double tout;
 
-  int kmax=5;
-  int compteur = 0;
-  int i,j;
-  int nb_points = tspan.extent(0);
-  int statusgdk;
+	/* control */
+
+#if _DEBUG >= 2
+	cout << "Control Variable ..." << endl;
+#endif  
+
+	void * u_data;
+	u_data = (Array1D*) new Array1D(0);
+	GetU(f_data,  u_data);
+	Array1D* u = (Array1D*) u_data;
+	dimu = (*u).extent(0);
+
+	/* working variables */
+
+	Range Rx(0,N-1);
+	Range All = Range::all();
+
+	int kmax=5;
+	int compteur = 0;
+	int i,j;
+	int nb_points = tspan.extent(0);
+	int statusgdk;
 
 
-  if (nb_points == 2) {
-    
-    tout = tspan(1);          
-    x = (*p0)(Rx); // new x0
-    p = (*p0)(All);
+	if (nb_points == 2) {
+
+		tout = tspan(1);
+		x = (*p0)(Rx); // new x0
+		p = (*p0)(All);
 #ifdef _TD
-    x(N)=0.;
+		x(N)=0.;
 #endif	    
-    UpdateFdata(t0,y,f_data,0,NULL);		
-    compteur = 0;
-    iret = FALSE;
-    tret = t0;
-	
-    /* Reinit solver */
-      
-    switch (itol) {
-    case CV_SS:
-      CVodeReInit(cvode_mem, f, t0, y, itol, reltol, &Sabstol);      
-      break;
-    case CV_SV:
-      CVodeReInit(cvode_mem, f, t0, y, itol, reltol, NV_abstol);
-      break;
-    }
+		UpdateFdata(t0,y,f_data,0,NULL);
+		compteur = 0;
+		iret = FALSE;
+		tret = t0;
 
-    CVodeSetStopTime(cvode_mem,tout);
-      
-    /* Init root finding for hybrid */
+		/* Reinit solver */
 
-    if (data->dimg>0){
-      CVodeRootInit(cvode_mem, data->dimg, g, f_data);	  	  
-    }
-    
-    /* Init Output Arrays */
-    
-    time->resize(kmax);
-    (*time)(0) = t0;
-    X->resize(N,kmax);
-    (*X)(All,0) = x;
-    U->resize(dimu,kmax);
-    (*U)(All,0)=*u;
-    
-    /* Integrate system until tout */
-	
-    while (1) {
-	  
-      /* Integrate one step */
-      tlast = tret;
-      
+		switch (itol) {
+		case CV_SS:
+			CVodeReInit(cvode_mem, f, t0, y, itol, reltol, &Sabstol);
+			break;
+		case CV_SV:
+			CVodeReInit(cvode_mem, f, t0, y, itol, reltol, NV_abstol);
+			break;
+		}
+
+		CVodeSetStopTime(cvode_mem,tout);
+
+		/* Init root finding for hybrid */
+
+		if (data->dimg>0){
+			CVodeRootInit(cvode_mem, data->dimg, g, f_data);
+		}
+
+		/* Init Output Arrays */
+
+		time->resize(kmax);
+		(*time)(0) = t0;
+		X->resize(N,kmax);
+		(*X)(All,0) = x;
+		U->resize(dimu,kmax);
+		(*U)(All,0)=*u;
+
+		/* Integrate system until tout */
+
+		while (1) {
+
+			/* Integrate one step */
+			tlast = tret;
+
 #if _DEBUG >= 3
-      cout << " CVodes Call ... " << endl;
+			cout << " CVodes Call ... " << endl;
 #endif        
-      status = CVode(cvode_mem, tout, y, &tret, itask);
-	  
-      /* break on CVode error */
-      if (status < 0) {
-	cout << "tout:" << tout << endl;
-	cout << "x:" << x << endl;
+			status = CVode(cvode_mem, tout, y, &tret, itask);
+
+			/* break on CVode error */
+			if (status < 0) {
+				cout << "tout:" << tout << endl;
+				cout << "x:" << x << endl;
 #if _DEBUG >=3
-	cout << "time:" << time << endl;
-	cout << "X:" << *X << endl;
-	cout << "U:" << *U << endl;
+				cout << "time:" << time << endl;
+				cout << "X:" << *X << endl;
+				cout << "U:" << *U << endl;
 #endif
-	CVodeGetDky(cvode_mem, tout, 1, y);
-	cout << "dx:" << x << endl;
-	cout << "CVODES failed miserably for some reason. Status= " << status << endl;
-	mexErrMsgTxt("Dying...");	  
-	return;
-      }
+				CVodeGetDky(cvode_mem, tout, 1, y);
+				cout << "dx:" << x << endl;
+				cout << "CVODES failed miserably for some reason. Status= " << status << endl;
+				cout << "Ending current trajectory - integration might be incomplete" << endl;
+				tout = tret;
+			}
 
-      /* Test if tout was reached */
-      CVodeGetCurrentStep(cvode_mem, &h);
-      
-      if ( (tret - tout)*h >= 0.0 ) {
-	tret = tout;
-	CVodeGetDky(cvode_mem, tout, 0, y);
-	iret = TRUE;
-      }      
-	  
+			/* Test if tout was reached */
+			CVodeGetCurrentStep(cvode_mem, &h);
+
+			if ( (tret - tout)*h >= 0.0 ) {
+				tret = tout;
+				CVodeGetDky(cvode_mem, tout, 0, y);
+				iret = TRUE;
+			}
+
 #if _DEBUG >= 3
-      cout << " On avance, on avance.." << endl;
-      cout << "tret:" << tret <<  endl;
+			cout << " On avance, on avance.." << endl;
+			cout << "tret:" << tret <<  endl;
 #endif
-	  
-      /* Update f_data */
-	  
-      if (UpdateFdata(tret,y,f_data,0,NULL) || status == CV_ROOT_RETURN) {  //Update f_data. if changed at a discontinuity, reinit cvode 
-	    
-	CVodeGetDky(cvode_mem, tret, 0, y);
-	
-	switch (itol) {
-	case CV_SS:
-	  CVodeReInit(cvode_mem, f, tret,y, itol, reltol, &Sabstol);
-	  break;
-	case CV_SV:
-	  CVodeReInit(cvode_mem, f, tret,y, itol, reltol, NV_abstol);
-	  break;
+
+			/* Update f_data */
+
+			if (UpdateFdata(tret,y,f_data,0,NULL) || status == CV_ROOT_RETURN) {  //Update f_data. if changed at a discontinuity, reinit cvode
+
+				CVodeGetDky(cvode_mem, tret, 0, y);
+
+				switch (itol) {
+				case CV_SS:
+					CVodeReInit(cvode_mem, f, tret,y, itol, reltol, &Sabstol);
+					break;
+				case CV_SV:
+					CVodeReInit(cvode_mem, f, tret,y, itol, reltol, NV_abstol);
+					break;
+				}
+				CVodeSetInitStep(cvode_mem,h);
+			}
+
+			/* get input value */
+
+#if _DEBUG >= 3
+			cout << " Appel de GetU " << endl;
+#endif       
+
+			GetU(f_data, u_data);
+
+			/* store step done, resizing arrays if necessary */
+
+#if _DEBUG >= 3
+			cout << " Resizing ... " << endl;
+#endif       
+
+			compteur++;
+			if (compteur < kmax) {
+
+#if _DEBUG >= 3
+				cout << " no need. " << endl;
+#endif       
+
+				(*time)(compteur) = tret;
+				(*U)(All,compteur)= *u;
+				(*X)(All,compteur)= x;
+			}
+
+			else  { // try to guess how many points left
+
+				kmax += max(1,min((int) ceil((tout-tret)/(tret-tlast)),kmax));
+				(*X).resizeAndPreserve(N,kmax);
+				(*U).resizeAndPreserve(dimu,kmax);
+				(*time).resizeAndPreserve(kmax);
+
+				(*time)(compteur) = tret;
+				(*U)(All,compteur)= *u;
+				(*X)(All,compteur)= x;
+			}
+
+			/* break if we need to */
+
+			if(iret)  break;
+			//      cout << "loop or not .. " << endl;
+		}
+
+#if _DEBUG >= 2
+		cout << "Writing trajectory ..." << endl;
+#endif
+
+		/* resize */
+		length = compteur+1;
+		(*X).resizeAndPreserve(N,compteur+1);
+		(*U).resizeAndPreserve(dimu,compteur+1);
+		(*time).resizeAndPreserve(compteur+1);
 	}
-	CVodeSetInitStep(cvode_mem,h);
-      }
-      
-      /* get input value */
-      
-#if _DEBUG >= 3
-      cout << " Appel de GetU " << endl;
-#endif       
-      
-      GetU(f_data, u_data);
 
-      /* store step done, resizing arrays if necessary */
+	else {
 
-#if _DEBUG >= 3
-      cout << " Resizing ... " << endl;
-#endif       
-      
-      compteur++;
-      if (compteur < kmax) {
-	
-#if _DEBUG >= 3
-	cout << " no need. " << endl;
-#endif       
-	
-	(*time)(compteur) = tret;
-	(*U)(All,compteur)= *u;
-	(*X)(All,compteur)= x;     
-      }
+		if ((nb_points == 3)&&(tspan(1)==tspan(2))) {
+			tspan.resizeAndPreserve(2);
+			nb_points = 2;
+		}
 
-      else  { // try to guess how many points left
-	    
-	kmax += max(1,min((int) ceil((tout-tret)/(tret-tlast)),kmax));
-	
-	(*X).resizeAndPreserve(N,kmax);
-	(*U).resizeAndPreserve(dimu,kmax);
-	(*time).resizeAndPreserve(kmax);
-	
-	(*time)(compteur) = tret;
-	(*U)(All,compteur)= *u;
-	(*X)(All,compteur)= x;     
-      }
-    
-      /* break if we need to */
-      
-      if(iret)  break;      
-      //      cout << "loop or not .. " << endl;
-    }
-    
+		length = nb_points;
+		(*X).resize(N,nb_points);
+		(*U).resize(dimu,nb_points);
+		(*time).resize(nb_points);
+		(*time) = tspan;
+
 #if _DEBUG >= 2
-    cout << "Writing trajectory ..." << endl;
+		cout << "Loop over trajectories..." << endl;
 #endif
-    
-    /* resize */   
-    length = compteur+1;
-    (*X).resizeAndPreserve(N,compteur+1);
-    (*U).resizeAndPreserve(dimu,compteur+1);
-    (*time).resizeAndPreserve(compteur+1);    	
-  }
-  
-  else { 
-    
-   if ((nb_points == 3)&&(tspan(1)==tspan(2))) {      
-      tspan.resizeAndPreserve(2);
-      nb_points = 2;
-    }
 
-   length = nb_points;
-   (*X).resize(N,nb_points);
-   (*U).resize(dimu,nb_points);
-   (*time).resize(nb_points);
-   (*time) = tspan;
-    
-#if _DEBUG >= 2
-    cout << "Loop over trajectories..." << endl;
-#endif
-               
-    x = (*p0)(Rx); // new x0
-    p = (*p0)(All);
- 
-    UpdateFdata(t0,y,f_data,0,NULL);
-            
-    (*X)(All,0)= x;
-    GetU(f_data, u_data);
-    (*U)(All,0)=*u;
-      
+		x = (*p0)(Rx); // new x0
+		p = (*p0)(All);
+
+		UpdateFdata(t0,y,f_data,0,NULL);
+
+		(*X)(All,0)= x;
+		GetU(f_data, u_data);
+		(*U)(All,0)=*u;
+
 #ifdef _TD
-    x(N)=0.;
+x(N)=0.;
 #endif	
-    iret = FALSE;
-    
-    /* Reinit solver */
-    
-    switch (itol) {
-    case CV_SS:
-      status = CVodeReInit(cvode_mem, f, t0, y, itol, reltol, &Sabstol);      
-      break;
-    case CV_SV:
-      status = CVodeReInit(cvode_mem, f, t0, y, itol, reltol, NV_abstol);
-      break;
-    }
-    
-    /* Init root finding for hybrid */
-    
-    if (data->dimg>0) {
-      CVodeRootInit(cvode_mem, data->dimg, g, f_data);
-    }
-    
-    for(i=1; i<nb_points;i++) {
-      
-      iret = FALSE;
-      tout=tspan(i);
-      
-      CVodeSetStopTime(cvode_mem,tout);
+iret = FALSE;
 
-      /* Integrate system until tout */
-      
-      while (1) {
-	
-	/* Integrate one step */
-	status = CVode(cvode_mem, tout, y, &tret, itask);
-	
-	/* break on CVode error */
-	if (status < 0) mexErrMsgTxt("Cvodes error.");   
-	  
-	/* Test if tout was reached */
-	CVodeGetCurrentStep(cvode_mem, &h);
-	
-	if ( (tret - tout)*h >= 0.0 ) {
-	  tret = tout;
-	  CVodeGetDky(cvode_mem, tout, 0, y);
-	  iret = TRUE;
-	}      
-	
-	/* Update f_data */
-	
-	if (UpdateFdata(tret,y,f_data,0,NULL)||status == CV_ROOT_RETURN) { /* if f_data changed in a discontinuity, reinit cvode */
-	  CVodeGetDky(cvode_mem, tret, 0, y);
-	  
-	  switch (itol) {
-	  case CV_SS:
-	    status = CVodeReInit(cvode_mem, f, tret,y, itol, reltol, &Sabstol);      
-	    break;
-	  case CV_SV:
-	    status = CVodeReInit(cvode_mem, f, tret,y, itol, reltol, NV_abstol);
-	  }
-	  CVodeSetInitStep(cvode_mem,h);
+/* Reinit solver */
+
+switch (itol) {
+case CV_SS:
+	status = CVodeReInit(cvode_mem, f, t0, y, itol, reltol, &Sabstol);
+	break;
+case CV_SV:
+	status = CVodeReInit(cvode_mem, f, t0, y, itol, reltol, NV_abstol);
+	break;
+}
+
+/* Init root finding for hybrid */
+
+if (data->dimg>0) {
+	CVodeRootInit(cvode_mem, data->dimg, g, f_data);
+}
+
+for(i=1; i<nb_points;i++) {
+
+	iret = FALSE;
+	tout=tspan(i);
+
+	CVodeSetStopTime(cvode_mem,tout);
+
+	/* Integrate system until tout */
+
+	while (1) {
+
+		/* Integrate one step */
+		status = CVode(cvode_mem, tout, y, &tret, itask);
+
+		/* give up trajectory on CVode error */
+		if (status < 0) {
+			cout << "CVodes error, ending computation of current trajectory before tend." << endl;
+			nb_points = i;
+			tout =tret;
+			(*X).resizeAndPreserve(N,nb_points);
+			(*U).resizeAndPreserve(dimu,nb_points);
+			(*time).resizeAndPreserve(nb_points);
+		}
+
+
+		/* Test if tout was reached */
+		CVodeGetCurrentStep(cvode_mem, &h);
+
+		if ( (tret - tout)*h >= 0.0 ) {
+			tret = tout;
+			CVodeGetDky(cvode_mem, tout, 0, y);
+			iret = TRUE;
+		}
+
+		/* Update f_data */
+
+		if (UpdateFdata(tret,y,f_data,0,NULL)||status == CV_ROOT_RETURN) { /* if f_data changed in a discontinuity, reinit cvode */
+			CVodeGetDky(cvode_mem, tret, 0, y);
+
+			switch (itol) {
+			case CV_SS:
+				status = CVodeReInit(cvode_mem, f, tret,y, itol, reltol, &Sabstol);
+				break;
+			case CV_SV:
+				status = CVodeReInit(cvode_mem, f, tret,y, itol, reltol, NV_abstol);
+			}
+			CVodeSetInitStep(cvode_mem,h);
+		}
+
+		/* break if we need to */
+		if(iret)  break;
 	}
-	  
-	/* break if we need to */
-	if(iret)  break;      
-      }
-	
-      GetU(f_data, u_data);
-      (*U)(All,i)= *u;
-      (*X)(All,i)= x;	
-    }       
-  }
+
+	GetU(f_data, u_data);
+	(*U)(All,i)= *u;
+	(*X)(All,i)= x;
+}
+	}
 
 #if _DEBUG >= 1
-  cout << "Leaving ComputeTraj." << endl;
+	cout << "Leaving ComputeTraj." << endl;
 #endif
 }
 
 void trajectory::ComputeTraj(Array1D& tspan, vector<int>& indx_u,  Array1D& tin, Array2D& uval) {
 
 #if _DEBUG >= 1
-    cout << "Entering traj::ComputeTraj ..." <<endl;
+	cout << "Entering traj::ComputeTraj ..." <<endl;
 #endif
- 
-  /* CVodes Reinitialization */
- 
-#if _DEBUG >= 2
-  cout << "Init CVodes..." << endl;
-#endif  
- 
-  //  InitFdata(f_data, cvm_Mdata->mx_data);
-  int status;
-  int itask = CV_ONE_STEP_TSTOP;
-  int dimu;
-  double tlast,tret,h;
-  booleantype iret = FALSE;
 
-  Fdata* data = (Fdata*) f_data;
-  realtype *xdata = N_VGetArrayPointer(y);
-  Array1D x(xdata,shape(N));
-  Array1D p(data->p,shape(data->dimp));
-
-  double t0 = tspan(0);
-  double tout, tend;
-
-  /* inputs */ 
+	/* CVodes Reinitialization */
 
 #if _DEBUG >= 2
-  cout << "Control Variable ..." << endl;
+	cout << "Init CVodes..." << endl;
 #endif  
 
-  int i_u = 0, n_idxu = indx_u.size();
-  int n_u = tin.extent(0);
+	//  InitFdata(f_data, cvm_Mdata->mx_data);
+	int status;
+	int itask = CV_ONE_STEP_TSTOP;
+	int dimu;
+	double tlast,tret,h;
+	booleantype iret = FALSE;
 
-  //  cout << "tin:" << tin << endl;
-  //  cout << "uval" << uval << endl;  
+	Fdata* data = (Fdata*) f_data;
+	realtype *xdata = N_VGetArrayPointer(y);
+	Array1D x(xdata,shape(N));
+	Array1D p(data->p,shape(data->dimp));
 
-  /* working variables */
+	double t0 = tspan(0);
+	double tout, tend;
 
-  Range Rx(0,N-1);
-  Range All = Range::all();   
+	/* inputs */
 
-  int kmax=5;
-  int compteur = 0;
-  int i,j;
-  int nb_points = tspan.extent(0);
-  int statusgdk;
+#if _DEBUG >= 2
+	cout << "Control Variable ..." << endl;
+#endif  
 
-  if (nb_points == 2) { 
-     
-    x = (*p0)(Rx); // new x0
-    p = (*p0)(All);
-    UpdateFdata(t0,y,f_data,0,NULL);		
-    compteur = 0;
-    iret = FALSE;
-    tret = t0;       
+	int i_u = 0, n_idxu = indx_u.size();
+	int n_u = tin.extent(0);
 
-    tend = tspan(1);  
-    
-    /* if first input is at 0, initialize it */
-    if (tin(i_u)<=t0) {          
-      for (int k = 0; k < n_idxu; k++) 
-	if ( indx_u[k] <= N)
-	  x(indx_u[k]-1) = uval(k, i_u);
-	else 
-	  p(indx_u[k]-1) = uval(k, i_u);      
-      i_u++;
-      tout = min(tin(i_u), tend);
-    }
-    else
-      tout = min(tin(i_u), tend);
-  	
-    /* Reinit solver */
-      
-    switch (itol) {
-    case CV_SS:
-      CVodeReInit(cvode_mem, f, t0, y, itol, reltol, &Sabstol);      
-      break;
-    case CV_SV:
-      CVodeReInit(cvode_mem, f, t0, y, itol, reltol, NV_abstol);
-      break;
-    }
+	//  cout << "tin:" << tin << endl;
+	//  cout << "uval" << uval << endl;
 
-    CVodeSetStopTime(cvode_mem, tout);
-      
-    /* Init root finding for hybrid */
+	/* working variables */
 
-    if (data->dimg>0){
-      CVodeRootInit(cvode_mem, data->dimg, g, f_data);	  	  
-    }
-    
-    /* Init Output Arrays */
-    
-    time->resize(kmax);
-    (*time)(0) = t0;
-    X->resize(N,kmax);
-    (*X)(All,0) = x;
-    U->resize(0,kmax);
-    
-    /* Integrate system until tout */
-	
-    while (1) {
-	  
-      /* Integrate one step */
-      tlast = tret;
-      
+	Range Rx(0,N-1);
+	Range All = Range::all();
+
+	int kmax=5;
+	int compteur = 0;
+	int i,j;
+	int nb_points = tspan.extent(0);
+	int statusgdk;
+
+	if (nb_points == 2) {
+
+		x = (*p0)(Rx); // new x0
+		p = (*p0)(All);
+		UpdateFdata(t0,y,f_data,0,NULL);
+		compteur = 0;
+		iret = FALSE;
+		tret = t0;
+
+		tend = tspan(1);
+
+		/* if first input is at 0, initialize it */
+		if (tin(i_u)<=t0) {
+			for (int k = 0; k < n_idxu; k++)
+				if ( indx_u[k] <= N)
+					x(indx_u[k]-1) = uval(k, i_u);
+				else
+					p(indx_u[k]-1) = uval(k, i_u);
+			i_u++;
+			tout = min(tin(i_u), tend);
+		}
+		else
+			tout = min(tin(i_u), tend);
+
+		/* Reinit solver */
+
+		switch (itol) {
+		case CV_SS:
+			CVodeReInit(cvode_mem, f, t0, y, itol, reltol, &Sabstol);
+			break;
+		case CV_SV:
+			CVodeReInit(cvode_mem, f, t0, y, itol, reltol, NV_abstol);
+			break;
+		}
+
+		CVodeSetStopTime(cvode_mem, tout);
+
+		/* Init root finding for hybrid */
+
+		if (data->dimg>0){
+			CVodeRootInit(cvode_mem, data->dimg, g, f_data);
+		}
+
+		/* Init Output Arrays */
+
+		time->resize(kmax);
+		(*time)(0) = t0;
+		X->resize(N,kmax);
+		(*X)(All,0) = x;
+		U->resize(0,kmax);
+
+		/* Integrate system until tout */
+
+		while (1) {
+
+			/* Integrate one step */
+			tlast = tret;
+
 #if _DEBUG >= 3
-      cout << " CVodes Call ... " << endl;
+			cout << " CVodes Call ... " << endl;
 #endif        
-      status = CVode(cvode_mem, tout, y, &tret, itask);
-	  
-      /* break on CVode error */
-      if (status < 0) {
-	cout << "tout:" << tout << endl;
-	cout << "x:" << x << endl;
+			status = CVode(cvode_mem, tout, y, &tret, itask);
+
+			/* break on CVode error */
+			if (status < 0) {
+				cout << "tout:" << tout << endl;
+				cout << "x:" << x << endl;
 #if _DEBUG >=3
-	cout << "time:" << time << endl;
-	cout << "X:" << *X << endl;
-	cout << "U:" << *U << endl;
+				cout << "time:" << time << endl;
+				cout << "X:" << *X << endl;
+				cout << "U:" << *U << endl;
 #endif
-	CVodeGetDky(cvode_mem, tout, 1, y);
-	cout << "dx:" << x << endl;
-	cout << "CVODES failed for some reason. Status= " << status << endl;
-	mexErrMsgTxt("Dying...");	  
-	return;
-      }
+				CVodeGetDky(cvode_mem, tout, 1, y);
+				cout << "dx:" << x << endl;
+				cout << "CVODES failed for some reason. Status= " << status << endl;
+				cout << "Ending current trajectory before tend." << endl;
+				tout = tret;
+			}
 
-      /* Test if tout was reached */
-      CVodeGetCurrentStep(cvode_mem, &h);
-      
-      if ( (tret - tout)*h >= 0.0 ) {
-	tret = tout;
-	CVodeGetDky(cvode_mem, tout, 0, y);
-	/* check if we need to update inputs */
-	if (tout == tend) {
-	  iret = TRUE;
-	  break;
-	}
-      }      
-	  
+			/* Test if tout was reached */
+			CVodeGetCurrentStep(cvode_mem, &h);
+
+			if ( (tret - tout)*h >= 0.0 ) {
+				tret = tout;
+				CVodeGetDky(cvode_mem, tout, 0, y);
+				/* check if we need to update inputs */
+				if (tout == tend) {
+					iret = TRUE;
+					break;
+				}
+			}
+
 #if _DEBUG >= 3
-      cout << " On avance, on avance.." << endl;
-      cout << "tret:" << tret <<  endl;
+			cout << " On avance, on avance.." << endl;
+			cout << "tret:" << tret <<  endl;
 #endif
-	  
-      /* Update f_data */
-	  
-      if (UpdateFdata(tret,y,f_data,0,NULL) || status == CV_ROOT_RETURN || status == CV_TSTOP_RETURN) {  //Update f_data. if changed at a discontinuity, reinit cvode 
 
-	CVodeGetDky(cvode_mem, tret, 0, y);
+			/* Update f_data */
 
-	/* update inputs */
-	 for (int k = 0; k < n_idxu; k++) 
-	   if ( indx_u[k] <= N )
-	     x(indx_u[k]-1) = uval(k, i_u);
-	   else
-	     p(indx_u[k]-1) = uval(k, i_u);
+			if (UpdateFdata(tret,y,f_data,0,NULL) || status == CV_ROOT_RETURN || status == CV_TSTOP_RETURN) {  //Update f_data. if changed at a discontinuity, reinit cvode
 
-	 i_u++;
-	 // update time step
-	 if (i_u == n_u)
-	   tout = tend;
-	 else
-	   tout = min(tin(i_u), tend);
+				CVodeGetDky(cvode_mem, tret, 0, y);
 
-	 CVodeSetStopTime(cvode_mem, tout);	   
-	  
+				/* update inputs */
+				for (int k = 0; k < n_idxu; k++)
+					if ( indx_u[k] <= N )
+						x(indx_u[k]-1) = uval(k, i_u);
+					else
+						p(indx_u[k]-1) = uval(k, i_u);
+
+				i_u++;
+				// update time step
+				if (i_u == n_u)
+					tout = tend;
+				else
+					tout = min(tin(i_u), tend);
+
+				CVodeSetStopTime(cvode_mem, tout);
+
+				switch (itol) {
+				case CV_SS:
+					CVodeReInit(cvode_mem, f, tret,y, itol, reltol, &Sabstol);
+					break;
+				case CV_SV:
+					CVodeReInit(cvode_mem, f, tret,y, itol, reltol, NV_abstol);
+					break;
+				}
+				CVodeSetInitStep(cvode_mem,h);
+			}
 
 
-	switch (itol) {
-	case CV_SS:
-	  CVodeReInit(cvode_mem, f, tret,y, itol, reltol, &Sabstol);
-	  break;
-	case CV_SV:
-	  CVodeReInit(cvode_mem, f, tret,y, itol, reltol, NV_abstol);
-	  break;
+			/* store step done, resizing arrays if necessary */
+
+			compteur++;
+			if (compteur < kmax) {
+
+				(*time)(compteur) = tret;
+				(*X)(All,compteur)= x;
+			}
+
+			else  { // try to guess how many points left
+
+				kmax += max(1,min((int) ceil((tout-tret)/(tret-tlast)),kmax));
+
+				(*X).resizeAndPreserve(N,kmax);
+				(*U).resizeAndPreserve(0,kmax);
+				(*time).resizeAndPreserve(kmax);
+
+				(*time)(compteur) = tret;
+				(*X)(All,compteur)= x;
+			}
+
+			/* break if we need to */
+
+			if(iret)  break;
+		}
+
+		/* resize */
+		length = compteur+1;
+		(*X).resizeAndPreserve(N,compteur+1);
+		(*U).resizeAndPreserve(0,compteur+1);
+		(*time).resizeAndPreserve(compteur+1);
 	}
-	CVodeSetInitStep(cvode_mem,h);
-      }
-      
-            
-      /* store step done, resizing arrays if necessary */
-      
-      compteur++;
-      if (compteur < kmax) {
-		
-	(*time)(compteur) = tret;
-	(*X)(All,compteur)= x;     
-      }
 
-      else  { // try to guess how many points left
-	    
-	kmax += max(1,min((int) ceil((tout-tret)/(tret-tlast)),kmax));
-	
-	(*X).resizeAndPreserve(N,kmax);
-	(*U).resizeAndPreserve(0,kmax);
-	(*time).resizeAndPreserve(kmax);
-	
-	(*time)(compteur) = tret;
-	(*X)(All,compteur)= x;     
-      }
-    
-      /* break if we need to */
-      
-      if(iret)  break;      
-      //      cout << "loop or not .. " << endl;
-    }
-       
-    /* resize */   
-    length = compteur+1;
-    (*X).resizeAndPreserve(N,compteur+1);
-    (*U).resizeAndPreserve(0,compteur+1);
-    (*time).resizeAndPreserve(compteur+1);    	
-  }
-  
-  else { 
-    
-   if ((nb_points == 3)&&(tspan(1)==tspan(2))) {      
-      tspan.resizeAndPreserve(2);
-      nb_points = 2;
-    }
+	else {
 
-   length = nb_points;
-   (*X).resize(N,nb_points);
-   (*U).resize(0,nb_points);
-   (*time).resize(nb_points);
-   (*time) = tspan;
-               
-    x = (*p0)(Rx); // new x0
-    p = (*p0)(All);
- 
-    UpdateFdata(t0,y,f_data,0,NULL);
-            
-    (*X)(All,0)= x;
-    iret = FALSE;
+		if ((nb_points == 3)&&(tspan(1)==tspan(2))) {
+			tspan.resizeAndPreserve(2);
+			nb_points = 2;
+		}
 
-    /* if first input is at 0, initialize it */
-    if (tin(i_u)<=t0) {             
-      for (int k = 0; k < n_idxu; k++) 
-	if ( indx_u[k] <= N)
-	  x(indx_u[k]-1) = uval(k, i_u);
-	else 
-	  p(indx_u[k]-1) = uval(k, i_u);      
-      i_u++;
-    }
-    
-    /* Reinit solver */
-    
-    switch (itol) {
-    case CV_SS:
-      status = CVodeReInit(cvode_mem, f, t0, y, itol, reltol, &Sabstol);      
-      break;
-    case CV_SV:
-      status = CVodeReInit(cvode_mem, f, t0, y, itol, reltol, NV_abstol);
-      break;
-    }
-    
-    /* Init root finding for hybrid */
-    
-    if (data->dimg>0) {
-      CVodeRootInit(cvode_mem, data->dimg, g, f_data);
-    }
-    
-    for(i=1; i<nb_points;i++) {
-      
-      iret = FALSE;
-      tend =tspan(i);     
-      //     cout << "tend: " << tend << " tin(" << i_u << "):" << tin(i_u) << endl;
- 
-      if (i_u+1< n_u)
-      	tout = min(tin(i_u), tend);
-      else      
-	tout = tend;
+		length = nb_points;
+		(*X).resize(N,nb_points);
+		(*U).resize(0,nb_points);
+		(*time).resize(nb_points);
+		(*time) = tspan;
 
-      CVodeSetStopTime(cvode_mem,tout);
+		x = (*p0)(Rx); // new x0
+		p = (*p0)(All);
 
-      /* Integrate system until tout */
-      while (1) {
+		UpdateFdata(t0,y,f_data,0,NULL);
 
-	/* Integrate one step */
-	status = CVode(cvode_mem, tout, y, &tret, itask);
-	
-	/* break on CVode error */
-	if (status < 0) mexErrMsgTxt("Cvodes error.");   
-	
-	/* Test if tout was reached */
-	CVodeGetCurrentStep(cvode_mem, &h);
-	
-	if ( (tret - tout)*h >= 0.0 ) {	  
+		(*X)(All,0)= x;
+		iret = FALSE;
 
-	  tret = tout;
-	  CVodeGetDky(cvode_mem, tout, 0, y);
+		/* if first input is at 0, initialize it */
+		if (tin(i_u)<=t0) {
+			for (int k = 0; k < n_idxu; k++)
+				if ( indx_u[k] <= N)
+					x(indx_u[k]-1) = uval(k, i_u);
+				else
+					p(indx_u[k]-1) = uval(k, i_u);
+			i_u++;
+		}
 
-	  /* check if we need to break or update inputs */
-	  if (tret == tin(i_u)) {
+		/* Reinit solver */
 
-	    /* update inputs */
-	    for (int k = 0; k < n_idxu; k++) 
-	      if ( indx_u[k] <= N)
-		x(indx_u[k]-1) = uval(k, i_u);
-	      else {
-		//		cout <<  "p(" << indx_u[k]-1 << ") = " <<  uval(k, i_u) << endl;
-		p(indx_u[k]-1) = uval(k, i_u);
-	      }
+		switch (itol) {
+		case CV_SS:
+			status = CVodeReInit(cvode_mem, f, t0, y, itol, reltol, &Sabstol);
+			break;
+		case CV_SV:
+			status = CVodeReInit(cvode_mem, f, t0, y, itol, reltol, NV_abstol);
+			break;
+		}
 
-	    /* Reinit solver */
-	    switch (itol) {
-	    case CV_SS:
-	      status = CVodeReInit(cvode_mem, f, tret,y, itol, reltol, &Sabstol);      
-	      break;
-	    case CV_SV:
-	      status = CVodeReInit(cvode_mem, f, tret,y, itol, reltol, NV_abstol);
-	    }
-	      
-	    /* update time step */
-	    if (i_u + 1< n_u) 
-	      i_u++;
-	    
-	    if (tout == tend)
-	      break;
-	    
-	    if (tout== tin(i_u))
-	      tout = tend;
-	    else
-	      min(tin(i_u), tend);	        	  	  
-	    
-	    CVodeSetStopTime(cvode_mem, tout);	  	    
-	    	  
-	    continue;	  	  	  	  
-	  }
+		/* Init root finding for hybrid */
 
-	  if (tret == tend)
-	    iret=TRUE;	    
-	}	
-	/* Update f_data */
-	
-	if (UpdateFdata(tret,y,f_data,0,NULL)||status == CV_ROOT_RETURN) { /* if f_data changed in a discontinuity, reinit cvode */
+		if (data->dimg>0) {
+			CVodeRootInit(cvode_mem, data->dimg, g, f_data);
+		}
 
-	  CVodeGetDky(cvode_mem, tret, 0, y);
-	  
-	  switch (itol) {
-	  case CV_SS:
-	    status = CVodeReInit(cvode_mem, f, tret,y, itol, reltol, &Sabstol);      
-	    break;
-	  case CV_SV:
-	    status = CVodeReInit(cvode_mem, f, tret,y, itol, reltol, NV_abstol);
-	  }
-	  CVodeSetInitStep(cvode_mem,h);
-	}	  
+		for(i=1; i<nb_points;i++) {
 
-	if (iret)
-	  break;
-      } // end while (1)
+			iret = FALSE;
+			tend =tspan(i);
+			//     cout << "tend: " << tend << " tin(" << i_u << "):" << tin(i_u) << endl;
 
-      (*X)(All,i)= x;	
-    }       
-  }
+			if (i_u+1< n_u)
+				tout = min(tin(i_u), tend);
+			else
+				tout = tend;
+
+			CVodeSetStopTime(cvode_mem,tout);
+
+			/* Integrate system until tout */
+			while (1) {
+
+				/* Integrate one step */
+				status = CVode(cvode_mem, tout, y, &tret, itask);
+
+				/* break on CVode error */
+				if (status < 0) {
+					nb_points = i;
+					tout = tret;
+					tend = tout;
+					cout << "CVode failed, ending current trajectory no matter what." << endl;
+					(*X).resizeAndPreserve(N,nb_points);
+					(*U).resizeAndPreserve(dimu,nb_points);
+					(*time).resizeAndPreserve(nb_points);
+				}
+
+				/* Test if tout was reached */
+				CVodeGetCurrentStep(cvode_mem, &h);
+
+				if ( (tret - tout)*h >= 0.0 ) {
+
+					tret = tout;
+					CVodeGetDky(cvode_mem, tout, 0, y);
+
+					/* check if we need to break or update inputs */
+					if (tret == tin(i_u)) {
+
+						/* update inputs */
+						for (int k = 0; k < n_idxu; k++)
+							if ( indx_u[k] <= N)
+								x(indx_u[k]-1) = uval(k, i_u);
+							else {
+								//		cout <<  "p(" << indx_u[k]-1 << ") = " <<  uval(k, i_u) << endl;
+								p(indx_u[k]-1) = uval(k, i_u);
+							}
+
+						/* Reinit solver */
+						switch (itol) {
+						case CV_SS:
+							status = CVodeReInit(cvode_mem, f, tret,y, itol, reltol, &Sabstol);
+							break;
+						case CV_SV:
+							status = CVodeReInit(cvode_mem, f, tret,y, itol, reltol, NV_abstol);
+						}
+
+						/* update time step */
+						if (i_u + 1< n_u)
+							i_u++;
+
+						if (tout == tend)
+							break;
+
+						if (tout== tin(i_u))
+							tout = tend;
+						else
+							min(tin(i_u), tend);
+
+						CVodeSetStopTime(cvode_mem, tout);
+
+						continue;
+					}
+
+					if (tret == tend)
+						iret=TRUE;
+				}
+				/* Update f_data */
+
+				if (UpdateFdata(tret,y,f_data,0,NULL)||status == CV_ROOT_RETURN) { /* if f_data changed in a discontinuity, reinit cvode */
+
+					CVodeGetDky(cvode_mem, tret, 0, y);
+
+					switch (itol) {
+					case CV_SS:
+						status = CVodeReInit(cvode_mem, f, tret,y, itol, reltol, &Sabstol);
+						break;
+					case CV_SV:
+						status = CVodeReInit(cvode_mem, f, tret,y, itol, reltol, NV_abstol);
+					}
+					CVodeSetInitStep(cvode_mem,h);
+				}
+
+				if (iret)
+					break;
+			} // end while (1)
+
+			(*X)(All,i)= x;
+		}
+	}
 
 #if _DEBUG >= 1
-  cout << "Leaving ComputeTraj." << endl;
+	cout << "Leaving ComputeTraj." << endl;
 #endif
 }
 
 void trajectory::ComputeTrajSensi(Array1D& tspan) {
 
- #if _DEBUG >= 1
-  cout << "Entering trajectory::ComputeTrajSensi ..." <<endl;
- #endif
+#if _DEBUG >= 1
+	cout << "Entering trajectory::ComputeTrajSensi ..." <<endl;
+#endif
 
-  /* Sensitivity Reinitialisation */
-  
-  Array2D xS(N,Ns,ColumnMajorArray<2>());
-  xS = 0;
-  double *xSdata = xS.data();
+	/* Sensitivity Reinitialisation */
 
-  /* CVodes Reinitialization */
+	Array2D xS(N,Ns,ColumnMajorArray<2>());
+	xS = 0;
+	double *xSdata = xS.data();
 
-  InitFdata(f_data, cvm_Mdata->mx_data);
-  CVodeSetMaxConvFails(cvode_mem,20);
+	/* CVodes Reinitialization */
 
-  int status, statusFSA;
-  int itask = CV_ONE_STEP_TSTOP;
-  int dimu;
-  double tret,h;
-  booleantype iret = FALSE;
-  Fdata* data = (Fdata*) f_data;
-  realtype *xdata = N_VGetArrayPointer(y);
-  Array1D x(xdata,shape(N),neverDeleteData);
-  Array1D p(data->p,shape(data->dimp),neverDeleteData);
+	InitFdata(f_data, cvm_Mdata->mx_data);
+	CVodeSetMaxConvFails(cvode_mem,20);
 
-  /* declarations for root (guard) functions  */
+	int status, statusFSA;
+	int itask = CV_ONE_STEP_TSTOP;
+	int dimu;
+	double tret,h;
+	booleantype iret = FALSE;
+	Fdata* data = (Fdata*) f_data;
+	realtype *xdata = N_VGetArrayPointer(y);
+	Array1D x(xdata,shape(N),neverDeleteData);
+	Array1D p(data->p,shape(data->dimp),neverDeleteData);
 
-  data->ns = Ns;
-  int * rootsfound  = (int*) malloc( sizeof(int)*(data->dimg));
-  int ig;
+	/* declarations for root (guard) functions  */
 
-  /* control */
+	data->ns = Ns;
+	int * rootsfound  = (int*) malloc( sizeof(int)*(data->dimg));
+	int ig;
 
-  void* u_data;
-  u_data = (Array1D*) new Array1D(0);  
-  GetU(f_data, u_data);
-  Array1D * u = (Array1D*) u_data; 
-  dimu = (*u).extent(0);
+	/* control */
 
-  /* working variables */
+	void* u_data;
+	u_data = (Array1D*) new Array1D(0);
+	GetU(f_data, u_data);
+	Array1D * u = (Array1D*) u_data;
+	dimu = (*u).extent(0);
 
-  Range Rx(0,N-1);
-  Range All = Range::all();   
+	/* working variables */
 
-  int kmax = 5;
-  int compteur = 0;
-  int i,is,j;
-  double tlast,tcur;
-  int nb_points = tspan.extent(0);
+	Range Rx(0,N-1);
+	Range All = Range::all();
 
-  double t0, tout;
+	int kmax = 5;
+	int compteur = 0;
+	int i,is,j;
+	double tlast,tcur;
+	int nb_points = tspan.extent(0);
 
-  if (nb_points == 2) {
+	double t0, tout;
 
-    t0 = tspan(0);
-    tlast = tret = t0;
-    tout = tspan(1);
-    
-    x = (*p0)(Rx); // new x0
-    p = (*p0)(All);
-      
-    UpdateFdata(t0,y,f_data,0,NULL);
+	if (nb_points == 2) {
 
-    compteur = 0; 
-    iret = FALSE;
-    
-    /* Init output arrays  */
-    
-    time->resize(kmax);
-    (*time)(0) = t0;
-    X->resize(N,kmax);
-    (*X)(All,0) = x;
-    U->resize(dimu,kmax);
-    (*U)(All,0)=*u;
-    XS->resize(N*Ns,kmax);
-        
-    for (is=0; is<Ns; is++)
-      GetData(yS0[is], &xSdata[is*N], N);
-      
-    for (is=0; is<Ns; is++) 
-      for (i=0; i <N; i++)
-	(*XS)(i+is*N ,0) =xS(i,is) ;	    
-    
-    /* Reinit solver */
+		t0 = tspan(0);
+		tlast = tret = t0;
+		tout = tspan(1);
 
-    switch (itol) {
-    case CV_SS:
-      status = CVodeReInit(cvode_mem, f, t0, y, itol, reltol, &Sabstol);
-      statusFSA= CVodeSensReInit(cvode_mem,ism,yS0);
-      break;
-    case CV_SV:
-      status = CVodeReInit(cvode_mem, f, t0, y, itol, reltol, NV_abstol);
-      statusFSA = CVodeSensReInit(cvode_mem,ism,yS0);
-      break;
-    }
+		x = (*p0)(Rx); // new x0
+		p = (*p0)(All);
 
-    CVodeSetStopTime(cvode_mem,tout);
-  
-    /* Init root finding for hybrid */
-      
-    if (data->dimg>0){
-	CVodeRootInit(cvode_mem, data->dimg, g, f_data);	  	  
-    }
+		UpdateFdata(t0,y,f_data,0,NULL);
 
-    /* Integrate system until tout */
-      
-      while (1) {
-	
-	tlast = tret;
-      
+		compteur = 0;
+		iret = FALSE;
+
+		/* Init output arrays  */
+
+		time->resize(kmax);
+		(*time)(0) = t0;
+		X->resize(N,kmax);
+		(*X)(All,0) = x;
+		U->resize(dimu,kmax);
+		(*U)(All,0)=*u;
+		XS->resize(N*Ns,kmax);
+
+		for (is=0; is<Ns; is++)
+			GetData(yS0[is], &xSdata[is*N], N);
+
+		for (is=0; is<Ns; is++)
+			for (i=0; i <N; i++)
+				(*XS)(i+is*N ,0) =xS(i,is) ;
+
+		/* Reinit solver */
+
+		switch (itol) {
+		case CV_SS:
+			status = CVodeReInit(cvode_mem, f, t0, y, itol, reltol, &Sabstol);
+			statusFSA= CVodeSensReInit(cvode_mem,ism,yS0);
+			break;
+		case CV_SV:
+			status = CVodeReInit(cvode_mem, f, t0, y, itol, reltol, NV_abstol);
+			statusFSA = CVodeSensReInit(cvode_mem,ism,yS0);
+			break;
+		}
+
+		CVodeSetStopTime(cvode_mem,tout);
+
+		/* Init root finding for hybrid */
+
+		if (data->dimg>0){
+			CVodeRootInit(cvode_mem, data->dimg, g, f_data);
+		}
+
+		/* Integrate system until tout */
+
+		while (1) {
+
+			tlast = tret;
+
 #if _DEBUG >=2
-	cout << "Calling CVode .."<< " tout: "<< tout << endl;
-	N_VPrint_Serial(y);
+			cout << "Calling CVode .."<< " tout: "<< tout << endl;
+			N_VPrint_Serial(y);
 #endif
-	status = CVode(cvode_mem, tout, y, &tret, itask);
-        
-	/* break and diagnose on CVode error */
-	
-	if (status < 0) {
-	
-	  cout << "aie, problem." << endl;
-	  cout << "status (see cvodes guide):" << status << endl;
-	  cout << "traj no: " << j << endl;
-	  cout << "tout:" << tout << endl;	  
-	  cout << "p:" << p << endl;
-	  cout << "x:" << x << endl;
+			status = CVode(cvode_mem, tout, y, &tret, itask);
+
+			/* break and diagnose on CVode error */
+
+			if (status < 0) {
+
+				cout << "aie, problem." << endl;
+				cout << "status (see cvodes guide):" << status << endl;
+				cout << "traj no: " << j << endl;
+				cout << "tout:" << tout << endl;
+				cout << "p:" << p << endl;
+				cout << "x:" << x << endl;
 #if _DEBUG>=3
-	  cout << "time:" << *time << endl;
-	  cout << "X:" << *X << endl;
-	  cout << "XS:" << *XS << endl;
-	  cout << "U:" << *U << endl;
+				cout << "time:" << *time << endl;
+				cout << "X:" << *X << endl;
+				cout << "XS:" << *XS << endl;
+				cout << "U:" << *U << endl;
 #endif
-	  CVodeGetDky(cvode_mem, tout, 1, y);
-	  cout << "dx:" << x << endl;	
-	  cout << "CVODES failed for some reason. Yep. Status= " << status << endl;
-	  mexErrMsgTxt("Dying...");	      
-	
-	  return;
-	}
-      
-	/* Test if tout was reached */
-	
-	CVodeGetCurrentStep(cvode_mem, &h);
-	if ( (tret - tout)*h >= 0.0 ) {
-	  tret = tout;
-	  CVodeGetDky(cvode_mem, tout, 0, y);
-	  iret = TRUE;
-	}      
-      
-	/* get sensitivity */
-      
-	CVodeGetSens(cvode_mem, tret, yS);
-      
-	/* Tests if a root is found  */
-	
-	if (status == CV_ROOT_RETURN) { 
-	  
-	  //cout << "Transitions !" << endl;
+				CVodeGetDky(cvode_mem, tout, 1, y);
+				cout << "dx:" << x << endl;
+				cout << "CVODES failed for some reason. Yep. Status= " << status << endl;
+				cout << "Ending current trajectory NOW, no matter what." << endl;
+				tout = tret;
+			}
 
-	  CVodeGetRootInfo(cvode_mem, rootsfound);
-	  ig =0;
-	
-	  for(i=0; i< data->dimg ; i++) { 
-	    if (rootsfound[i]) {
-	      ig = i;
-	      break;
-	    }
-	  }
-	  
-	  ComputeSensiJump(ig, tret, y, yS, f_data);      
+			/* Test if tout was reached */
 
-	  for (is=0;is < Ns; is++) {	  
-	    
-	    //	  cout << "xsJump[" << is << "]:" << endl;
-	    //    N_VPrint_Serial(data->xsJump[is]);
-	  	   
-	    for(i=0; i< N; i++) 
-	      NV_Ith_S(yS[is],i) += NV_Ith_S(data->xsJump[is],i);	
-	  }
-	  
-	  CVodeGetCurrentTime(cvode_mem,&tcur);
-	  tret= min(tcur, tret+abs((tcur-tret)/1e6));
-	  CVodeGetDky(cvode_mem, tret, 0, y);
-	  
-	  switch (itol) {
-	  case CV_SS:
-	    CVodeReInit(cvode_mem, f, tret,y, itol, reltol, &Sabstol);
-	    CVodeSensReInit(cvode_mem,ism,yS);  
-	    break;
-	  case CV_SV:
-	    CVodeReInit(cvode_mem, f, tret,y, itol, reltol, NV_abstol);
-	    CVodeSensReInit(cvode_mem,ism,yS);  
-	    break;
-	  }
-	  CVodeSetInitStep(cvode_mem,h/2);
+			CVodeGetCurrentStep(cvode_mem, &h);
+			if ( (tret - tout)*h >= 0.0 ) {
+				tret = tout;
+				CVodeGetDky(cvode_mem, tout, 0, y);
+				iret = TRUE;
+			}
+
+			/* get sensitivity */
+
+			CVodeGetSens(cvode_mem, tret, yS);
+
+			/* Tests if a root is found  */
+
+			if (status == CV_ROOT_RETURN) {
+
+				//cout << "Transitions !" << endl;
+
+				CVodeGetRootInfo(cvode_mem, rootsfound);
+				ig =0;
+
+				for(i=0; i< data->dimg ; i++) {
+					if (rootsfound[i]) {
+						ig = i;
+						break;
+					}
+				}
+
+				ComputeSensiJump(ig, tret, y, yS, f_data);
+
+				for (is=0;is < Ns; is++) {
+
+					//	  cout << "xsJump[" << is << "]:" << endl;
+					//    N_VPrint_Serial(data->xsJump[is]);
+
+					for(i=0; i< N; i++)
+						NV_Ith_S(yS[is],i) += NV_Ith_S(data->xsJump[is],i);
+				}
+
+				CVodeGetCurrentTime(cvode_mem,&tcur);
+				tret= min(tcur, tret+abs((tcur-tret)/1e6));
+				CVodeGetDky(cvode_mem, tret, 0, y);
+
+				switch (itol) {
+				case CV_SS:
+					CVodeReInit(cvode_mem, f, tret,y, itol, reltol, &Sabstol);
+					CVodeSensReInit(cvode_mem,ism,yS);
+					break;
+				case CV_SV:
+					CVodeReInit(cvode_mem, f, tret,y, itol, reltol, NV_abstol);
+					CVodeSensReInit(cvode_mem,ism,yS);
+					break;
+				}
+				CVodeSetInitStep(cvode_mem,h/2);
+			}
+			else {
+
+				if (UpdateFdata(tret,y,f_data,0,NULL)) {
+
+					CVodeGetDky(cvode_mem, tret, 0, y);
+
+					switch (itol) {
+					case CV_SS:
+						CVodeReInit(cvode_mem, f, tret,y, itol, reltol, &Sabstol);
+						CVodeSensReInit(cvode_mem,ism,yS);
+						break;
+					case CV_SV:
+						CVodeReInit(cvode_mem, f, tret,y, itol, reltol, NV_abstol);
+						CVodeSensReInit(cvode_mem,ism,yS);
+						break;
+					}
+					CVodeSetInitStep(cvode_mem,h/2);
+				}
+			}
+
+			/* Store sensitivity matrix */
+
+			for (is=0; is<Ns; is++)
+				GetData(yS[is], &xSdata[is*N], N);
+
+
+			/* get input value */
+
+			GetU(f_data, u_data);
+
+			compteur++;
+			if (compteur < kmax) {
+
+				(*time)(compteur) = tret;
+				(*U)(All,compteur)= *u;
+				(*X)(All,compteur)= x;
+				for (is=0; is<Ns; is++)
+					for (i=0; i <N; i++)
+						(*XS)(i+is*N ,compteur) =xS(i,is) ;
+
+			}
+			else  {// reached max number of point, must resize arrays. Try to guess how many points left.
+
+				kmax += max(1,min((int) ceil((tout-tret)/(tret-tlast)),kmax));
+				X->resizeAndPreserve(N,kmax);
+				U->resizeAndPreserve(dimu,kmax);
+				XS->resizeAndPreserve(N*Ns,kmax);
+				time->resizeAndPreserve(kmax);
+
+				(*time)(compteur) = tret;
+				(*U)(All,compteur)= *u;
+				(*X)(All,compteur)= x;
+				for (is=0; is<Ns; is++)
+					for (i=0; i <N; i++)
+						(*XS)(i+is*N ,compteur) =xS(i,is) ;
+			}
+
+			/* break if we need to */
+
+			if(iret) {
+
+#if _DEBUG>=2 
+				cout << " End of trajectory." << endl;
+#endif 
+
+				break;
+			}
+		}
+
+		length = compteur+1;
+		(*X).resizeAndPreserve(N,compteur+1);
+		(*U).resizeAndPreserve(dimu,compteur+1);
+		(*XS).resizeAndPreserve(N*Ns,compteur+1);
+		(*time).resizeAndPreserve(compteur+1);
+
 	}
 	else {
-      
-	  if (UpdateFdata(tret,y,f_data,0,NULL)) {
-	    
-	    CVodeGetDky(cvode_mem, tret, 0, y);
-	    
-	    switch (itol) {
-	    case CV_SS:
-	      CVodeReInit(cvode_mem, f, tret,y, itol, reltol, &Sabstol);
-	      CVodeSensReInit(cvode_mem,ism,yS);  
-	      break;
-	    case CV_SV:
-	      CVodeReInit(cvode_mem, f, tret,y, itol, reltol, NV_abstol);
-	      CVodeSensReInit(cvode_mem,ism,yS);  
-	      break;
-	    }
-	    CVodeSetInitStep(cvode_mem,h/2);
-	  }
-	}
-    
-	/* Store sensitivity matrix */
-	
-	for (is=0; is<Ns; is++)
-	  GetData(yS[is], &xSdata[is*N], N);
-		
-         
-      /* get input value */
-	
-	GetU(f_data, u_data);  
-      
-	compteur++;
-	if (compteur < kmax) {
-	  
-	  (*time)(compteur) = tret;
-	  (*U)(All,compteur)= *u;
-	  (*X)(All,compteur)= x;	  
-	  for (is=0; is<Ns; is++) 
-	    for (i=0; i <N; i++)
-	      (*XS)(i+is*N ,compteur) =xS(i,is) ;
-	
-	}
-	else  {// reached max number of point, must resize arrays. Try to guess how many points left.
-	
-	  kmax += max(1,min((int) ceil((tout-tret)/(tret-tlast)),kmax));
-	  X->resizeAndPreserve(N,kmax);
-	  U->resizeAndPreserve(dimu,kmax);	  
-	  XS->resizeAndPreserve(N*Ns,kmax);
-	  time->resizeAndPreserve(kmax);
-	  
-	  (*time)(compteur) = tret;
-	  (*U)(All,compteur)= *u;
-	  (*X)(All,compteur)= x;     
-	  for (is=0; is<Ns; is++) 
-	    for (i=0; i <N; i++)
-	      (*XS)(i+is*N ,compteur) =xS(i,is) ;	    
-	}
-            
-	/* break if we need to */    
-	
-	if(iret) { 
-	
-#if _DEBUG>=2 
-	  cout << " End of trajectory." << endl;
-#endif 
-      
-	  break;      
-	}
-      }
+		if ((nb_points == 3)&&(tspan(1)==tspan(2))) {
+			tspan.resizeAndPreserve(2);
+			nb_points = 2;
+		}
 
-      length = compteur+1;
-      (*X).resizeAndPreserve(N,compteur+1);
-      (*U).resizeAndPreserve(dimu,compteur+1);
-      (*XS).resizeAndPreserve(N*Ns,compteur+1);
-      (*time).resizeAndPreserve(compteur+1);
-      
-  }
-  else {
-    if ((nb_points == 3)&&(tspan(1)==tspan(2))) {      
-      tspan.resizeAndPreserve(2);    
-      nb_points = 2;
-    }
+		(*X).resize(N,nb_points);
+		(*U).resize(dimu,nb_points);
+		(*time).resize(nb_points);
+		*time = tspan;
+		XS->resize(N*Ns,nb_points);
+		length = nb_points;
+		x = (*p0)(Rx); // new x0
+		p = (*p0)(All);
 
-    (*X).resize(N,nb_points);
-    (*U).resize(dimu,nb_points);
-    (*time).resize(nb_points);
-    *time = tspan;    
-    XS->resize(N*Ns,nb_points);
-    length = nb_points;
-    x = (*p0)(Rx); // new x0
-    p = (*p0)(All);
-    
 #ifdef _TD
-    x(N)=0.;
+		x(N)=0.;
 #endif
-    
-    //    InitFdata(f_data, cvm_Mdata->mx_data);
-    UpdateFdata(t0,y,f_data,0,NULL);
-    
-    (*X)(All,0)= x;
-    GetU(f_data, u_data);
-    (*U)(All,0)=*u;
-    
-    iret = FALSE;
-    
-    /* Init output arrays  */
-        
-    for (is=0; is<Ns; is++)
-      GetData(yS0[is], &xSdata[is*N], N);
-    
-    for (is=0; is<Ns; is++) 
-      for (i=0; i <N; i++)
-	(*XS)(i+is*N ,0) = xS(i,is) ;	    
-    
-    /* Reinit solver */
 
-    switch (itol) {
-    case CV_SS:
-      status = CVodeReInit(cvode_mem, f, t0, y, itol, reltol, &Sabstol);
-      statusFSA= CVodeSensReInit(cvode_mem,ism,yS0);
-      break;
-    case CV_SV:
-      status = CVodeReInit(cvode_mem, f, t0, y, itol, reltol, NV_abstol);
-      statusFSA = CVodeSensReInit(cvode_mem,ism,yS0);
-      break;
-    }
-      
-    /* Init root finding for hybrid */
-      
-    if (data->dimg>0){
-      CVodeRootInit(cvode_mem, data->dimg, g, f_data);	  	  
-    }
+		//    InitFdata(f_data, cvm_Mdata->mx_data);
+		UpdateFdata(t0,y,f_data,0,NULL);
 
-    /* Integrate system until tout */
-    
-    for(int k=1; k<nb_points;k++) {
-      
-      iret = FALSE;
-      tout = tspan(k);
-      
-      CVodeSetStopTime(cvode_mem,tout);
-      //	tlast = tret;
-      
-      while (1) {
-	  
-	/* Integrate one step */
-	status = CVode(cvode_mem, tout, y, &tret, itask);
+		(*X)(All,0)= x;
+		GetU(f_data, u_data);
+		(*U)(All,0)=*u;
 
-	/* break and diagnose on CVode error */
-	  
-	if (status < 0) {
-	
-	  cout << "aie, problem." << endl;
-	  cout << "status (see cvodes guide):" << status << endl;
-	  cout << "traj no: " << j << endl;
-	  cout << "tout:" << tout << endl;
-	  cout << "p:" << p << endl;
-	  cout << "x:" << x << endl;
+		iret = FALSE;
+
+		/* Init output arrays  */
+
+		for (is=0; is<Ns; is++)
+			GetData(yS0[is], &xSdata[is*N], N);
+
+		for (is=0; is<Ns; is++)
+			for (i=0; i <N; i++)
+				(*XS)(i+is*N ,0) = xS(i,is) ;
+
+		/* Reinit solver */
+
+		switch (itol) {
+		case CV_SS:
+			status = CVodeReInit(cvode_mem, f, t0, y, itol, reltol, &Sabstol);
+			statusFSA= CVodeSensReInit(cvode_mem,ism,yS0);
+			break;
+		case CV_SV:
+			status = CVodeReInit(cvode_mem, f, t0, y, itol, reltol, NV_abstol);
+			statusFSA = CVodeSensReInit(cvode_mem,ism,yS0);
+			break;
+		}
+
+		/* Init root finding for hybrid */
+
+		if (data->dimg>0){
+			CVodeRootInit(cvode_mem, data->dimg, g, f_data);
+		}
+
+		/* Integrate system until tout */
+
+		for(int k=1; k<nb_points;k++) {
+
+			iret = FALSE;
+			tout = tspan(k);
+
+			CVodeSetStopTime(cvode_mem,tout);
+			//	tlast = tret;
+
+			while (1) {
+
+				/* Integrate one step */
+				status = CVode(cvode_mem, tout, y, &tret, itask);
+
+				/* break and diagnose on CVode error */
+
+				if (status < 0) {
+
+					cout << "aie, problem." << endl;
+					cout << "status (see cvodes guide):" << status << endl;
+					cout << "traj no: " << j << endl;
+					cout << "tout:" << tout << endl;
+					cout << "p:" << p << endl;
+					cout << "x:" << x << endl;
 #if _DEBUG>=3
-	  cout << "time:" << *time << endl;
-	  cout << "X:" << *X << endl;
-	  cout << "XS:" << *XS << endl;
-	  cout << "U:" << *U << endl;
+					cout << "time:" << *time << endl;
+					cout << "X:" << *X << endl;
+					cout << "XS:" << *XS << endl;
+					cout << "U:" << *U << endl;
 #endif
-	  CVodeGetDky(cvode_mem, tout, 1, y);
-	  cout << "dx:" << x << endl;	
-	  cout << "CVODES failed for some reason. Yep. Status= " << status << endl;
-	  mexErrMsgTxt("Dying...");	      
-	
-	  return;
+					CVodeGetDky(cvode_mem, tout, 1, y);
+					cout << "dx:" << x << endl;
+					cout << "CVODES failed for some reason. Yep. Status= " << status << endl;
+					cout << "Ending computation of current trajectory before tend." << endl;
+					nb_points = i;
+					tout=tret;
+
+					(*X).resizeAndPreserve(N,nb_points);
+					(*XS).resizeAndPreserve(N*Ns,nb_points);
+					(*U).resizeAndPreserve(dimu,nb_points);
+					(*time).resizeAndPreserve(nb_points);
+				}
+
+
+				/* Test if tout was reached */
+
+				CVodeGetCurrentStep(cvode_mem, &h);
+				if ( (tret - tout)*h >= 0.0 ) {
+					tret = tout;
+					CVodeGetDky(cvode_mem, tout, 0, y);
+					iret = TRUE;
+				}
+
+				/* get sensitivity and compute expansion */
+
+				CVodeGetSens(cvode_mem, tret, yS);
+
+				/* Update f_data. if changed at a discontinuity, reinit cvode */
+
+				if (status == CV_ROOT_RETURN) {
+
+					// cout << "Transitions !" << endl;
+
+					CVodeGetRootInfo(cvode_mem, rootsfound);
+					ig =0;
+
+					for(i=0; i< data->dimg ; i++) {
+						if (rootsfound[i]) {
+							ig = i;
+							break;
+						}
+					}
+
+					// UpdateFdata(tret,y,f_data,ig,yS);
+					ComputeSensiJump(ig, tret, y, yS, f_data);
+
+					for (is=0;is < Ns; is++) {
+
+						//	  cout << "xsJump[" << is << "]:" << endl;
+						//    N_VPrint_Serial(data->xsJump[is]);
+
+						for(i=0; i< N; i++)
+							NV_Ith_S(yS[is],i) += NV_Ith_S(data->xsJump[is],i);
+					}
+
+					CVodeGetCurrentTime(cvode_mem,&tcur);
+					tret= min(tcur, tret+abs((tcur-tret)/1e6));
+					CVodeGetDky(cvode_mem, tret, 0, y);
+
+					switch (itol) {
+					case CV_SS:
+						CVodeReInit(cvode_mem, f, tret,y, itol, reltol, &Sabstol);
+						CVodeSensReInit(cvode_mem,ism,yS);
+						break;
+					case CV_SV:
+						CVodeReInit(cvode_mem, f, tret,y, itol, reltol, NV_abstol);
+						CVodeSensReInit(cvode_mem,ism,yS);
+						break;
+					}
+					CVodeSetInitStep(cvode_mem,h/2);
+				}
+				else {
+
+					if (UpdateFdata(tret,y,f_data,0,NULL)) {
+
+						CVodeGetDky(cvode_mem, tret, 0, y);
+
+						switch (itol) {
+						case CV_SS:
+							CVodeReInit(cvode_mem, f, tret,y, itol, reltol, &Sabstol);
+							CVodeSensReInit(cvode_mem,ism,yS);
+							break;
+						case CV_SV:
+							CVodeReInit(cvode_mem, f, tret,y, itol, reltol, NV_abstol);
+							CVodeSensReInit(cvode_mem,ism,yS);
+							break;
+						}
+						CVodeSetInitStep(cvode_mem,h/2);
+					}
+				}
+
+				/* break if we need to */
+				if(iret) break;
+			}
+
+			/* Store sensitivity matrix */
+
+			for (is=0; is<Ns; is++)
+				GetData(yS[is], &xSdata[is*N], N);
+
+			/* get input value and store things */
+
+			GetU(f_data, u_data);
+
+			(*U)(All,k)= *u;
+			(*X)(All,k)= x;
+
+			for (is=0; is<Ns; is++)
+				for (i=0; i <N; i++)
+					(*XS)(i+is*N, k) =xS(i,is) ;
+		}
 	}
-      
-	/* Test if tout was reached */
-	
-	CVodeGetCurrentStep(cvode_mem, &h);
-	if ( (tret - tout)*h >= 0.0 ) {
-	  tret = tout;
-	  CVodeGetDky(cvode_mem, tout, 0, y);
-	  iret = TRUE;
-	}      
-	
-	/* get sensitivity and compute expansion */
-      
-	CVodeGetSens(cvode_mem, tret, yS);
-	  
-	/* Update f_data. if changed at a discontinuity, reinit cvode */
-	
-	if (status == CV_ROOT_RETURN) { 
 
-	  // cout << "Transitions !" << endl;
-	  
-	  CVodeGetRootInfo(cvode_mem, rootsfound);
-	  ig =0;
-	  
-	  for(i=0; i< data->dimg ; i++) { 
-	    if (rootsfound[i]) {
-	      ig = i;
-	      break;
-	    }
-	  }
-	  
-	  // UpdateFdata(tret,y,f_data,ig,yS);	  
-	  ComputeSensiJump(ig, tret, y, yS, f_data);      
-	  
-	  for (is=0;is < Ns; is++) {	  
-	    
-	    //	  cout << "xsJump[" << is << "]:" << endl;
-	    //    N_VPrint_Serial(data->xsJump[is]);
-	    
-	    for(i=0; i< N; i++) 
-	      NV_Ith_S(yS[is],i) += NV_Ith_S(data->xsJump[is],i);	
-	  }
-	  
-	  CVodeGetCurrentTime(cvode_mem,&tcur);
-	  tret= min(tcur, tret+abs((tcur-tret)/1e6));
-	  CVodeGetDky(cvode_mem, tret, 0, y);
-	  
-	  switch (itol) {
-	  case CV_SS:
-	    CVodeReInit(cvode_mem, f, tret,y, itol, reltol, &Sabstol);
-	    CVodeSensReInit(cvode_mem,ism,yS);  
-	    break;
-	  case CV_SV:
-	    CVodeReInit(cvode_mem, f, tret,y, itol, reltol, NV_abstol);
-	    CVodeSensReInit(cvode_mem,ism,yS);  
-	    break;
-	  }
-	  CVodeSetInitStep(cvode_mem,h/2);
-	}
-	  else {
-	    
-	    if (UpdateFdata(tret,y,f_data,0,NULL)) {
-	    
-	    CVodeGetDky(cvode_mem, tret, 0, y);
-	    
-	    switch (itol) {
-	    case CV_SS:
-	      CVodeReInit(cvode_mem, f, tret,y, itol, reltol, &Sabstol);
-	      CVodeSensReInit(cvode_mem,ism,yS);  
-	      break;
-	    case CV_SV:
-	      CVodeReInit(cvode_mem, f, tret,y, itol, reltol, NV_abstol);
-	      CVodeSensReInit(cvode_mem,ism,yS);  
-	      break;
-	    }
-	    CVodeSetInitStep(cvode_mem,h/2);
-	    }
-	  }
-    	  	
-	/* break if we need to */    
-	if(iret) break;      
-      }
-      
-      /* Store sensitivity matrix */
-	
-      for (is=0; is<Ns; is++)
-	GetData(yS[is], &xSdata[is*N], N);
-	               
-      /* get input value and store things */
-	
-      GetU(f_data, u_data);  
-	
-      (*U)(All,k)= *u;
-      (*X)(All,k)= x;	      
-
-      for (is=0; is<Ns; is++) 
-	for (i=0; i <N; i++)
-	  (*XS)(i+is*N, k) =xS(i,is) ;       
-    }	      
-  }
-
-  free(rootsfound);
+	free(rootsfound);
 #if _DEBUG >= 1
-  cout << "Leaving trajectory::ComputeTrajSensi ..." << endl;  
+	cout << "Leaving trajectory::ComputeTrajSensi ..." << endl;
 #endif    
 }
 
@@ -1920,27 +1937,27 @@ void trajectory::ComputeTraj(Array1D& tspan, int (trajectory::*test_function)())
 
       /* break on CVode error */
       if (status < 0) {
-	cout << "tout:" << tout << endl;
-	cout << "x:" << x << endl;
+    	  cout << "tout:" << tout << endl;
+    	  cout << "x:" << x << endl;
 #if _DEBUG >=3
-	cout << "time:" << time << endl;
-	cout << "X:" << *X << endl;
-	cout << "U:" << *U << endl;
+    	  cout << "time:" << time << endl;
+    	  cout << "X:" << *X << endl;
+    	  cout << "U:" << *U << endl;
 #endif
-	CVodeGetDky(cvode_mem, tout, 1, y);
-	cout << "dx:" << x << endl;
-	cout << "CVODES failed miserably for some reason. Status= " << status << endl;
-	mexErrMsgTxt("Dying...");	  
-	return;
+    	  CVodeGetDky(cvode_mem, tout, 1, y);
+    	  cout << "dx:" << x << endl;
+    	  cout << "CVODES failed miserably for some reason. Status= " << status << endl;
+    	  cout << "Stopping current trajectory, might be incomplete" << endl;
+    	  tout=tret;
       }
 
       /* Test if tout was reached */
       CVodeGetCurrentStep(cvode_mem, &h);
       
       if ( (tret - tout)*h >= 0.0 ) {
-	tret = tout;
-	CVodeGetDky(cvode_mem, tout, 0, y);
-	iret = TRUE;
+    	  tret = tout;
+    	  CVodeGetDky(cvode_mem, tout, 0, y);
+    	  iret = TRUE;
       }      
 	  
 #if _DEBUG >= 3

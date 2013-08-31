@@ -4,13 +4,15 @@ function Pf = Falsify (Sys, phi, falsif_opt, params_prop)
 % Synopsis:    Pf = Falsify(Sys, phi,  falsif_opt [, param_prop])
 %
 % Input:
-%  - Sys        : 
-%  - phi        : 
-%  - falsif_opt : contains fields params, ranges, nb_init, nb_iter
-%  - param_prop : contains fields names , values
+%  - Sys        : System Breach structure
+%  - phi        : property to falsify
+%  - falsif_opt : parameters for falsification - contains fields params, ranges, nb_init, nb_iter
+%  - param_prop : parameters for phi -  contains fields names , values
 %
 % Output:
-%  - Pf :
+%  - Pf : parameter set leading to falsification, or least robust
+%  parameters found in case falsification failed
+% 
 %
 % Example:
 %

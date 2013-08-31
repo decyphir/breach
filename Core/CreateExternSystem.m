@@ -51,11 +51,12 @@ function Sys = CreateExternSystem(name, vars, params, p0, simfn)
   if (~exist('p0'))
       Sys.p = zeros(1, Sys.DimP);
   else
-      if (numel(p0)== Sys.DimP)
-        Sys.p = p0;
-      else        
-        Sys.p = [Sys.x0'; p0];
-      end
+    p0 = reshape(p0, numel(p0),1);
+    if (numel(p0)== Sys.DimP)
+      Sys.p = p0;
+    else
+      Sys.p = [Sys.x0'; p0];
+    end
   end
   
   if exist('simfn','var')

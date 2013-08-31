@@ -37,9 +37,10 @@ function Ph = QuasiRefine(P, nb, varargin)
 %See also RandomLogRefine LogNRefine Refine
 %
 
-% we manage the inputs
+%  process inputs
 if(nb<=1)
-    return;
+  Ph =P;
+  return;
 end
 nb = floor(nb);
 
