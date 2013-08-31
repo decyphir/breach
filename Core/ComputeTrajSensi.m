@@ -1,20 +1,20 @@
 function Pf = ComputeTrajSensi(Sys, P, tspan, is)
 %COMPUTETRAJSENSI compute trajectories with sensitivities
 %
-%  Synopsis:  Pf = ComputeTrajSensi(Sys, P0, tspan [ , is])
+% Synopsis:  Pf = ComputeTrajSensi(Sys, P0, tspan [ , is])
+% 
+% Compute trajectories with corresponding sensitivities issued from points
+% in P0 on the time interval tspan.
 %
-%   Compute trajectories with corresponding sensitivities issued from points
-%   in P0 on the time interval tspan.
-%
-%   Inputs:
+% Inputs:
 %
 %    -  Sys      System (needs to be compiled)
 %    -  P0       Initial parameter set
 %    -  tspan    interval of the form [t0, tf], t0:dt:tf, etc
 %    -  is       Parameter sensitivities to compute, if absent uses
-%                uncertain parameters in P
+%                uncertain parameters in P (aka P.dim)
 %
-%   Outputs:
+% Outputs:
 %
 %    -  Pf       Parameter set augmented with the field traj
 %                containing computed trajectories with sensitivities
@@ -69,10 +69,8 @@ end
 
 InitSensi(Sys,P);
 
-if isfield(P,'XS0')
-    if isempty(P.XS0)
-        P = rmfield(P,'XS0');
-    end
+if isfield(P,'XS0') && isempty(P.XS0)
+    P = rmfield(P,'XS0');
 end
 
 if ~isfield(P,'XS0')
@@ -93,7 +91,7 @@ if ~isfield(P,'XS0')
     
 end
 
-Pf = cvm(93,P,T);
+Pf = cvm(93,P,T); %NM : what happens if P.XS0 is not empty?
 CVodeFree();
 
 if exist('is','var')
