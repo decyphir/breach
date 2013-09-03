@@ -71,7 +71,7 @@ if strcmp(Sys.type,'traces') % No model
     for i = 1:numel(Pf.traj)
         Pf.traj(i).param = Pf.pts(1:Pf.DimP,i)';
     end
-elseif isfield(P0, 'traj_to_compute') && ~isempty(P0.traj_to_compute)
+elseif isfield(P0, 'traj_to_compute') && ~isempty(P0.traj_to_compute) && ~all(P0.traj_to_compute==1:size(P0.pts,2))
     P0 = SPurge(P0);
     S = Sselect(P0, P0.traj_to_compute);
     S = ComputeTraj(Sys, S, tspan);
