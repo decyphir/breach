@@ -410,7 +410,7 @@ function button_compute_traj_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
   
-  try            
+ % try            
     tspan = inputdlg('Enter tspan (Format: [ti tf] or [t0 t1 t2 ... tn] or ti:dt:tf)','Compute trajectories', 1, {handles.last_tspan});
     if isempty(tspan)
       return;
@@ -431,12 +431,12 @@ function button_compute_traj_Callback(hObject, eventdata, handles)
     guidata(hObject, handles);
     h = BreachTrajGui('varargin', handles);
  
-  catch 
-    s = lasterror;
-    warndlg(['Problem computing traj: ' s.message] );
-    error(s);    
-    return
-  end
+ % catch 
+ %   s = lasterror;
+ %   warndlg(['Problem computing traj: ' s.message] );
+ %   error(s);    
+ %   return
+ % end
 
   
 % --- Executes on button press in button_remove_param.

@@ -140,4 +140,10 @@ if (isfield(S, 'traj')&&(isfield(S2,'traj')))
     
 end
 
+X = S.pts(1:S.DimP,:)';
+[~,IA,IC] = unique(X,'rows');
+
+S.traj_ref = IC';
+S.traj_to_compute = IA';
+
 end

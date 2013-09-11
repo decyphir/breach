@@ -129,6 +129,6 @@ end
 end
 
 function valid = isMethodValid(str)
-valid = ( strcmpi(str,'halton') || strcmpi(str,'sobol') );
+    valid = ( strcmpi(str,'halton') || strcmpi(str,'sobol') );
 end
 
