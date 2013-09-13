@@ -385,12 +385,14 @@ function button_add_param_Callback(hObject, eventdata, handles)
   else
     epsi = .1;
   end
-
-  if strcmp(handles.Sys.type, 'Simulink')
-    if (ind<= P.DimX)
-      handles= info(handles,'Cannot modify initial condition for a Simulink signal (must use an explicit parameter)');
-      return
-    end
+  
+  if isfield(handles.Sys, 'type')
+      if strcmp(handles.Sys.type, 'Simulink')
+          if (ind<= P.DimX)
+              handles= info(handles,'Cannot modify initial condition for a Simulink signal (must use an explicit parameter)');
+              return
+          end
+      end     
   end
   
   
