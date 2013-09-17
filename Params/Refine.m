@@ -30,9 +30,9 @@ function P = Refine(P0, delta)
 %
 %   Refine(P0, .1) % creates a grid with resolution (.1,.1)
 %
-%   Refine(P0 [.1 .2]) % creates a grid with resolution (.1,.2)
+%   Refine(P0, [.1 .2]) % creates a grid with resolution (.1,.2)
 %
-%   Refine(P0 [1.1 1.2]) % returns P0
+%   Refine(P0, [2.1 2.2]) % returns P0
 %
 %See also CreateParamSet RandomLogRefine QuasiRefine
 %
