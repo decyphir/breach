@@ -31,6 +31,7 @@ function Pn = Sselect(P, kn)
 % val = QMITL_Eval(Sys, phi, P, P.traj, 0);     % this code also works for
 % Pvalid = Sselect(P, P.traj_ref(find(val>0))); % selecting valid parameter sets
 
+% Manage input
 if exist('kn','var')
     if isempty(kn)
         warning('Sselect:EmptyKn','The optional parameter ''kn'' is empty. Pn is defined as P.');
@@ -49,7 +50,9 @@ else
     end
 end
 
+% Do the copy
 Pn = [];
+
 
 field_list_copy = {'dim', 'ParamList', 'DimX', 'DimP', 'props_names', 'props'};
 
@@ -59,6 +62,7 @@ for ii = 1:numel(field_list_copy)
     end
 end
 
+
 field_list_select= {'pts', 'epsi', 'selected', 'props_values'};
 
 for ii = 1:numel(field_list_select)
@@ -67,13 +71,14 @@ for ii = 1:numel(field_list_select)
     end
 end
 
-field_list_traj_ref_select = {'traj', 'etraj'};
 
 if isfield(P,'traj')
     if ~isfield(P, 'traj_ref')
         P.traj_ref = 1:numel(P.traj);
     end
 end
+
+field_list_traj_ref_select = {'traj', 'etraj'};
 
 for ii = 1:numel(field_list_traj_ref_select)
     if isfield(P, field_list_traj_ref_select{ii})
@@ -82,8 +87,13 @@ for ii = 1:numel(field_list_traj_ref_select)
 end
 
 if isfield(P, 'traj_to_compute')
-    Pn.traj_to_compute = intersect(P.traj_ref(kn),P.traj_to_compute);
+    Pn.traj_to_compute = intersect(kn,P.traj_to_compute,'sorted');
+else
+    %TODO : to improve to avoid computation of two identical simulations
+    Pn.traj_to_compute = 1:size(Pn.pts,2);
 end
+
+%TODO : set Pn.traj_ref
 
 field_list_traj_ref_select2 = {'XS0', 'Xf', 'ExpaMax', 'XSf'};
 
