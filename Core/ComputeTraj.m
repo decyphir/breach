@@ -63,7 +63,7 @@ if isfield(P0, 'init_fun')
 end
 
 % if no trajectories to compute, we return the param set itself
-if isfield(P0, 'traj_to_compute') && isempty(P.traj_to_compute)
+if isfield(P0, 'traj_to_compute') && isempty(P0.traj_to_compute)
     Pf = P0;
     return
 end
@@ -78,7 +78,7 @@ if strcmp(Sys.type,'traces') % No model
     for ii = 1:numel(Pf.traj)
         Pf.traj(ii).param = Pf.pts(1:Pf.DimP,ii)';
     end
-elseif isfield(P0, 'traj_to_compute') && ~isempty(P0.traj_to_compute) && ~all(P0.traj_to_compute==1:size(P0.pts,2))
+elseif isfield(P0, 'traj_to_compute') && ~isempty(P0.traj_to_compute) && ~isequal(P0.traj_to_compute,1:size(P0.pts,2))
     P0 = SPurge(P0);
     S = Sselect(P0, P0.traj_to_compute);
     S = ComputeTraj(Sys, S, tspan);
