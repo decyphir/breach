@@ -6,13 +6,15 @@ function P = Refine(P0, delta)
 % Inputs:
 %   - P0       is a parameter set
 %
-%   - delta    should be a scalar or a vector of dimension size(P0.dim). If it
-%              is a scalar, it is interpreted as vector with all components
-%              equal to its value. Its value(s) can be either integer or
-%              real. If it is integer, P has delta(i) points in dimension
-%              i. If it is real then delta is interpreted as a distance and
-%              P is divided into points that at distance delta from one
-%              another.
+%   - delta    should be a scalar or a vector of dimension
+%              numel(P0.dim) x 1. If it is a scalar, it is interpreted as
+%              vector with all components equal to its value. If it is an
+%              array, the ith line corresponds to the ith parameter in
+%              P0.dim. Its value(s) can be either integer or real. If it is
+%              integer, P has delta(i) points in dimension i. If it is real
+%              (ie: any(floor(delta) ~= delta) is true), then delta is
+%              interpreted as a distance and P is divided into points that
+%              at distance delta from one another.
 %
 %
 %   This function is better understood through examples. First, create
@@ -35,54 +37,56 @@ function P = Refine(P0, delta)
 %See also CreateParamSet RandomLogRefine QuasiRefine
 %
 
+
+% check delta
 if(delta==1)
     P = P0;
     return;
 end
 
-n = numel(P0.dim);
-
 if isscalar(delta)
     delta = delta*ones(numel(P0.dim),1);
-    
 elseif(size(delta,1)==1)
-    delta=delta';
+    delta = delta'; % try to transpose if needed
 end
 
 if(numel(delta)>numel(P0.dim))
-    delta = delta(P0.dim);
+    delta = delta(P0.dim); %NM: CAUTION : may lead to error if P0.dim > numel(delta)
+    %NM: better solution is
+    % delta = delta(1:numel(P0.dim));
 end;
 
+n = numel(P0.dim);
 P.dim = P0.dim;
-P.pts =[];
+P.pts = [];
 P.epsi = [];
 
-for i = 1:size(P0.pts,2)
-    deltai=delta;
-    if (sum(abs(deltai-floor(deltai))));
-        deltai(deltai>2*P0.epsi(:,i)) = 2*P0.epsi(deltai>2*P0.epsi(:,i));
-        deltai = ceil(2*P0.epsi(:,i)./deltai);
+for ii = 1:size(P0.pts,2)
+    deltai = delta;
+    if sum(abs(deltai-floor(deltai))) % if delta contains reals
+        % we compute how many points will be generated in each dimension
+        deltai(deltai>2*P0.epsi(:,ii)) = 2*P0.epsi(deltai>2*P0.epsi(:,ii));
+        deltai = ceil(2*P0.epsi(:,ii)./deltai);
     end
     
-    nb_new = prod(deltai);
+    nb_new = prod(deltai); % number of generated parameter sets
     
     if(nb_new > 1)
-        
         l = N2Nn(n,deltai);
-        xlim = [ P0.pts(P0.dim,i)-P0.epsi(:,i)  P0.pts(P0.dim,i)+P0.epsi(:,i) ];
-        X = repmat(P0.pts(:,i),1,nb_new);
-        nepsi = repmat(P0.epsi(:,i)./(deltai),1,size(X,2));
-        
-        for j=1:n
-            if(deltai(j)>1)
-                d1 = xlim(j,1);
-                d2 = xlim(j,2);
-                dx(j) = (d2-d1)./(deltai(j));
-                X(P0.dim(j),:) = l(j,:)*dx(j)+d1-dx(j)/2;
+        xlim = [ P0.pts(P0.dim,ii)-P0.epsi(:,ii)  P0.pts(P0.dim,ii)+P0.epsi(:,ii) ];
+        X = repmat(P0.pts(:,ii),1,nb_new);
+        nepsi = repmat(P0.epsi(:,ii)./(deltai),1,size(X,2));
+
+        for jj=1:n
+            if(deltai(jj)>1)
+                d1 = xlim(jj,1);
+                d2 = xlim(jj,2);
+                dx = (d2-d1)./(deltai(jj));
+                X(P0.dim(jj),:) = l(jj,:)*dx+d1-dx/2;
             end
         end
         
-        P.pts = [P.pts X];
+        P.pts = [P.pts X]; % we cant know a priori the size of P.pts
         P.epsi = [P.epsi nepsi];
     end
     
@@ -116,14 +120,13 @@ P.DimP = P0.DimP;
 X = P.pts(1:P.DimP,:)';
 [~,IA,IC] = unique(X,'rows');
 
-P.traj_ref= IC';
+P.traj_ref = IC';
 
-if (isfield(P0,'traj'))
-    
+if isfield(P0,'traj')
     P.traj = P0.traj;
     P.Xf = P0.Xf;
     if ~isequal(P.pts(1:P.DimP,IA), vertcat(P.traj.param))
-        P.traj_to_compute = IA';
+        P = SPurge(P); % set traj_to_compute
     end
 else
     P.traj_to_compute = IA';

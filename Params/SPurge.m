@@ -1,4 +1,4 @@
-function S = SPurge(S)
+function P = SPurge(P)
 % SPURGE Remove all fields related to a specific computation of
 % trajectories
 %
@@ -7,30 +7,31 @@ function S = SPurge(S)
 %  Notes: does not remove properties values
 %
 %  SEE ALSO SPURGE_PROPS
+%
 
 try
-    S = rmfield(S, 'traj');
+    P = rmfield(P, 'traj');
 end
 try
-    S = rmfield(S, 'Xf');
+    P = rmfield(P, 'Xf');
 end
 
 try
-    S = rmfield(S, 'XSf');
+    P = rmfield(P, 'XSf');
 end
 try
-    S = rmfield(S, 'XS0');
+    P = rmfield(P, 'XS0');
 end
 try
-    S = rmfield(S, 'ExpaMax');
+    P = rmfield(P, 'ExpaMax');
 end
 
 % Reset field traj_to_compute
 
-X = S.pts(1:S.DimP,:)';
+X = P.pts(1:P.DimP,:)';
 [~,IA,IC] = unique(X,'rows');
 
-S.traj_ref = IC';
-S.traj_to_compute = IA';
+P.traj_ref = IC';
+P.traj_to_compute = IA';
 
 end

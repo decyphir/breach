@@ -12,7 +12,8 @@ function Pn = Sselect(P, kn)
 %        thrown.
 %
 % Output:
-%  - Pn: parameter set containing the kn set of values of P
+%  - Pn: parameter set containing the kn set of values of P. If the field
+%        traj_ref wasn't defined in P, it is created in Pn.
 %
 % Example (Lorentz84):
 %   CreateSystem;
@@ -52,17 +53,17 @@ Pn = [];
 
 field_list_copy = {'dim', 'ParamList', 'DimX', 'DimP', 'props_names', 'props'};
 
-for i = 1:numel(field_list_copy)
-    if isfield(P, field_list_copy{i})
-        Pn.(field_list_copy{i}) = P.(field_list_copy{i});
+for ii = 1:numel(field_list_copy)
+    if isfield(P, field_list_copy{ii})
+        Pn.(field_list_copy{ii}) = P.(field_list_copy{ii});
     end
 end
 
 field_list_select= {'pts', 'epsi', 'selected', 'props_values'};
 
-for i = 1:numel(field_list_select)
-    if isfield(P, field_list_select{i})
-        Pn.(field_list_select{i}) = P.(field_list_select{i})(:,kn);
+for ii = 1:numel(field_list_select)
+    if isfield(P, field_list_select{ii})
+        Pn.(field_list_select{ii}) = P.(field_list_select{ii})(:,kn);
     end
 end
 
@@ -74,17 +75,21 @@ if isfield(P,'traj')
     end
 end
 
-for i = 1:numel(field_list_traj_ref_select)
-    if isfield(P, field_list_traj_ref_select{i})
-        Pn.(field_list_traj_ref_select{i}) = P.(field_list_traj_ref_select{i})(P.traj_ref(kn));
+for ii = 1:numel(field_list_traj_ref_select)
+    if isfield(P, field_list_traj_ref_select{ii})
+        Pn.(field_list_traj_ref_select{ii}) = P.(field_list_traj_ref_select{ii})(P.traj_ref(kn));
     end
+end
+
+if isfield(P, 'traj_to_compute')
+    Pn.traj_to_compute = intersect(P.traj_ref(kn),P.traj_to_compute);
 end
 
 field_list_traj_ref_select2 = {'XS0', 'Xf', 'ExpaMax', 'XSf'};
 
-for i = 1:numel(field_list_traj_ref_select2)
-    if isfield(P, field_list_traj_ref_select2{i})
-        Pn.(field_list_traj_ref_select2{i}) = P.(field_list_traj_ref_select2{i})(:,P.traj_ref(kn));
+for ii = 1:numel(field_list_traj_ref_select2)
+    if isfield(P, field_list_traj_ref_select2{ii})
+        Pn.(field_list_traj_ref_select2{ii}) = P.(field_list_traj_ref_select2{ii})(:,P.traj_ref(kn));
     end
 end
 
