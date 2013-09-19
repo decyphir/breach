@@ -7,8 +7,11 @@ function [mu, mustar, sigma, Pr] = SPropSensi(Sys, P, phi, opt)
 % Synopsis: [mu, mustar, sigma] = SPropSensi(Sys, P, phi, opt)
 %
 % Input:
-%    - P  is a parameter set for Sys. The value of all parameters of P, not
-%         in opt.params is defined by the first parameters values in P.
+%    - P  is a parameter set for Sys. P may contains many parameter sets,
+%         but only the first will be considered, so it is recommanded that
+%         P contains only one parameter set. The value of all parameters of
+%         P, not in opt.params is defined by the first parameters values in
+%         P.
 %    - phi is an STL property
 %    - opt is an option structure with the following fields :
 %
@@ -33,22 +36,34 @@ function [mu, mustar, sigma, Pr] = SPropSensi(Sys, P, phi, opt)
 %   - mustar  expectation of absolute values of elementary effects
 %   - sigma   variance of elementary effects
 %
-% Example (Lorentz84):
+% Example1 (Lorentz84):
 %   CreateSystem;
 %   P = CreateParamSet(Sys);
 %   phi = QMITL_Formula('phi','ev (x1[t] > 3)');
-%   % P = SetParam(P, {'x1h', 'x1l', 'T'}, [.3, -.3, 5]);
-%   % oscil_prop_names = QMITL_ReadFile('oscil_prop.stl');
-%   % phi = QMITL_Formula(oscil_prop_names{end});
 %   opt.tspan = 2:0.1:5;
 %   opt.params = {'a','F'};
 %   opt.lbound = [0.15, 5];
 %   opt.ubound = [0.35, 25];
+%   opt.p = 8;
+%   opt.r = 100;
 %   opt.plot = 1;
 %   opt.muGraphOpt = {'XScale','log'};
-%   [mu, mustar, sigma] = SPropSensi(Sys, P, phi,  opt);
+%   [mu, mustar, sigma] = SPropSensi(Sys, P, phi, opt);
+% 
+% Example2 (Lorentz84):
+%   CreateSystem;
+%   P = CreateParamSet(Sys);
+%   P = SetParam(P, {'x1h', 'x1l', 'T'}, [.3, -.3, 5]);
+%   [~,props] = QMITL_ReadFile('oscil_prop.stl');
+%   phi = props{end};
+%   opt.tspan = 0:0.1:5;
+%   opt.params = {'a','F'};
+%   opt.lbound = [0.15, 5];
+%   opt.ubound = [0.35, 25];
+%   opt.plot = 1;
+%   [mu, mustar, sigma] = SPropSensi(Sys, P, phi, opt);
 %
-%See also QMITL_Formula CreateParamSet
+%See also QMITL_Formula QMITL_ReadFile CreateParamSet
 %
 
 
@@ -68,10 +83,7 @@ else
     tprop = tspan(1);
 end
 
-if isfield(opt, 'p')
-    p = opt.p;
-else
-    p = 4;
+if ~isfield(opt, 'p')
     opt.p = 4;
 end
 
@@ -84,6 +96,7 @@ if ~isfield(opt, 'r')
 end
 
 Sys.p = P.pts(:,1);
+Sys.ParamList = P.ParamList;
 Pr = CreateParamSet(Sys, opt.params, [opt.lbound' opt.ubound']);
 
 Pr = pRefine(Pr, opt.p, opt.r);
@@ -99,7 +112,7 @@ Pr = ComputeTraj(Sys, Pr, tspan);
 
 [Pr, Y] = SEvalProp(Sys, Pr, phi, tprop);
 
-[mu, mustar, sigma] = EEffects(Y, Pr.D, p);
+[mu, mustar, sigma] = EEffects(Y, Pr.D, opt.p);
 
 
 if opt.plot
