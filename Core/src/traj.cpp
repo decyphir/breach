@@ -169,22 +169,13 @@ int CVM_ComputeTrajSensi(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prh
     cout << "\nComputing "  << nb_pts <<  " trajectories " << endl;
     cout << "[             25%            50%            75%              ] "<< endl;
     cout << " "; 
-    mexEvalString("drawnow;"); 
+    mexEvalString("drawnow;");
+    cout.flush();
   }  
 
   int iprog=0;
 
   for (int j = 0; j<nb_pts ; j++) {
-
-    /* Progress bar */
-    if (nb_pts>1) {
-      cout.flush();
-      while (60*(j+1)/nb_pts>iprog) {      
-	cout << "^";
-	iprog++;
-      }
-      mexEvalString("drawnow;"); 
-    }
 
     /* Update initial condition and parameters */
     p0 = pts(All, j);
@@ -201,6 +192,16 @@ int CVM_ComputeTrajSensi(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prh
     int l = trajArray(j)->length; 
     Xf(All,j) = (*trajArray(j)->X)(All,l-1);
     XSf(All,j) = (*trajArray(j)->XS)(All,l-1);
+
+    /* Progress bar */
+    if (nb_pts>1) {
+      cout.flush();
+      while (60*(j+1)/nb_pts>iprog) {      
+	cout << "^";
+	iprog++;
+      }
+      mexEvalString("drawnow;"); 
+    }
 
   }
   if (nb_pts>1) 
@@ -273,7 +274,7 @@ int CVM_ComputeTraj(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) 
   /* Get IC and parameters */ 
   Array2D pts(N,1);
   GetArrayField(pts, prhs[0],"pts");
- int nb_pts = pts.extent(1);
+  int nb_pts = pts.extent(1);
 
   /* Get time span */ 
   Array1D tspan(2);
@@ -307,23 +308,14 @@ int CVM_ComputeTraj(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) 
     cout << "\nComputing "  << nb_pts <<  " trajectories " << endl;
     cout << "[             25%            50%            75%              ] "<< endl;
     cout << " "; 
-    mexEvalString("drawnow;"); 
+    mexEvalString("drawnow;");
+    cout.flush();
   }
 
   int iprog=0;
   
   for (int j = 0; j<nb_pts ; j++) {
     //cout << "\n\n\n**********************************************************" <<endl;
-    /* Progress bar progress */
-    if (nb_pts>1) {
-      cout.flush();
-      while (60*(j+1)/nb_pts>iprog) {      
-	cout << "^";
-	iprog++;
-      }
-      mexEvalString("drawnow;"); 
-    }
-
     p0 = pts(All, j);
     Tspan.resize(tspan.shape());  
     Tspan = tspan;
@@ -350,6 +342,16 @@ int CVM_ComputeTraj(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) 
     int l = trajArray(j)->length; 
     Xf(All,j) = (*trajArray(j)->X)(All,l-1);    
   
+    /* Progress bar progress */
+    if (nb_pts>1) {
+      cout.flush();
+      while (60*(j+1)/nb_pts>iprog) {      
+	cout << "^";
+	iprog++;
+      }
+      mexEvalString("drawnow;"); 
+    }
+
   }
 
   /* End progress bar */
