@@ -1,15 +1,16 @@
 function P = SetEpsi(P, ParamList, EpsiValues)
-% SETPARAM Sets the values of epsi in a parameter set.
+% SETEPSI Sets the values of epsi in a parameter set.
 % 
-% Synopsis: P = SetParam(P, ParamList, EpsiValues)
+% Synopsis: P = SetEpsi(P, ParamList, EpsiValues)
 % 
 % Input:
 %  - P          : the parameter set to modify ;
-%  - ParamList  : the list of parameter names for which the epsi value is
-%                 modified. If empty, nothing is done ;
+%  - ParamList  : the list of parameter names or indexes for which the epsi
+%                 value is modified. If empty, nothing is done. If a
+%                 parameter of ParamList is not uncertain or doesn't exist,
+%                 then it is skipped ;
 %  - EpsiValue  : the values of the epsi. Its size is either
-%                 ( numel(ParamList) , size(P.pts,2) ) or
-%                 ( numel(ParamList) , 1 )
+%                 numel(ParamList) x size(P.pts,2) or numel(ParamList) x 1
 % 
 % Example (for Lorenz84 system):
 % 
@@ -42,19 +43,10 @@ if(size(EpsiValues,1)==1 && ~ischar(ParamList) && numel(ParamList)~=1)
 end
 
 if(ischar(ParamList) || iscell(ParamList))
-    ind = FindParam(P,ParamList);
-    [~,ind,ind_epsi] = intersect(P.dim,ind);
-    P.epsi(ind,:) = EpsiValues(ind_epsi,:);
-    return
-% 
-% elseif isnumeric(ParamList)
-%     for i = 1:numel(ParamList)
-%         if ParamList(i) > size(P.pts, 1)
-%             error('SetParam:index','Index out of range')
-%         end
-%         P.pts(ParamList(i),:) = EpsiValues(i,:);
-%     end
-%     return
+    ParamList = FindParam(P,ParamList);
 end
+
+[~,ind,ind_epsi] = intersect(P.dim,ParamList);
+P.epsi(ind,:) = EpsiValues(ind_epsi,:);
 
 end

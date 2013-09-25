@@ -49,7 +49,8 @@ function P = Refine(P0, delta)
 %   P = Refine(P0, [2.1 2.2]);   % returns P0:
 %   all(size(P.pts)==size(P0.pts)) & all((P.pts==P0.pts)  % true
 %
-%See also CreateParamSet RandomLogRefine QuasiRefine
+%See also CreateParamSet RandomLogRefine QuasiRefine SAddUncertainParam
+%SetEpsi
 %
 
 

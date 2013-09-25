@@ -164,16 +164,19 @@ function idx = find_prop(P,st)
 % Output:
 %  - the index of the property evaluation if found, 0 otherwize
 %
-try
+
+if ~isfield(P,'props_names')
+    idx = 0;
+    return;
+else
     for idx = 1:numel(P.props_names)
         if strcmp(st,P.props_names{idx})
             return;
         end
     end
-catch %#ok<CTCH>
 end
 
-idx=0;
+idx=0; % in case it is not found
 
 end
 

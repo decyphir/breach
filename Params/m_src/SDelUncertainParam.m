@@ -3,7 +3,7 @@ function P = SDelUncertainParam(P, ParamList, Exception, Verbose)
 % excepted of those contained in Exception. If P will contain no uncertain
 % parameters, nothing is done.
 %
-% Synopsis: P = SDelUncertainParam(P, ParamList [ , Exception, Verbose ])
+% Synopsis: P = SDelUncertainParam(P, ParamList[ , Exception[, Verbose]])
 %
 % Input:
 %   - P         : the parameter set to modify
@@ -18,7 +18,6 @@ function P = SDelUncertainParam(P, ParamList, Exception, Verbose)
 %   - P : the modified parameter set
 %
 % Examples (Lorentz84):
-%
 %   CreateSystem;
 %   P = CreateParamSet(Sys,{'a','b'});
 %   fprintf('%s\n',P.ParamList{P.dim}); % output: a and b
@@ -30,17 +29,13 @@ function P = SDelUncertainParam(P, ParamList, Exception, Verbose)
 
 % Check inputs
 
-if iscell(ParamList) || ischar(ParamList)
+if(iscell(ParamList) || ischar(ParamList))
     ParamList = FindParam(P,ParamList);
-end
-
-if iscell(Exception) || ischar(Exception)
-    Exception = FindParam(P,Exception);
 end
 
 if ~exist('Exception','var')
     Exception = [];
-elseif iscell(Exception) || ischar(Exception)
+elseif(iscell(Exception) || ischar(Exception))
     Exception = FindParam(P,Exception);
 end
 
@@ -60,13 +55,5 @@ elseif(Verbose>=1)
             ['No uncertain parameters are remaining, the command has' ...
              ' been skipped\n']);
 end
-
-% for ii=ParamList
-%     if isempty(find(Exception==ii,1))
-%         ParamList = find(P.dim~=ii);
-%         P.dim = P.dim(ParamList);
-%         P.epsi = P.epsi(ParamList,:);
-%     end
-% end
 
 end
