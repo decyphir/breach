@@ -1,27 +1,30 @@
 function [P, val] = SEvalProp(Sys, P, props, tau, ipts, bool_plot, break_level)
 %SEVALPROP Eval property for previously computed trajectories
 %
-% Usage: [Pf, val] = SEvalProp(Sys, P, prop [ , tau, ipts, bool_plot, break_level ])
+% Usage: [Pf, val] = SEvalProp(Sys, P, prop[ , tau[, ipts[, bool_plot[, break_level ]]]])
 %
 % Inputs:
-%  - Sys         system
-%  - P           param set with trajectories
-%  - prop        property(ies)
-%  - tau         time instant(s) when to estimate properties. If not
-%                provided, the time instants considered for computing the
-%                trajectory are used.
-%  - ipts        indices of param sets for which to eval properties.
-%                (Default= all parameter sets)
-%  - break_level (Optional) defines the deep of breaking of props. If
-%                lower or equal to 1, it is ignored. If greater or equal to
-%                two, SEvalProp answers the evaluation of the props and all
-%                sub-formula of props until the deep provided.
+%  - Sys         : system
+%  - P           : Param set with trajectories
+%  - prop        : QMITL property(ies)
+%  - tau         : Time instant(s) when to estimate properties. If not
+%                  provided, the time instants considered for computing the
+%                  trajectory are used. It may be a scalar, in which case,
+%                  all the formula are evaluated at this time point, or it
+%                  may be an array of size 1 x numel(props), thus
+%                  indicating the time point of evaluation of each formula.
+%  - ipts        : Indices of parameter vectors for which the properties is
+%                  evaluated (Optional, Default=all parameter sets).
+%  - break_level : (Optional) defines the deep of breaking of props. If
+%                  lower or equal to 1, it is ignored. If greater or equal
+%                  to two, SEvalProp answers the evaluation of the props
+%                  and all sub-formula of props until the deep provided.
 %
 % Outputs:
-%  - Pf          param set with prop_values field
-%  - val         an array containing the quantitative satisfaction of
-%                properties for each trajectory. The dimension of val is
-%                numel(props) x numel(ipts)
+%  - Pf  : param set with prop_namse, prop and prop_values fields
+%  - val : an array containing the quantitative satisfaction of properties
+%          for each trajectory at the first time point of tau. The
+%          dimension of val is numel(props) x numel(ipts)
 %
 %See also QMITL_Formula CreateParamSet ComputeTraj Sselect
 %
@@ -29,20 +32,34 @@ function [P, val] = SEvalProp(Sys, P, props, tau, ipts, bool_plot, break_level)
 
 % check arguments
 
-if(~exist('ipts','var')||isempty(ipts))
-    ipts = 1:size(P.pts,2);
-end
-
-if(~exist('break_level','var'))
+if ~exist('break_level','var')
     break_level = 0;
 end
 
 if(break_level>0)
     nprops = [];
-    for i = 1:numel(props)
-        nprops = [ nprops QMITL_Break(props(i),break_level) ];
+    for ii = 1:numel(props)
+        nprops = [ nprops QMITL_Break(props(ii),break_level) ]; %#ok<AGROW>
     end
     props = nprops;
+end
+
+if ~exist('bool_plot','var')
+    bool_plot = 0;
+end
+
+if(~exist('ipts','var')||isempty(ipts))
+    ipts = 1:size(P.pts,2);
+end
+
+if ~exist('tau','var')
+    tau = [];
+elseif isscalar(tau)
+    tau = ones(1,numel(props))*tau;
+end
+
+if ~iscell(props)
+    props = {props};
 end
 
 if ~isfield(P,'props')
@@ -57,24 +74,14 @@ if ~isfield(P,'traj_ref')
     P.traj_ref = 1:numel(P.traj);
 end
 
-if(~exist('tau','var')||isempty(tau))
-    tau0 = [];
-else
-    tau0 = tau;
-end
-
-if ~exist('bool_plot','var')
-    bool_plot = 0;
-end
-
 % do things
 
 % setup plots if needed
 
-if (bool_plot)
+if(bool_plot)
     figure;
     nb_prop = numel(props);
-    if (isfield(Sys,'time_mult'))
+    if isfield(Sys,'time_mult')
         time_mult = Sys.time_mult;
     else
         time_mult = 1;
@@ -82,20 +89,21 @@ if (bool_plot)
 end
 
 val = zeros(numel(props),numel(ipts)); %initialize array containing truth values for each property and each param set
+props_values(1:numel(ipts)) = deal(struct()); % Temporary line containing the growing evaluation of the formula
 for np = 1:numel(props) % for each property
     
-    prop = props(np);  % prop = current property
+    prop = props{np};  % prop = current property
     prop_name =  get_id(prop);
     iprop = find_prop(P,prop_name);
     
-    if (bool_plot)
+    if(bool_plot)
         subplot(nb_prop, 1, np);
         hold on;
         xlabel('tau');
         title(disp(prop), 'Interpreter','none');
     end
     
-    if ~iprop
+    if(~iprop)
         % if the property does not exist in P, we add it to P
         P.props_names = [P.props_names {prop_name}];
         P.props = [P.props prop];
@@ -107,47 +115,65 @@ for np = 1:numel(props) % for each property
              '[             25%%           50%%            75%%               ]\n ']);
     iprog = 0; %idx of progression bar
     
-    Ptmp = Sselect(P,1); % copie P en ne gardant que le premier parameter set
-    
-    for i = ipts % we compute the truch value of prop for each param set
-        while (floor(60*i/numel(ipts))>iprog)
+    for ii = ipts % we compute the truch value of prop for each param set
+        traj_tmp = P.traj(P.traj_ref(ii));
+        Ptmp = Sselect(P,ii);
+        if isempty(tau)
+            tau_tmp = traj_tmp.time;
+        else
+            tau_tmp = tau(np);
+        end
+        props_values(ii).tau = tau_tmp;
+        props_values(ii).val = QMITL_Eval(Sys, prop, Ptmp, traj_tmp, tau_tmp);
+        val(np,ii) = props_values(iprop,ii).val(1);
+        if isnan(val(np,ii))
+            warning('SEvalProp:NaNEval','Warning: property evaluated to NaN');
+        end
+        
+        while(floor(60*ii/numel(ipts))>iprog)
             fprintf('^');
             iprog = iprog+1;
         end
         
-        traj = P.traj(P.traj_ref(i));
-        Ptmp.pts = P.pts(:,i); % we copy in Ptmp the ith param set ; BETTER TO USE Ptmp = Sselect(P,i) ???
-        if isempty(tau0)
-            tau = traj.time; % no need of "else tau=tau0" because tau0 is a copy of tau
-        end
-        P.props_values(iprop,i).tau = tau;
-        P.props_values(iprop,i).val = QMITL_Eval(Sys,prop,Ptmp, traj, tau);
-        val(np,i) = P.props_values(iprop,i).val(1);
-        if isnan(val(np,i))
-            disp('Warning: property evaluated to NaN');
-        end
         % plot property values
-        if (bool_plot)
-            phi_tspan = P.props_values(iprop,i).tau;
-            phi_val = P.props_values(iprop,i).val;
+        if(bool_plot)
+            phi_tspan = props_values(ii).tau;
+            phi_val = props_values(ii).val;
             plot(phi_tspan*time_mult, phi_val);
             plot([phi_tspan(1) phi_tspan(end)]*time_mult, [0 0],'-k');
             stairs(phi_tspan*time_mult, (phi_val>0)*max(abs(phi_val))/2,'-r');
             grid on;
         end
-        
     end
+    P.props_values(iprop,:) = props_values; % we copy all evaluation in once to avoid inconsistent parameter set
     
     fprintf('\n');
 end
 
-
-function i = find_prop(S,st)
-
-i = 0;
-for k = 1:numel(S.props_names)
-    if strcmp(st,S.props_names{k})
-        i = k;
-        return;
-    end
 end
+
+function idx = find_prop(P,st)
+%FIND_PROP finds the index of a property in a parameter set.
+%
+% Synopsis: idx = find_prop(P,st)
+%
+% Input:
+%  - P  the parameter set containing the evaluation of properties
+%  - st a string describing the name of the searched property
+%
+% Output:
+%  - the index of the property evaluation if found, 0 otherwize
+%
+try
+    for idx = 1:numel(P.props_names)
+        if strcmp(st,P.props_names{idx})
+            return;
+        end
+    end
+catch %#ok<CTCH>
+end
+
+idx=0;
+
+end
+

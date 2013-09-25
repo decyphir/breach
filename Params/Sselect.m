@@ -6,18 +6,19 @@ function Pn = Sselect(P, kn)
 % Inputs:
 %  - P : the parameter set from which we extract a sub-parameter set
 %
-%  - kn: (Optional, defaut = find(P.selected~=0)) the indices of the set of
-%        values to extract from P. If kn is not given and P does not have a
-%        field selected, Pn is P. If kn is empty, Pn is P and a warning is
-%        thrown.
+%  - kn: (Optional, defaut = find(P.selected~=0)) the indices of the
+%        parameter vectors to extract from P. If kn is not given and P does
+%        not have a field selected, Pn is P. If kn is empty, Pn is P and a
+%        warning is thrown.
 %
 % Output:
-%  - Pn: parameter set containing the kn set of values of P. If the field
-%        traj_ref wasn't defined in P, it is created in Pn.
+%  - Pn: parameter set containing the selected required sub-parameter set.
+%        If the fields traj_ref or traj_to_compute wasn't defined in P,
+%        they are created in Pn.
 %
 % Example (Lorentz84):
 %   CreateSystem;
-%   P = CreateParamSet(Sys, {'a','F'}, [0.15,0.35;5,25], 4); % creates 16 param sets
+%   P = CreateParamSet(Sys, {'a','F'}, [0.15,0.35;5,25], 4); % creates 16 param vectors
 %
 %   Peven = Sselect(P, 2:2:16);
 %   Podd = Sselect(P, 1:2:15);  % split P into two param sets
@@ -25,7 +26,19 @@ function Pn = Sselect(P, kn)
 %   P = ComputeTraj(Sys, P, 0:0.01:10);
 %   phi = QMITL_Formula('phi', 'ev (x1[t]<-3)');
 %   [~,val] = SEvalProp(Sys,P,phi,0);
-%   Pvalid = Sselect(P,find(val>0));  % select param sets verifying phi
+%   Pvalid = Sselect(P,find(val>0));  % the four select param vectors verifying phi
+%   figure ; SplotVar(Pvalid)
+%
+%   P2 = CreateParamSet(Sys,'a',[0,2]);
+%   P2 = ComputeTraj(Sys,P2,1:0.1:10);
+%   P2 = SetParam(P2,'propParam',2);
+%   P2 = SAddUncertainParam(P2,'propParam');
+%   P2 = Refine(P2,[3,3]);
+%   P2.traj_ref   % have three parameter vector leading to the trajectory
+%   P2 = Sselect(P2,[2,5]);  % select two of them
+%   size(P2.traj)   % only one traj
+%   P2.traj_ref     % with both parameter vector leading to it
+%   P2.traj_to_compute  % and no parameter vector remaining to compute
 %
 
 % val = QMITL_Eval(Sys, phi, P, P.traj, 0);     % this code also works for
@@ -72,35 +85,41 @@ for ii = 1:numel(field_list_select)
 end
 
 
-if isfield(P,'traj')
-    if ~isfield(P, 'traj_ref')
-        P.traj_ref = 1:numel(P.traj);
-    end
-end
-
 field_list_traj_ref_select = {'traj', 'etraj'};
-
-for ii = 1:numel(field_list_traj_ref_select)
-    if isfield(P, field_list_traj_ref_select{ii})
-        Pn.(field_list_traj_ref_select{ii}) = P.(field_list_traj_ref_select{ii})(P.traj_ref(kn));
-    end
-end
-
-if isfield(P, 'traj_to_compute')
-    Pn.traj_to_compute = intersect(kn,P.traj_to_compute,'sorted');
-else
-    %TODO : to improve to avoid computation of two identical simulations
-    Pn.traj_to_compute = 1:size(Pn.pts,2);
-end
-
-%TODO : set Pn.traj_ref
-
 field_list_traj_ref_select2 = {'XS0', 'Xf', 'ExpaMax', 'XSf'};
 
-for ii = 1:numel(field_list_traj_ref_select2)
-    if isfield(P, field_list_traj_ref_select2{ii})
-        Pn.(field_list_traj_ref_select2{ii}) = P.(field_list_traj_ref_select2{ii})(:,P.traj_ref(kn));
+Pn.traj_ref = zeros(1,numel(kn));
+if ~isfield(P, 'traj_ref')
+    for ii = 1:numel(field_list_traj_ref_select)
+        if isfield(P, field_list_traj_ref_select{ii})
+            Pn.(field_list_traj_ref_select{ii}) = P.(field_list_traj_ref_select{ii})(kn);
+        end
+        if isfield(P, field_list_traj_ref_select2{ii})
+            Pn.(field_list_traj_ref_select2{ii}) = P.(field_list_traj_ref_select2{ii})(:,kn);
+        end
+    end
+    if isfield(Pn,'traj')
+        Pn.traj_ref(1:numel(Pn.traj)) = 1:numel(Pn.traj);
+    end
+else
+    kn_ref = P.traj_ref(kn);
+    kn_ref = unique(kn_ref(kn_ref~=0),'stable'); % don't copy 1/ non-computed traj OR 2/ many times same stuff
+    for ii = 1:numel(field_list_traj_ref_select)
+        if isfield(P, field_list_traj_ref_select{ii})
+            Pn.(field_list_traj_ref_select{ii}) = P.(field_list_traj_ref_select{ii})(kn_ref);
+        end
+        if isfield(P, field_list_traj_ref_select2{ii})
+            Pn.(field_list_traj_ref_select2{ii}) = P.(field_list_traj_ref_select2{ii})(:,kn_ref);
+        end
+    end
+    for ii=1:numel(kn_ref) % to set the correct values to traj_ref, we do a mapping from the unique...
+        Pn.traj_ref(P.traj_ref(kn)==kn_ref(ii)) = ii; % values in kn_ref to 1:numel(unique(kn_ref))
     end
 end
+
+[~,Pn.traj_to_compute] = unique(Pn.pts(1:Pn.DimP,:)','rows','first'); % set traj_to_compute
+Pn.traj_to_compute = setdiff(Pn.traj_to_compute,find(Pn.traj_ref~=0)); % don't keep those already computed
+Pn.traj_to_compute = sort(Pn.traj_to_compute)'; % set it in a line shape
+
 
 end

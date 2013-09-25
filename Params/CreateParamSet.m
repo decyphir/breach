@@ -39,11 +39,11 @@ function P = CreateParamSet(Sys, Param, Ranges, Nb_pts)
 %
 % Example 3:
 %     CreateSystem;
-%     P = CreateParamSet(Sys,{'a','x0'},[0.2,0.4;-0.6,0.6]); % a and x0 are
-%                                      % unknown parameters. The value of a
-%                                      % is 0.3, with an epsi of 0.1, and
-%                                      % the value of x0 is 0, with an epsi
-%                                      % of 0.6
+%     P = CreateParamSet(Sys,{'a','x0'},[0.2,0.4 ; -0.6,0.6]); % a and x0
+%                                      % are unknown parameters. The value
+%                                      % of a % is 0.3, with an epsi of
+%                                      % 0.1, and % the value of x0 is 0,
+%                                      % with an epsi % of 0.6
 %
 % See also: Refine SetParam SAddUncertainParam
 %
@@ -56,7 +56,7 @@ if exist('Param','var')
     end
     nbParam = numel(Param);
     if isnumeric(Param)
-        dim = reshape(Param,1,nbParam); % ensure that dim is a vector
+        dim = reshape(Param,1,nbParam); % ensure that dim is a line vector
         ParamList = Sys.ParamList;
     else
         ind = FindParam(Sys,Param);
@@ -94,16 +94,19 @@ end
 P.DimX = Sys.DimX;
 P.DimP = Sys.DimP;
 P.dim = dim;
-if(size(pts,2)>size(pts,1))
+if(size(pts,2)>size(pts,1)) % should not happen !
     pts = pts'; % we want a column vector
 end
-if(size(epsi,2)>size(epsi,1))
+if(size(epsi,2)>size(epsi,1)) % should not happen !
     epsi = epsi'; % we want a column vector
 end
 
 P.pts = pts;
 P.epsi = epsi;
 P.ParamList = ParamList;
+
+P.traj_ref = 0; %NM: let's assume that non-computed trajectories have a traj_ref set to 0
+P.traj_to_compute = 1;
 
 if exist('Nb_pts', 'var') 
     P = Refine(P, Nb_pts);

@@ -1,7 +1,7 @@
 function P = SetParam(P, ParamList, ParamValues)
 % SETPARAM Sets the values of parameters in a parameter set. Note that if
-% the parameter is not present in P, it is created and appended. The epsi
-% are neither modified nor created.
+% the parameter is not present in P, it is created and appended as a fixed
+% parameter. The epsi are neither modified nor created.
 % 
 % Synopsis: P = SetParam(P, ParamList, ParamValues)
 % 
