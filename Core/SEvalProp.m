@@ -15,10 +15,10 @@ function [P, val] = SEvalProp(Sys, P, props, tau, ipts, bool_plot, break_level)
 %                  indicating the time point of evaluation of each formula.
 %  - ipts        : Indices of parameter vectors for which the properties is
 %                  evaluated (Optional, Default=all parameter sets).
-%  - break_level : (Optional) defines the deep of breaking of props. If
+%  - break_level : (Optional) defines the depth of breaking of props. If
 %                  lower or equal to 1, it is ignored. If greater or equal
 %                  to two, SEvalProp answers the evaluation of the props
-%                  and all sub-formula of props until the deep provided.
+%                  and all sub-formula of props until the depth provided.
 %
 % Outputs:
 %  - Pf  : param set with prop_namse, prop and prop_values fields
@@ -39,7 +39,8 @@ end
 if(break_level>0)
     nprops = [];
     for ii = 1:numel(props)
-        nprops = [ nprops QMITL_Break(props(ii),break_level) ]; %#ok<AGROW>
+        broken_props = QMITL_Break(props(ii),break_level);
+        nprops = [ nprops broken_props(:) ]; %#ok<AGROW>
     end
     props = nprops;
 end
@@ -58,9 +59,9 @@ elseif isscalar(tau)
     tau = ones(1,numel(props))*tau;
 end
 
-if ~iscell(props)
-    props = {props};
-end
+%if ~iscell(props)
+%    props = {props};
+%end
 
 if ~isfield(P,'props')
     P.props = [];
@@ -74,10 +75,7 @@ if ~isfield(P,'traj_ref')
     P.traj_ref = 1:numel(P.traj);
 end
 
-% do things
-
 % setup plots if needed
-
 if(bool_plot)
     figure;
     nb_prop = numel(props);
@@ -92,7 +90,7 @@ val = zeros(numel(props),numel(ipts)); %initialize array containing truth values
 props_values(1:numel(ipts)) = deal(struct()); % Temporary line containing the growing evaluation of the formula
 for np = 1:numel(props) % for each property
     
-    prop = props{np};  % prop = current property
+    prop = props(np);  % prop = current property
     prop_name =  get_id(prop);
     iprop = find_prop(P,prop_name);
     
@@ -119,13 +117,16 @@ for np = 1:numel(props) % for each property
         traj_tmp = P.traj(P.traj_ref(ii));
         Ptmp = Sselect(P,ii);
         if isempty(tau)
-            tau_tmp = traj_tmp.time;
+            [props_values(ii).val tau_tmp]= QMITL_Eval(Sys, prop, Ptmp, traj_tmp);
+            props_values(ii).tau = tau_tmp;
         else
             tau_tmp = tau(np);
+            props_values(ii).tau = tau_tmp;
+            [props_values(ii).val props_values(ii).tau]= QMITL_Eval(Sys, prop, Ptmp, traj_tmp, tau_tmp);
         end
-        props_values(ii).tau = tau_tmp;
-        props_values(ii).val = QMITL_Eval(Sys, prop, Ptmp, traj_tmp, tau_tmp);
-        val(np,ii) = props_values(iprop,ii).val(1);
+        %props_values(ii).tau = tau_tmp;
+        %[props_values(ii).val props_values(ii).tau]= QMITL_Eval(Sys, prop, Ptmp, traj_tmp, tau_tmp);
+        val(np,ii) = props_values(ii).val(1);
         if isnan(val(np,ii))
             warning('SEvalProp:NaNEval','Warning: property evaluated to NaN');
         end
@@ -141,7 +142,10 @@ for np = 1:numel(props) % for each property
             phi_val = props_values(ii).val;
             plot(phi_tspan*time_mult, phi_val);
             plot([phi_tspan(1) phi_tspan(end)]*time_mult, [0 0],'-k');
-            stairs(phi_tspan*time_mult, (phi_val>0)*max(abs(phi_val))/2,'-r');
+            stairs(phi_tspan*time_mult, (phi_val>0)*max(abs(phi_val))/2,'-r','LineWidth', 4);
+            YLim = get(gca, 'YLim');
+            YLim(1) = min([-max(abs(phi_val))/2, YLim(1)]);
+            set(gca,'YLim', YLim);
             grid on;
         end
     end

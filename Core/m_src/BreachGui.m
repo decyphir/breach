@@ -513,7 +513,12 @@ function edit_default_param_Callback(hObject, eventdata, handles)
       for i= 1:numel(props) 
         phi = props(i);    
         tau = props_values(i).tau;
-        P0 = SEvalProp(handles.Sys, P0, phi, tau);
+        if (isfield(P0,'traj'))
+          P0 = SEvalProp(handles.Sys, P0, phi, tau);
+        else
+          PO = SPurge_props(P0);
+          handles = info(handles, 'Parameters changed, recompute trajectories to re-evaluate properties.');
+        end
       end
       handles.working_sets.(handles.current_set) = P0;
     end

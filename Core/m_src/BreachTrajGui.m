@@ -1012,8 +1012,7 @@ function button_save_pts_Callback(hObject, eventdata, handles)
   try
     
     Ptmp = select(handles.TrajSet,handles.current_pts);
-    Ptmp = rmfield(Ptmp,'traj');
-    Ptmp = rmfield(Ptmp,'Xf');
+    Ptmp = SPurge(Ptmp);
     
     name = handles.traj_set_name;
     new_name = genvarname(name, handles.protected_names);
@@ -1036,8 +1035,7 @@ function button_save_all_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
   try
-    Ptmp = rmfield(handles.TrajSet,'traj');
-    Ptmp = rmfield(Ptmp,'Xf');
+    Ptmp = SPurge(handles.TrajSet);
     name = handles.traj_set_name;
     new_name = genvarname(name, handles.protected_names);
     eval([new_name '= Ptmp']);   
@@ -1891,10 +1889,10 @@ function handles = update_trajectories(handles)
            
     if (handles.has_dynamics==1)
       if isfield(Ptmp.traj, 'sensis')
-        Ptmp = rmfield(Ptmp,'traj');
+        Ptmp = SPurge(Ptmp);
         Pftmp = ComputeTrajSensi(handles.Sys, Ptmp, tspan);
       else
-        Ptmp = rmfield(Ptmp,'traj');
+        Ptmp = SPurge(Ptmp);
         Pftmp = ComputeTraj(handles.Sys, Ptmp, tspan);
       end
     else
