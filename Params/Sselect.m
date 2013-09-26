@@ -118,7 +118,7 @@ else
 end
 
 [~,Pn.traj_to_compute] = unique(Pn.pts(1:Pn.DimP,:)','rows','first'); % set traj_to_compute
-if isfield(Pn,'traj')
+if isfield(Pn,'traj') % optimizing test
     Pn.traj_to_compute = setdiff(Pn.traj_to_compute,find(Pn.traj_ref~=0)); % don't keep those already computed
 end
 Pn.traj_to_compute = sort(Pn.traj_to_compute)'; % set it in a line shape

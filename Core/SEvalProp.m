@@ -117,15 +117,13 @@ for np = 1:numel(props) % for each property
         traj_tmp = P.traj(P.traj_ref(ii));
         Ptmp = Sselect(P,ii);
         if isempty(tau)
-            [props_values(ii).val tau_tmp]= QMITL_Eval(Sys, prop, Ptmp, traj_tmp);
+            [props_values(ii).val, tau_tmp]= QMITL_Eval(Sys, prop, Ptmp, traj_tmp);
             props_values(ii).tau = tau_tmp;
         else
             tau_tmp = tau(np);
             props_values(ii).tau = tau_tmp;
-            [props_values(ii).val props_values(ii).tau]= QMITL_Eval(Sys, prop, Ptmp, traj_tmp, tau_tmp);
+            [props_values(ii).val, props_values(ii).tau]= QMITL_Eval(Sys, prop, Ptmp, traj_tmp, tau_tmp);
         end
-        %props_values(ii).tau = tau_tmp;
-        %[props_values(ii).val props_values(ii).tau]= QMITL_Eval(Sys, prop, Ptmp, traj_tmp, tau_tmp);
         val(np,ii) = props_values(ii).val(1);
         if isnan(val(np,ii))
             warning('SEvalProp:NaNEval','Warning: property evaluated to NaN');
