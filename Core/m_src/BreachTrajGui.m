@@ -941,7 +941,7 @@ function edit_change_param_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-  try
+ % try
   
     ind_p = handles.current_change_param;
     if (ind_p)
@@ -979,11 +979,11 @@ function edit_change_param_Callback(hObject, eventdata, handles)
       end  
       
     end
-  catch
-    s = lasterror;
-    warndlg(['Problem edit_change_param: ' s.message] );
-    return
-  end
+ % catch
+ %   s = lasterror;
+ %   warndlg(['Problem edit_change_param: ' s.message] );
+ %   return
+ % end
 
   
 % Hints: get(hObject,'String') returns contents of edit_change_param as text
@@ -1898,8 +1898,9 @@ function handles = update_trajectories(handles)
     else
         Pftmp = Ptmp;
     end
-    handles.TrajSet.traj(handles.current_pts) = Pftmp.traj;
-    handles.TrajSet.Xf(:,handles.current_pts) = Pftmp.traj.X(:,end);
+    traj_ref = handles.TrajSet.traj_ref;
+    handles.TrajSet.traj(traj_ref(handles.current_pts)) = Pftmp.traj;
+    handles.TrajSet.Xf(:,traj_ref(handles.current_pts)) = Pftmp.traj.X(:,end);
     
     new_plot = plot_param(handles,1);
     handles.current_plot{1} = new_plot;

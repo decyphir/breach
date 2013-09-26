@@ -113,7 +113,7 @@ elseif isfield(P0, 'traj_to_compute') && ~isempty(P0.traj_to_compute) && ~isequa
         Pf.traj_ref(i_traj_ref) = numTrajP0+ii;
     end
     Pf.traj_to_compute = [];
-    % Pf.Xf = Ptmp.Xf; %NM: I dont what it does, so please update this
+    Pf.Xf = Ptmp.Xf; %NM: I dont what it does, so please update this
     return;
 end
 
