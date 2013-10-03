@@ -105,7 +105,8 @@ P.pts = pts;
 P.epsi = epsi;
 P.ParamList = ParamList;
 
-P.traj_ref = 0; %NM: let's assume that non-computed trajectories have a traj_ref set to 0
+P.traj_ref = 1; %NM: let's assume that non-computed trajectories have a traj_ref set to 0
+                 %AD: Not a good idea...
 P.traj_to_compute = 1;
 
 if exist('Nb_pts', 'var') 
