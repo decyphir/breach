@@ -88,7 +88,7 @@ function BreachGui_OpeningFcn(hObject, eventdata, handles, varargin)
   try 
     handles.working_sets = load(handles.working_sets_file_name);
   catch
-    P0 = CreateSampling(Sys,min(Sys.DimX+1, Sys.DimP));
+    P0 = CreateParamSet(Sys,min(Sys.DimX+1, Sys.DimP));
     save([SysName '_param_sets.mat'], 'P0');
     handles.working_sets = load(handles.working_sets_file_name);
   end
@@ -682,7 +682,7 @@ function button_new_set_Callback(hObject, eventdata, handles)
  try
   names = fieldnames(handles.working_sets);
   new_name =  genvarname('P',names);
-  P = CreateSampling(handles.Sys,min([handles.Sys.DimP handles.Sys.DimX+1]));
+  P = CreateParamSet(handles.Sys,min([handles.Sys.DimP handles.Sys.DimX+1]));
   P.selected = 0;
   handles.working_sets = setfield(handles.working_sets, new_name, P);
   handles = update_working_sets_panel(handles);  
@@ -2489,7 +2489,7 @@ function button_go_refine_Callback(hObject, eventdata, handles)
       if isempty(ipts)
         ipts = handles.current_pts;
       end      
-      
+
       Ptmp = Sselect(handles.working_sets.(handles.current_set),ipts);
       if (handles.halton)
         Pr =QuasiRefine(Ptmp, handles.refine_args);
