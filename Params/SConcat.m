@@ -1,7 +1,7 @@
-function S = SConcat(S,S2)
+function P = SConcat(P,P2)
 % SCONCAT Concatenates two parameter sets.
 %
-% Synopsis: P = SConcat(P1, P2)
+% Synopsis: P = SConcat(P, P2)
 %
 %  Tries to concat all compatible fields in P2 to those in P1. Basically
 %  add points and trajectories of P2 in P1. If P2 contains property
@@ -21,131 +21,202 @@ function S = SConcat(S,S2)
 
 
 % check consistency between the to parameter sets
-if(S.DimP~=S2.DimP)
+if(P.DimP~=P2.DimP)
     error('SConcat:DimP','The number of system parameters is not the same');
 end
-if(S.DimX~=S2.DimX)
+if(P.DimX~=P2.DimX)
     error('SConcat:DimX','The number of variables is not the same');
 end
-if ~isempty(setxor(S.ParamList(1:S.DimP),S2.ParamList(1:S2.DimP)))
+if ~isempty(setxor(P.ParamList(1:P.DimP),P2.ParamList(1:P2.DimP)))
     error('SConcat:ParamList','The system parameters are not the same');
 end
 
-if isempty(S2.pts) % should not happens
+if isempty(P2.pts) % should not happen
     return
 end
 
-if isempty(S.pts) % should not happens
-    S = S2;
+if isempty(P.pts) % should not happen
+    P = P2;
     return;
 end
 
-field_list_copy = {'props_names', 'props',  'time_mult'};
 
-for ii = 1:numel(field_list_copy)
-    if isfield(S2, field_list_copy{ii})
-        S.(field_list_copy{ii}) = S2.(field_list_copy{ii});
+% %%%%
+% time_mult
+% %%%%
+
+if isfield(P2,'time_mult')
+    if isfield(P,'time_mult')
+        if(P.time_mult~=P2.time_mult)
+            warning('SConcat:time_multField','time_mult field differs, keep first one');
+        end
+    else
+        P.time_mult = P2.time_mult;
     end
 end
 
-field_list = {'XS0', 'Xf', 'ExpaMax', 'XSf', 'props_values'};
+
+% %%%%
+% props, props_names, props_values
+% %%%%
+
+if(~isfield(P,'props_names') || ~isfield(P2,'props_names'))
+    try
+        P = rmfield(P,'props_names');
+        P = rmfield(P,'props');
+        P = rmfield(P,'props_values');
+    end
+else
+    [P.props_names,iP,iP2] = intersect(P.props_names,P2.props_names,'stable');
+    P.props = P.props(iP);
+    P.props_values = [P.props_values(iP,:),P2.props_values(iP2,:)];
+end
+
+
+field_list = {'XS0', 'Xf', 'ExpaMax', 'XSf'};
 
 for ii = 1:numel(field_list)
-    if(isfield(S,field_list{ii}) && isfield(S2,field_list{ii}))
-        if(numel(S.(field_list{ii}))==0)
-            S.(field_list{ii}) = S2.(field_list{ii});
+    if(isfield(P,field_list{ii}) && isfield(P2,field_list{ii}))
+        if(numel(P.(field_list{ii}))==0)
+            P.(field_list{ii}) = P2.(field_list{ii});
         else
-            S.(field_list{ii}) = [S.(field_list{ii}) S2.(field_list{ii})];
+            P.(field_list{ii}) = [P.(field_list{ii}) P2.(field_list{ii})];
         end
     end
 end
+
 
 % %%%%
 % selected
 % %%%%
 
-if(isfield(S2,'selected') && isfield(S,'pts'))
-    S2.selected = S2.selected+size(S.pts,2);
-    if isfield(S,'selected')
-        S.selected = [S.selected,S2.selected];
+if(isfield(P2,'selected') && isfield(P,'pts'))
+    P2.selected = P2.selected+size(P.pts,2);
+    if isfield(P,'selected')
+        P.selected = [P.selected,P2.selected];
     else
-        S.selected = S2.selected;
+        P.selected = P2.selected;
     end
 end
+
+
+% %%%%
+% traj, traj_ref
+% %%%%
+
+if isfield(P,'traj') % Some check, in case of ...
+    if(size(P.traj,1) > 1)
+        P.traj = P.traj';
+    end
+    if ~isfield(P, 'traj_ref')
+        P.traj_ref = 1:numel(P.traj);
+    end
+end
+if isfield(P2,'traj')
+    if(size(P2.traj,1) > 1)
+        P2.traj = P2.traj';
+    end
+    if ~isfield(P2, 'traj_ref')
+        P2.traj_ref = 1:numel(P2.traj);
+    end
+end
+
+if(isfield(P,'traj') && isfield(P2,'traj'))
+    num_traj_P = numel(P.traj);
+    P2.traj_ref(P2.traj_ref~=0) = P2.traj_ref(P2.traj_ref~=0) + num_traj_P;
+    
+    % link param vector of P2 to traj of  P
+    for ii = 1:num_traj_P
+        P2.traj_ref(ismember(P2.pts(1:P2.DimP,:)',P.traj(ii).param,'rows')) = ii; % P.traj(ii).param is a row vector
+    end
+    
+    % copy P2.traj not in P.traj
+    [traj_valid,~,i_unique] = unique(P2.traj_ref(P2.traj_ref>num_traj_P),'stable');
+    P.traj = [ P.traj , P2.traj(traj_valid-num_traj_P) ];
+    
+    % update P2.traj_ref
+    P2.traj_ref(P2.traj_ref>num_traj_P) = i_unique;
+    
+    % link param vector of P to P2 trajectories
+    for ii=num_traj_P+1:numel(P.traj)
+        P.traj_ref(ismember(P.pts(1:P.DimP,:)',P.traj(ii).param,'rows')) = ii;
+    end
+    
+    % copy P2.traj_ref in P.traj_ref
+    P.traj_ref = [P.traj_ref, P2.traj_ref];
+elseif isfield(P,'traj')
+    % link param vector of P2 to traj of  P
+    P2.traj_ref = zeros(1,size(P2.pts,2));
+    for ii = 1:numel(P.traj)
+        P2.traj_ref(ismember(P2.pts(1:P2.DimP,:)',P.traj(ii).param,'rows')) = ii; % P.traj(ii).param is a row vector
+    end
+    % copy P2.traj_ref in P.traj_ref
+    P.traj_ref = [P.traj_ref, P2.traj_ref];
+elseif isfield(P2,'traj')
+    % link param vector of P to traj of  P2
+    P.traj_ref = zeros(1,size(P.pts,2));
+    for ii = 1:numel(P2.traj)
+        P.traj_ref(ismember(P.pts(1:P.DimP,:)',P2.traj(ii).param,'rows')) = ii; % P2.traj(ii).param is a row vector
+    end
+    % copy traj
+    P.traj = P2.traj;
+    % copy P2.traj_ref
+    P.traj_ref = [P.traj_ref, P2.traj_ref];
+else
+    P.traj_ref = zeros(1,size(P.pts,2));
+end
+
 
 % %%%%
 % pts
 % %%%%
 
-if(isfield(S,'pts') && isfield(S2,'pts'))
-    % for pts in S, we set to 0 the params of S2\S
-    newParams=setdiff(S2.ParamList,S.ParamList);
-    S=SetParam(S,newParams,zeros(1,numel(newParams)));
+if(isfield(P,'pts') && isfield(P2,'pts'))  % case where P.pts or P2.pts are empty already considered
+    % for pts in P, we set to 0 the params of P2\P
+    newParams=setdiff(P2.ParamList,P.ParamList,'stable');
+    P=SetParam(P,newParams,zeros(1,numel(newParams)));
     
-    % number of points in S
-    nb_pts_S = size(S.pts,2);
+    % for pts in P2, we set to 0 the params of P\P2
+    newParams=setdiff(P.ParamList,P2.ParamList,'stable');
+    P2=SetParam(P2,newParams,zeros(1,numel(newParams)));
     
-    % for pts in S2, we set to 0 the params of S\S2
-    S.pts = [S.pts,zeros(size(S.pts,1),size(S2.pts,2))];
-    
-    % we copy S2 into S
-    for ii=1:numel(S2.ParamList)
-        idx = FindParam(S,S2.ParamList(ii));
-        S.pts(idx,nb_pts_S+1:end) = S2.pts(ii,:);
-    end
+    % we add P2.pts to P.pts
+    P.pts = [ P.pts , P2.pts(FindParam(P2,P.ParamList),:) ];
 end
+
 
 % %%%%
-% epsi and dim
+% epsi, dim
 % %%%%
 
-if(isfield(S,'epsi') && isfield(S2,'epsi'))
-    % there are size(S2.pts,2) more trajectories
-    S.epsi = [S.epsi,zeros(size(S.epsi,1),size(S2.pts,2))];
+if(isfield(P,'epsi') && isfield(P2,'epsi'))
     
-    for ii=1:numel(S2.dim) % for each uncertain parameter in S2
-        p = S2.ParamList(S2.dim(ii));
-        idx_p = find(strcmp(S.ParamList(S.dim),p),1);
-        if isempty(idx_p) % if it is not an uncertain parameter in S
-            S.dim = [S.dim,find(strcmp(S.ParamList,p),1)]; % it becomes one
-            S.epsi = [S.epsi;zeros(1,size(S.epsi,2))]; % the epsi are null
-            S.epsi(size(S.epsi,1),nb_pts_S+1:end) = S2.epsi(ii,:); % exept for those in S2
-        else
-            S.epsi(idx_p,nb_pts_S+1:end) = S2.epsi(ii,:);
-        end
-    end
+    % Add new uncertain parameter in P
+    name_new = setdiff(P2.ParamList(P2.dim),P.ParamList(P.dim));
+    P.dim = [P.dim, FindParam(P,name_new)];
+    P.epsi = [P.epsi;zeros(numel(name_new),size(P.epsi,2))];
+    
+    % Add new uncertain parameters in P2
+    name_new = setdiff(P.ParamList(P.dim),P2.ParamList(P2.dim));
+    P2.dim = [P2.dim, FindParam(P2,name_new)];
+    P2.epsi = [P2.epsi;zeros(numel(name_new),size(P2.epsi,2))];
+    
+    % get index of P2.dim in P.dim
+    [~,~,iP2] = intersect(P.ParamList(P.dim), P2.ParamList(P2.dim),'stable'); % P.ParamList(P.dim) and P2.ParamList(P2.dim) are the same
+    
+    % Copy P2.epsi in P.epsi
+    P.epsi = [P.epsi, P2.epsi(iP2,:)];
 end
 
 
+% %%%%
+% traj_to_compute
+% %%%%
 
-if(isfield(S, 'traj') && (isfield(S2,'traj')))
-    
-    %%% TEMPORARY FIX
-    if size(S.traj,1) >1
-        S.traj = S.traj';
-    end
-    
-    if size(S2.traj,1) >1
-        S2.traj = S2.traj';
-    end
-    
-    if (~isfield(S, 'traj_ref'))
-        S.traj_ref = 1:numel(S.traj);
-    end
-    
-    if (~isfield(S2, 'traj_ref'))
-        S2.traj_ref = 1:numel(S2.traj);
-    end
-    
-    S.traj_ref = [S.traj_ref S2.traj_ref+numel(S.traj)];
-    S.traj = [S.traj S2.traj];
-    
+[~,P.traj_to_compute] = unique(P.pts(1:P.DimP,:)','rows');
+if isfield(P,'traj') % optimizing test
+    P.traj_to_compute = setdiff(P.traj_to_compute,find(P.traj_ref~=0)); % don't keep those already computed
 end
-
-X = S.pts(1:S.DimP,:)';
-[~,IA,IC] = unique(X,'rows');
-
-S.traj_ref = IC';
-S.traj_to_compute = IA';
+P.traj_to_compute = sort(P.traj_to_compute)';
 
 end

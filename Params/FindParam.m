@@ -5,19 +5,32 @@ function index =  FindParam(S,param)
 % Syntax: index = FindParam(Sys, param)
 %     or  index = FindParam(P, param)
 %
-% param can be a string or a cell of string when looking for more than one
-% parameter. Returns index greater than Sys.DimP for parameter(s) not
-% found. (for unfound parameters, the returned indexes is compact,
-% different for each parameter and the smaller index is equal to the higher
-% known parameter index + 1).
+% Inputs:
+%  - S     : is the system or a parameter set
+%  - param : it can be a string or a cell of string when looking for more
+%            than one parameter. If it contains many time the same
+%            parameter name, then this index is answered as many
+%            time than the parameter name is in param.
+%
+% Outputs:
+%  - index  is the index of param in S.ParamList. It is greater than S.DimP
+%           for parameter(s) not found. (for unfound parameters, the
+%           returned indexes is compact, different for each parameter and
+%           the smaller index is equal to the higher known parameter index
+%           + 1).
 %
 % Example (Lorentz84):
 %
 %  CreateSystem;
-%  idx = FindParam(Sys, 'a');
-%  idxs = FindParam(Sys, {'a','F','G'});
+%  idx = FindParam(Sys, 'a')
+%  numel(Sys.ParamList)  % 7 elements
+%  idxs = FindParam(Sys, {'a','blah','F','bou'}) % 4  8  6  9 -> 'blah' and 'bou' are new params
+%  idxs = FindParam(Sys, {'F','F'})
+%  P = CreateParamSet(Sys,'a',[0,2]);
+%  idxs = FindParam(P, {'bou','bou'})
 %
 
+% check inputs
 if ~isfield(S,'ParamList')
     error('FindParam:noParamList','No parameter list ...');
 end
@@ -25,6 +38,9 @@ end
 if ~iscell(param)
     param = {param};
 end
+
+% This implementation is very optimized: I have try to use member or
+% intersect, it is 10 to 100 times slower.
 
 index = zeros(1, numel(param));
 
@@ -37,15 +53,16 @@ for ii = 1:numel(param)
     found = 0;
     for jj = 1:numel(S.ParamList)
         same = strcmp(S.ParamList{jj},param{ii});
-        if (same)
+        if(same)
             found = 1;
             index(ii) = jj;
             break; % index found, no need to try other names of S.ParamList
         end
     end
-    if (~found)
+    if(~found)
         newp = newp+1;
         index(ii) = newp;
+        S.ParamList = [S.ParamList, param(ii)];
     end
 end
 

@@ -1,37 +1,39 @@
 function P = SPurge(P)
-% SPURGE Remove all fields related to a specific computation of
-% trajectories
+%SPURGE Remove all fields related to a specific computation of
+% trajectories. this function does not remove properties values
 %
-%  Synopsis: P = SPurge(P)
+% Synopsis: P = SPurge(P)
 %
-%  Notes: does not remove properties values
+% Input:
+%  - P : the parameter set to purge
 %
-%  SEE ALSO SPURGE_PROPS
+% Output:
+%  - P : the parameter set after cleaning
+%
+%See also SPurge_props
 %
 
-try
+if isfield(P,'traj')
     P = rmfield(P, 'traj');
 end
-try
+if isfield(P,'Xf')
     P = rmfield(P, 'Xf');
 end
 
-try
+if isfield(P,'XSf')
     P = rmfield(P, 'XSf');
 end
-try
+if isfield(P,'XS0')
     P = rmfield(P, 'XS0');
 end
-try
+if isfield(P,'ExpaMax')
     P = rmfield(P, 'ExpaMax');
 end
 
-% Reset field traj_to_compute
+% Reset field traj_to_compute and traj_ref
+[~,P.traj_to_compute] = unique(P.pts(1:P.DimP,:)','rows');
+P.traj_to_compute = sort(P.traj_to_compute)';
 
-X = P.pts(1:P.DimP,:)';
-[~,IA,IC] = unique(X,'rows');
-
-P.traj_ref = IC';
-P.traj_to_compute = IA';
+P.traj_ref = zeros(1,size(P.pts,2));
 
 end
