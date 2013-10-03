@@ -114,6 +114,8 @@ elseif isfield(P0, 'traj_to_compute') && ~isempty(P0.traj_to_compute) && ~isequa
     end
     Pf.traj_to_compute = [];
     Pf.Xf = Ptmp.Xf; %NM: don't we need to use traj_ref here ?
+                     %AD: not here but probably in SPlotXf, and anything
+                     %    using Xf (not much nowadays, though)  
     return;
 end
 
@@ -155,8 +157,9 @@ switch Sys.type
             fprintf('\n');
         end
         
-        %NM: Need to manage traj_ref and traj_to_compute ?
-    
+        Pf.traj_to_compute = [];
+        Pf.traj_ref = 1:numel(Pf.traj); % fill field traj_ref (one to one mapping)
+  
     case 'Simulink'
         model = Sys.mdl;
         Pf = P0;
