@@ -1486,7 +1486,7 @@ function new_plot= plot_param(handles,ax)
               end
             end
               
-            Ptmp = CreateSampling(handles.Sys,sensi_param(is));
+            Ptmp = CreateParamSet(handles.Sys,sensi_param(is));
             Ptmp.pts = handles.TrajSet.pts(:,handles.current_pts);
             Pftmp = ComputeTrajSensi(handles.Sys, Ptmp,tspan);          
 
@@ -1519,7 +1519,7 @@ function new_plot= plot_param(handles,ax)
       %% OBSOLETE, TO REMOVE OR UPDATE...
       is = QMITL_ExtractSensi(prop);
       if (~isempty(is))        
-        Ptmp = CreateSampling(handles.Sys,is);
+        Ptmp = CreateParamSet(handles.Sys,is);
         Ptmp.pts = handles.TrajSet.pts(:,handles.current_pts);
         Pftmp = ComputeTrajSensi(handles.Sys, Ptmp, handles.TrajSet.traj(handles.traj_ref(ipts)).time);          
         phi_val = QMITL_Eval(handles.Sys,prop,Ptmp, Pftmp.traj,phi_tspan);
@@ -1557,7 +1557,7 @@ function new_plot= plot_param(handles,ax)
       end
  
       if (numel(sensi_param)>0)
-        Ptmp = CreateSampling(handles.Sys,sensi_param);
+        Ptmp = CreateParamSet(handles.Sys,sensi_param);
         Ptmp.pts = handles.TrajSet.pts(:,handles.current_pts);
         if isfield(handles.TrajSet, 'traj')
           tspan = handles.TrajSet.traj(handles.current_pts).time;

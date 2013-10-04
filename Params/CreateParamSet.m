@@ -106,8 +106,6 @@ P.epsi = epsi;
 P.ParamList = ParamList;
 
 P.traj_ref = 0; %NM: let's assume that non-computed trajectories have a traj_ref set to 0
-                %AD: ok, my bad, the problem was elsewhere (compute
-                %traj_ref for extern simulators)
 P.traj_to_compute = 1;
 
 if exist('Nb_pts', 'var') 
