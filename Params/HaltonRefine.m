@@ -22,7 +22,7 @@ function P = HaltonRefine(P, nb, varargin)
 % Example:
 %
 %   CreateSystem;
-%   P = CreateSampling(Sys); % Create default parameter set for system Sys
+%   P = CreateParamSet(Sys); % Create default parameter set for system Sys
 %   Ph = HaltonRefine(P, 1000); % Sample with 1000 points
 %
 %   SplotBoxPts(P); % Parameter set before sampling

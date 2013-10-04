@@ -1,10 +1,9 @@
 function Sr = HaltLogRefine(S, N, l,u)
-%
-%  HaltLogRefine  sample a parameter set uniformly on a logarithmic scale
+%HaltLogRefine  sample a parameter set uniformly on a logarithmic scale
 %
 %  Ex:
 %      CreateSystem;
-%      S  = CreateSampling(Sys, [1 2], [0 2;0 2]');
+%      S  = CreateParamSet(Sys, [1 2], [0 2;0 2]');
 %      Sr = HaltLogRefine(S, 100, -2,2); % log sampling 100 samples between .01 and 100
 %
 
