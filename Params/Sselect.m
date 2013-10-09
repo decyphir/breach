@@ -67,7 +67,7 @@ end
 Pn = [];
 
 
-field_list_copy = {'dim', 'ParamList', 'DimX', 'DimP', 'props_names', 'props'};
+field_list_copy = {'dim', 'ParamList', 'DimX', 'DimP', 'props_names', 'props', 'time_mult'};
 
 for ii = 1:numel(field_list_copy)
     if isfield(P, field_list_copy{ii})
