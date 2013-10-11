@@ -5,18 +5,16 @@ function Pf = ComputeTrajSensi(Sys, P, tspan, is)
 % Synopsis:  Pf = ComputeTrajSensi(Sys, P0, tspan[, is])
 %
 % Inputs:
-%
-%    -  Sys   : System (needs to be compiled)
-%    -  P0    : Initial parameter set
-%    -  tspan : interval of the form [t0, tf], t0:dt:tf, etc
-%    -  is    : Names or indexes of parameter sensitivities to compute, if
-%               absent uses uncertain parameters in P (aka P.dim). Not
-%               valid indexes or names will not be considered.
+%   -  Sys   : System (needs to be compiled)
+%   -  P0    : Initial parameter set
+%   -  tspan : interval of the form [t0, tf], t0:dt:tf, etc
+%   -  is    : Names or indexes of parameter sensitivities to compute, if
+%              absent uses uncertain parameters in P (aka P.dim). Not
+%              valid indexes or names will not be considered.
 %
 % Output:
-%
-%    -  Pf : Parameter set augmented with the field traj containing
-%            computed trajectories with sensitivities
+%   -  Pf : Parameter set augmented with the field traj containing
+%           computed trajectories with sensitivities
 %
 %  NEEDS UPDATE TO HANDLE TRAJ_REF AND PROPERTIES
 %
