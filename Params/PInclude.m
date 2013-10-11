@@ -1,29 +1,30 @@
 function [include, info] = PInclude(Pin, P, EPSI)
-%PINCLUDE tests if the parameter set Pin is included in P. The parameters
-% must be the same. This function tests if all the parameter sets in Pin
-% are included in, at least, one parameter set of P. If a parameter pp in a
-% fixed parameter in P and in Pin, Pin is said included in P iff
+%PINCLUDE tests if the parameter set Pin is included in P. Pin.ParamList
+% must be included in P.ParamList. This function tests if all parameter
+% vectors in Pin are included in, at least, one parameter vector of P. If a
+% parameter pp is a fixed parameter in P and in Pin, Pin is said included
+% in P iff
 %   GetParam(P,'pp')-EPSI <= GetParam(Pin,'pp') <= GetParam(P,'pp')+EPSI
 % If the parameter pp is an uncertain parameter of Pin, Pin is said
 % included in P iff
-%   GetParam(P,'pp')-EPSI <= GetParam(Pin,'pp')-GetEpsi(Pin,'pp)  &
-%   GetParam(Pin,'pp')+GetEpsi(Pin,'pp) <= GetParam(P,'pp')+EPSI
+%   GetParam(P,'pp')-EPSI <= GetParam(Pin,'pp')-GetEpsi(Pin,'pp)  &&
+%   GetParam(Pin,'pp')+GetEpsi(Pin,'pp') <= GetParam(P,'pp')+EPSI
 %
 % Synopsis: [include, info] = PInclude(Pin, P [, EPSI] )
 %
 % Input:
-%  - Pin  : A parameter set
-%  - P    : A parameter set with the same parameter than Pin
+%  - Pin  : A parameter set which may contain many parameter vectors
+%  - P    : A parameter set with the same parameters than Pin
 %  - EPSI : optional, default=eps
 %
 % Output:
 %  - include : true if all parameter sets in Pin are included in a
 %              parameter set of P, false otherwise.
-%  - info    : provides more details if Pin is not included in P. If the
-%              parameters in P and in Pin are not the same, info is set to
+%  - info    : provides more details if Pin is not included in P. If
+%              Pin.ParamList is not included in P.ParamList, info is set to
 %              -1. Otherwise, info indicates the indexes of the parameter
-%              set in Pin which are not included in P. If Pin is included
-%              in P, info is set to 0.
+%              vectors in Pin which are not included in P. If Pin is
+%              included in P, info is set to 0.
 %
 %See also SConcat SSelect
 %
