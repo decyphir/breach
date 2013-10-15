@@ -8,7 +8,8 @@ function SplotPts(P,proj,ipts,opt)
 %  -  proj : (optional) chooses the parameters to plot; can be numbers or
 %            parameters names; if not provided, is defined by
 %            P(1).plot_proj if it exist. If not, is defined by the three
-%            first parameter described by P(1).dim .
+%            first parameter described by P(1).dim . If it contains more
+%            than three elements, only the three firsts are considered.
 %  -  ipts : indices of the pts to plot; all if absent or []
 %  -  opt  : plot options; uses the plotting options defined in field
 %            X0plot_opt or default if this is absent
@@ -49,16 +50,18 @@ if isfield(opt, 'rescale')
     rescale = opt.rescale;
 end
 
-if isfield(P(1),'plot_proj')
-    proj = P(1).plot_proj;
-elseif(~exist('proj','var')||isempty(proj))
-    switch (numel(P(1).dim))
-        case {1}
-            proj = P(1).dim(1);
-        case {2}
-            proj = P(1).dim(1: 2);
-        otherwise
-            proj = P(1).dim(1:3);
+if(~exist('proj','var')||isempty(proj))
+    if isfield(P(1),'plot_proj')
+        proj = P(1).plot_proj;
+    else
+        switch (numel(P(1).dim))
+            case {1}
+                proj = P(1).dim(1);
+            case {2}
+                proj = P(1).dim(1: 2);
+            otherwise
+                proj = P(1).dim(1:3);
+        end
     end
 end
 if ischar(proj)
@@ -72,7 +75,7 @@ if ~isnumeric(proj)
     end
 end
 proj = proj(proj>0);
-proj = proj(proj<=size(P(1).pts,2));
+proj = proj(proj<=size(P(1).pts,1));
 
 %  Deal with several Sampling sets
 
