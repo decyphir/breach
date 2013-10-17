@@ -1,16 +1,16 @@
-function Pf = ComputeTrajSensi(Sys, P, tspan, is)
+function Pf = ComputeTrajSensi(Sys, P, tspan, i_params)
 %COMPUTETRAJSENSI computes trajectories with corresponding sensitivities
 % issued from points in P0 on the time interval tspan.
 %
-% Synopsis:  Pf = ComputeTrajSensi(Sys, P0, tspan[, is])
+% Synopsis:  Pf = ComputeTrajSensi(Sys, P0, tspan[, i_params])
 %
 % Inputs:
-%   -  Sys   : System (needs to be compiled)
-%   -  P0    : Initial parameter set
-%   -  tspan : interval of the form [t0, tf], t0:dt:tf, etc
-%   -  is    : Names or indexes of parameter sensitivities to compute, if
-%              absent uses uncertain parameters in P (aka P.dim). Not
-%              valid indexes or names will not be considered.
+%   -  Sys      : System (needs to be compiled)
+%   -  P0       : Initial parameter set
+%   -  tspan    : interval of the form [t0, tf], t0:dt:tf, etc
+%   -  i_params : Names or indexes of parameter sensitivities to compute,
+%                 if absent uses uncertain parameters in P (aka P.dim). Not
+%                 valid indexes or names will not be considered.
 %
 % Output:
 %   -  Pf : Parameter set augmented with the field traj containing
@@ -38,12 +38,12 @@ else
     T = tspan;
 end
 
-if ~exist('is','var')
-    is = [];
-elseif(iscell(is) || ischar(is))
-    is = FindParam(is);
+if ~exist('i_params','var')
+    i_params = [];
+elseif(iscell(i_params) || ischar(i_params))
+    i_params = FindParam(i_params);
 end
-is = is(is<size(P.pts,2));
+i_params = i_params(i_params<size(P.pts,2));
     
 
 % checks for an initialization function
@@ -54,11 +54,11 @@ if isfield(P,'init_fun')
     P = P.init_fun(P);
 end
 
-if ~isempty(is)
+if ~isempty(i_params)
     org_dims = P.dim; % we save original dim and epsi
     org_epsi = P.epsi;
-    P = SAddUncertainParam(P,is);
-    P = SDelUncertainParam(P,org_dims,is);
+    P = SAddUncertainParam(P,i_params);
+    P = SDelUncertainParam(P,org_dims,i_params);
 end
 
 InitSensi(Sys,P);
@@ -88,10 +88,10 @@ end
 Pf = cvm(93,P,T); % fill the fields traj, XS (?) and Xf (?)
 CVodeFree();
 
-if ~isempty(is)
+if ~isempty(i_params)
     Pf = SAddUncertainParam(Pf,org_dims);
-    Pf = SDelUncertainParam(Pf,is,org_dims);
-    Pf.epsi = org_epsi; %NM : not sure of that (wonder if cvm makes changes on epsi - I guess no)
+    Pf = SDelUncertainParam(Pf,i_params,org_dims);
+    Pf.epsi = org_epsi;
 end
 
 end

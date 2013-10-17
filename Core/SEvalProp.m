@@ -1,17 +1,17 @@
-function [P, val] = SEvalProp(Sys, P, props, tau, ipts, bool_plot, break_level)
+function [P, val] = SEvalProp(Sys, P, phis, tau, ipts, bool_plot, break_level)
 %SEVALPROP Eval property for previously computed trajectories
 %
-% Usage: [Pf, val] = SEvalProp(Sys, P, prop[ , tau[, ipts[, bool_plot[, break_level ]]]])
+% Usage: [Pf, val] = SEvalProp(Sys, P, phis[ , tau[, ipts[, bool_plot[, break_level ]]]])
 %
 % Inputs:
 %  - Sys         : system
 %  - P           : Param set with trajectories
-%  - prop        : QMITL property(ies)
+%  - phis        : QMITL property(ies)
 %  - tau         : Time instant(s) when to estimate properties. If not
 %                  provided, the time instants considered for computing the
 %                  trajectory are used. It may be a scalar, in which case,
 %                  all the formula are evaluated at this time point, or it
-%                  may be an array of size 1 x numel(props), thus
+%                  may be an array of size 1 x numel(phis), thus
 %                  indicating the time point of evaluation of each formula.
 %  - ipts        : Indices of parameter vectors for which the properties is
 %                  evaluated (Optional, Default=all parameter sets).
@@ -38,11 +38,11 @@ end
 
 if(break_level>0)
     nprops = [];
-    for ii = 1:numel(props)
-        broken_props = QMITL_Break(props(ii),break_level);
+    for ii = 1:numel(phis)
+        broken_props = QMITL_Break(phis(ii),break_level);
         nprops = [ nprops broken_props(:) ]; %#ok<AGROW>
     end
-    props = nprops;
+    phis = nprops;
 end
 
 if ~exist('bool_plot','var')
@@ -56,7 +56,7 @@ end
 if ~exist('tau','var')
     tau = [];
 elseif isscalar(tau)
-    tau = ones(1,numel(props))*tau;
+    tau = ones(1,numel(phis))*tau;
 end
 
 %if ~iscell(props)
@@ -78,7 +78,7 @@ end
 % setup plots if needed
 if(bool_plot)
     figure;
-    nb_prop = numel(props);
+    nb_prop = numel(phis);
     if isfield(Sys,'time_mult')
         time_mult = Sys.time_mult;
     else
@@ -86,30 +86,30 @@ if(bool_plot)
     end
 end
 
-val = zeros(numel(props),numel(ipts)); %initialize array containing truth values for each property and each param set
-props_values(1:numel(ipts)) = deal(struct()); % Temporary line containing the growing evaluation of the formula
-for np = 1:numel(props) % for each property
+val = zeros(numel(phis),numel(ipts)); %initialize array containing truth values for each property and each param set
+props_values(1:numel(ipts)) = deal(struct()); % Temporary line containing the evaluation of the formula
+for np = 1:numel(phis) % for each property
     
-    prop = props(np);  % prop = current property
-    prop_name =  get_id(prop);
-    iprop = find_prop(P,prop_name);
+    phi = phis(np);  % phi = current formula
+    phi_name =  get_id(phi);
+    i_phi = find_prop(P,phi_name);
     
     if(bool_plot)
         subplot(nb_prop, 1, np);
         hold on;
         xlabel('tau');
-        title(disp(prop), 'Interpreter','none');
+        title(disp(phi), 'Interpreter','none');
     end
     
-    if(~iprop)
+    if(i_phi==0)
         % if the property does not exist in P, we add it to P
-        P.props_names = [P.props_names {prop_name}];
-        P.props = [P.props prop];
-        iprop = numel(P.props_names);
+        P.props_names = [P.props_names {phi_name}];
+        P.props = [P.props phi];
+        i_phi = numel(P.props_names);
     end
     
-    prop = QMITL_OptimizePredicates(Sys,prop);
-    fprintf(['Checking ' prop_name  '\n'...
+    phi = QMITL_OptimizePredicates(Sys,phi);
+    fprintf(['Checking ' phi_name  '\n'...
              '[             25%%           50%%            75%%               ]\n ']);
     iprog = 0; %idx of progression bar
     
@@ -117,12 +117,9 @@ for np = 1:numel(props) % for each property
         traj_tmp = P.traj(P.traj_ref(ii));
         Ptmp = Sselect(P,ii);
         if isempty(tau)
-            [props_values(ii).val, tau_tmp]= QMITL_Eval(Sys, prop, Ptmp, traj_tmp);
-            props_values(ii).tau = tau_tmp;
+            [props_values(ii).val, props_values(ii).tau] = QMITL_Eval(Sys, phi, Ptmp, traj_tmp);
         else
-            tau_tmp = tau(np);
-            props_values(ii).tau = tau_tmp;
-            [props_values(ii).val, props_values(ii).tau]= QMITL_Eval(Sys, prop, Ptmp, traj_tmp, tau_tmp);
+            [props_values(ii).val, props_values(ii).tau] = QMITL_Eval(Sys, phi, Ptmp, traj_tmp, tau(np));
         end
         val(np,ii) = props_values(ii).val(1);
         if isnan(val(np,ii))
@@ -147,7 +144,7 @@ for np = 1:numel(props) % for each property
             grid on;
         end
     end
-    P.props_values(iprop,:) = props_values; % we copy all evaluation in once to avoid inconsistent parameter set
+    P.props_values(i_phi,:) = props_values; % we copy all evaluation in once to avoid inconsistent parameter set
     
     fprintf('\n');
 end
