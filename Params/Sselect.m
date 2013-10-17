@@ -99,7 +99,9 @@ if ~isfield(P, 'traj_ref')
         end
     end
     if isfield(Pn,'traj')
-        Pn.traj_ref(1:numel(Pn.traj)) = 1:numel(Pn.traj);
+        %TODO : update the two following lines, it is dirty
+        idx_max = min(numel(Pn.traj),numel(kn));
+        Pn.traj_ref(1:idx_max) = 1:idx_max;
     end
 else
     kn_ref = P.traj_ref(kn);
