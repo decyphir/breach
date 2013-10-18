@@ -53,7 +53,7 @@ function [mu, mustar, sigma, Pr] = SPropSensi(Sys, P, phi, opt)
 % Example2 (Lorentz84):
 %   CreateSystem;
 %   P = CreateParamSet(Sys);
-%   P = SetParam(P, {'x1h', 'x1l', 'T'}, [.3, -.3, 5]);
+%   P = SetParam(P, {'x1h', 'x1l', 'T'}, [.3; -.3; 5]);
 %   [~,props] = QMITL_ReadFile('oscil_prop.stl');
 %   phi = props{end};
 %   opt.tspan = 0:0.1:5;

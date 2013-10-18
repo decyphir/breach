@@ -1,6 +1,6 @@
 function f_st = mydiff(f_st, param)
-%MYDIFF Computes the symbolic derivative of f_st w.r.t p, where f_st is an
-%  expression involving symbols in param_list.
+%MYDIFF Computes the symbolic derivative of f_st w.r.t param, where f_st is
+% an expression involving symbols in param_list.
 %
 % Synopsis: df_st = mydiff(f_st, param)
 %
@@ -14,10 +14,10 @@ function f_st = mydiff(f_st, param)
 %            d f_st/d param
 %
 % Example:
+%  
+%  
 %
-%
-%
-%See also: DiffFormula
+% See also DiffFormula QMITL_SEvalDiff
 %
 
 f_st = regexprep(f_st,'\.\*','*');
@@ -35,7 +35,7 @@ end
 try
     syms x;
     f_st = diff(f_st,param);
-catch
+catch %#ok<CTCH>
     error('mydiff:diffError','Problem: maybe Symbolic toolbox not present.');
 end
 
