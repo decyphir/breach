@@ -1,16 +1,16 @@
-function [include, info] = PInclude(Pin, P, EPSI)
-%PINCLUDE tests if the parameter set Pin is included in P. Pin.ParamList
-% must be included in P.ParamList. This function tests if all parameter
-% vectors in Pin are included in, at least, one parameter vector of P. If a
-% parameter pp is a fixed parameter in P and in Pin, Pin is said included
-% in P iff
+function [include, outside] = PInclude(Pin, P, EPSI)
+%PINCLUDE tests if the parameter set Pin is included in P. Pin and P must
+% contains the same parameters, but they may be in different order. This
+% function tests if all parameter vectors in Pin are included in, at least,
+% one parameter vector of P. If a parameter pp is a fixed parameter in P
+% and in Pin, Pin is said included in P iff
 %   GetParam(P,'pp')-EPSI <= GetParam(Pin,'pp') <= GetParam(P,'pp')+EPSI
-% If the parameter pp is an uncertain parameter of Pin, Pin is said
-% included in P iff
-%   GetParam(P,'pp')-EPSI <= GetParam(Pin,'pp')-GetEpsi(Pin,'pp)  &&
+% If the parameter pp is an uncertain parameter of Pin and fixed in P, Pin
+% is said included in P iff
+%   GetParam(P,'pp')-EPSI <= GetParam(Pin,'pp')-GetEpsi(Pin,'pp')  &&
 %   GetParam(Pin,'pp')+GetEpsi(Pin,'pp') <= GetParam(P,'pp')+EPSI
 %
-% Synopsis: [include, info] = PInclude(Pin, P [, EPSI] )
+% Synopsis: [include, outside] = PInclude(Pin, P [, EPSI] )
 %
 % Input:
 %  - Pin  : A parameter set which may contain many parameter vectors
@@ -25,22 +25,47 @@ function [include, info] = PInclude(Pin, P, EPSI)
 %              -1. Otherwise, info indicates the indexes of the parameter
 %              vectors in Pin which are not included in P. If Pin is
 %              included in P, info is set to 0.
-%
-%See also SConcat SSelect
+% 
+% Example (Lorentz84):
+%  CreateSystem
+%  P = CreateParamSet(Sys,{'x0','x1','a'},[-5,-2;3,4;0,0.5]);
+%  Pin = CreateParamSet(Sys,{'x1','x0'},[3.5,3.8;-4,-3]);
+%  PInclude(Pin,P) % should be 1
+%  
+%  Pout = SetParam(Pin,'a',1);
+%  PInclude(Pout,P) % should be 0
+%  
+%  Pin = SAddUncertainParam(Pin,'a');
+%  Pin = SetParam(Pin,'a',0.35);
+%  Pin = SDelUncertainParam(Pin,'x0');
+%  Pin = SAddUncertainParam(Pin,'x0'); % change order in epsi
+%  PInclude(Pin,P)
+%  
+%  Pout = SetEpsi(Pin,'a',0.2);
+%  PInclude(Pout,P)
+%  
+%  Pboth = Refine(Pout,3); % 27 parameter vectors (param 'a' is splitted
+%                          % into [0.15, 0.283], [0.283, 0.416] and
+%                          % [0.416 0.55] )
+%  [include,outside] = PInclude(Pboth,P)
+%  a = GetParam(Pboth,'a')+GetEpsi(Pboth,'a'); % upper bound for 'a'
+%  a(outside) % should only get 0.55
+% 
+%See also SConcat SSelect SAddUncertainParam
 %
 
 include = true;
 
-if ~isempty(setdiff(Pin.ParamList,P.ParamList)) % we check that all parameter in Pin are in P
+if ~all(ismember(Pin.ParamList,P.ParamList)) % we check that all parameter in Pin are in P
     include = false;
-    info = -1;
+    outside = -1;
     return;
 end
 
 numPparam = numel(P.ParamList); % number of parameters
 if(numPparam~=numel(Pin.ParamList))
     include = false;
-    info = -1;
+    outside = -1;
     return;
 end
 
@@ -53,45 +78,42 @@ numPdim = numel(P.dim);
 % we create a 3D array describing the intervals in the following order:
 % uncertains param of P in the order defined by P.dim, then,
 % fixed parameters of P in the order defined by P.ParamList
-Pinterv = zeros([size(P.pts),2]);
-Pinterv(1:numPdim,:,1) = P.pts(P.dim,:) - P.epsi; % first component in the 3rd dim = min value
-Pinterv(1:numPdim,:,2) = P.pts(P.dim,:) + P.epsi; % second component in the 3rd dim = max value
-Pinterv(numPdim+1:end,:,1) = P.pts(setdiff(1:numPparam,P.dim,'stable'),:);
-Pinterv(numPdim+1:end,:,2) = Pinterv(numPdim+1:end,:,1); % fixed param -> min=max
+rangeP = zeros([size(P.pts),2]);
+rangeP(1:numPdim,:,1) = P.pts(P.dim,:) - P.epsi; % first component in the 3rd dim = min value
+rangeP(1:numPdim,:,2) = P.pts(P.dim,:) + P.epsi; % second component in the 3rd dim = max value
+idxPParamFixed = setdiff(1:numPparam,P.dim,'stable'); % indexes of fixed parameter (ie not uncertain)
+rangeP(numPdim+1:end,:,1) = P.pts(idxPParamFixed,:);
+rangeP(numPdim+1:end,:,2) = rangeP(numPdim+1:end,:,1); % fixed param, so min=max
 
-% we compute the order for Pin
-paramOrder = FindParam(Pin,P.ParamList([P.dim,setdiff(1:numPparam,P.dim,'stable')]));
-% paramOrder is such that Pin.pts(paramOrder,:) is in the same order than
-% Pinterv
-[~,uncertainParamOrder] = intersect(paramOrder,Pin.dim,'stable');
-% uncertainParamOrder is such that Pinterv(uncertainParamOrder,:,:) correspond
-% to the same param than Pin.pts(Pin.dim,:)
-[fixedParamOrderPts,fixedParamOrderVal] = setdiff(paramOrder,Pin.dim,'stable');
-% fixedParamOrderPts and fixedParamOrderVal are such that
-% Pin.pts(fixedParamOrderPts,:) correspond to the same param than
-% Pinterv(fixedParamOrderVal,:,:)
+[~,uncertainParamOrder] = ismember(Pin.ParamList(Pin.dim),P.ParamList([P.dim,idxPParamFixed]));
+uncertainParamOrder = uncertainParamOrder(uncertainParamOrder~=0);
+% uncertainParamOrder is such that Pin.pts(Pin.dim,:) correspond to the
+% same param than rangeP(uncertainParamOrder,:,:)
+idxPinParamFixed = setdiff(1:numPparam,Pin.dim,'stable'); % indexes of fixed parameter (ie not uncertain)
+[~,fixedParamOrder] = ismember(Pin.ParamList(idxPinParamFixed),P.ParamList([P.dim,idxPParamFixed]));
+fixedParamOrder = fixedParamOrder(fixedParamOrder~=0);
+% fixedParamOrder is such that Pin.pts(idxPinParamFixed,:) correspond to
+% the same param than rangeP(fixedParamOrder,:,:)
 
-info = [];
+outside = [];
 for ii = 1:size(Pin.pts,2)
-    PinValue = zeros(numPparam,1,2); % PinValue contains the intervals for the ii-th param set in Pin
-    PinValue(uncertainParamOrder,1,1) = Pin.pts(Pin.dim,ii) - Pin.epsi(:,ii);
-    PinValue(uncertainParamOrder,1,2) = Pin.pts(Pin.dim,ii) + Pin.epsi(:,ii);
-    PinValue(fixedParamOrderVal,1,1) = Pin.pts(fixedParamOrderPts,ii);
-    PinValue(fixedParamOrderVal,1,2) = PinValue(fixedParamOrderVal,1,1);
+    rangePin = zeros(numPparam,1,2); % rangePin contains the intervals for the ii-th param set in Pin
+    rangePin(uncertainParamOrder,1,1) = Pin.pts(Pin.dim,ii) - Pin.epsi(:,ii);
+    rangePin(uncertainParamOrder,1,2) = Pin.pts(Pin.dim,ii) + Pin.epsi(:,ii);
+    rangePin(fixedParamOrder,1,1) = Pin.pts(idxPinParamFixed,ii);
+    rangePin(fixedParamOrder,1,2) = rangePin(fixedParamOrder,1,1); % fixed param, so min=max
     
-    PinValue = repmat(PinValue,[1,size(P.pts,2),1]); % replicate PinValue, so it has the same size than Pinterv
+    rangePin = repmat(rangePin,[1,size(P.pts,2),1]); % replicate rangePin, so it has the same size than rangeP
     
-    if ~any(all(Pinterv(:,:,1)-EPSI <= PinValue(:,:,1) & PinValue(:,:,2) <= Pinterv(:,:,2)+EPSI , 1))
-        info = [info,ii]; %#ok<AGROW>
+    if ~any(all(rangeP(:,:,1)-EPSI <= rangePin(:,:,1) & rangePin(:,:,2) <= rangeP(:,:,2)+EPSI , 1))
+        outside = [outside,ii]; %#ok<AGROW>
         include = false;
-%        return;
     end
     
 end
 
 if(include)
-    info = 0;
+    outside = 0;
 end
 
 end
-

@@ -40,6 +40,8 @@ function Pn = Sselect(P, kn)
 %   P2.traj_ref     % with both parameter vector leading to it
 %   P2.traj_to_compute  % and no parameter vector remaining to compute
 %
+%See also SConcat PInclude CreateParamSet SAddUncertainParam
+%
 
 % val = QMITL_Eval(Sys, phi, P, P.traj, 0);     % this code also works for
 % Pvalid = Sselect(P, P.traj_ref(find(val>0))); % selecting valid parameter sets

@@ -4,17 +4,18 @@ function P = Refine(P0, delta)
 % Synopsis: P = Refine(P0, delta)
 %
 % Inputs:
-%   - P0       is a parameter set which may contain many parameter vectors
+%   - P0    : is a parameter set which may contain many parameter vectors
 %
-%   - delta    should be a scalar or a vector of dimension
-%              numel(P0.dim) x 1. If it is a scalar, it is interpreted as
-%              vector with all components equal to its value. If it is an
-%              array, the ith line corresponds to the ith parameter in
-%              P0.dim. Its value(s) can be either integer or real. If it is
-%              integer, P has delta(i) points in dimension i. If it is real
-%              (ie: any(floor(delta) ~= delta) is true), then delta is
-%              interpreted as a distance and P is divided into points that
-%              at distance delta from one another.
+%   - delta : is a vector of dimension numel(P0.dim) x 1. It also may be a
+%             scalar, and, in this case, it is interpreted as vector with
+%             all components equal to its value. The ith line corresponds
+%             to the ith parameter in P0.dim. Its values can be either
+%             integer or real. If it is integer, P has delta(i) points in
+%             dimension i. If it is real (ie: any(floor(delta) ~= delta) is
+%             true), then delta is interpreted as a distance and P is
+%             divided into points that are at distance delta from one
+%             another. If any value in delta in lower or equal to 0, P0 is
+%             answered.
 %
 % Output:
 %  - P  is the generated parameter set
@@ -32,7 +33,7 @@ function P = Refine(P0, delta)
 %   P.pts   % show the generated parameter vectors
 %
 %   P = ComputeTraj(Sys,P0,1:0.1:10);
-%   P = Refine(P, [3 3]);  % creates a 3x3 grid
+%   P = Refine(P, [3;3]);  % creates a 3x3 grid
 %   P.traj_ref     % should be [0 0 0 0 1 0 0 0 0]
 %   P.traj_to_compute  % should be [1 2 3 4 6 7 8 9]
 %   P.traj
@@ -40,10 +41,10 @@ function P = Refine(P0, delta)
 %   P = Refine(P0, .1); % creates a grid with resolution (.1,.1)
 %   P.pts(:,[1,2,3,19,20,21,22,400])
 %
-%   Refine(P0, [.1 .2]) % creates a grid with resolution (.1,.2) (works
+%   Refine(P0, [.1;.2]) % creates a grid with resolution (.1,.2) (works
 %                       % well as .1 and .2 are divisor of 2*P.epsi)
 %
-%   P = Refine(P0, [1.3,1.3]); % creates a grid with "resolution (1.3,1.3)"
+%   P = Refine(P0, [1.3;1.3]); % creates a grid with "resolution (1.3,1.3)"
 %   P.pts    % pay attention here to the values !
 %
 %   P = Refine(P0, [2.1 2.2]);   % returns P0:
@@ -55,7 +56,7 @@ function P = Refine(P0, delta)
 
 
 % check delta
-if(delta==1)
+if(all(delta==1) || any(delta<=0))
     P = P0;
     return;
 end
