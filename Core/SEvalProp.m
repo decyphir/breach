@@ -4,8 +4,9 @@ function [P, val] = SEvalProp(Sys, P, phis, tau, ipts, bool_plot, break_level)
 % Usage: [Pf, val] = SEvalProp(Sys, P, phis[ , tau[, ipts[, bool_plot[, break_level ]]]])
 %
 % Inputs:
-%  - Sys         : system
-%  - P           : Param set with trajectories
+%  - Sys         : The system
+%  - P           : Parameter set. It may contain many parameter vector. All
+%                  trajectories must be computed or an error is thrown.
 %  - phis        : QMITL property(ies)
 %  - tau         : Time instant(s) when to estimate properties. If not
 %                  provided, the time instants considered for computing the
@@ -35,7 +36,6 @@ function [P, val] = SEvalProp(Sys, P, phis, tau, ipts, bool_plot, break_level)
 if ~exist('break_level','var')
     break_level = 0;
 end
-
 if(break_level>0)
     nprops = [];
     for ii = 1:numel(phis)
@@ -59,20 +59,24 @@ elseif isscalar(tau)
     tau = ones(1,numel(phis))*tau;
 end
 
-%if ~iscell(props)
-%    props = {props};
+%if ~iscell(phis)
+%    phis = {phis};
 %end
 
+if ~isfield(P,'traj')
+    error('SEvalProp:noTrajField','P has no traj field.')
+end
+if ~isfield(P,'traj_ref')
+    P.traj_ref = 1:numel(P.traj);
+end
+if any(P.traj_ref(ipts)==0)
+    error('SEvalProp:trajNotComputed','A trajectory is not computed.');
+end
 if ~isfield(P,'props')
     P.props = [];
 end
-
 if ~isfield(P,'props_names')
     P.props_names = {} ;
-end
-
-if ~isfield(P,'traj_ref')
-    P.traj_ref = 1:numel(P.traj);
 end
 
 % setup plots if needed

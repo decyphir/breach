@@ -1,21 +1,21 @@
-function [include, outside] = PInclude(Pin, P, EPSI)
+function [include, outside] = PInclude(Pin, P, epsi)
 %PINCLUDE tests if the parameter set Pin is included in P. Pin and P must
 % contains the same parameters, but they may be in different order. This
 % function tests if all parameter vectors in Pin are included in, at least,
 % one parameter vector of P. If a parameter pp is a fixed parameter in P
-% and in Pin, Pin is said included in P iff
-%   GetParam(P,'pp')-EPSI <= GetParam(Pin,'pp') <= GetParam(P,'pp')+EPSI
+% and in Pin, then Pin is said included in P iff
+%   GetParam(P,'pp')*(1-epsi) <= GetParam(Pin,'pp') <= GetParam(P,'pp')*(1+epsi)
 % If the parameter pp is an uncertain parameter of Pin and fixed in P, Pin
 % is said included in P iff
-%   GetParam(P,'pp')-EPSI <= GetParam(Pin,'pp')-GetEpsi(Pin,'pp')  &&
-%   GetParam(Pin,'pp')+GetEpsi(Pin,'pp') <= GetParam(P,'pp')+EPSI
+%   GetParam(P,'pp')*(1-epsi) <= GetParam(Pin,'pp')-GetEpsi(Pin,'pp')  &&
+%   GetParam(Pin,'pp')+GetEpsi(Pin,'pp') <= GetParam(P,'pp')*(1+epsi)
 %
-% Synopsis: [include, outside] = PInclude(Pin, P [, EPSI] )
+% Synopsis: [include, outside] = PInclude(Pin, P [, epsi] )
 %
 % Input:
 %  - Pin  : A parameter set which may contain many parameter vectors
 %  - P    : A parameter set with the same parameters than Pin
-%  - EPSI : optional, default=eps
+%  - epsi : Optional, default=eps. Indicate the admissible relative error.
 %
 % Output:
 %  - include : true if all parameter sets in Pin are included in a
@@ -63,14 +63,14 @@ if ~all(ismember(Pin.ParamList,P.ParamList)) % we check that all parameter in Pi
 end
 
 numPparam = numel(P.ParamList); % number of parameters
-if(numPparam~=numel(Pin.ParamList))
+if(numPparam~=numel(Pin.ParamList)) % check that number of parameter is the same in P and Pin
     include = false;
     outside = -1;
     return;
 end
 
 if(nargin<=2)
-    EPSI = eps;
+    epsi = eps;
 end
 
 numPdim = numel(P.dim);
@@ -79,11 +79,11 @@ numPdim = numel(P.dim);
 % uncertains param of P in the order defined by P.dim, then,
 % fixed parameters of P in the order defined by P.ParamList
 rangeP = zeros([size(P.pts),2]);
-rangeP(1:numPdim,:,1) = P.pts(P.dim,:) - P.epsi; % first component in the 3rd dim = min value
-rangeP(1:numPdim,:,2) = P.pts(P.dim,:) + P.epsi; % second component in the 3rd dim = max value
+rangeP(1:numPdim,:,1) = P.pts(P.dim,:)*(1-epsi) - P.epsi; % first component in the 3rd dim = min value
+rangeP(1:numPdim,:,2) = P.pts(P.dim,:)*(1+epsi) + P.epsi; % second component in the 3rd dim = max value
 idxPParamFixed = setdiff(1:numPparam,P.dim,'stable'); % indexes of fixed parameter (ie not uncertain)
-rangeP(numPdim+1:end,:,1) = P.pts(idxPParamFixed,:);
-rangeP(numPdim+1:end,:,2) = rangeP(numPdim+1:end,:,1); % fixed param, so min=max
+rangeP(numPdim+1:end,:,1) = P.pts(idxPParamFixed,:)*(1-epsi);
+rangeP(numPdim+1:end,:,2) = P.pts(idxPParamFixed,:)*(1+epsi); % fixed param, so min=max
 
 [~,uncertainParamOrder] = ismember(Pin.ParamList(Pin.dim),P.ParamList([P.dim,idxPParamFixed]));
 uncertainParamOrder = uncertainParamOrder(uncertainParamOrder~=0);
@@ -105,7 +105,7 @@ for ii = 1:size(Pin.pts,2)
     
     rangePin = repmat(rangePin,[1,size(P.pts,2),1]); % replicate rangePin, so it has the same size than rangeP
     
-    if ~any(all(rangeP(:,:,1)-EPSI <= rangePin(:,:,1) & rangePin(:,:,2) <= rangeP(:,:,2)+EPSI , 1))
+    if ~any(all(rangeP(:,:,1) <= rangePin(:,:,1) & rangePin(:,:,2) <= rangeP(:,:,2) , 1))
         outside = [outside,ii]; %#ok<AGROW>
         include = false;
     end
