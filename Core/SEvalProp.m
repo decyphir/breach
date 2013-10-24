@@ -1,25 +1,32 @@
-function [P, val] = SEvalProp(Sys, P, phis, tau, ipts, bool_plot, break_level)
+function [P, val] = SEvalProp(Sys, P, phis, tau, ipts, bool_plot, break_level, method)
 %SEVALPROP Eval property for previously computed trajectories
 %
-% Usage: [Pf, val] = SEvalProp(Sys, P, phis[ , tau[, ipts[, bool_plot[, break_level ]]]])
+% Usage: [Pf, val] = SEvalProp(Sys, P, phis[ , tau[, ipts[, bool_plot[, break_level[, method]]]]])
 %
 % Inputs:
 %  - Sys         : The system
 %  - P           : Parameter set. It may contain many parameter vector. All
 %                  trajectories must be computed or an error is thrown.
 %  - phis        : QMITL property(ies)
-%  - tau         : Time instant(s) when to estimate properties. If not
-%                  provided, the time instants considered for computing the
-%                  trajectory are used. It may be a scalar, in which case,
-%                  all the formula are evaluated at this time point, or it
-%                  may be an array of size 1 x numel(phis), thus
-%                  indicating the time point of evaluation of each formula.
-%  - ipts        : Indices of parameter vectors for which the properties is
-%                  evaluated (Optional, Default=all parameter sets).
-%  - break_level : (Optional) defines the depth of breaking of props. If
-%                  lower or equal to 1, it is ignored. If greater or equal
-%                  to two, SEvalProp answers the evaluation of the props
-%                  and all sub-formula of props until the depth provided.
+%  - tau         : (Optional) Time point(s) when to estimate properties. If
+%                  not provided, the formulas are evaluated at the first
+%                  time point of the trajectory. It may be a scalar, in
+%                  which case, all the formulas are evaluated at this time
+%                  point, or it may be an array of size 1 x numel(phis),
+%                  thus indicating the time point of evaluation of each
+%                  formula.
+%  - ipts        : (optional, default or empty=all parameter sets) Indices
+%                  of parameter vectors for which the formulas are evaluated.
+%  - bool_plot   : (Optional, default=0) boolean indicating if the
+%                  evaluation of the formulas should be plotted.
+%  - break_level : (Optional, default=0) defines the depth of breaking of
+%                  the formulas. If lower or equal to 1, it is ignored. If
+%                  greater or equal to two, SEvalProp provides the
+%                  evaluation of formulas in phis and all sub-formulas
+%                  until the depth provided.
+%  - method      : (Optional, default='thom') string indicating the method
+%                  which must be used to evaluate the formulas. It must be
+%                  'classic' or 'thom'.
 %
 % Outputs:
 %  - Pf  : param set with prop_namse, prop and prop_values fields
@@ -32,17 +39,20 @@ function [P, val] = SEvalProp(Sys, P, phis, tau, ipts, bool_plot, break_level)
 
 
 % check arguments
+if ~exist('method','var')
+    method = 'thom';
+end
 
 if ~exist('break_level','var')
     break_level = 0;
 end
 if(break_level>0)
-    nprops = [];
+    phis_tmp = [];
     for ii = 1:numel(phis)
         broken_props = QMITL_Break(phis(ii),break_level);
-        nprops = [ nprops broken_props(:) ]; %#ok<AGROW>
+        phis_tmp = [phis_tmp broken_props(:)]; %#ok<AGROW>
     end
-    phis = nprops;
+    phis = phis_tmp;
 end
 
 if ~exist('bool_plot','var')
@@ -121,9 +131,9 @@ for np = 1:numel(phis) % for each property
         traj_tmp = P.traj(P.traj_ref(ii));
         Ptmp = Sselect(P,ii);
         if isempty(tau)
-            [props_values(ii).val, props_values(ii).tau] = QMITL_Eval(Sys, phi, Ptmp, traj_tmp);
+            [props_values(ii).val, props_values(ii).tau] = QMITL_Eval(Sys, phi, Ptmp, traj_tmp, traj_tmp.time(1), method);
         else
-            [props_values(ii).val, props_values(ii).tau] = QMITL_Eval(Sys, phi, Ptmp, traj_tmp, tau(np));
+            [props_values(ii).val, props_values(ii).tau] = QMITL_Eval(Sys, phi, Ptmp, traj_tmp, tau(np), method);
         end
         val(np,ii) = props_values(ii).val(1);
         if isnan(val(np,ii))
