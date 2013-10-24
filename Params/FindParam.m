@@ -13,11 +13,11 @@ function index =  FindParam(S,param)
 %            time than the parameter name is in param.
 %
 % Outputs:
-%  - index  is the index of param in S.ParamList. It is greater than S.DimP
-%           for parameter(s) not found. (for unfound parameters, the
-%           returned indexes is compact, different for each parameter and
-%           the smaller index is equal to the higher known parameter index
-%           + 1).
+%  - index  is an array of size 1 x numel(param) containing the index of
+%           param in S.ParamList. It is greater than S.DimP for
+%           parameter(s) not found. (for unfound parameters, the returned
+%           indexes is compact, different for each parameter and the
+%           smaller index is equal to the higher known parameter index + 1)
 %
 % Example (Lorentz84):
 %
@@ -39,7 +39,7 @@ if ~iscell(param)
     param = {param};
 end
 
-% This implementation is very optimized: I have try to use member or
+% This implementation is very optimized: I have try to use ismember or
 % intersect, it is 10 to 100 times slower.
 
 index = zeros(1, numel(param));
@@ -67,4 +67,3 @@ for ii = 1:numel(param)
 end
 
 end
-

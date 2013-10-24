@@ -1,175 +1,138 @@
-function SplotVar(S,iX,ipts,opt, bool_same_axe)
-% SPLOTVAR Plots trajectories variables separatly
+function SplotVar(P, i_var, ipts, opt, same_axe)
+%SPLOTVAR Plots trajectories variables separatly
 %
-% Synopsis:  SplotVar(P, [iX,ipts,opt])
-%     
-%   Inputs: 
-%   
-%    -  P        Parameter set 
-%    -  iX       indices of the  X variables to plot (optional, absent
-%    means all)
-%    -  ipts     indices of the trajectories in S to plot (optional,
-%    absent means all)
-%    -  opt      plotting options    
-%    - bool_same_axe  if 1, all variables are plot on the same axe
-%  
-
+% Synopsis:  SplotVar(P, [i_var[, ipts[, opt[, same_axe]]]])
+%
+% Inputs:
+%  -  P       : Parameter set. The trajectories must be computed or an
+%               error is thrown.
+%  -  i_var   : (Optional, default or empty=all variables) indices or names
+%               of the variables to plot
+%  -  ipts    : (Optional, default or empty=all trajectories) indices of
+%               the parameter vectors in P for which the trajectory must be
+%               plotted. For traces sets, it must set to [], so all traces
+%               will be plotted (otherwize, some traces may be not
+%               plotted).
+%  - opt      : (Optional) plotting options
+%  - same_axe : (Optional, default=0) boolean indicating if all variables
+%               must be plotted on the same axe.
+%
+% Output:
+%  - none, but a figure
+% 
+% Example (Lorentz84):
+%  CreateSystem;
+%  P = CreateParamSet(Sys,'x0', [-5, 5], 4);
+%  P = ComputeTraj(Sys,P,0:0.01:10);
+%  figure ; SplotVar(P)
+%  clf ; SplotVar(P,'x0')  % plot only x0
+%  clf ; SplotVar(P,[],1)  % plot only the first trajectory
+%
 
 % Check inputs
 
-  if (isfield(S, 'time_mult'))
-    time_mult= S.time_mult;
-  else
-    time_mult=1;
-  end
-  
-  if (isempty(S.pts))
-    disp('S empty !');
-    return
-  end
+if isempty(P.pts)
+    error('SplotVar:emptyPtsField','The field P.pts is empty.');
+end
+if ~isfield(P,'traj')
+    error('SplotVar:toTrajField','The parameter set has no field traj. Please compute trajectories (see ComputeTraj).');
+end
 
-  if (~isfield(S,'traj'))
-    disp('No trajectory computed for this set')
-    return;
-  end
-  
-  
-  if (~exist('iX')||isempty(iX))
-    iX = 1:S.DimX;
-  end
-  
-  if (~exist('ipts')||isempty(ipts))
-    ipts = 1:numel(S.traj);
-  end
-  
-  if ( isfield(S, 'traj_ref') )    
-    ipts = unique(S.traj_ref(ipts));        
-  end
-     
-  if (~isempty(iX))
-    if (~isnumeric(iX))  
-      if isstr(iX)
-          iX = {iX};
-      end
-        NiX = iX;
-      iX = [];
-      for i = 1:numel(NiX)
-        ind = FindParam(S,NiX{i});
-        iX(i) = ind;
-      end    
-    end
-  else
-    iX = 1:S.DimX;
-  end
-  iX = iX(iX<=S.DimX);
-  
+if(~exist('i_var','var') || isempty(i_var))
+    i_var = 1:P.DimX;
+elseif(iscell(i_var) || ischar(i_var))
+    i_var = FindParam(P, i_var);
+end
+i_var = i_var(i_var<=P.DimX);
+i_var = i_var(i_var>0);
 
-  if (~exist('bool_same_axe'))
-    same_axe = 0;
-  else
-    same_axe = bool_same_axe;
-  end
-  
-  if (isfield(S,'plot_proj'))
-    proj = S.plot_proj;
-  else
-    proj = 1:size(S.pts,1);
-  end
-     
-  
-  if (nargin == 2)
-    ipts = 1:numel(S.traj);
-  end
-  
-  
-  % Plot options
-  
-  colors = hsv(numel(ipts));
-  colors = colors(:,[3 2 1]);
-  
-  if (~exist('opt')||isempty(opt))
-    if (isfield(S,'traj_plot_opt'))
-      opt = S.traj_plot_opt;
+if(~exist('ipts','var')||isempty(ipts))
+    ipts = 1:numel(P.traj); % manage parameter sets as trace sets
+elseif isfield(P, 'traj_ref')
+    ipts = unique(P.traj_ref(ipts));
+end
+
+if(~exist('opt','var')||isempty(opt))
+    if isfield(P,'traj_plot_opt')
+        opt = P.traj_plot_opt;
     else
-      opt = [];
-   end
-  end
-     
-  
-  if (same_axe==1)
-    lg = {};
-    for i = ipts
-      
-      time = S.traj(i).time;       
-      grid on;
-      % set(gca,'FontSize',12,'FontName','times');
-      hold on;  
-                  
-      X = S.traj(i).X(iX(:),:);       
-      plot(time*time_mult,X);
-            
+        opt = [];
+    end
+end
+
+if ~exist('same_axe','var')
+    same_axe = 0;
+end
+
+
+% Plot options
+
+if isfield(P, 'time_mult')
+    time_mult = P.time_mult;
+else
+    time_mult = 1;
+end
+
+colors = hsv(numel(ipts));
+colors = colors(:,[3 2 1]);
+
+if(same_axe==1)
+    for ii = ipts
+        time = P.traj(ii).time;
+        grid on;
+        %set(gca,'FontSize',12,'FontName','times');
+        hold on;
+        
+        X = P.traj(ii).X(i_var(:),:);
+        plot(time*time_mult,X);
+        
     end
     
-    for j = 1:numel(iX)
-      if isfield(S,'ParamList')            
-        lg = {lg{:} S.ParamList{iX(j)} }; 
-        
-      else
-        lg = {lg{:} ['x_' num2str(iX(j))] }; 
-        
-      end
+    lg = cell(1,numel(i_var));
+    for ii = 1:numel(i_var)
+        if isfield(P,'ParamList')
+            lg{ii} = P.ParamList{i_var(ii)};
+        else
+            lg{ii} = ['x_' num2str(i_var(ii))];
+        end
     end
     hl = legend(lg);
     set(hl, 'Interpreter','none');
     hold off;
     xlabel('time')
-  
-  else % plots on multi axes       
-    ci=1;
-    for i = ipts
-      
-      time = S.traj(i).time;       
-      
-      for j = 1:numel(iX)
-        if (numel(iX)>1)
-          subplot(numel(iX),1,j)
-        end
+    
+else % plots on multi axes
+    for jj = 1:numel(i_var) % preparing the graph
+        subplot(numel(i_var),1,jj)
         grid on;
-        %    set(gca,'FontSize',12,'FontName','times');
-        hold on;  
-        
-        if isfield(S,'ParamList')            
-          ylabel(S.ParamList{iX(j)},'Interpreter','none');
+        %set(gca,'FontSize',12,'FontName','times');
+        hold on;
+
+        if isfield(P,'ParamList')
+            ylabel(P.ParamList{i_var(jj)},'Interpreter','none');
         else
-          ylabel(['x_' num2str(iX(j))]);
+            ylabel(['x_' num2str(i_var(jj))],'Interpreter','tex');
         end
+    end
+    
+    ci = 1;
+    for ii = ipts % then plotting
+        time = P.traj(ii).time;
         
-        x = S.traj(i).X(iX(j),:);       
-        if isempty(opt)
-            plot(time*time_mult,x,'Color', colors(ci,:));   
-        else
-          plot(time*time_mult,x,opt{:});
+        for jj = 1:numel(i_var)
+            subplot(numel(i_var),1,jj)
+            
+            x = P.traj(ii).X(i_var(jj),:);
+            if isempty(opt)
+                plot(time*time_mult, x, 'Color', colors(ci,:));
+            else
+                plot(time*time_mult, x, opt{:});
+            end
         end
-      end
-    ci = ci+1;  
+        ci = ci+1;
     end
     hold off;
-    xlabel('time')  
-  end
+    xlabel('time')
+end
 
-  
-function index=  FindParam(Sys,param)
-  
-  if ~isfield(Sys,'ParamList')
-    error('No parameter list ...');
-  end
-
-  for j = 1:numel(Sys.ParamList)
-    if (strcmp(Sys.ParamList{j}, param));
-      index = j;
-      return;            
-    end
-  end
-  
-  error(['Parameter ' param ' not found']);
-
+end
