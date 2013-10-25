@@ -1,60 +1,47 @@
-function SplotTraj(P,proj,ipts,opt,t0)
+function SplotTraj(P, proj, ipts, opt, t0)
 %SPLOTTRAJ plots the trajectories in field traj of P in the phase space.
 %
 %   Note:  Uses the plotting options defined in field traj_plot_opt, and
 %   project on dimensions specified by field 'plot_proj' if these fields
 %   are defined
 %
-% Synopsis: SplotTraj(S [, proj, ipts, opt, t0])
+% Synopsis: SplotTraj(P [, proj, ipts, opt, t0])
 %
-%   Inputs:
-%    -  P    : Parameter set. It must have a traj field, else what's the
-%              point (and an error is thrown)?
-%    -  proj : (optional) variables to plot (the three first if [])
-%    -  ipts : indices of the initial pts from which to plot
-%    -  opt  : plotting option e.g: {'r','LineWidth',4}
-%    -  t0   : (optional) starting time to plot trajectories from, zero by
-%              default.
-%
-%   Outputs:
-%    - None, but plot a figure, hopefully an interesting one.
+% Inputs:
+%  -  P    : Parameter set. It must have a traj field, else what's the
+%            point (and an error is thrown)?
+%  -  proj : (Optional) variables to plot (the three first if [])
+%  -  ipts : indices of the initial pts from which to plot
+%  -  opt  : plotting option e.g: {'r','LineWidth',4}
+%  -  t0   : (optional) starting time to plot trajectories from, zero by
+%            default.
+% 
+% Outputs:
+%  - None, but plot a figure, hopefully an interesting one.
 %
 
 % Check inputs
 if isempty(P.pts)
     error('SPlotTraj:noPts','P.pts is empty !');
 end
-
 if ~isfield(P,'traj')
     error('SPlotTraj:noTraj','No trajectory computed for this set')
 end
 
-if isfield(P, 'time_mult')
+if isfield(P,'time_mult')
     time_mult = P.time_mult;
+elseif(isfield(P,'opt') && isfield(P.opt,'time_mult'))
+    time_mult = P.opt.time_mult;
 else
-    if isfield(P,'opt')
-        if isfield(P.opt, 'time_mult')
-            time_mult= P.opt.time_mult;
-        else
-            time_mult=1;
-        end
-    else
-        time_mult=1;
-    end
+    time_mult = 1;
 end
 
-if isfield(P, 'rescale')
+if isfield(P,'rescale')
     rescale = P.rescale;
+elseif(isfield(P,'opt') && isfield(P.opt,'rescale'))
+    rescale = P.opt.rescale;
 else
-    if isfield(P,'opt')
-        if isfield(P.opt, 'rescale')
-            rescale = P.opt.rescale;
-        else
-            rescale = 1;
-        end
-    else
-        rescale = 1;
-    end
+    rescale = 1;
 end
 
 
@@ -75,30 +62,22 @@ end
 
 
 % find the projected axes
-if isfield(P,'plot_proj')
-    proj = P.plot_proj;
-elseif(~exist('proj','var')||isempty(proj))
-    switch (P.DimX)
-        case {1}
-            proj=1;
-        case {2}
-            proj=[ 1 2 ];
-        otherwise
-            proj = [ 1 2 3 ];
-    end
+if ~exist('proj','var')
+    proj = [];
 end
-if ischar(proj)
-    proj = {proj};
+if(isempty(proj) && isfield(P,'plot_proj'))
+    proj = P.plot_proj;
 end
 if ~isnumeric(proj)
-    stproj = proj;
-    proj=zeros(1,numel(stproj));
-    for ii = 1:numel(stproj)
-        proj(ii) = FindParam(P,stproj{ii});
-    end
+    proj = FindParam(P,proj);
 end
-proj = proj(proj~=0);
-
+proj = proj(proj>0);
+proj = proj(proj<=P.DimX);
+if isempty(proj)
+    proj = 1:min(3,P.DimX);
+elseif(numel(proj)>3)
+    proj = proj(1:3);
+end
 
 if(~exist('ipts','var')||isempty(ipts))
     ipts = 1:numel(P.traj);
@@ -108,7 +87,7 @@ if isfield(P, 'traj_ref')
 end
 ipts = ipts(ipts>0); % to avoid non computed trajectories
 
-switch (numel(proj))
+switch(numel(proj))
     
     case {1}
         hold on;

@@ -35,7 +35,10 @@ if ~isfield(S,'ParamList')
     error('FindParam:noParamList','No parameter list ...');
 end
 
-if ~iscell(param)
+if isempty(param)
+    index = [];
+    return;
+elseif ~iscell(param)
     param = {param};
 end
 

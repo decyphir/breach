@@ -1,12 +1,12 @@
 function [P, val] = SEvalProp(Sys, P, phis, tau, ipts, bool_plot, break_level, method)
 %SEVALPROP Eval property for previously computed trajectories
 %
-% Usage: [Pf, val] = SEvalProp(Sys, P, phis[ , tau[, ipts[, bool_plot[, break_level[, method]]]]])
+% Usage: [P, val] = SEvalProp(Sys, P, phis[ , tau[, ipts[, bool_plot[, break_level[, method]]]]])
 %
 % Inputs:
 %  - Sys         : The system
-%  - P           : Parameter set. It may contain many parameter vector. All
-%                  trajectories must be computed or an error is thrown.
+%  - P           : Parameter set. It may contain many parameter vectors.
+%                  All trajectories must be computed or an error is thrown.
 %  - phis        : QMITL property(ies)
 %  - tau         : (Optional) Time point(s) when to estimate properties. If
 %                  not provided, the formulas are evaluated at the first
@@ -29,7 +29,7 @@ function [P, val] = SEvalProp(Sys, P, phis, tau, ipts, bool_plot, break_level, m
 %                  'classic' or 'thom'.
 %
 % Outputs:
-%  - Pf  : param set with prop_namse, prop and prop_values fields
+%  - P   : param set with prop_names, prop and prop_values fields
 %  - val : an array containing the quantitative satisfaction of properties
 %          for each trajectory at the first time point of tau. The
 %          dimension of val is numel(props) x numel(ipts)
@@ -175,7 +175,7 @@ function idx = find_prop(P,st)
 %  - st a string describing the name of the searched property
 %
 % Output:
-%  - the index of the property evaluation if found, 0 otherwize
+%  - the index of the property evaluation if found, 0 otherwise
 %
 
 if ~isfield(P,'props_names')

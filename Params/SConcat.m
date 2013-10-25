@@ -1,8 +1,8 @@
 function P = SConcat(P,P2)
-% SCONCAT Concatenates two parameter sets.
-%
+%SCONCAT Concatenates two parameter sets.
+% 
 % Synopsis: P = SConcat(P, P2)
-%
+% 
 %  Tries to concat all compatible fields in P2 to those in P1. Basically
 %  add points and trajectories of P2 in P1. If P2 contains property
 %  parameters not in P1, there are added to P1. The value of these
@@ -10,13 +10,15 @@ function P = SConcat(P,P2)
 %  uncertain for the parameter set Pi and not for Pj, they are uncertain in
 %  the resulting parameter set. The epsi for these paramters for the
 %  trajectories coming from Pj is 0.
-%
+% 
 % Example (Lorentz84):
 %   CreateSystem;
 %   P1 = CreateParamSet(Sys,'a',[0.2,0.6],2);
 %   P2 = CreateParamSet(Sys,'b',[3.5,7.5],2);
 %   P = SConcat(P1,P2);
 %   figure ; SplotBoxPts(P);
+% 
+%See also Sselect
 %
 
 
@@ -61,7 +63,7 @@ end
 % %%%%
 
 if(~isfield(P,'props_names') || ~isfield(P2,'props_names'))
-    try
+    try %#ok<TRYNC>
         P = rmfield(P,'props_names');
         P = rmfield(P,'props');
         P = rmfield(P,'props_values');
@@ -213,10 +215,10 @@ end
 % traj_to_compute
 % %%%%
 
-[~,P.traj_to_compute] = unique(P.pts(1:P.DimP,:)','rows');
+[~,P.traj_to_compute] = unique(P.pts(1:P.DimP,:)','rows','first');
 if isfield(P,'traj') % optimizing test
     P.traj_to_compute = setdiff(P.traj_to_compute,find(P.traj_ref~=0)); % don't keep those already computed
 end
-P.traj_to_compute = sort(P.traj_to_compute)';
+P.traj_to_compute = sort(reshape(P.traj_to_compute,1,[]));
 
 end

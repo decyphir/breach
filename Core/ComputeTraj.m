@@ -1,9 +1,9 @@
 function Pf = ComputeTraj(Sys, P0, tspan, u)
 %COMPUTETRAJ computes trajectories for a system given initial conditions
 % and parameters
-%
+% 
 % Synopsis:   Pf = ComputeTraj(Sys,P0,tspan [,u])
-%
+% 
 % Inputs:
 % -  Sys   : System (needs to be compiled)
 % -  P0    : Initial conditions and params given in a parameter set or in
@@ -17,17 +17,17 @@ function Pf = ComputeTraj(Sys, P0, tspan, u)
 %                 dependant
 %             - tin : times when the input changes
 %             - values : values of the parameters
-%
+% 
 % Outputs:
 %  -  Pf   Parameter set augmented with the field traj containing
 %          computed trajectories if the input is a param set. The field
 %          traj_ref is filled. If the P0 is an  array of parameter values,
 %          then Pf is an array of trajectories.
-%
+% 
 % Examples (Lorentz84):
 %  CreateSystem;
 %  P = CreateParamSet(Sys,'a',[1,2]);
-%
+% 
 %  P1 = Refine(P,2);
 %  P1 = ComputeTraj(Sys,P1,0:0.1:10);
 %  P1 = ComputeTraj(Sys,P1,0:0.1:10); % Here, nothing shows because nothing happens
@@ -37,8 +37,8 @@ function Pf = ComputeTraj(Sys, P0, tspan, u)
 %  P2 = Refine(P2,2);
 %  P2 = ComputeTraj(Sys,P2,0:0.1:10);
 %  P2.traj_ref  % should be [1 2 1 2]
-%
-%See also CreateParamSet Sselect SConcat
+% 
+%See also CreateParamSet Sselect SConcat SPurge
 %
 
 
@@ -108,14 +108,16 @@ elseif isfield(P0, 'traj_to_compute') && ~isempty(P0.traj_to_compute) && ~isequa
     [~,~,i_P0] = unique([Ptmp.pts(1:P0.DimP,:),P0.pts(1:P0.DimP,:)]','rows','stable'); % Ptmp(1:P0.DimP,:) are all unique
     for ii = 1:numel(P0.traj_to_compute) % for each newly computed traj
         Pf.traj(numTrajP0+ii) = Ptmp.traj(Ptmp.traj_ref(ii)); % add it to Pf
+        Pf.Xf(numTrajP0+ii) = Ptmp.Xf(Ptmp.traj_ref(ii));
         i_traj_ref = find(i_P0==ii); % look for indexes of param vector in Pf corresponding to this traj
         i_traj_ref = i_traj_ref(i_traj_ref>numel(P0.traj_to_compute)) - numel(P0.traj_to_compute); % The first ones are Ptmp index, skip them
         Pf.traj_ref(i_traj_ref) = numTrajP0+ii;
     end
     Pf.traj_to_compute = [];
-    Pf.Xf = Ptmp.Xf; %NM: don't we need to use traj_ref here ?
-                     %AD: not here but probably in SPlotXf, and anything
-                     %    using Xf (not much nowadays, though)  
+    if isfield(Ptmp,'Xf')
+        Pf.Xf = Ptmp.Xf; % copy computed fields - it should maybe be copied in same time than traj...
+    end
+    
     return;
 end
 

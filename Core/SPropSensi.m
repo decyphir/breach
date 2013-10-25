@@ -1,5 +1,5 @@
 function [mu, mustar, sigma, Pr] = SPropSensi(Sys, P, phi, opt)
-% SPROPSENSI estimates the global sensitivity of a property wrt some
+%SPROPSENSI estimates the global sensitivity of a property wrt some
 % parameters (Morris method). This function is adapted from the strategy
 % described in "Global Sensitivity Analysis, A Primer", Saltelli et al,
 % p113++
@@ -7,34 +7,37 @@ function [mu, mustar, sigma, Pr] = SPropSensi(Sys, P, phi, opt)
 % Synopsis: [mu, mustar, sigma] = SPropSensi(Sys, P, phi, opt)
 %
 % Input:
-%    - P  is a parameter set for Sys. P may contains many parameter sets,
-%         but only the first will be considered, so it is recommanded that
-%         P contains only one parameter set. The value of all parameters of
-%         P, not in opt.params is defined by the first parameters values in
-%         P.
-%    - phi is an STL property
-%    - opt is an option structure with the following fields :
-%
-%        - tspan       time domain computation of the trajectories
-%        - tprop       time instant (scalar) when to eval prop satisfaction (default tspan(1))
-%        - params      variable parameters
-%        - lbound      lower bounds for the search domain
-%        - ubound      upper bounds for the search domain
-%        - p           number of levels (p-grid). Recommended to be even (default 4)
-%        - r           number of trajectories (default 10)
-%        - k           DEPRECATED ; REPLACED BY r
-%        - plot        if 1, plots histograms (default 0)
-%        - muGraphOpt      if plot=1, define graphical options for mu graph
-%                          (optional)
-%        - mustarGraphOpt  if plot=1, graphical options for mu* graph
-%                          (optional)
-%        - sigmaGraphOpt   if plot=1, graphical options for sigma graph
-%                          (optional)
-%
+%  - Sys : the system
+%  - P   : is a parameter set for Sys. P may contains many parameter sets,
+%          but only the first will be considered, so it is recommanded that
+%          P contains only one parameter set. The value of all parameters
+%          of P, not in opt.params is defined by the first parameters
+%          values in P.
+%  - phi : is an STL property
+%  - opt : is an option structure with the following fields:
+% 
+%      - tspan       time domain computation of the trajectories
+%      - tprop       time instant (scalar) when to eval prop satisfaction
+%                    (default tspan(1))
+%      - params      variable parameters
+%      - lbound      lower bounds for the search domain
+%      - ubound      upper bounds for the search domain
+%      - p           number of levels (p-grid). Recommended to be even
+%                    (default 4)
+%      - r           number of trajectories (default 10)
+%      - k           DEPRECATED ; REPLACED BY r
+%      - plot        if 1, plots histograms (default 0)
+%      - muGraphOpt      if plot=1, define graphical options for mu graph
+%                        (optional)
+%      - mustarGraphOpt  if plot=1, graphical options for mu* graph
+%                        (optional)
+%      - sigmaGraphOpt   if plot=1, graphical options for sigma graph
+%                        (optional)
+% 
 % Output:
-%   - mu      expectation of elementary effects
-%   - mustar  expectation of absolute values of elementary effects
-%   - sigma   variance of elementary effects
+%  - mu     : expectation of elementary effects
+%  - mustar : expectation of absolute values of elementary effects
+%  - sigma  : variance of elementary effects
 %
 % Example1 (Lorentz84):
 %   CreateSystem;
@@ -62,8 +65,8 @@ function [mu, mustar, sigma, Pr] = SPropSensi(Sys, P, phi, opt)
 %   opt.ubound = [0.35, 25];
 %   opt.plot = 1;
 %   [mu, mustar, sigma] = SPropSensi(Sys, P, phi, opt);
-%
-%See also QMITL_Formula QMITL_ReadFile CreateParamSet
+% 
+%See also QMITL_Formula QMITL_ReadFile QMITL_SEvalDiff
 %
 
 

@@ -1,16 +1,16 @@
 function P = SPurge(P)
 %SPURGE Remove all fields related to a specific computation of
-% trajectories. this function does not remove properties values
-%
+% trajectories. This function does not remove properties values.
+% 
 % Synopsis: P = SPurge(P)
-%
+% 
 % Input:
 %  - P : the parameter set to purge
-%
+% 
 % Output:
 %  - P : the parameter set after cleaning
-%
-%See also SPurge_props
+% 
+%See also SPurge_props ComputeTraj
 %
 
 if isfield(P,'traj')

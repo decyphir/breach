@@ -11,7 +11,7 @@ function SplotVar(P, i_var, ipts, opt, same_axe)
 %  -  ipts    : (Optional, default or empty=all trajectories) indices of
 %               the parameter vectors in P for which the trajectory must be
 %               plotted. For traces sets, it must set to [], so all traces
-%               will be plotted (otherwize, some traces may be not
+%               will be plotted (otherwise, some traces may be not
 %               plotted).
 %  - opt      : (Optional) plotting options
 %  - same_axe : (Optional, default=0) boolean indicating if all variables

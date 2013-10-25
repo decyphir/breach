@@ -19,7 +19,7 @@ function [P] = RandomLogRefine(P, N, minValue)
 %                 rounded toward 0.
 %    -  minValue  If there are parameters with intervals such that
 %                 "pts-epsi<=0", if minValue exists, the lower possible
-%                 value for this parameter is set to minValue, otherwize,
+%                 value for this parameter is set to minValue, otherwise,
 %                 an error is thrown.
 %
 % Outputs:
