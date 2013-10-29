@@ -135,8 +135,7 @@ P.DimP = P0.DimP;
 %  Checks for pts sharing the sames systems parameters
 P.traj_ref = zeros(1,size(P.pts,2));
 
-% check if some already computed trajectories are valid for generated param
-% set
+% check if some already computed traj are valid for generated param set
 [Ppts,~,i_pts] = unique(P.pts(1:P.DimP,:)','rows','stable'); % got unique param vector for P
 [~,iP,iP0] = intersect(Ppts,P0.pts(1:P.DimP,logical(P0.traj_ref))','rows','stable'); % get param vector common between computed P0 and (unique) P
 
@@ -148,7 +147,9 @@ end
 
 % Then define which are remaining trajectories to compute
 [~,P.traj_to_compute] = unique(P.pts(1:P.DimP,:)','rows','first');
-P.traj_to_compute = setdiff(P.traj_to_compute,find(P.traj_ref~=0)); % don't keep those already computed
-P.traj_to_compute = sort(P.traj_to_compute)'; % set it in a line shape
+if isfield(P,'traj')
+    P.traj_to_compute = setdiff(P.traj_to_compute,find(P.traj_ref~=0)); % don't keep those already computed
+end
+P.traj_to_compute = sort(reshape(P.traj_to_compute,1,[])); % set it in a line shape
 
 end
