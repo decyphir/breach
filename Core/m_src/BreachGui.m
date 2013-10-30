@@ -494,7 +494,9 @@ if ~any(handles.working_sets.(handles.current_set).dim==i)
     
     if isfield(handles.working_sets.(handles.current_set), 'traj')
         if (handles.selected_param <= handles.working_sets.(handles.current_set).DimP)
-            tspan=handles.working_sets.(handles.current_set).traj(1).time;
+            %NM: tspan=handles.working_sets.(handles.current_set).traj(1).time;
+            [~,~,~,~,tokens] = regexp(handles.last_tspan,'([0-9eE\+-\.]+):([0-9eE\+-\.]+):([0-9eE\+-\.]+)');
+            tspan = str2double(tokens{1}{1}):str2double(tokens{1}{2}):str2double(tokens{1}{3});
             handles= info(handles,'Updating trajectories...');
             handles.working_sets.(handles.current_set) = ComputeTraj(handles.Sys,rmfield(handles.working_sets.(handles.current_set),'traj'), tspan);
             handles= info(handles,'Updating trajectories... Done.');

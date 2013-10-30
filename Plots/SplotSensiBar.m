@@ -33,7 +33,7 @@ function [Mend, opts] =  SplotSensiBar(Sys, P, ipts, opts)
 %                      properties for which the sensitivity must be
 %                      computed.
 %     -- props       : DEPRECATED, use phis instead.
-%     -- taus        : column vector of size numel(props) x 1 or single
+%     -- taus        : column vector of size numel(phis) x 1 or single
 %                      value indicating the time instant at which the
 %                      sensitivity of props must be computed.
 %     -- cutoff      : (Optional, default=0) cut off limit in percentage of
@@ -333,7 +333,7 @@ M = max(max(abs(Mend)));
 Mend(abs(Mend)<cutoff*M) = 0;
 
 if plots
-    plot_histo(Mend, P, iX, phis, iP);
+    plot_histo(Mend, P, iX, phis, iP, taus);
 end
 
 end

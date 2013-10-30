@@ -105,7 +105,7 @@ if(isfield(P0,'XS0') && isempty(P0.XS0))
 end
 
 if ~isfield(P0,'XS0') % XS0 describes the sensitivity of each variable to each uncertain variable and param
-    dims = P0.dim;
+    dims = sort(P0.dim);
     Ns = numel(dims);
     N = P0.DimX;
     ix0 = dims(dims<=N); % indexes in pts of uncertain initial conditions

@@ -1,7 +1,7 @@
-function h = plot_histo(M, P, iX, phis, iP)
+function h = plot_histo(M, P, iX, phis, iP, taus)
 %PLOT_HISTO plots sensitivity histograms
 % 
-% Synopsis : h = plot_histo(M, P, iX, phis, iP)
+% Synopsis : h = plot_histo(M, P, iX, phis, iP, taus)
 % 
 % Inputs:
 %  - M    : the matrix containing data
@@ -9,6 +9,10 @@ function h = plot_histo(M, P, iX, phis, iP)
 %  - iX   : 
 %  - phis : 
 %  - iP   : indexes of parameters
+%  - taus : time point at which phis are evaluated.
+% 
+% Output:
+%  - h
 %
 
 h = figure;
@@ -52,7 +56,7 @@ for ii = numel(iX)+1:nb_histo
     hy = get(gca, 'ylabel');
     set(hy, 'Interpreter', 'none');
     phi = struct2cell(phis(ii-numel(iX)));
-    st = ['S(' phi{1} ')'];
+    st = ['S(' phi{1} '[' num2str(taus(ii-numel(iX))) '])'];
     title(st, 'Interpreter', 'none');
 end
 
