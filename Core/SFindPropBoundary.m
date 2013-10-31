@@ -1,106 +1,108 @@
-function Sf = SFindPropBoundary(Sys, S, prop, tspan,tprop, iter)
-% SFINDPROPBOUNDARY  find parameters in a set which are close to a boundary
-% between different satisfaction regions 
+function Pf = SFindPropBoundary(Sys, P, prop, tspan, tprop, iter)
+%SFINDPROPBOUNDARY finds parameters in a set which are close to a boundary
+% between different satisfaction regions
 %
-%  Synopsis: 
-%              S = SFindPropBoundary(Sys, S, prop, tspan, tprop, iter)
-%   
-%  Find in S a set of points such that each points belong to a delaunay
+%  Synopsis: Pf = SFindPropBoundary(Sys, P, prop, tspan, tprop, iter)
+%
+%  Find in P a set of points such that each points belong to a delaunay
 %  simplex for which at least two vertices generate a trajectory of Sys on
 %  time span tspan having a different boolean valuation of prop.
-%    
-%  
-  
-  needs_sensi = check_sensi(prop);
-  
-  if (~exist('tprop')) 
-    tprop=0;
-  end
-  
-  if (~exist('iter'))
+%
+%
+
+needs_sensi = check_sensi(prop);
+
+if ~exist('tprop','var')
+    tprop = 0;
+end
+
+if ~exist('iter','var')
     iter = 1; % will only estimate (select) the boundary
-  end
+end
 
-  if iter ==0
+if(iter==0)
     return;
-  end
-  
-  %S = SPurge(S);
-  %S = SPurge_props(S);
-  
-  Sf = SCopyEmpty(S);
-  Sf.selected = [];
+end
 
-  Sf.traj = [];
-  Sf.props_values = [];
-  
-  nb_prop = numel(prop);
-  
-  for k=1:iter
-    if needs_sensi 
-      S = ComputeTrajSensi(Sys,S, tspan);
+%P = SPurge(P);
+%P = SPurge_props(P);
+
+Pf = SCopyEmpty(P);
+Pf.selected = [];
+
+Pf.traj = [];
+Pf.props_values = [];
+
+nb_prop = numel(prop);
+
+for kk=1:iter
+    if needs_sensi
+        P = ComputeTrajSensi(Sys, P, tspan);
     else
-      S = ComputeTraj(Sys,S, tspan);      
+        P = ComputeTraj(Sys, P, tspan);
     end
-      
-    S = SEvalProp(Sys,S,prop, tprop);
-  
-    tri = delaunayn(S.pts(S.dim,:)', {'Qt', 'Qbb','Qc', 'Qz'});
-    S.IsOnBoundary= zeros(1, size(S.pts,2));
     
-    for i = 1:size(tri,1)
-      
-      % get property values for the vertices of the current simplex
-      
-      vertices = tri(i,:); 
-      pr = S.props_values(:,vertices); 
-      
-      % Update the status of vertices with respect to the props
-      
-      traj_status = zeros(1, size(pr,2)); 
-      for j=1:nb_prop 
-        pri = cat(1, pr(j,:).val);
-        pri = (pri(:,1)>0)';
-        traj_status = traj_status+pri*2.^j;
-      end
-
-      % check if the status is uniform
-    		
-      status = traj_status(1);
-      bool_bnd = ~isempty(find(traj_status~= status));
-      
-      if (bool_bnd)
-        for j = 1:numel(vertices)
-          S.IsOnBoundary(vertices(j))=1;         
+    P = SEvalProp(Sys, P, prop, tprop);
+    
+    tri = delaunayn(P.pts(P.dim,:)', {'Qt', 'Qbb','Qc', 'Qz'});
+    P.IsOnBoundary = zeros(1, size(P.pts,2));
+    
+    for ii = 1:size(tri,1)
+        
+        % get property values for the vertices of the current simplex
+        
+        vertices = tri(ii,:);
+        pr = P.props_values(:,vertices);
+        
+        % Update the status of vertices with respect to the props
+        
+        traj_status = zeros(1, size(pr,2));
+        for j=1:nb_prop
+            pri = cat(1, pr(j,:).val);
+            pri = (pri(:,1)>0)';
+            traj_status = traj_status+pri*2.^j;
         end
-      end    
+        
+        % check if the status is uniform
+        
+        status = traj_status(1);
+        bool_bnd = ~isempty(find(traj_status~=status,1));
+        
+        if(bool_bnd)
+            for j = 1:numel(vertices)
+                P.IsOnBoundary(vertices(j)) = 1;
+            end
+        end
     end
-  
-    Sn =  Sselect(S, find(S.IsOnBoundary>0));
-    Snn = Sselect(S, find(S.IsOnBoundary==0));
-  
-    nbnn = size(Snn.pts,2);   
-    if (nbnn)
-      Sf = SConcat(Sf, Snn);
-      Sf.selected(end+1:end+nbnn) = 0 ;   
+    
+    Pn = Sselect(P, find(P.IsOnBoundary>0));
+    idx_nn = find(P.IsOnBoundary==0);
+    Pnn = Sselect(P, idx_nn);
+    
+    nbnn = numel(idx_nn);
+    if(nbnn)
+        Pf = SConcat(Pf, Pnn);
+        Pf.selected(end+1:end+nbnn) = 0 ;
     end
+    
+    if(kk < iter)
+        nbn = size(Pn.pts,2);
+        if(nbn>0)
+            %S = VoronoiRefine(Sn);
+            P = Refine(Pn,2);
+        else
+            break
+        end
+    end
+end
 
-    if k < iter
-      nbn = size(Sn.pts,2);
-      if (nbn>0)
-        %S = VoronoiRefine(Sn);
-        S = Refine(Sn,2);
-      else 
-        break
-      end
-    end
-  end
-  
-  nbn = size(Sn.pts,2);   
+nbn = size(Pn.pts,2);
 
-  if (nbn > 0)
-    Sf = SConcat(Sf, Sn);
-    Sf.selected(end+1:end+nbn) = 1;
-  else
+if(nbn > 0)
+    Pf = SConcat(Pf, Pn);
+    Pf.selected(end+1:end+nbn) = 1;
+else
     return;
-  end
+end
+
+end

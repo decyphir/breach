@@ -17,8 +17,9 @@ function [mu, mustar, sigma, Pr] = SPropSensi(Sys, P, phi, opt)
 %  - opt : is an option structure with the following fields:
 % 
 %      - tspan       time domain computation of the trajectories
-%      - tprop       time instant (scalar) when to eval prop satisfaction
-%                    (default tspan(1))
+%      - tprop       DEPRECATED, use tau instead
+%      - tau         (Optional, default=tspan(1)) time instant (scalar)
+%                     when to evaluate the satisfaction of phi
 %      - params      variable parameters
 %      - lbound      lower bounds for the search domain
 %      - ubound      upper bounds for the search domain
@@ -80,10 +81,12 @@ else
     tspan = 0:.2:10;
 end
 
-if isfield(opt, 'tprop')
-    tprop = opt.tprop;
+if isfield(op, 'tau')
+    tau = opt.tau;
+elseif isfield(opt, 'tprop')
+    tau = opt.tprop;
 else
-    tprop = tspan(1);
+    tau = tspan(1);
 end
 
 if ~isfield(opt, 'p')
@@ -105,15 +108,15 @@ Pr = CreateParamSet(Sys, opt.params, [opt.lbound' opt.ubound']);
 Pr = pRefine(Pr, opt.p, opt.r);
 
 %NM : it is better to compute the truth value of phi at time=tprop
-if tprop < tspan(1)
-    tspan = [tprop,tspan];
+if tau < tspan(1)
+    tspan = [tau,tspan];
 %elseif tprop > tspan(end)    % don't compute it in case it is too far from
 %    tspan = [tspan, tprop];  % the last time instant computed
 end
 
 Pr = ComputeTraj(Sys, Pr, tspan);
 
-[Pr, Y] = SEvalProp(Sys, Pr, phi, tprop);
+[Pr, Y] = SEvalProp(Sys, Pr, phi, tau);
 
 [mu, mustar, sigma] = EEffects(Y, Pr.D, opt.p);
 

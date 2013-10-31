@@ -127,5 +127,4 @@ if isfield(Pn,'traj') % optimizing test
 end
 Pn.traj_to_compute = sort(reshape(Pn.traj_to_compute,1,[])); % set it in a line shape
 
-
 end

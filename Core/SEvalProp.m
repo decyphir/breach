@@ -1,20 +1,28 @@
-function [P, val] = SEvalProp(Sys, P, phis, tau, ipts, bool_plot, break_level, method)
+function [P, val] = SEvalProp(Sys, P, phis, taus, ipts, bool_plot, break_level, method)
 %SEVALPROP Eval property for previously computed trajectories
-%
-% Usage: [P, val] = SEvalProp(Sys, P, phis[ , tau[, ipts[, bool_plot[, break_level[, method]]]]])
-%
+% 
+% Synopsis: [P, val] = SEvalProp(Sys, P, phis[ , taus[, ipts[, bool_plot[, break_level[, method]]]]])
+% 
 % Inputs:
 %  - Sys         : The system
 %  - P           : Parameter set. It may contain many parameter vectors.
 %                  All trajectories must be computed or an error is thrown.
 %  - phis        : QMITL property(ies)
-%  - tau         : (Optional) Time point(s) when to estimate properties. If
+%  - taus        : (Optional) Time point(s) when to estimate properties. If
 %                  not provided, the formulas are evaluated at the first
-%                  time point of the trajectory. It may be a scalar, in
-%                  which case, all the formulas are evaluated at this time
-%                  point, or it may be an array of size 1 x numel(phis),
-%                  thus indicating the time point of evaluation of each
-%                  formula.
+%                  time point of the trajectories. It is a cell array of
+%                  size 1 x numel(phis), the ith cell describing the time
+%                  point(s) where the ith formula should be evaluated. Taus
+%                  may also be a scalar, in which case, all the formula are
+%                  evaluated at this time point. The third possiblity is
+%                  that taus is an array. In this case: 1/ numel(phis) is
+%                  equal to 1, so the formula is evaluated at all time
+%                  points provided in taus ; 2/ numel(taus)==numel(phis),
+%                  in which case, the ith formula is evaluated at the ith
+%                  time point provided in taus ; 3/ otherwise, all formula
+%                  are evaluated at all time points provided in taus. As
+%                  the two last possibilities may be confusing, it is
+%                  recommanded to use a cell array.
 %  - ipts        : (optional, default or empty=all parameter sets) Indices
 %                  of parameter vectors for which the formulas are evaluated.
 %  - bool_plot   : (Optional, default=0) boolean indicating if the
@@ -27,13 +35,25 @@ function [P, val] = SEvalProp(Sys, P, phis, tau, ipts, bool_plot, break_level, m
 %  - method      : (Optional, default='thom') string indicating the method
 %                  which must be used to evaluate the formulas. It must be
 %                  'classic' or 'thom'.
-%
+% 
 % Outputs:
 %  - P   : param set with prop_names, prop and prop_values fields
 %  - val : an array containing the quantitative satisfaction of properties
 %          for each trajectory at the first time point of tau. The
 %          dimension of val is numel(props) x numel(ipts)
-%
+% 
+% Example (Lorentz84):
+%  CreateSystem;
+%  P = CreateParamSet(Sys, 'F', [10, 20]);
+%  P = SetParam(P, 'theta', 2);
+%  P = ComputeTraj(Sys, P, 0:.01:10);
+%  phi = QMITL_Formula('phi','ev_[0,1] (x0[t]>theta)');
+%  [~,val] = SEvalProp(Sys, P, phi, 0)
+%  [P,val] = SEvalProp(Sys, P, phi, [3,7]);
+%  val
+%  idx_phi = find(strcmp('phi',P.props_names)); % find the index of phi in formula evaluations
+%  P.props_values(idx_phi).val % fist value is equal to val
+% 
 %See also QMITL_Formula CreateParamSet ComputeTraj Sselect
 %
 
@@ -63,11 +83,27 @@ if(~exist('ipts','var')||isempty(ipts))
     ipts = 1:size(P.pts,2);
 end
 
-if ~exist('tau','var')
-    tau = [];
-elseif isscalar(tau)
-    tau = ones(1,numel(phis))*tau;
+if ~exist('taus','var')
+    taus = cell(0);
+elseif isscalar(taus)
+    tau_tmp = taus;
+    taus = cell(1,numel(phis));
+    [taus{:}] = deal(tau_tmp);
+    clear('tau_tmp');
+elseif isvector(taus)
+    if(numel(phis)==1)
+        taus = {taus};
+    elseif(numel(phis)==numel(taus))
+        taus = reshape(taus,1,[]);
+        taus = cell2mat(taus,1,ones(1,numel(taus)));
+    else
+        tau_tmp = taus;
+        taus = cell(1,numel(phis));
+        [taus{:}] = deal(tau_tmp);
+        clear('tau_tmp');
+    end
 end
+
 
 %if ~iscell(phis)
 %    phis = {phis};
@@ -130,10 +166,10 @@ for np = 1:numel(phis) % for each property
     for ii = ipts % we compute the truch value of prop for each param set
         traj_tmp = P.traj(P.traj_ref(ii));
         Ptmp = Sselect(P,ii);
-        if isempty(tau)
+        if(isempty(taus)||isempty(taus{np}))
             [props_values(ii).val, props_values(ii).tau] = QMITL_Eval(Sys, phi, Ptmp, traj_tmp, traj_tmp.time(1), method);
         else
-            [props_values(ii).val, props_values(ii).tau] = QMITL_Eval(Sys, phi, Ptmp, traj_tmp, tau(np), method);
+            [props_values(ii).val, props_values(ii).tau] = QMITL_Eval(Sys, phi, Ptmp, traj_tmp, taus{np}, method);
         end
         val(np,ii) = props_values(ii).val(1);
         if isnan(val(np,ii))

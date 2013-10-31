@@ -481,9 +481,9 @@ function edit_default_param_Callback(hObject, eventdata, handles)
 
 val = eval(get(hObject,'String'));
 param = get(handles.edit30,'String');
-i = FindParam(handles.working_sets.(handles.current_set), param);
+ii = FindParam(handles.working_sets.(handles.current_set), param);
 
-if ~any(handles.working_sets.(handles.current_set).dim==i)
+if ~any(handles.working_sets.(handles.current_set).dim==ii)
     
     handles.working_sets.(handles.current_set) = ...
         SetParam(handles.working_sets.(handles.current_set),param, val);
@@ -493,13 +493,13 @@ if ~any(handles.working_sets.(handles.current_set).dim==i)
     set(handles.listbox_default_parameters, 'Value',handles.selected_param);
     
     if isfield(handles.working_sets.(handles.current_set), 'traj')
-        if (handles.selected_param <= handles.working_sets.(handles.current_set).DimP)
+        if(handles.selected_param <= handles.working_sets.(handles.current_set).DimP)
             %NM: tspan=handles.working_sets.(handles.current_set).traj(1).time;
             [~,~,~,~,tokens] = regexp(handles.last_tspan,'([0-9eE\+-\.]+):([0-9eE\+-\.]+):([0-9eE\+-\.]+)');
             tspan = str2double(tokens{1}{1}):str2double(tokens{1}{2}):str2double(tokens{1}{3});
-            handles= info(handles,'Updating trajectories...');
+            handles = info(handles,'Updating trajectories...');
             handles.working_sets.(handles.current_set) = ComputeTraj(handles.Sys,rmfield(handles.working_sets.(handles.current_set),'traj'), tspan);
-            handles= info(handles,'Updating trajectories... Done.');
+            handles = info(handles,'Updating trajectories... Done.');
         end
     end
     
@@ -512,10 +512,10 @@ if ~any(handles.working_sets.(handles.current_set).dim==i)
         P0 = rmfield(P0,'props_names');
         P0 = rmfield(P0,'props_values');
         
-        for i= 1:numel(props)
-            phi = props(i);
-            tau = props_values(i).tau;
-            if (isfield(P0,'traj'))
+        for ii = 1:numel(props)
+            phi = props(ii);
+            tau = props_values(ii).tau;
+            if isfield(P0,'traj')
                 P0 = SEvalProp(handles.Sys, P0, phi, tau);
             else
                 PO = SPurge_props(P0);

@@ -54,15 +54,10 @@ end
 
 for ii = 1:numel(param)
     found = 0;
-    for jj = 1:numel(S.ParamList)
-        same = strcmp(S.ParamList{jj},param{ii});
-        if(same)
-            found = 1;
-            index(ii) = jj;
-            break; % index found, no need to try other names of S.ParamList
-        end
-    end
-    if(~found)
+    same = strcmp(S.ParamList,param{ii});
+    if any(same)
+        index(ii) = find(same);
+    else
         newp = newp+1;
         index(ii) = newp;
         S.ParamList = [S.ParamList, param(ii)];
