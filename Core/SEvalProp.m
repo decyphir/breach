@@ -45,9 +45,9 @@ function [P, val] = SEvalProp(Sys, P, phis, taus, ipts, bool_plot, break_level, 
 % Example (Lorentz84):
 %  CreateSystem;
 %  P = CreateParamSet(Sys, 'F', [10, 20]);
-%  P = SetParam(P, 'theta', 2);
+%  P = SetParam(P, 'the_threshold', 2);
 %  P = ComputeTraj(Sys, P, 0:.01:10);
-%  phi = QMITL_Formula('phi','ev_[0,1] (x0[t]>theta)');
+%  phi = QMITL_Formula('phi','ev_[0,1] (x0[t]>the_threshold)');
 %  [~,val] = SEvalProp(Sys, P, phi, 0)
 %  [P,val] = SEvalProp(Sys, P, phi, [3,7]);
 %  val
