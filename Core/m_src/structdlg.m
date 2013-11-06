@@ -1,4 +1,4 @@
-function [P answer] = structdlg(P,title,prompt, default)
+function [P, answer] = structdlg(P,title,prompt, default)
   
  % helper function that opens a dialog window to edit the fields of a
  % given structure

@@ -2712,23 +2712,27 @@ opt.tspan_traj = [];
 opt.tspan_prop_eval = [];
 opt.break_lev = 1;
 
-[opt, handles.check_prop_options] = structdlg(opt,title,prompt, handles.check_prop_options);
+[opt, handles.check_prop_options] = structdlg(opt, title, prompt, handles.check_prop_options);
 
 if isempty(opt)
     return;
 end
 
-Ptmp = Sselect(handles.working_sets.(handles.current_set), handles.current_pts)
+Ptmp = Sselect(handles.working_sets.(handles.current_set), handles.current_pts);
 
 if ~isempty(opt.tspan_traj)
-    Pphi = ComputeTraj(handles.Sys, Ptmp, ...
-        opt.tspan_traj);
+    Pphi = SPurge(Ptmp);
+    Pphi = ComputeTraj(handles.Sys, Pphi, opt.tspan_traj);
 else
     Pphi = Ptmp;
 end
 
+if isempty(opt.tspan_prop_eval)
+    opt.tspan_prop_eval = Pphi.traj(Pphi.traj_ref(1)).time;
+end
 
-SEvalProp(handles.Sys,Pphi, prop, opt.tspan_prop_eval, 1,1,opt.break_lev);
+Pphi = SEvalProp(handles.Sys, Pphi, prop, opt.tspan_prop_eval, 1, opt.break_lev);
+PplotFormula(handles.Sys, Pphi, prop, 1, opt.break_lev);
 guidata(hObject,handles);
 
 

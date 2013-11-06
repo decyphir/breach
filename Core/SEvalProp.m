@@ -1,13 +1,13 @@
-function [P, val] = SEvalProp(Sys, P, phis, taus, ipts, bool_plot, break_level, method)
+function [P, val] = SEvalProp(Sys, P, phis, taus, ipts, break_level, method)
 %SEVALPROP Eval property for previously computed trajectories
 % 
-% Synopsis: [P, val] = SEvalProp(Sys, P, phis[ , taus[, ipts[, bool_plot[, break_level[, method]]]]])
+% Synopsis: [P, val] = SEvalProp(Sys, P, phis[ , taus[, ipts[, break_level[, method]]]])
 % 
 % Inputs:
 %  - Sys         : The system
 %  - P           : Parameter set. It may contain many parameter vectors.
 %                  All trajectories must be computed or an error is thrown.
-%  - phis        : QMITL property(ies)
+%  - phis        : an array of QMITL property(ies)
 %  - taus        : (Optional) Time point(s) when to estimate properties. If
 %                  not provided, the formulas are evaluated at the first
 %                  time point of the trajectories. It is a cell array of
@@ -25,8 +25,6 @@ function [P, val] = SEvalProp(Sys, P, phis, taus, ipts, bool_plot, break_level, 
 %                  recommanded to use a cell array.
 %  - ipts        : (optional, default or empty=all parameter sets) Indices
 %                  of parameter vectors for which the formulas are evaluated.
-%  - bool_plot   : (Optional, default=0) boolean indicating if the
-%                  evaluation of the formulas should be plotted.
 %  - break_level : (Optional, default=0) defines the depth of breaking of
 %                  the formulas. If lower or equal to 1, it is ignored. If
 %                  greater or equal to two, SEvalProp provides the
@@ -53,10 +51,14 @@ function [P, val] = SEvalProp(Sys, P, phis, taus, ipts, bool_plot, break_level, 
 %  val
 %  idx_phi = find(strcmp('phi',P.props_names)); % find the index of phi in formula evaluations
 %  P.props_values(idx_phi).val % fist value is equal to val
+%  
+%  P = SEvalProp(Sys, P, phi, 0:0.01:10);
+%  PplotFormula(Sys, P, phi);
 % 
-%See also QMITL_Formula CreateParamSet ComputeTraj Sselect
+%See also QMITL_Formula CreateParamSet ComputeTraj Sselect PplotFormula
 %
 
+%  SEvalProp(Sys, P, phi, 0:0.1:10, [], 1); % plots the evaluation
 
 % check arguments
 if ~exist('method','var')
@@ -68,46 +70,41 @@ if ~exist('break_level','var')
 end
 if(break_level>0)
     phis_tmp = [];
-    for ii = 1:numel(phis)
-        broken_props = QMITL_Break(phis(ii),break_level);
+    for i_pt = 1:numel(phis)
+        broken_props = QMITL_Break(phis(i_pt),break_level);
         phis_tmp = [phis_tmp broken_props(:)]; %#ok<AGROW>
     end
     phis = phis_tmp;
-end
-
-if ~exist('bool_plot','var')
-    bool_plot = 0;
 end
 
 if(~exist('ipts','var')||isempty(ipts))
     ipts = 1:size(P.pts,2);
 end
 
-if ~exist('taus','var')
-    taus = cell(0);
+if(~exist('taus','var')||isempty(taus))
+    taus = cell(0); % taus is not defined, we set it to empty
 elseif isscalar(taus)
     tau_tmp = taus;
-    taus = cell(1,numel(phis));
-    [taus{:}] = deal(tau_tmp);
+    taus = cell(1,numel(phis)); % create line cell array
+    [taus{:}] = deal(tau_tmp); % full of taus' value
     clear('tau_tmp');
 elseif isvector(taus)
     if(numel(phis)==1)
         taus = {taus};
-    elseif(numel(phis)==numel(taus))
+    elseif(numel(phis)==numel(taus)) % we guess, there is one tau for each formula
         taus = reshape(taus,1,[]);
         taus = cell2mat(taus,1,ones(1,numel(taus)));
-    else
+    else % all taus are for all formulas
         tau_tmp = taus;
         taus = cell(1,numel(phis));
         [taus{:}] = deal(tau_tmp);
         clear('tau_tmp');
     end
+elseif(numel(taus)<numel(phis)) % it is a cell array of the wrong size
+    error('SEvalProp:badTausSize','The size of taus and the size of phis are differents.');
+elseif(numel(taus)<numel(phis)) % it is a cell array of the wrong size
+    warning('SEvalProp:strangeTausSize','The size of taus is higher than the size of phis.');
 end
-
-
-%if ~iscell(phis)
-%    phis = {phis};
-%end
 
 if ~isfield(P,'traj')
     error('SEvalProp:noTrajField','P has no traj field.')
@@ -125,31 +122,13 @@ if ~isfield(P,'props_names')
     P.props_names = {} ;
 end
 
-% setup plots if needed
-if(bool_plot)
-    figure;
-    nb_prop = numel(phis);
-    if isfield(Sys,'time_mult')
-        time_mult = Sys.time_mult;
-    else
-        time_mult = 1;
-    end
-end
-
 val = zeros(numel(phis),numel(ipts)); %initialize array containing truth values for each property and each param set
-props_values(1:numel(ipts)) = deal(struct()); % Temporary line containing the evaluation of the formula
+props_values(1:size(P.pts,2)) = deal(struct()); % Temporary line containing the evaluation of the formula
 for np = 1:numel(phis) % for each property
     
     phi = phis(np);  % phi = current formula
     phi_name =  get_id(phi);
     i_phi = find_prop(P,phi_name);
-    
-    if(bool_plot)
-        subplot(nb_prop, 1, np);
-        hold on;
-        xlabel('tau');
-        title(disp(phi), 'Interpreter','none');
-    end
     
     if(i_phi==0)
         % if the property does not exist in P, we add it to P
@@ -163,39 +142,28 @@ for np = 1:numel(phis) % for each property
              '[             25%%           50%%            75%%               ]\n ']);
     iprog = 0; %idx of progression bar
     
-    for ii = ipts % we compute the truch value of prop for each param set
-        traj_tmp = P.traj(P.traj_ref(ii));
-        Ptmp = Sselect(P,ii);
+    for ii = 1:numel(ipts) % we compute the truch value of phis for each parameter vector
+        i_pt = ipts(ii);
+        traj_tmp = P.traj(P.traj_ref(i_pt));
+        Ptmp = Sselect(P,i_pt);
+        
         if(isempty(taus)||isempty(taus{np}))
-            [props_values(ii).val, props_values(ii).tau] = QMITL_Eval(Sys, phi, Ptmp, traj_tmp, traj_tmp.time(1), method);
+            [props_values(i_pt).val, props_values(i_pt).tau] = QMITL_Eval(Sys, phi, Ptmp, traj_tmp, traj_tmp.time(1), method);
         else
-            [props_values(ii).val, props_values(ii).tau] = QMITL_Eval(Sys, phi, Ptmp, traj_tmp, taus{np}, method);
+            [props_values(i_pt).val, props_values(i_pt).tau] = QMITL_Eval(Sys, phi, Ptmp, traj_tmp, taus{np}, method);
         end
-        val(np,ii) = props_values(ii).val(1);
+        
+        val(np,ii) = props_values(i_pt).val(1); % fill val with first evaluation at the first time point
         if isnan(val(np,ii))
             warning('SEvalProp:NaNEval','Warning: property evaluated to NaN');
         end
         
-        while(floor(60*ii/numel(ipts))>iprog)
+        while(floor(60*i_pt/numel(ipts))>iprog)
             fprintf('^');
             iprog = iprog+1;
         end
-        
-        % plot property values
-        if(bool_plot)
-            phi_tspan = props_values(ii).tau;
-            phi_val = props_values(ii).val;
-            plot(phi_tspan*time_mult, phi_val);
-            plot([phi_tspan(1) phi_tspan(end)]*time_mult, [0 0],'-k');
-            stairs(phi_tspan*time_mult, (phi_val>0)*max(abs(phi_val))/2,'-r','LineWidth', 4);
-            YLim = get(gca, 'YLim');
-            YLim(1) = min([-max(abs(phi_val))/2, YLim(1)]);
-            set(gca,'YLim', YLim);
-            grid on;
-        end
     end
     P.props_values(i_phi,:) = props_values; % we copy all evaluation in once to avoid inconsistent parameter set
-    
     fprintf('\n');
 end
 
@@ -228,4 +196,3 @@ end
 idx=0; % in case it is not found
 
 end
-
