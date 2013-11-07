@@ -38,16 +38,6 @@ if ~isempty(setxor(P.ParamList(1:P.DimP),P2.ParamList(1:P2.DimP)))
     error('SConcat:ParamList','The system parameters are not the same');
 end
 
-if isempty(P2.pts) % should not happen
-    return
-end
-
-if isempty(P.pts) % should not happen
-    P = P2;
-    return;
-end
-
-
 % %%%%
 % time_mult
 % %%%%
@@ -55,7 +45,7 @@ end
 if isfield(P2,'time_mult')
     if isfield(P,'time_mult')
         if(P.time_mult~=P2.time_mult)
-            warning('SConcat:time_multField','time_mult field differs, keep first one');
+            warning('SConcat:time_multField','time_mult field differs, keeping first one');
         end
     else
         P.time_mult = P2.time_mult;
@@ -78,7 +68,6 @@ else
     P.props = P.props(iP);
     P.props_values = [P.props_values(iP,:),P2.props_values(iP2,:)];
 end
-
 
 field_list = {'XS0', 'Xf', 'ExpaMax', 'XSf'};
 
@@ -104,6 +93,17 @@ if(isfield(P2,'selected') && isfield(P,'pts'))
     else
         P.selected = P2.selected;
     end
+else
+    P2.selected=[];
+end
+
+if isempty(P2.pts) % should not happen
+    return
+end
+
+if isempty(P.pts) % should not happen
+    P = P2;
+    return;
 end
 
 
@@ -178,6 +178,7 @@ end
 % %%%%
 % pts
 % %%%%
+
 
 if(isfield(P,'pts') && isfield(P2,'pts'))  % case where P.pts or P2.pts are empty already considered
     % for pts in P, we set to 0 the params of P2\P
