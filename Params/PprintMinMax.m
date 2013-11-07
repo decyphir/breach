@@ -21,10 +21,13 @@ else
     if(~exist('access','var') || (access~='w' && access~='a'))
         access = 'w';
     end
-    fid = fopen('file',access);
+    [fid,err_msg] = fopen(file,access);
+    if(fid==-1)
+        warning('PprintMinMax:fileAccesFailed',['The file ''',file,'''couldn''t be opened. Error message is:\n',err_msg] );
+    end
 end
-
-fprintf(fid,'\n nom         :  valeur              | moyenne     ecart type\n');
+fprintf(fid,'\nStatistics based on %d parameter vectors.\n\n',size(P.pts,2));
+fprintf(fid,'\nname         :  interval            | mean        std. dev. \n');
 fprintf(fid,[repmat('-',1,61) '\n']);
 
 for ii = 1:numel(P.ParamList)
