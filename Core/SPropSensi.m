@@ -67,7 +67,7 @@ function [mu, mustar, sigma, Pr] = SPropSensi(Sys, P, phi, opt)
 %   opt.plot = 1;
 %   [mu, mustar, sigma] = SPropSensi(Sys, P, phi, opt);
 % 
-%See also QMITL_Formula QMITL_ReadFile QMITL_SEvalDiff
+%See also QMITL_Formula QMITL_ReadFile SplotSensiBar
 %
 
 

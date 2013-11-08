@@ -1,4 +1,4 @@
-function index =  FindParam(S,param)
+function index =  FindParam(S, param)
 % FINDPARAM Finds the indices of parameters given by their name for a given
 % system or parameter set.
 %
