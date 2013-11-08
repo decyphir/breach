@@ -94,7 +94,7 @@ if(isfield(P2,'selected') && isfield(P,'pts'))
         P.selected = P2.selected;
     end
 else
-    P2.selected=[];
+    P2.selected = []; %NM: why P2 and not P ?
 end
 
 if isempty(P2.pts) % should not happen

@@ -76,6 +76,8 @@ end
 colors = hsv(numel(ipts));
 colors = colors(:,[3 2 1]);
 
+figure; % creates the figure
+
 if(same_axe==1)
     for ii = ipts
         time = P.traj(ii).time;
@@ -102,9 +104,10 @@ if(same_axe==1)
     xlabel('time')
     
 else % plots on multi axes
-    for jj = 1:numel(i_var) % preparing the graph
-        subplot(numel(i_var),1,jj)
+    for jj = 1:numel(i_var) % for each variable
+        subplot(numel(i_var),1,jj) % preparing the sub-graph
         grid on;
+        set(gca,'ColorOrder',colors); % provide a differnet color for each trajectory
         %set(gca,'FontSize',12,'FontName','times');
         hold on;
 
@@ -113,25 +116,19 @@ else % plots on multi axes
         else
             ylabel(['x_' num2str(i_var(jj))],'Interpreter','tex');
         end
-    end
-    
-    ci = 1;
-    for ii = ipts % then plotting
-        time = P.traj(ii).time;
         
-        for jj = 1:numel(i_var)
-            subplot(numel(i_var),1,jj)
-            
-            x = P.traj(ii).X(i_var(jj),:);
+        for ii = 1:numel(ipts)
+            i_pt = ipts(ii);
+            time = P.traj(i_pt).time;
+            x = P.traj(i_pt).X(i_var(jj),:);
             if isempty(opt)
-                plot(time*time_mult, x, 'Color', colors(ci,:));
+                plot(time*time_mult, x, 'Color', colors(ii,:));
             else
                 plot(time*time_mult, x, opt{:});
             end
         end
-        ci = ci+1;
+        
     end
-    hold off;
     xlabel('time')
 end
 
