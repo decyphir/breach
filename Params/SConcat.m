@@ -94,14 +94,14 @@ if(isfield(P2,'selected') && isfield(P,'pts'))
         P.selected = P2.selected;
     end
 else
-    P2.selected = []; %NM: why P2 and not P ?
+    P2.selected = []; % if P.pts is empty, selected field may not disappear
 end
 
-if isempty(P2.pts) % should not happen
+if isempty(P2.pts)
     return
 end
 
-if isempty(P.pts) % should not happen
+if isempty(P.pts)
     P = P2;
     return;
 end

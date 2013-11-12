@@ -12,14 +12,14 @@ function [Mend, opts] =  SplotSensiBar(Sys, P, ipts, opts)
 %           for computing the sensitivity. The sensitivity is averaged over
 %           all these parameter vectors.
 %  - opts : argument describing the options. It can contains the fields:
-%     -- plot_histo  : (Optional, default=1) if set to 1, plot the
-%                      sensitivity
+%     -- plot_histo  : (Optional, default=1) if set to 1, open a figure to
+%                      plot the sensitivity
 %     -- open_dialog : (Optional, default=1) if set to one, open a dialog
 %                      box asking for iP, iX and tspan. If used, the fields
 %                      in args are only considered as suggestions for the
 %                      dialog box.
-%     -- args        : not considered if open_dialog is set to one. It must
-%                      contain the fields:
+%     -- args        : only considered as suggestion if open_dialog is set
+%                      to one. It can contain the fields:
 %         --- iX       : (Optional, default=all) indexes or names of the
 %                        variable for which the sensitivity is computed.
 %                        Any name which does not match a variable name or
@@ -271,8 +271,7 @@ switch(stat_type)
         Mend = Mend/size(P.pts,2); % average over all trajectories
         
         % 2/ Compute formula sensitivities
-        
-        % TODO
+        Mend(numel(iX)+1:end,:) = PPhiSensiLocal(Sys,P,phis,tspan,taus,iP,ipts,stat_type,cutoff);
     
     case {'aver_time','aver_end'}
         
@@ -303,34 +302,35 @@ switch(stat_type)
         Mend = Mend/size(P.pts,2); % average over all trajectories
         
         % 2/ Compute formula sensitivities
-        for jj = 1:numel(phis)
-            
-            [p, x, dx] = QMITL_SEvalDiff(Sys, phis(jj), P, tspan, iP, taus(jj));
-            
-            % replace zeros by small quantities
-            ind = abs(x)<1e-16;
-            x(ind) = sign(x(ind))*1e-16;
-            x(x==0) = 1e-16;
-            x = repmat(x,numel(iP),1);
-            
-            xs = (dx.*p)./abs(x);
-            
-            Mend(numel(iX)+jj,:) = mean(xs,2)'; % Compute the average over all trajectories
-            
-%             for kk = 1:numel(iP) % for each parameter
-%                 [p, x, dx] = QMITL_SEvalDiff(Sys, phis(jj), P, tspan, iP(kk), taus(jj));
-%                 
-%                 % replace zeros by small quantities
-%                 ind = abs(x)<1e-16;
-%                 x(ind) = sign(x(ind))*1e-16;
-%                 x(x==0) = 1e-16;
-%                 
-%                 xs = (dx.*p)./abs(x);
-%                 
-%                 Mend(numel(iX)+jj,kk) = mean(xs); % Compute the average over all trajectories
-%             end
-            
-        end % end jj = phis
+        Mend(numel(iX)+1:end,:) = PPhiSensiLocal(Sys,P,phis,tspan,taus,iP,ipts,'aver_time',cutoff);
+%         for jj = 1:numel(phis)
+%             
+%             [p, x, dx] = QMITL_SEvalDiff(Sys, phis(jj), P, tspan, iP, taus(jj));
+%             
+%             % replace zeros by small quantities
+%             ind = abs(x)<1e-16;
+%             x(ind) = sign(x(ind))*1e-16;
+%             x(x==0) = 1e-16;
+%             x = repmat(x,numel(iP),1);
+%             
+%             xs = (dx.*p)./abs(x);
+%             
+%             Mend(numel(iX)+jj,:) = mean(xs,2)'; % Compute the average over all trajectories
+%             
+% %             for kk = 1:numel(iP) % for each parameter
+% %                 [p, x, dx] = QMITL_SEvalDiff(Sys, phis(jj), P, tspan, iP(kk), taus(jj));
+% %                 
+% %                 % replace zeros by small quantities
+% %                 ind = abs(x)<1e-16;
+% %                 x(ind) = sign(x(ind))*1e-16;
+% %                 x(x==0) = 1e-16;
+% %                 
+% %                 xs = (dx.*p)./abs(x);
+% %                 
+% %                 Mend(numel(iX)+jj,kk) = mean(xs); % Compute the average over all trajectories
+% %             end
+%             
+%         end % end jj = phis
         
     case 'aver_max'
         
@@ -363,25 +363,26 @@ switch(stat_type)
         Mend = Mend/size(P.pts,2);
         
         % 2/ Compute formula sensitivities
-        for jj = 1:numel(phis)
-            for kk = 1:numel(iP)
-                xs_max = zeros(1,size(P.pts,2)); %zero is the lowest absolute value
-                for tau = tspan
-                    [p, x, dx] = QMITL_SEvalDiff(Sys, phis(jj), P, tspan, iP(kk), tau);
-
-                    % replace zeros by small quantities
-                    ind = find(abs(x)<1e-16);
-                    x(ind) = sign(x(ind))*1e-16;
-                    x(x==0) = 1e-16;
-
-                    xs = (dx.*p)./abs(x);
-                    
-                    idx = abs(xs_max)<abs(xs);
-                    xs_max(idx) = xs(idx); % keep the max
-                end
-                Mend(numel(iX)+jj,kk) = mean(xs); % average over all trajectories
-            end
-        end % end jj = phis
+        Mend(numel(iX)+1:end,:) = PPhiSensiLocal(Sys,P,phis,tspan,taus,iP,ipts,stat_type,cutoff);
+%         for jj = 1:numel(phis)
+%             for kk = 1:numel(iP)
+%                 xs_max = zeros(1,size(P.pts,2)); %zero is the lowest absolute value
+%                 for tau = tspan
+%                     [p, x, dx] = QMITL_SEvalDiff(Sys, phis(jj), P, tspan, iP(kk), tau);
+%                     
+%                     % replace zeros by small quantities
+%                     ind = find(abs(x)<1e-16);
+%                     x(ind) = sign(x(ind))*1e-16;
+%                     x(x==0) = 1e-16;
+%                     
+%                     xs = (dx.*p)./abs(x);
+%                     
+%                     idx = abs(xs_max)<abs(xs);
+%                     xs_max(idx) = xs(idx); % keep the max
+%                 end
+%                 Mend(numel(iX)+jj,kk) = mean(xs); % average over all trajectories
+%             end
+%         end % end jj = phis
 end % end switch
 
 % Cut off negligible values
