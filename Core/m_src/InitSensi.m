@@ -1,13 +1,15 @@
-function InitSensi(Sys,P)
+function InitSensi(Sys, P)
 %INITSENSI Initializes Cvodes for sensitivity computation of system Sys
-% w.r.t. varying parameters in the set S. Options can be changed in the
+% w.r.t. varying parameters in the set P. Options can be changed in the
 % field CVodesSensiOptions
 % 
 
 dims = P.dim;
 N = Sys.DimX;
-ix0 = dims(dims<=N); % Parameters in x0
-ip = dims(dims>N); % Parameters NOT in x0
+ix0 = dims(dims<=N); % Uncertains initial conditions
+
+%NM: I comment the following line, uncomment if something bad happens
+%ip = dims(dims>N); % Uncertains parameters
 
 InitSystem(Sys);
 
@@ -39,8 +41,8 @@ end
 
 xS0 = zeros(N,Ns);
 
-for i=1:numel(ix0);
-    xS0(dims(i),i) = 1;
+for ii=1:numel(ix0);
+    xS0(dims(ii),ii) = 1;
 end;
 
 

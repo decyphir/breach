@@ -60,7 +60,7 @@ function [M, val] = PPhiSensiLocal(Sys, P, phis, tspan, taus, params, ipts, stat
 %   rho*(1+M/100)  % expected rho
 %   [~,rho] = SEvalProp(Sys, P2, phi1, 0) % got  1.4286% more :)
 % 
-%See also 
+%See also SPropSensi
 %
 
 
