@@ -1,4 +1,4 @@
-function P = SConcat(P,P2)
+function P = SConcat(P, P2)
 %SCONCAT Concatenates two parameter sets.
 % 
 % Synopsis: P = SConcat(P, P2)
@@ -13,10 +13,15 @@ function P = SConcat(P,P2)
 % 
 % Example (Lorentz84):
 %   CreateSystem;
-%   P1 = CreateParamSet(Sys,'a',[0.2,0.6],2);
-%   P2 = CreateParamSet(Sys,'b',[3.5,7.5],2);
-%   P = SConcat(P1,P2);
+%   P1 = CreateParamSet(Sys,'a',[0.15,0.75],3);
+%   P2 = CreateParamSet(Sys,'b',[3,9],3);
+%   P = SConcat(P1,P2);  % contains 6 parameter vectors. Two are the same.
 %   figure ; SplotBoxPts(P);
+%   
+%   P1 = ComputeTraj(Sys,P1,0:0.1:10);
+%   P2 = ComputeTraj(Sys,P2,0:0.1:10);
+%   P = SConcat(P1,P2);
+%   numel(P.traj)  % It contains only 5 trajectories
 % 
 %See also Sselect
 %
@@ -89,14 +94,14 @@ if(isfield(P2,'selected') && isfield(P,'pts'))
         P.selected = P2.selected;
     end
 else
-    P2.selected=[];
+    P2.selected = []; % if P.pts is empty, selected field may not disappear
 end
 
-if isempty(P2.pts) % should not happen
+if isempty(P2.pts)
     return
 end
 
-if isempty(P.pts) % should not happen
+if isempty(P.pts)
     P = P2;
     return;
 end
@@ -134,10 +139,11 @@ if(isfield(P,'traj') && isfield(P2,'traj'))
     
     % copy P2.traj not in P.traj
     [traj_valid,~,i_unique] = unique(P2.traj_ref(P2.traj_ref>num_traj_P),'stable');
+    i_unique = reshape(i_unique,1,[]);
     P.traj = [ P.traj , P2.traj(traj_valid-num_traj_P) ];
     
-    % update P2.traj_ref
-    P2.traj_ref(P2.traj_ref>num_traj_P) = i_unique;
+    % update P2.traj_ref (for traj not in P)
+    P2.traj_ref(P2.traj_ref>num_traj_P) = i_unique+num_traj_P;
     
     % link param vector of P to P2 trajectories
     for ii=num_traj_P+1:numel(P.traj)
@@ -165,7 +171,7 @@ elseif isfield(P2,'traj')
     % copy P2.traj_ref
     P.traj_ref = [P.traj_ref, P2.traj_ref];
 else
-    P.traj_ref = zeros(1,size(P.pts,2));
+    P.traj_ref = zeros(1,size(P.pts,2)+size(P2.pts,2));
 end
 
 

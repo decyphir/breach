@@ -70,8 +70,8 @@ if ~exist('break_level','var')
 end
 if(break_level>0)
     phis_tmp = [];
-    for i_pt = 1:numel(phis)
-        broken_props = QMITL_Break(phis(i_pt),break_level);
+    for ii = 1:numel(phis)
+        broken_props = QMITL_Break(phis(ii),break_level);
         phis_tmp = [phis_tmp broken_props(:)]; %#ok<AGROW>
     end
     phis = phis_tmp;
@@ -138,8 +138,8 @@ for np = 1:numel(phis) % for each property
     end
     
     phi = QMITL_OptimizePredicates(Sys,phi);
-    fprintf(['Checking ' phi_name  '\n'...
-             '[             25%%           50%%            75%%               ]\n ']);
+    fprintf('Checking  %s  on %d parameter vector(s)\n',phi_name,numel(ipts));
+    fprintf('[             25%%           50%%            75%%               ]\n ');
     iprog = 0; %idx of progression bar
     
     for ii = 1:numel(ipts) % we compute the truch value of phis for each parameter vector
