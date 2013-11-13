@@ -119,7 +119,9 @@ Ph.traj_to_compute = IA';
 if isfield(P,'traj')
     Ph.traj = P.traj;
     Ph.Xf = P.Xf;
-    if ~isequal(P.pts(1:P.DimP,IA), vertcat(P.traj.param))
+    if (size(P.pts, 2) ~= numel(IA))
+        Ph.traj_to_compute = IA';
+    elseif ~isequal(P.pts(1:P.DimP,IA), vertcat(P.traj.param))
         Ph.traj_to_compute = IA';
     end
 else
