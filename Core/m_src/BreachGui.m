@@ -174,7 +174,9 @@ handles.selected_param = val;
 if (val<= handles.Sys.DimX)
     if isfield(handles.Sys, 'type')
         if (strcmp(handles.Sys.type, 'Simulink')||(strcmp(handles.Sys.type, 'Extern')))
-            whatisit = 'a signal.';
+            whatisit = 'a signal.';   
+        else
+            whatisit = 'an initial condition.';
         end
     else
         whatisit = 'an initial condition.';
@@ -1350,8 +1352,10 @@ for i=1:DimX
     st = ParamList{i};
     if isfield(handles.Sys, 'type')
         switch handles.Sys.type
-            case 'Simulink'
+            case {'Simulink', 'Extern'}
                 st = strcat(st, ':','--');
+            case {'Breach'}
+                st = strcat(st, '[0]:',' ',dbl2str(handles.working_sets.(handles.current_set).pts(i,k)));
         end
     else
         st = strcat(st, '[0]:',' ',dbl2str(handles.working_sets.(handles.current_set).pts(i,k)));

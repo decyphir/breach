@@ -64,6 +64,7 @@ if ~isstruct(P0)
     P0.epsi = ones(1, size(pts,2));
     P0.traj_to_compute = 1:size(pts,2);
     P0.traj_ref = zeros(1,size(pts,2));
+    
 end
 
 % if no trajectories to compute, we return the param set itself

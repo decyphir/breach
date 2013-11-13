@@ -20,6 +20,8 @@ function SplotTraj(P, proj, ipts, opt, t0)
 %  - None, but plot a figure, hopefully an interesting one.
 %
 
+figure(gcf)
+
 % Check inputs
 if isempty(P.pts)
     error('SPlotTraj:noPts','P.pts is empty !');

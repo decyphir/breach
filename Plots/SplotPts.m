@@ -17,6 +17,8 @@ function SplotPts(P,proj,ipts,opt)
 % see demoVDP1 for examples
 % 
 
+figure(gcf); 
+
 if(~exist('ipts','var')||isempty(ipts))
     ipts=1:size(P(1).pts,2);
 end

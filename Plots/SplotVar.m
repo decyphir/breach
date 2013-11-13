@@ -29,6 +29,8 @@ function SplotVar(P, i_var, ipts, opt, same_axe)
 %  clf ; SplotVar(P,[],1)  % plot only the first trajectory
 %
 
+figure(gcf);
+
 % Check inputs
 
 if isempty(P.pts)
