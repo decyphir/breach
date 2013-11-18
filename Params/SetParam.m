@@ -61,6 +61,10 @@ if(size(ParamValues,1) == 1 && numel(ParamList)~=1)
     ParamValues = ParamValues'; % we corrige the input
 end
 
+if(numel(ParamList) ~= size(ParamValues,1))
+    warning('SetParam:wrongElementNumber','The number of line of ParamValues is not the same than the number of ParamList');
+end
+
 if isfield(P,'pts')        % if P is a parameter set
     pts = 'pts';
 else
@@ -88,7 +92,7 @@ if iscell(ParamList)
     new_params = ParamList(inds>size(P.(pts),1));
     P.ParamList = [P.ParamList new_params];
     
-    for ii = 1:numel(inds) % doing a loop is faster than using repmat on ParamValues
+    for ii = 1:numel(inds) % doing a loop is faster than using repmat on ParamValues or using bsxfun
         P.(pts)(inds(ii),:) = ParamValues(ii,:);
     end
 

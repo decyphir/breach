@@ -1,5 +1,5 @@
 function Psave(Sys, varargin)
-% PSAVE save one or many parameter set in the default param set file of a
+%PSAVE saves one or many parameter set in the default param set file of a
 % system. There is two ways to use Psave. The first one consist to provide
 % in the arguments the names of the parameter sets to save. In this case,
 % the parameter sets must be defined in the workspace (ie: if they are
