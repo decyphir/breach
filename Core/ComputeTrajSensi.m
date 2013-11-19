@@ -23,7 +23,7 @@ function Pf = ComputeTrajSensi(Sys, P0, tspan, i_params)
 %  P = ComputeTrajSensi(Sys,P,0:0.1:10)
 %  %TO FINISH
 % 
-%See also ComputeTraj SplotSensiBar
+%See also ComputeTraj SpropSensi PPhiSensiLocal SplotSensiBar
 %
 
 %%%%%%%%%%%%%%%%%%
@@ -110,13 +110,13 @@ if ~isfield(P0,'XS0') % XS0 describes the sensitivity of each variable to each u
     N = P0.DimX;
     ix0 = dims(dims<=N); % indexes in pts of uncertain initial conditions
     
-    yS0 = zeros(N,Ns);
+    xS0 = zeros(N,Ns);
     
     for ii=1:numel(ix0); % for each uncertain initial condition
-        yS0(dims(ii),ii) = 1;
+        xS0(dims(ii),ii) = 1; % d x_ii(0)/d x_ii = 1
     end
     
-    xS0 = reshape(yS0,N*Ns,1); % we stack columns of yS0
+    xS0 = reshape(xS0,N*Ns,1); % we stack columns of yS0
     
     P0.XS0 = repmat(xS0,[1 size(P0.pts,2)]); % duplicate initial sensitivity for each parameter vector
     

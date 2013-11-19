@@ -55,7 +55,8 @@ function [P, val] = SEvalProp(Sys, P, phis, taus, ipts, break_level, method)
 %  P = SEvalProp(Sys, P, phi, 0:0.01:10);
 %  PplotFormula(Sys, P, phi);
 % 
-%See also QMITL_Formula CreateParamSet ComputeTraj Sselect PplotFormula
+%See also QMITL_Formula DiscrimPropValues ComputeTraj Sselect PplotFormula
+%Spurge_props
 %
 
 %  SEvalProp(Sys, P, phi, 0:0.1:10, [], 1); % plots the evaluation
@@ -142,7 +143,7 @@ for np = 1:numel(phis) % for each property
     fprintf('[             25%%           50%%            75%%               ]\n ');
     iprog = 0; %idx of progression bar
     
-    for ii = 1:numel(ipts) % we compute the truch value of phis for each parameter vector
+    for ii = 1:numel(ipts) % we compute the truth value of phi for each parameter vector
         i_pt = ipts(ii);
         traj_tmp = P.traj(P.traj_ref(i_pt));
         Ptmp = Sselect(P,i_pt);

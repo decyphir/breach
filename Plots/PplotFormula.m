@@ -1,7 +1,25 @@
 function PplotFormula(Sys, P, phis, ipts, break_level)
-%PPLOTFORMULA plots formula evaluation
+%PPLOTFORMULA plots formula evaluation. Each formula is plotted in a
+% different subplot. The evaluation for all parameter vector is plotted in
+% the same plot.
 %
 % Synopsis : PplotFormula(Sys, P, phis[, ipts[, break_level]])
+% 
+% Inputs:
+%  - Sys         : the system
+%  - P           : the parameter set. The evaluation of formulas described
+%                  in phis must be computed.
+%  - phis        : formulas which are plotted.
+%  - ipts        : (Optional, default or empty=all parameter vectors)
+%                  indexes of parameter vectors for which the evaluations
+%                  of phis are plotted.
+%  - break_level : (Optional,default=0) indicates the deepth until which
+%                  formula described in phis are decomposed
+% 
+% Outputs:
+%  - None, but a figure, hopefully, a nice one.
+% 
+%See also SEvalProp DiscrimPropValues
 %
 
 
