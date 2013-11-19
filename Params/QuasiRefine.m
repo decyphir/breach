@@ -2,11 +2,10 @@ function Ph = QuasiRefine(P, nb, varargin)
 %QUASIREFINE Sample quasi-uniformly a parameter set. The number of
 % uncertain parameters must be lower or equal to 40 (when using Sobol).
 %
-% Synopsis:  Ph = QuasiRefine(P, nb [,step] [, 'strictlyInside'] [, algo] )
+% Synopsis:  Ph = QuasiRefine(P, nb[, step][, 'strictlyInside'][, algo])
 %
 % Inputs:
-%  - P    : The parameter set to refine. May contains many set of parameter
-%           values
+%  - P    : The parameter set to refine. May contain many parameter vectors
 %  - nb   : how many parameter set are generated for each set of parameter
 %           values. If lower or equal to one, nothing is done. If nb is not
 %           an integer, it is rounded toward 0.
@@ -26,7 +25,7 @@ function Ph = QuasiRefine(P, nb, varargin)
 % Output:
 %  - Ph : The new parameter set
 %
-% Example:
+% Example (Lorentz84):
 %   CreateSystem;
 %   P = CreateParamSet(Sys); % Create default parameter set for system Sys
 %   Ph = QuasiRefine(P, 1000); % Sample with 1000 points
@@ -65,7 +64,7 @@ elseif(nargin==3) % one optional parameter
 elseif(nargin==4) % two optional parameters
     if ischar(varargin{1})
         step = 1;
-        strictlyInside = strcmpi(varargin{1},'strictlyinside');
+        strictlyInside = true;
         if isMethodValid(varargin{2})
             algo = varargin{2};
         else
@@ -96,6 +95,7 @@ if(strcmpi(algo,'sobol') && numel(P.dim)>40)
     algo = 'halton';
 end
 
+% proceed the refine part
 if strcmpi(algo,'sobol')
     if (strictlyInside)
         Ph = SobolRefine(P,nb,step,'strictlyInside');
@@ -110,23 +110,12 @@ else % default = halton
     end
 end
 
-X = Ph.pts(1:Ph.DimP,:)';
-[~,IA,IC] = unique(X,'rows');
-
-Ph.traj_ref = IC';
-Ph.traj_to_compute = IA';
-
-if isfield(P,'traj')
-    Ph.traj = P.traj;
-    Ph.Xf = P.Xf;
-    if (size(P.pts, 2) ~= numel(IA))
-        Ph.traj_to_compute = IA';
-    elseif ~isequal(P.pts(1:P.DimP,IA), vertcat(P.traj.param))
-        Ph.traj_to_compute = IA';
-    end
-else
-    Ph.traj_to_compute = IA';
-end
+% manage traj_ref and traj_to_compute: we make the supposition that no
+% generated parameter vector is equal to an previously computed parameter
+% vector
+[~,Ph.traj_to_compute] = unique(Ph.pts(1:Ph.DimP,:)','rows','first');
+Ph.traj_ref = zeros(1,size(P.pts,2));
+Ph.traj_to_compute = sort(reshape(Ph.traj_to_compute,1,[]));
 
 end
 

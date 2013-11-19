@@ -1,29 +1,32 @@
 function P = HaltonRefine(P, nb, varargin)
-%HALTONREFINE  Sample quasi-uniformly a parameter set using Halton sequence
+%HALTONREFINE samples quasi-uniformly a parameter set using Halton
+% sequence. This function should be used directly as it does not manage the
+% fields traj_ref and traj_to_compute, but rather through QuasiRefine
+% function.
 %
-% Synopsis:  P = HaltonRefine(P, nb [, step] [, 'strictlyInside'] )
+% Synopsis:  P = HaltonRefine(P, nb[, step][, 'strictlyInside'])
 %
 % Inputs:
-%  - P    : a parameter set. It may contain one or many set of values for
-%           the parameters
-%  - nb   : the number of parameter set to generate for each set of values
-%           for the parameters
-%  - step : (optional, default=1)
+%  - P                : a parameter set. It may contain many parameter
+%                       vectors
+%  - nb               : the number of parameter vectors generated for each
+%                       initial parameter vector
+%  - step             : (optional, default=1)
 %  - 'strictlyInside' : (optional, not set by default) If the string
-%                      'striclyInside' is provided, the generated
-%                      parameter sets are such that all new boxes are
-%                      stricly inside the initial one. Otherwise, the
-%                      centers of the new boxes are in the initial one, but
-%                      some part of the boxes may overtake the initial one.
+%                       'striclyInside' is provided, the generated
+%                       parameter sets are such that all new boxes are
+%                       stricly inside the initial one. Otherwise, the
+%                       centers of the new boxes are in the initial one,
+%                       but some part of the boxes may overtake the initial
+%                       one.
 %
 % Output:
 %  - P : the new parameter set
 %
-% Example:
-%
-%   CreateSystem;
+% Example (Lorentz84):
+%   CreateSystem
 %   P = CreateParamSet(Sys); % Create default parameter set for system Sys
-%   Ph = HaltonRefine(P, 1000); % Sample with 1000 points
+%   Ph = QuasiRefine(P, 1000,'halton'); % Sample with 1000 points
 %
 %   SplotBoxPts(P); % Parameter set before sampling
 %   SplotPts(Ph);   % plots the generated points
@@ -71,10 +74,6 @@ new_epsi = P.epsi/(nb^(1/dim_num));
 P.epsi = repmat(new_epsi,[1 nb]);
 % old version
 %P.epsi = repmat(P.epsi,[1 nb])/(floor(nb^(1/dim_num)));
-% used to avoid superposition of square when selectionned and shown in 2
-% dimension ; it is not really correct because space is "lost"
-%P.epsi = kron(P.epsi, ones(1,size(P.pts,2)))/nb;
-
 
 if(strictlyInside)
     width = 2*(old_epsi - new_epsi);
@@ -93,7 +92,7 @@ end
 end
 
 function r = halton_sequence ( dim_num, n, step, seed, leap, base )
-%% was originally I4_TO_HALTON_SEQUENCE: N elements of an DIM_NUM-dimensional Halton sequence.
+% was originally I4_TO_HALTON_SEQUENCE: N elements of an DIM_NUM-dimensional Halton sequence.
 %
 %  Author:John Burkardt
 %

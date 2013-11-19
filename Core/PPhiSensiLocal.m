@@ -1,5 +1,5 @@
 function [M, val] = PPhiSensiLocal(Sys, P, phis, tspan, taus, params, ipts, stat_type, cutoff)
-%PPHISENSILOCAl computes local sensitivity of a formula
+%PPHISENSILOCAl computes local sensitivity of STL formulas
 % 
 % Synopsis:  [M, val] = PPhiSensiLocal(Sys, P, phis, tspan[, taus[, params[, ipts[, stat_type[, cutoff]]]]])
 % 

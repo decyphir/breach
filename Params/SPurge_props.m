@@ -1,21 +1,28 @@
-function S = SPurge_props(S)
-% SPURGE_PROPS Removes values of satisfaction functions in a parameter set
-%  
+function P = SPurge_props(P)
+%SPURGE_PROPS removes all fields related to a specific computation of
+% properties
+%
 % Synopsis:  P = SPurge_props(P)
 %
-% Remove all fields related to a specific computation of properties
+% Input:
+%  - P the parameter set to clean
+% 
+% Output:
+%  - P the parameter set whithout fields related to formula evaluation.
+% 
+%See also SPurge SEvalProp
 %
-% SEE ALSO SPURGE
-%  
-  try 
-    S = rmfield(S, 'props_values');
-  end
 
-  try
-    S = rmfield(S, 'props');  
-  end
-  
-  try
-    S = rmfield(S, 'props_names');  
-  end
-  
+try
+    P = rmfield(P, 'props_values');
+end
+
+try
+    P = rmfield(P, 'props');
+end
+
+try
+    P = rmfield(P, 'props_names');
+end
+
+end

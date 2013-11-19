@@ -42,21 +42,20 @@ elseif ~iscell(param)
     param = {param};
 end
 
-% This implementation is very optimized: I have try to use ismember or
+%NM: This implementation is very optimized: I have try to use ismember or
 % intersect, it is 10 to 100 times slower.
 
 index = zeros(1, numel(param));
 
 newp = S.DimP;
-if isfield(S, 'pts') % S.pts can be > S.DimP (due to properties parameters)
+if isfield(S, 'pts') % S.pts can be > S.DimP (due to property parameters)
     newp = size(S.pts,1);
 end
 
 for ii = 1:numel(param)
-    found = 0;
     same = strcmp(S.ParamList,param{ii});
     if any(same)
-        index(ii) = find(same);
+        index(ii) = find(same,1);
     else
         newp = newp+1;
         index(ii) = newp;

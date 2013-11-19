@@ -1,5 +1,5 @@
 function Propsave(Sys, varargin)
-% PROPSAVE save properties set in the default properties set file of a system
+%PROPSAVE saves properties set in the default properties set file of a system
 %
 % Synopsis:  Propsave(Sys, 'phi1', 'phi2', ..., )
 %
