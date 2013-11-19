@@ -15,7 +15,7 @@ function [tout X] = sim_breach(Sys, tspan, pts)
   assignin('base','tspan',tspan);
 
   set_param(mdl, 'OutputTimes', 'tspan',...
-                     'OutputOption', 'SpecifiedOutputTimes'); 
+                 'OutputOption','SpecifiedOutputTimes'); 
   
   
   try                
