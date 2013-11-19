@@ -138,18 +138,19 @@ switch(stat_type)
             ind = abs(x)<1e-16;
             x(ind) = sign(x(ind))*1e-16;
             x(x==0) = 1e-16;
-            x = repmat(x,numel(params),1);
             
+            val(ii,:) = x; % store evaluation of phis(ii) for all parameter vectors
+            
+            x = repmat(x,numel(params),1);
             xs = (dx.*p)./abs(x);
             
             M(ii,:) = mean(xs,2)'; % Compute the average over all trajectories
-            val(ii,:) = x;
         end
         
     case 'aver_max'
         for ii = 1:numel(phis)
             for jj = 1:numel(params)       %TODO: CAN BE OPTIMIZED
-                xs_max = zeros(1,size(P.pts,2)); %zero is the lowest absolute value
+                xs_max = zeros(1,size(P.pts,2)); % zero is the lowest absolute value
                 for tau = tspan
                     [p, x, dx] = QMITL_SEvalDiff(Sys, phis(ii), P, tspan, params(jj), tau);
 
@@ -162,9 +163,10 @@ switch(stat_type)
                     
                     idx = abs(xs_max)<abs(xs);
                     xs_max(idx) = xs(idx); % keep the max
+                    
+                    val(ii,ind) = x(ind); % keep the formula evaluation corresponding to the maximal sensitivity
                 end
                 M(ii,jj) = mean(xs_max); % average over all trajectories
-                val(ii,:) = x;
             end
         end
 end
