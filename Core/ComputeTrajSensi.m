@@ -51,7 +51,7 @@ if ~exist('i_params','var')
 elseif(iscell(i_params) || ischar(i_params))
     i_params = FindParam(P0,i_params);
 end
-i_params = i_params(i_params<=size(P0.pts,2));
+i_params = i_params(i_params<=size(P0.pts,1));
 i_params = i_params(i_params>0);
 
 [~,traj_to_compute] = unique(P0.pts(1:P0.DimP,:)','rows','first');
@@ -68,13 +68,12 @@ if(numel(traj_to_compute)~=size(P0.pts,2)) % we got duplicate
     [~,Pf.traj_ref] = ismember(Pf.pts(1:Pf.DimP,:)',Ptmp.pts(1:Ptmp.DimP,:)','rows'); % link all param vect to computed traj and sensi
     Pf.traj_ref = reshape(Pf.traj_ref,1,[]); % set traj_ref in a line shape
     Pf.traj_to_compute = [];
-    
     return;
 end
 
 % check Sys.type (why?)
 if ~isfield(Sys, 'type')
-    Sys.type = '';
+    Sys.type = 'Breach';
 end
 
 % manage tspan

@@ -1,6 +1,6 @@
 #include "traj.h"
 #include <vector>
-
+#define _DEBUG 0
 /*  Some Constants for DQ approximation of g*/
 
 #define MIN_INC_MULT RCONST(1000.0)
@@ -1104,6 +1104,10 @@ void trajectory::ComputeTrajSensi(Array1D& tspan) {
 
 	/* CVodes Reinitialization */
 
+#if _DEBUG >= 3
+	cout << "Entering trajectory::ComputeTrajSensi ..." <<endl;
+#endif
+
 	InitFdata(f_data, cvm_Mdata->mx_data);
 	CVodeSetMaxConvFails(cvode_mem,20);
 
@@ -1369,6 +1373,10 @@ void trajectory::ComputeTrajSensi(Array1D& tspan) {
 			nb_points = 2;
 		}
 
+#if _DEBUG>=3
+				cout << "Init traj data (X, time)" << endl;
+#endif
+
 		(*X).resize(N,nb_points);
 		(*U).resize(dimu,nb_points);
 		(*time).resize(nb_points);
@@ -1421,7 +1429,15 @@ void trajectory::ComputeTrajSensi(Array1D& tspan) {
 
 		/* Integrate system until tout */
 
+#if _DEBUG>=3
+		cout << "Entering major time steps loop " << endl;
+#endif
+
+
 		for(int k=1; k<nb_points;k++) {
+#if _DEBUG>=3
+			cout << "Major Step " << k << "tret= " << tret << endl;
+#endif
 
 			iret = FALSE;
 			tout = tspan(k);
@@ -1429,7 +1445,12 @@ void trajectory::ComputeTrajSensi(Array1D& tspan) {
 			CVodeSetStopTime(cvode_mem,tout);
 			//	tlast = tret;
 
+
 			while (1) {
+
+#if _DEBUG>=3
+				cout << "Minor Step tret=" << tret <<  endl;
+#endif
 
 				/* Integrate one step */
 				status = CVode(cvode_mem, tout, y, &tret, itask);
