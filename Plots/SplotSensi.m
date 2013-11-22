@@ -1,12 +1,12 @@
 function SplotSensi(P, iX, iP, ipts)
-%SPLOTSENSI Plots trajectories sensitivities of state variables iX w.r.t.
+%SPLOTSENSI plots trajectories sensitivities of state variables iX w.r.t.
 % parameters iP.
-%
+% 
 % Synopsis: SplotSensi(P, iX, iP, ipts)
-%
+% 
 % Note: Uses the plotting options defined in field traj_plot_opt, and
 % project on dimensions specified by field 'plot_proj'.
-%
+% 
 % Inputs:
 %  -  P    : Parameter set. Trajectories and the sensitivities must be
 %            computed. If the trajectories are not computed, an error is
@@ -17,9 +17,20 @@ function SplotSensi(P, iX, iP, ipts)
 %            parameter
 %  -  ipts : (Optional, default=all traj) indices of the trajectories in P
 %            to plot
+% 
+% Output:
+%  - none, but a figure.
+% 
+% Example (Lorentz84):
+%   CreateSystem
+%   P = CreateParamSet(Sys, {'x0','x1','a'}, [0,1 ; 0,1 ; 0,0.5]);
+%   P = ComputeTrajSensi(Sys,P,0:0.001:0.1);
+%   figure ; SplotSensi(P)
+% 
+%See also ComputeTrajSensi SplotVar SplotBoxPts SplotPts SplotTraj
 %
 
-
+% Check inputs
 if isempty(P.pts)
     error('SplotSensi:ptsEmpty','The field P.pts is empty.');
 end
@@ -27,7 +38,7 @@ if ~isfield(P,'traj')
     error('SplotSensi:noTrajField','There is no field traj.');
 end
 if ~isfield(P,'type')
-    P.type = '';
+    P.type = 'Breach';
 end
 if(strcmp(P.type,'') && ~isfield(P,'traj_ref'))
     P.traj_ref = 1:size(P.pts,2);
@@ -58,7 +69,7 @@ end
 if ~exist('ipts','var')
     ipts = [];
 end
-if strcmp(P.type,'')
+if strcmp(P.type,'Breach')
     ipts = ipts(ipts>0);
     ipts = ipts(ipts<=size(P.pts,2));
     if isempty(ipts)
@@ -73,8 +84,7 @@ else
     end
 end
 
-
-%   Check inputs
+% manage options
 if isfield(P, 'time_mult')
     time_mult = P.time_mult;
 else
@@ -93,6 +103,7 @@ if isfield(P,'traj_plot_opt')
     opt = P.traj_plot_opt;
 end
 
+% the plot itself
 for jj = 1:numel(iX) % we prepare the graphic
     subplot(numel(iX),1,jj);
     hold on;
@@ -100,23 +111,19 @@ for jj = 1:numel(iX) % we prepare the graphic
     ylabel(['Sensi(' P.ParamList{iX(jj)} ')'],'Interpreter','none');
 end
 
-for ii = ipts % then, we plot
-    time = P.traj(ii).time;
-    
-    for jj = 1:numel(iX)
-        subplot(numel(iX),1,jj)
+for ii = 1:numel(iX) % then, we plot
+    subplot(numel(iX),1,ii)
+    for jj = 1:numel(ipts)
+        time = P.traj(ipts(jj)).time;
         for kk = 1:numel(iP)
-            is = (find(P.dim==iP(kk))-1)*size(P.traj(ii).X,1)+iX(jj);
-            x = P.traj(ii).XS(is,:);
+            is = (find(P.dim==iP(kk))-1)*size(P.traj(ipts(jj)).X,1)+iX(ii);
+            x = P.traj(ipts(jj)).XS(is,:);
             plot(time*time_mult, x, opt{:}, 'Color', colors(kk,:));
         end
+        if(jj==1) % we plot the legend when only the sensitivity of first parameter vector is
+            legend(P.ParamList(iP)); % plot to avoid to loose time when showing the legend
+        end
     end
-end
-
-leg = P.ParamList(iP); % we show the legend.
-for jj = 1:numel(iX)
-    subplot(numel(iX),1,jj);
-    legend(leg);            %%%%% THIS LINE TAKES A VERY LONG TIME !!! %%%%
 end
 xlabel('time','Interpreter','none');
 

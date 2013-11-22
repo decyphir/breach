@@ -1,150 +1,164 @@
-function [S,val] =  SplotSat(Sys,S,props, depth, tau, ipts)
+function [P, val] =  SplotSat(Sys, P, phis, depth, tau, ipts)
+%SplotSat computes and plots the satisfaction function wrt time of
+% properties for computed trajectories
+% 
+% 
+% TODO: THIS FUNCTION SHOULD BE USED ONLY TO PLOT, NOT TO COMPUTE
+% PROPERTIES SATISFACTIONS !!!
+% 
+% 
+% Synopsis: [Pf, val] = SplotSat(Sys, Ptraj, phis[, depth[, tau[, ipts]]])
+% 
+% Inputs:
+%  - Sys   : the system
+%  - Ptraj : parameter set with trajectories
+%  - phis  : property(ies)
+%  - depth : (Optional, default=0) computes and plot satisfaction of
+%            subformulas up to depth
+%  - tau   : (Optional, default or empty=traj.time for each trajectories)
+%            time instant(s) when to estimate all properties
+%  - ipts  : (Optional, default=all parameter vectors) parameter vectors
+%            for which trajectories are considered to eval properties
+% 
+% Outputs:
+%  - Pf  : param set with prop_values field
+%  - val : quantitative satisfaction of properties
 %
-%   SplotSat Plots the satisfaction function wrt time of properties for computed trajectories
-%  
-%   Usage: [Pf val] = SplotSat(Sys, Ptraj ,prop [, depth, tau,  ipt])
-%   
-%   Inputs: 
-%   
-%    - Sys        system    
-%    - Ptraj      param set with trajectories
-%    - prop       property(ies)  
-%    - depth      computes and plot satisfaction of subformulas up to depth
-%                 (default: 0)
-%    - tau        time instant(s) when to estimate properties
-%    - ipts       trajectories for which to eval properties 
 
-%  
-%   Outputs: 
-%  
-%    - Pf       param set with prop_values field 
-%    - val      quantitative satisfaction of properties
-%   
-         
-% check arguments 
+% check arguments
+if(~exist('ipts','var')||isempty(ipts))
+    ipts = 1:size(P.pts,2);
+end
 
-      
-  if (~exist('ipts')||isempty(ipts))
-    ipts = 1:size(S.pts,2);
-  end
+if(~exist('tau','var')||isempty(tau))
+    tau = [];
+end
 
-  if (~exist('depth'))
+if ~exist('depth','var')
     depth = 0;
-  end
- 
-  if (~exist('tau')||isempty(tau))
-    tau=[];
-  end
- 
- if isstr(props)
-    QMITL_Formula('phi_tmp__', props );
-    [S,val] =  SplotSat(Sys,S, phi_tmp__ , depth, tau, ipts)
-    evalin('base', 'clear phi_tmp__'); 
+end
+
+if ischar(phis)
+    QMITL_Formula('phi_tmp__', phis );
+    [P,val] = SplotSat(Sys,P, phi_tmp__ , depth, tau, ipts);
+    evalin('base', 'clear phi_tmp__');
     return;
- end
+end
 
-  if (depth>0)
-    nprops = [];
-    for i = 1:numel(props)
-      nprops =   [nprops QMITL_Break(props(i), depth) ];      
-    end    
-    props = nprops;
-  end 
-  
-  if ~isfield(S,'props')
-    S.props = [];
-    npb =0;
-  else
-    npb = numel(S.props);
-  end
-  
-  if ~isfield(S,'props_names')
-    S.props_names = {} ;		
-  end    
+if(depth>0)
+    nphis = [];
+    for ii = 1:numel(phis)
+        nphis = [nphis QMITL_Break(phis(ii), depth) ]; %#ok<*AGROW>
+    end
+    phis = nphis;
+end
 
-  if ~isfield(S,'traj_ref')
-    S.traj_ref =1:numel(S.traj);
-  end
-  
-  
-  % do things
+if ~isfield(P,'props')
+    P.props = [];
+    npb = 0;
+else
+    npb = numel(P.props);
+end
+if ~isfield(P,'props_names')
+    P.props_names = {} ;
+end
+if ~isfield(P,'traj_ref')
+    P.traj_ref = 1:numel(P.traj);
+end
+
+
+% do things
+
+%%% setup plots if needed
+
+nb_phis = numel(phis);
+if isfield(Sys,'time_mult')
+    time_mult = Sys.time_mult;
+else
+    time_mult = 1;
+end
+
+Ptmp = Sselect(P,1); % this avoid to use Sselect npb*ipts times
+for np = npb+1:nb_phis+npb
     
-  %% setup plots if needed
-  
-  nb_prop = numel(props);
-  if (isfield(Sys,'time_mult'))
-      time_mult = Sys.time_mult;
-  else
-      time_mult=1;
-  end
-  
-  for np = npb+1:numel(props)+npb
-     
-    prop = props(np-npb);
-    prop_name =  get_id(prop);
-    iprop = find_prop(S,prop_name);
+    phi = phis(np-npb);
+    phi_name = get_id(phi);
+    iphi = find_prop(P, phi_name);
+    if(~iphi)
+        P.props_names = [P.props_names, get_id(phi)];
+        P.props = [P.props, phi];
+        iphi = numel(P.props_names);
+    end
     
-    subplot(nb_prop, 1, np-npb);     
+    subplot(nb_phis, 1, np-npb);
     hold on;
-   
-    title(disp(prop), 'Interpreter','none');
-   
+    title(disp(phi), 'Interpreter', 'none');
     
-    if ~iprop      
-      S.props_names= {S.props_names{:} get_id(prop)};
-      S.props= [S.props prop];
-      iprop = numel(S.props_names);      
-    end    
-
-    prop = QMITL_OptimizePredicates(Sys,prop);
-    fprintf(['Checking ' prop_name  '\n[             25%%           50%%            75%%               ]\n ']);
-    iprog =0;
+    phi = QMITL_OptimizePredicates(Sys, phi);
+    fprintf(['Checking ' phi_name  '\n[             25%%           50%%            75%%               ]\n ']);
+    iprog = 0;
     
-    Ptmp = Sselect(S,1);
-    
-    for i = ipts
-      while (floor(60*i/numel(ipts))>iprog)
-        fprintf('^');
-        iprog = iprog+1;
-      end
-      
-      traj = S.traj(S.traj_ref(i));
-      Ptmp.pts = S.pts(:,i);
-      if (~isempty(tau))        
-        S.props_values(iprop,i).tau = tau;
-        S.props_values(iprop,i).val = QMITL_Eval(Sys,prop,Ptmp,traj, tau);
-        val(np-npb,i) =  S.props_values(iprop,i).val(1);
-      else
-        tau = traj.time; 
-        S.props_values(iprop,i).tau = traj.time;
-        S.props_values(iprop,i).val = QMITL_Eval(Sys,prop,Ptmp, traj, tau);         
-        val(np-npb,i) =  S.props_values(iprop,i).val(1);
-      end 
-
-      % plot property values
-      
-      phi_tspan = S.props_values(iprop,i).tau;
-      phi_val = S.props_values(iprop,i).val;
-      plot(phi_tspan*time_mult, phi_val);
-      %plot([phi_tspan(1) phi_tspan(end)]*time_mult, [0 0],'-k');
-      stairs(phi_tspan*time_mult, (phi_val>0)*max(abs(phi_val))/2,'-r');
-      
-      legend('Quant. sat', 'Bool. sat');
-      grid on;
-      
-    
-    end  
+    for ii = ipts
+        traj = P.traj(P.traj_ref(ii));
+        Ptmp.pts = P.pts(:,ii);
+        if ~isempty(tau)
+            P.props_values(iphi,ii).tau = tau;
+            P.props_values(iphi,ii).val = QMITL_Eval(Sys, phi, Ptmp, traj, tau);
+            val(np-npb,ii) = P.props_values(iphi,ii).val(1);
+        else
+            tau = traj.time;
+            P.props_values(iphi,ii).tau = traj.time;
+            P.props_values(iphi,ii).val = QMITL_Eval(Sys, phi, Ptmp, traj, tau);
+            val(np-npb,ii) = P.props_values(iphi,ii).val(1);
+        end
+        
+        while(floor(60*ii/numel(ipts))>iprog)
+            fprintf('^');
+            iprog = iprog+1;
+        end
+        
+        % plot property values
+        phi_tspan = P.props_values(iphi,ii).tau;
+        phi_val = P.props_values(iphi,ii).val;
+        plot(phi_tspan*time_mult, phi_val);
+        %plot([phi_tspan(1) phi_tspan(end)]*time_mult, [0 0],'-k');
+        stairs(phi_tspan*time_mult, (phi_val>0)*max(abs(phi_val))/2,'-r');
+        
+        legend('Quant. sat', 'Bool. sat');
+        grid on;
+        
+    end
     
     fprintf('\n');
-  end
-xlabel('time');    
-  
-function i = find_prop(S,st)
+end
+xlabel('time');
 
-  i=0;
-  for k = 1:numel(S.props_names)
-    if strcmp(st,S.props_names{k})
-      i = k;
-      return;
-    end    
-  end   
+end
+
+function idx = find_prop(P, st)
+%FIND_PROP finds the index of a property in a parameter set.
+%
+% Synopsis: idx = find_prop(P,st)
+%
+% Input:
+%  - P  the parameter set containing the evaluation of properties
+%  - st a string describing the name of the searched property
+%
+% Output:
+%  - the index of the property evaluation if found, 0 otherwise
+%
+
+if ~isfield(P,'props_names')
+    idx = 0;
+    return;
+else
+    for idx = 1:numel(P.props_names)
+        if strcmp(st,P.props_names{idx})
+            return;
+        end
+    end
+end
+
+idx=0; % in case it is not found
+
+end

@@ -34,7 +34,10 @@ if isfield(Sys,'type')
         Pf = P0;
         return ;
     end
+else
+    Sys.type = 'Breach';
 end
+
 
 % checks for an initialization function
 if isfield(Sys, 'init_fun')
@@ -69,11 +72,6 @@ if(numel(traj_to_compute)~=size(P0.pts,2)) % we got duplicate
     Pf.traj_ref = reshape(Pf.traj_ref,1,[]); % set traj_ref in a line shape
     Pf.traj_to_compute = [];
     return;
-end
-
-% check Sys.type (why?)
-if ~isfield(Sys, 'type')
-    Sys.type = 'Breach';
 end
 
 % manage tspan

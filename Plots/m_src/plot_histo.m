@@ -22,7 +22,7 @@ nb_histo = numel(iX)+numel(phis);
 ytick_labels = cell(1,numel(iP));
 for ii = 1:numel(iP)
     ylabel = P.ParamList{iP(ii)};
-    if (iP(ii)<= P.DimX)
+    if(iP(ii) <= P.DimX)
         ylabel = [ylabel '(0)']; %#ok<AGROW>
     end
     ytick_labels(ii) = {ylabel};

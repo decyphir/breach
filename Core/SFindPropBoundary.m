@@ -1,4 +1,4 @@
-function Pf = SFindPropBoundary(Sys, P, prop, tspan, tprop, iter)
+function Pf = SFindPropBoundary(Sys, P, phis, tspan, tprop, iter)
 %SFINDPROPBOUNDARY finds parameters in a set which are close to a boundary
 % between different satisfaction regions
 %
@@ -10,7 +10,7 @@ function Pf = SFindPropBoundary(Sys, P, prop, tspan, tprop, iter)
 %
 %
 
-needs_sensi = check_sensi(prop);
+needs_sensi = check_sensi(phis);
 
 if ~exist('tprop','var')
     tprop = 0;
@@ -33,7 +33,7 @@ Pf.selected = [];
 Pf.traj = [];
 Pf.props_values = [];
 
-nb_prop = numel(prop);
+nb_phis = numel(phis);
 
 for kk=1:iter
     if needs_sensi
@@ -42,7 +42,7 @@ for kk=1:iter
         P = ComputeTraj(Sys, P, tspan);
     end
     
-    P = SEvalProp(Sys, P, prop, tprop);
+    P = SEvalProp(Sys, P, phis, tprop);
     
     tri = delaunayn(P.pts(P.dim,:)', {'Qt', 'Qbb','Qc', 'Qz'});
     P.IsOnBoundary = zeros(1, size(P.pts,2));
@@ -57,10 +57,10 @@ for kk=1:iter
         % Update the status of vertices with respect to the props
         
         traj_status = zeros(1, size(pr,2));
-        for j=1:nb_prop
-            pri = cat(1, pr(j,:).val);
+        for jj=1:nb_phis
+            pri = cat(1, pr(jj,:).val);
             pri = (pri(:,1)>0)';
-            traj_status = traj_status+pri*2.^j;
+            traj_status = traj_status+pri*2.^jj;
         end
         
         % check if the status is uniform
@@ -69,8 +69,8 @@ for kk=1:iter
         bool_bnd = ~isempty(find(traj_status~=status,1));
         
         if(bool_bnd)
-            for j = 1:numel(vertices)
-                P.IsOnBoundary(vertices(j)) = 1;
+            for jj = 1:numel(vertices)
+                P.IsOnBoundary(vertices(jj)) = 1;
             end
         end
     end
@@ -88,7 +88,7 @@ for kk=1:iter
     if(kk < iter)
         nbn = size(Pn.pts,2);
         if(nbn>0)
-            %S = VoronoiRefine(Sn);
+            %P = VoronoiRefine(Pn);
             P = Refine(Pn,2);
         else
             break

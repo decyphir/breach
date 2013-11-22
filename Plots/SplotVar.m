@@ -27,6 +27,8 @@ function SplotVar(P, i_var, ipts, opt, same_axe)
 %  figure ; SplotVar(P)
 %  clf ; SplotVar(P,'x0')  % plot only x0
 %  clf ; SplotVar(P,[],1)  % plot only the first trajectory
+% 
+%See also SplotBoxPts SplotPts SplotTraj SplotSensi
 %
 
 figure(gcf);
