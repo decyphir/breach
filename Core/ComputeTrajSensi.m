@@ -38,16 +38,6 @@ else
     Sys.type = 'Breach';
 end
 
-
-% checks for an initialization function
-if isfield(Sys, 'init_fun')
-    P0 = Sys.init_fun(P0);
-end
-
-if isfield(P0, 'init_fun')
-    P0 = P0.init_fun(P0);
-end
-
 % manage i_params
 if ~exist('i_params','var')
     i_params = [];
@@ -56,6 +46,20 @@ elseif(iscell(i_params) || ischar(i_params))
 end
 i_params = i_params(i_params<=size(P0.pts,1));
 i_params = i_params(i_params>0);
+
+% do initialization if such function exists
+if ~isempty(i_params)
+    org_dims = P0.dim; % we save original dim and epsi
+    org_epsi = P0.epsi;
+    P0 = SAddUncertainParam(P0,i_params);
+    P0 = SDelUncertainParam(P0,org_dims,i_params);
+end
+if isfield(Sys, 'init_fun')
+    P0 = Sys.init_fun(P0);
+end
+if isfield(P0, 'init_fun')
+    P0 = P0.init_fun(P0);
+end
 
 [~,traj_to_compute] = unique(P0.pts(1:P0.DimP,:)','rows','first');
 if(numel(traj_to_compute)~=size(P0.pts,2)) % we got duplicate
@@ -87,13 +91,6 @@ end
 
 %%%%%%%%%%%%%%%%%%
 % Do the computation
-
-if ~isempty(i_params)
-    org_dims = P0.dim; % we save original dim and epsi
-    org_epsi = P0.epsi;
-    P0 = SAddUncertainParam(P0,i_params);
-    P0 = SDelUncertainParam(P0,org_dims,i_params);
-end
 
 InitSensi(Sys,P0);
 

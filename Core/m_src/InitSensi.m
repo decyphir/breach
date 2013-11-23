@@ -3,13 +3,12 @@ function InitSensi(Sys, P)
 % w.r.t. varying parameters in the set P. Options can be changed in the
 % field CVodesSensiOptions
 % 
+% Synopsis: InitSensi(Sys, P)
+%
 
-dims = P.dim;
+dims = sort(P.dim);
 N = Sys.DimX;
 ix0 = dims(dims<=N); % Uncertains initial conditions
-
-%NM: I comment the following line, uncomment if something bad happens
-%ip = dims(dims>N); % Uncertains parameters
 
 InitSystem(Sys);
 
@@ -26,11 +25,15 @@ else
     if isscalar(AbsTol)
         pscales = AbsTol*1e6*ones(Ns,1);
     else
-        if ~isempty(ix0)
-            pscales(dims<=N) = AbsTol(dims<=N)*1e6;
-        else
-            pscales(dims>N) = 1;
+        if isscalar(AbsTol)
+            AbsTol = ones(1,Sys.DimP)*AbsTol;
         end
+        pscales = ones(Ns,1);
+        %if ~isempty(ix0)
+            pscales(1:numel(find(dims<=N))) = AbsTol(dims(dims<=N))*1e6;
+        %else
+        %    pscales(dims>N) = 1;
+        %end
     end
     method = 'Simultaneous';
     FSAoptions = CVodeSetFSAOptions('SensErrControl', 'on',...

@@ -1,4 +1,9 @@
 function InitSystem(Sys)
+%INTISYSTEM initialises the system with t0 = 0, x0 = Sys.x0, ... This
+% function calls CVodeMalloc.
+% 
+% Synopsis: InitSystem(Sys)
+%
 
 t0 = 0.;
 if isfield(Sys,'fdata')
