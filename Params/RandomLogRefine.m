@@ -69,11 +69,11 @@ P = QuasiRefine(P, N, 2^(ii-1));
 
 
 % 3/ convert back from log scale to linear scale
-epsi = P.epsi;
+% we cannot compute the lower and higher bound of the new interval and
+% deduce pts/epsi from them because (10^lower+10^higher)/2 may be higher
+% than the initial upper bound
 val = P.pts(P.dim,:);
-mini = 10.^(val-epsi);
-maxi = 10.^(val+epsi);
-P.pts(P.dim,:) = (maxi+mini)/2;
-P.epsi = (maxi-mini)/2;
+P.pts(P.dim,:) = 10.^val;
+P.epsi = 10.^(val+P.epsi) - val; % epsi = sup - value
 
 end
