@@ -1,7 +1,7 @@
-function [P, val] = SEvalProp(Sys, P, phis, taus, ipts, break_level, method)
+function [P, val] = SEvalProp(Sys, P, phis, taus, ipts, break_level, method, VERBOSE)
 %SEVALPROP Eval property for previously computed trajectories
 % 
-% Synopsis: [P, val] = SEvalProp(Sys, P, phis[ , taus[, ipts[, break_level[, method]]]])
+% Synopsis: [P, val] = SEvalProp(Sys, P, phis[ , taus[, ipts[, break_level[, method[, VERBOSE]]]]])
 % 
 % Inputs:
 %  - Sys         : The system
@@ -30,9 +30,11 @@ function [P, val] = SEvalProp(Sys, P, phis, taus, ipts, break_level, method)
 %                  greater or equal to two, SEvalProp provides the
 %                  evaluation of formulas in phis and all sub-formulas
 %                  until the depth provided.
-%  - method      : (Optional, default='thom') string indicating the method
-%                  which must be used to evaluate the formulas. It must be
-%                  'classic' or 'thom'.
+%  - method      : (Optional, default or empty='thom') string indicating
+%                  the method which must be used to evaluate the formulas.
+%                  It must be 'classic' or 'thom'.
+%  - VERBOSE     : (Optional, default=true) boolean indicating if progress
+%                  bar is shown.
 % 
 % Outputs:
 %  - P   : param set with prop_names, prop and prop_values fields
@@ -62,7 +64,11 @@ function [P, val] = SEvalProp(Sys, P, phis, taus, ipts, break_level, method)
 %  SEvalProp(Sys, P, phi, 0:0.1:10, [], 1); % plots the evaluation
 
 % check arguments
-if ~exist('method','var')
+if ~exist('VERBOSE','var')
+    VERBOSE = 1;
+end
+
+if(~exist('method','var')||isempty(method))
     method = 'thom';
 end
 
@@ -139,9 +145,11 @@ for np = 1:numel(phis) % for each property
     end
     
     phi = QMITL_OptimizePredicates(Sys,phi);
-    fprintf('Checking  %s  on %d parameter vector(s)\n',phi_name,numel(ipts));
-    fprintf('[             25%%           50%%            75%%               ]\n ');
-    iprog = 0; %idx of progression bar
+    if(VERBOSE)
+        fprintf('Checking  %s  on %d parameter vector(s)\n',phi_name,numel(ipts));
+        fprintf('[             25%%           50%%            75%%               ]\n ');
+        iprog = 0; %idx of progression bar
+    end
     
     for ii = 1:numel(ipts) % we compute the truth value of phi for each parameter vector
         i_pt = ipts(ii);
@@ -159,13 +167,17 @@ for np = 1:numel(phis) % for each property
             warning('SEvalProp:NaNEval','Warning: property evaluated to NaN');
         end
         
-        while(floor(60*i_pt/numel(ipts))>iprog)
-            fprintf('^');
-            iprog = iprog+1;
+        if(VERBOSE)
+            while(floor(60*i_pt/numel(ipts))>iprog)
+                fprintf('^');
+                iprog = iprog+1;
+            end
         end
     end
     P.props_values(i_phi,:) = props_values; % we copy all evaluation in once to avoid inconsistent parameter set
-    fprintf('\n');
+    if(VERBOSE)
+        fprintf('\n');
+    end
 end
 
 end

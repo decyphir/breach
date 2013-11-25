@@ -1,7 +1,7 @@
-function [M, val] = PPhiSensiLocal(Sys, P, phis, tspan, taus, params, ipts, stat_type, cutoff)
+function [M, val] = PPhiSensiLocal(Sys, P, phis, tspan, taus, params, ipts, stat_type, cutoff, VERBOSE)
 %PPHISENSILOCAl computes local sensitivity of STL formulas
 % 
-% Synopsis:  [M, val] = PPhiSensiLocal(Sys, P, phis, tspan[, taus[, params[, ipts[, stat_type[, cutoff]]]]])
+% Synopsis:  [M, val] = PPhiSensiLocal(Sys, P, phis, tspan[, taus[, params[, ipts[, stat_type[, cutoff[, VERBOSE]]]]]])
 % 
 % Inputs:
 %  - Sys       : the system
@@ -25,18 +25,21 @@ function [M, val] = PPhiSensiLocal(Sys, P, phis, tspan, taus, params, ipts, stat
 %                providing the indexes of the parameter vectors of P to
 %                consider for computing the sensitivity. The sensitivity is
 %                averaged over all these parameter vectors.
-%  - stat_type : (Default='aver_time') String defining the method used to
-%                compute the sensitivity. Can be either 'aver_sum',
-%                'aver_time' or 'aver_max'. If stat_type is 'aver_time',
-%                the sensitivity of formulas is computed at time point
-%                provided by taus and averaged over all trajectories. If
-%                stat_type is 'aver_max', the formula sensitivity is
-%                computed at each time instant in tspan and the highest is
-%                keept. Then, the sensitivity is averaged over all
-%                trajectories. The 'aver_sum' case is not implemented.
+%  - stat_type : (Optional, default or empty='aver_time') String defining
+%                the method used to compute the sensitivity. Can be either
+%                'aver_sum', 'aver_time' or 'aver_max'. If stat_type is
+%                'aver_time', the sensitivity of formulas is computed at
+%                time point provided by taus and averaged over all
+%                trajectories. If stat_type is 'aver_max', the formula
+%                sensitivity is computed at each time instant in tspan and
+%                the highest is keept. Then, the sensitivity is averaged
+%                over all trajectories. The 'aver_sum' case is not
+%                implemented.
 %  - cutoff    : (Optional, default=0) cut off limit in percentage of
 %                the highest value: all sensitivity lower than cutoff
 %                times the highest sensitivity will be set to 0.
+%  - VERBOSE   : (Optional, default=true) Boolean indicating if the
+%                computation progress bar is shown.
 %
 % Outputs:
 %  - M   : the values of sensitivities. The dimension of M is
@@ -60,7 +63,7 @@ function [M, val] = PPhiSensiLocal(Sys, P, phis, tspan, taus, params, ipts, stat
 %   rho*(1+M/100)  % expected rho
 %   [~,rho] = SEvalProp(Sys, P2, phi1, 0) % got  1.4286% more :)
 % 
-%See also SPropSensi
+%See also SPropSensi SplotSensiBar
 %
 
 
@@ -115,10 +118,14 @@ if ~exist('cutoff','var')
     cutoff = 0;
 end
 
+% do we show progress bar
+if ~exist('VERBOSE','var')
+    VERBOSE = true;
+end
+
 % From now on we shoud have Sys, ipts, tspan, iX, iP, phis, and taus
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   Recompute trajectories if needed
 
 P = Sselect(P, ipts);
 
@@ -132,7 +139,7 @@ switch(stat_type)
     
     case 'aver_time'
         for ii = 1:numel(phis)
-            [p, x, dx] = QMITL_SEvalDiff(Sys, phis(ii), P, tspan, params, taus(ii));
+            [p, x, dx] = QMITL_SEvalDiff(Sys, phis(ii), P, tspan, params, taus(ii), VERBOSE);
             
             % replace zeros by small quantities
             ind = abs(x)<1e-16;
@@ -152,7 +159,7 @@ switch(stat_type)
             for jj = 1:numel(params)       %TODO: CAN BE OPTIMIZED
                 xs_max = zeros(1,size(P.pts,2)); % zero is the lowest absolute value
                 for tau = tspan
-                    [p, x, dx] = QMITL_SEvalDiff(Sys, phis(ii), P, tspan, params(jj), tau);
+                    [p, x, dx] = QMITL_SEvalDiff(Sys, phis(ii), P, tspan, params(jj), tau, VERBOSE);
 
                     % replace zeros by small quantities
                     ind = find(abs(x)<1e-16);
