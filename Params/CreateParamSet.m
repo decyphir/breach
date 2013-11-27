@@ -83,13 +83,23 @@ if exist('Param','var')
     end
     
 else
-    dim = 1:size(pts,1); %All the parameters are varying
-    ptsun = pts(dim);
-    epsi = zeros(numel(dim),1);
-    epsi(ptsun~=0) = abs(ptsun(ptsun~=0)/10);
-    epsi(ptsun==0) = 1;
-    ParamList = Sys.ParamList;
-end
+   
+    if (~isfield(Sys,'type')|| (Sys.DimX==Sys.DimP))
+        dim = 1:size(pts,1); %All the parameters are varying
+    else
+        
+        switch(Sys.type)
+            case 'Breach'
+                dim = 1:size(pts,1); %All the parameters are varying
+            otherwise         
+                dim = Sys.DimX+1; %first parameter is varying
+        end
+        ptsun = pts(dim);
+        epsi = zeros(numel(dim),1);
+        epsi(ptsun~=0) = abs(ptsun(ptsun~=0)/10);
+        epsi(ptsun==0) = 1;
+        ParamList = Sys.ParamList;        
+    end
 
 P.DimX = Sys.DimX;
 P.DimP = Sys.DimP;
