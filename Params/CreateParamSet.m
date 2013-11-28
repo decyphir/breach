@@ -82,24 +82,22 @@ if exist('Param','var')
         epsi(ptsun==0) = 1;
     end
     
+elseif(~isfield(Sys,'type')||(Sys.DimX==Sys.DimP))
+    dim = 1:size(pts,1); %All the parameters are varying
+    
 else
-   
-    if (~isfield(Sys,'type')|| (Sys.DimX==Sys.DimP))
-        dim = 1:size(pts,1); %All the parameters are varying
-    else
-        
-        switch(Sys.type)
-            case 'Breach'
-                dim = 1:size(pts,1); %All the parameters are varying
-            otherwise         
-                dim = Sys.DimX+1; %first parameter is varying
-        end
-        ptsun = pts(dim);
-        epsi = zeros(numel(dim),1);
-        epsi(ptsun~=0) = abs(ptsun(ptsun~=0)/10);
-        epsi(ptsun==0) = 1;
-        ParamList = Sys.ParamList;        
+    switch(Sys.type)
+        case 'Breach'
+            dim = 1:size(pts,1); %All the parameters are varying
+        otherwise
+            dim = Sys.DimX+1; %first parameter is varying
     end
+    ptsun = pts(dim);
+    epsi = zeros(numel(dim),1);
+    epsi(ptsun~=0) = abs(ptsun(ptsun~=0)/10);
+    epsi(ptsun==0) = 1;
+    ParamList = Sys.ParamList;
+end
 
 P.DimX = Sys.DimX;
 P.DimP = Sys.DimP;
@@ -115,7 +113,7 @@ P.pts = pts;
 P.epsi = epsi;
 P.ParamList = ParamList;
 
-P.traj_ref = 0; %NM: let's assume that non-computed trajectories have a traj_ref set to 0
+P.traj_ref = 0;
 P.traj_to_compute = 1;
 
 if exist('Nb_pts', 'var') 
