@@ -17,7 +17,7 @@ function P = SetParam(P, ParamList, ParamValues)
 %  - P : the modified parameter set
 % 
 % Example (for Lorenz84 system):
-%   CreateSystem;
+%   CreateSystem
 %   P = CreateParamSet(Sys, {'a', 'b'}, [0 9; 0 5]);
 %   Pr = Refine(P, 3);
 %   val = GetParam(Pr, 'a')
@@ -79,12 +79,6 @@ if ~isfield(P,'traj_ref')
 end
 
 %%%%%%
-% save old param set
-
-Poldpts = P.(pts)(1:P.DimP,P.traj_ref~=0);
-old_traj_ref = P.traj_ref(P.traj_ref~=0); % save old traj_ref
-
-%%%%%%
 % set params
 
 if iscell(ParamList)
@@ -108,20 +102,24 @@ elseif isnumeric(ParamList)
     end
 end
 
-traj_to_keep = zeros(1,numel(old_traj_ref)); % one if we keep the ith traj
-idx_new_traj = 1;
+
+%%%%%%
+% manage traj_ref and traj_to_compute
+
 P.traj_ref = zeros(1,size(P.(pts),2)); % initialise traj_ref
-for ii = 1:numel(old_traj_ref)
-    same = all(bsxfun(@eq,P.(pts)(1:P.DimP,:),Poldpts(:,ii)),1);
-    if any(same)
-        traj_to_keep(ii) = 1;
-        P.traj_ref(same) = idx_new_traj;
-        idx_new_traj = idx_new_traj + 1;
+if isfield(P,'traj')
+    param_traj = cat(1,P.traj(:).param)'; % param value for computed traj
+    idx_new_traj = 1;
+    for ii = 1:size(param_traj,2) % for each existing traj
+        same = all(bsxfun(@eq,P.(pts)(1:P.DimP,:),param_traj(:,ii)),1);
+        if any(same) % if it is equal to a parameter vector
+            P.traj(idx_new_traj) = P.traj(ii); % then keep the traj (ok because idx_new_traj<=ii)
+            P.traj_ref(same) = idx_new_traj;
+            idx_new_traj = idx_new_traj + 1;
+        end
     end
 end
-if isfield(P,'traj')
-    P.traj = P.traj(logical(traj_to_keep)); % we keep only used trajectories
-end
+
 [~,P.traj_to_compute] = unique(P.(pts)(1:P.DimP,:)','rows','first'); % we define traj_to_compute
 if isfield(P,'traj')
     P.traj_to_compute = setdiff(P.traj_to_compute,find(P.traj_ref~=0)); % don't keep those already computed
