@@ -1,21 +1,19 @@
 function Pf = Falsify (Sys, phi, falsif_opt, params_prop)
 %FALSIFY Tries to falsify property phi
-%
-% Synopsis:    Pf = Falsify(Sys, phi,  falsif_opt [, param_prop])
-%
+% 
+% Synopsis: Pf = Falsify(Sys, phi, falsif_opt[, param_prop])
+% 
 % Input:
 %  - Sys        : System Breach structure
 %  - phi        : property to falsify
 %  - falsif_opt : parameters for falsification - contains fields params, ranges, nb_init, nb_iter
 %  - param_prop : parameters for phi -  contains fields names , values
-%
+% 
 % Output:
 %  - Pf : parameter set leading to falsification, or least robust
-%  parameters found in case falsification failed
+%         parameters found in case falsification failed
 % 
-%
 % Example:
-%
 %  mdl = 'Autotrans_shift';
 %  Sys = CreateSimulinkSystem(mdl, {}, {}, [], 'UniStep1');
 %  Sys.tspan = 0:.01:50;
@@ -27,8 +25,8 @@ function Pf = Falsify (Sys, phi, falsif_opt, params_prop)
 %  falsif_opt.nb_iter = 100;
 %
 %  Pr = Falsify(Sys, phi1, falsif_opt);
-%
-% See also SOptimProp SOptimPropLog
+% 
+%See also SOptimProp SOptimPropLog
 %
 
 %% Create system and input strategy

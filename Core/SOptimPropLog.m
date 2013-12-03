@@ -1,17 +1,20 @@
 function [Pbest,val_best] = SOptimPropLog(Sys, phi, opts, verbose)
-% SOPTIMPROPLOG answers either the better parameter set found if it is
-% negative or all leading to a positive evaluation of phi. If
-% opts.StopWhenFound is set to 1, the function stops as soon as it finds a
-% parameter set positive (max) or negative (min).
-% The value of the parameter not in opts.params in equal to Sys.p.
+%SOPTIMPROPLOG computes either the best parameter vector found if it is
+% negative or all parameter vector leading to a positive evaluation of phi.
+% If opts.StopWhenFound is set to 1, the function stops as soon as it finds
+% a parameter set positive (max) or negative (min). The value of the
+% parameter not in opts.params are set equal to Sys.p.
 %
-% Synopsis: [Pbest,val_best] = SOptimPropLog(Sys, phi, opts [, verbose])
+% Synopsis: [Pbest, val_best] = SOptimPropLog(Sys, phi, opts [, verbose])
 %
 % Inputs:
 %   - Sys  : the considered system
 %   - phi  : the STL formula to verify
 %   - opts : describes the options. It contains the following fields:
-%      - tspan          See SOptimProp
+%      - tspan      The time domain computation of the trajectories. If
+%                   not provided, either Sys must have a tspan field, or P
+%                   must contains computed trajectories. Otherwise, an
+%                   error is thrown.
 %      - tau            See SOptimProp (default= first time point of tspan)
 %      - params         See SOptimProp
 %      - lbound         See SOptimProp

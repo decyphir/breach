@@ -3,7 +3,7 @@ function P = SDelUncertainParam(P, ParamList, Exception, Verbose)
 % excepted of those contained in Exception. If P will contain no uncertain
 % parameters, nothing is done.
 %
-% Synopsis: P = SDelUncertainParam(P, ParamList[ , Exception[, Verbose]])
+% Synopsis: P = SDelUncertainParam(P, ParamList[, Exception[, Verbose]])
 %
 % Input:
 %   - P         : the parameter set to modify

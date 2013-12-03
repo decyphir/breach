@@ -1,63 +1,63 @@
 function [val_opt, Popt]  = SOptimProp(Sys, P, phi, opt)
+%SOPTIMPROP optimizes the satisfaction of a property
 %
-% SOPTIMPROP optimizes the satisfaction of a property
+% Synopsis: [val_opt, Popt] = SOptimProp(Sys, P, phi, opt)
 %
-% Synopsis: [val_opt, Popt]  = SOptimProp(Sys, P0, phi, opt)
-%
-% Input:
-%    - Sys is a system
-%    - P0 is a parameter set for Sys. Parameter values in P0 are used for
-%                  initializing the optimization algorithm
-%    - phi is a QMITL property
-%    - opt is an option structure with the following fields :
-%
-%        - tspan   : the time domain computation of the trajectories. If
-%                    not provided, either Sys must have a tspan field, or P
-%                    must contains computed trajectories. Otherwise, an
-%                    error is thrown.
-%        - tau     : time for the evaluation of phi (default = first tspan
-%                    value)
-%        - params  : variable (search) parameters. If not provided, params
-%                    is based on P.dim.
-%        - lbound  : lower bounds for the search domain. If not provided,
-%                    all parameters in params must be uncertain parameters
-%                    of P, and lbound is defined as P.pts-P.epsi.
-%        - ubound  : upper bounds for the search domain. If not provided,
-%                    all parameters in params must be uncertain parameters
-%                    of P, ans ubound is defined as P.pts+P.epsi.
-%        - MaxIter : (mandatory) max number of optimization iteration. If
-%                    not provided, an error is thrown.
-%        - OptimType : 'Max' (default), 'Min' or 'Zero'.
-%        - StopWhenFound : set to 1 to compute satisfaction for initial
-%                          parameters in P0 then stops whenever  a positive
-%                          ('Max') or negative ('Min') solution is found
-%        - StopWhenFoundInit : same as above except that it does not
-%                              necessarily compute all trajectories in P0
-%        - Ninit   : tries the Ninit best initial pts
-%
-%
-% Output:
-%    - val_opt : the truth value of phi for the param set Sopt. It is a
-%                scalar if StopWhenFound or StopWhenFoundInit is set to 1.
-%                Otherwise, it is a vector of size 1 x size(P.pts,2).
-%
-%    - Popt    : if StopWhenFound or StopWhenFoundInit is set to 1, and a
-%                set of parameter values leading to a negative (resp.
-%                positive) truth value of phi is found, Popt is this
-%                parameter set.
-%                Otherwise, it contains the optimum found for each set of
-%                parameter values in P.
-%
-% See also SOptimPropLog Falsify
+% Inputs:
+%  - Sys : is a system
+%  - P  : is a parameter set. Parameter values in P are used for
+%          initializing the optimization algorithm. It may contain many
+%          parameter vectors. Trajectories don't need to be computed.
+%  - phi : is a QMITL formula
+%  - opt : is an option structure with the following fields:
+%       - tspan   : the time domain computation of the trajectories. If
+%                   not provided, either Sys must have a tspan field, or P
+%                   must contains computed trajectories. Otherwise, an
+%                   error is thrown.
+%       - tau     : (Optional, default=first tspan value) time for the
+%                    evaluation of phi
+%       - params  : (Optional, default=P.dim) names or indexes of variable
+%                   (search) parameters.
+%       - lbound  : (Optional, default=P.pts-P.epsi) lower bounds for the
+%                   search domain. If not provided, all parameters in
+%                   params must be uncertain parameters of P.
+%       - ubound  : (Optional, default=P.pts+P.epsi) upper bounds for the
+%                   search domain. If not provided, all parameters in
+%                   params must be uncertain parameters of P.
+%       - MaxIter : Maximal number of optimization iteration.
+%       - OptimType : (Optional, defaut='Max') string which indicates the
+%                     type of optimization. It must be 'Max', 'Min' or
+%                     'Zero'.
+%       - StopWhenFound : (Optional) set to 1 to compute satisfaction for
+%                         initial parameters in P0 then stops whenever a
+%                         positive ('Max') or negative ('Min') solution is
+%                         found.
+%       - StopWhenFoundInit : same as above except that it does not
+%                             necessarily compute all trajectories in P0
+%       - Ninit   : (Optional, default=all parameter vectors) tries the
+%                   Ninit best initial pts
+% 
+% Outputs:
+%  - val_opt : the truth value of phi for the param set Popt. It is a
+%              scalar if StopWhenFound or StopWhenFoundInit is set to 1.
+%              Otherwise, it is a vector of size 1 x size(P.pts,2).
+% 
+%  - Popt    : if StopWhenFound or StopWhenFoundInit is set to 1, and a
+%              parameter vector leading to a negative (resp. positive)
+%              truth value of phi is found, Popt is this parameter vector.
+%              Otherwise, Popt contains the optimum found for each
+%              parameter vector of P.
+% 
+%See also SOptimPropLog Falsify
 %
 
 %% process options
 
 global Ptmp; % temporary param set used to get non-variables parameter values in optim func
-global found; % non empty if we found a positive or negative truth value of prop
-global StopWhenFound; % cf doc
-global fopt; % best truth value of prop found for the current initial set of value in P
-global traj_opt; % trajectory leading to fopt truth value of prop
+global found; % non empty if we found a positive or negative truth value of phi
+global StopWhenFound; % See doc
+global fopt; % best truth value of phi found for the current initial set of value in P
+global traj_opt; % trajectory leading to fopt truth value of phi
 global xopt; % parameter set leading to the trajectory traj_opt
 global timeout;
 
@@ -82,17 +82,18 @@ else
 end
 
 if isfield(opt,'params')
-    dim = FindParam(P,opt.params);
-    dim = dim(dim<size(P.pts,1)); % keep only existing parameters (either system or constraint parameter)
-
-    P0 = CreateParamSet(Sys, dim);
-    P0 = QuasiRefine(P0, size(P.pts,2));
-    P0.pts = P.pts;
-    P  = P0;
-
-else
-    dim = P.dim;
+    if ~isnumeric(opt.params)
+        dim = FindParam(P, opt.params);
+    else
+        dim = opt.params;
+    end
+    dim = dim(dim>0);
+    dim = dim(dim<=size(P.pts,1)); % keep only existing parameters (either system or constraint parameter)
+    
+    P = SAddUncertainParam(P, dim);
+    P = SDelUncertainParam(P, P.dim, dim);
 end
+dim = P.dim;
 
 if isfield(opt,'OptimType')
     OptimType = lower(opt.OptimType); % to avoid case mistake, we convert to lower case
@@ -126,9 +127,9 @@ else
 end
 
 if isfield(opt,'timeout')
-  timeout=opt.timeout;
+  timeout = opt.timeout;
 else
-  timeout=inf;
+  timeout = inf;
 end
 
 tic;
@@ -156,24 +157,14 @@ if(StopWhenFoundInit)
             end
             nb_errors = nb_errors + 1;
         end
-        status = ['Init ' num2str(ii) '/' num2str(size(P.pts, 2)) ' Robustness value: ' num2str(val(ii))];
+        status = sprintf('Init %d/%d Robustness value: %g\n',ii,size(P.pts,2),val(ii));
         rfprintf(status);
         
-        switch OptimType
-            case 'max'
-                if(val(ii)>0)
-                    val_opt = val(ii);
-                    Popt = Ptmp;
-                    fprintf('\n'); % to have a pretty display
-                    return;
-                end
-            case 'min'
-                if(val(ii)<0)
-                    val_opt = val(ii);
-                    Popt = Ptmp;
-                    fprintf('\n'); % to have a pretty display
-                    return;
-                end
+        if( (strcmp(OptimType,'max')&&val(ii)>0) || (strcmp(OptimType,'min')&&val(ii)<0) )
+            val_opt = val(ii);
+            Popt = Ptmp;
+            fprintf('\n'); % to have a pretty display
+            return;
         end
         
         if(ii==1)
@@ -215,7 +206,7 @@ switch OptimType
         fun = @(x) fun_zero(x, Sys, phi, tspan, tau);
 end
 
-if( ((StopWhenFound)&&(~isempty(found))) || (MaxIter==0) )
+if( ((StopWhenFound)&&(~isempty(found))) || (MaxIter<=0) )
     Popt = Sselect(Popt,iv(1));
     val_opt = val(iv(1)); 
     return ;
@@ -315,7 +306,7 @@ if(StopWhenFound&&~isempty(found)) %positive value found, do not need to continu
     return ;          % we provide it the opposite of the truth value
 end
 
-ct= toc;
+ct = toc;
 if (ct>timeout)
   val = -fopt;     %forces convergence of the optimizer in case timeout occured;
   return;
@@ -342,7 +333,7 @@ if(val>fopt)
     xopt = Ptmp.pts(Ptmp.dim,1); % as ComputeTraj launch init_fun, Ptmp.pts can be different than x
 end
 
-status = ['Robustness value: ' num2str(val) ' Current optimal: ' num2str(fopt)];
+status = sprintf('Robustness value: %g Current optimal: %g',val,fopt);
 rfprintf(status);
 val = -val; % optimize tries to minimize the objective function, so we
             % provide it -val instead of val
@@ -357,7 +348,7 @@ if(StopWhenFound&&~isempty(found)) %negative value found, do not need to continu
     return ;
 end
 
-ct= toc; 
+ct = toc; 
 if (ct>timeout)
   val = fopt;     %forces convergence of the optimizer in case timeout occured;
   return;
@@ -386,7 +377,7 @@ if(val<fopt)
     xopt = Ptmp.pts(Ptmp.dim,1);
 end
 
-status = ['Robustness value: ' num2str(val) ' Current optimal: ' num2str(fopt)];
+status = sprintf('Robustness value: %g Current optimal: %g',val,fopt);
 rfprintf(status);
 end
 
@@ -402,13 +393,14 @@ catch %#ok<CTCH>
     return ; % we can also let the function terminates
 end
 
-ct= toc; 
+ct = toc; 
 if (ct>timeout)
   val = fopt;     %forces convergence of the optimizer in case timeout occured;
+  return ;
 end
 
 val = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
-status = ['Robustness value: ' num2str(val) ];
+status = sprintf('Robustness value: %g Current optimal: %g',val,fopt);
 rfprintf(status);
 
 val = abs(val);

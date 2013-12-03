@@ -1,5 +1,5 @@
 function P = SetParam(P, ParamList, ParamValues)
-% SETPARAM Sets the values of parameters in a parameter set. Note that if
+%SETPARAM sets the values of parameters in a parameter set. Note that if
 % the parameter is not present in P, it is created and appended as a fixed
 % parameter. The epsi are neither modified nor created.
 % 
@@ -15,7 +15,7 @@ function P = SetParam(P, ParamList, ParamValues)
 % 
 % Output:
 %  - P : the modified parameter set
-%
+% 
 % Example (for Lorenz84 system):
 %   CreateSystem;
 %   P = CreateParamSet(Sys, {'a', 'b'}, [0 9; 0 5]);
@@ -43,7 +43,7 @@ function P = SetParam(P, ParamList, ParamValues)
 %   Pr_5 = SetParam(Pr,'a',2);
 %   Pr_5.traj_ref            % should be all zero
 %   Pr_5.traj_to_compute     % should be [1,4,7]
-%  
+%   
 %See also GetParam CreateParamSet SetEpsi
 %
 

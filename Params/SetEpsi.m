@@ -1,19 +1,21 @@
 function P = SetEpsi(P, ParamList, EpsiValues)
-% SETEPSI Sets the values of epsi in a parameter set.
+%SETEPSI sets the values of epsi in a parameter set.
 % 
 % Synopsis: P = SetEpsi(P, ParamList, EpsiValues)
 % 
-% Input:
-%  - P          : the parameter set to modify ;
-%  - ParamList  : the list of parameter names or indexes for which the epsi
-%                 value is modified. If empty, nothing is done. If a
-%                 parameter of ParamList is not uncertain or doesn't exist,
-%                 then it is skipped ;
-%  - EpsiValue  : the values of the epsi. Its size is either
-%                 numel(ParamList) x size(P.pts,2) or numel(ParamList) x 1
+% Inputs:
+%  - P         : the parameter set to modify ;
+%  - ParamList : the list of parameter names or indexes for which the epsi
+%                value is modified. If empty, nothing is done. If a
+%                parameter of ParamList is not uncertain or doesn't exist,
+%                then it is skipped ;
+%  - EpsiValue : the values of the epsi. Its size is either
+%                numel(ParamList) x size(P.pts,2) or numel(ParamList) x 1
 % 
-% Example (for Lorenz84 system):
+% Output:
+%  - P : the new parameter set
 % 
+% Example (Lorenz84):
 %    CreateSystem;
 %    P = CreateParamSet(Sys, {'a', 'b'}, [0 10; 0 5]);
 %    Pr = Refine(P, 3);
@@ -30,8 +32,9 @@ function P = SetEpsi(P, ParamList, EpsiValues)
 %                     % epsilon for 'a'is set to 0.4 for the nine parameter
 %                     % sets. Nothing has changed for 'G'.
 %    
-%See also GetEpsi CreateParamSet SetParam SAddUncertainParam SDelUncertainParam
-%  
+%See also GetEpsi CreateParamSet SetParam SAddUncertainParam
+%SDelUncertainParam
+%
 
 if isempty(ParamList)
     return ;
