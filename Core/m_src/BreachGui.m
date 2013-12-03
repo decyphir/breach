@@ -2157,7 +2157,7 @@ try
         handles.idx_prop = 1;
         
     elseif strcmp(ext,'.stl')
-        formulas = QMITL_ReadFile(FileName);
+        formulas = QMITL_ReadFile([PathName FileName]);
         Propsave(handles.Sys, formulas{:});
         
     end
