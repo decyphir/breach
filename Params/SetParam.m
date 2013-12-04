@@ -118,6 +118,10 @@ if isfield(P,'traj')
             idx_new_traj = idx_new_traj + 1;
         end
     end
+    P.traj = P.traj(1:idx_new_traj-1); % remove all other traj
+    if isempty(P.traj)
+        P = rmfield(P,'traj');
+    end
 end
 
 [~,P.traj_to_compute] = unique(P.(pts)(1:P.DimP,:)','rows','first'); % we define traj_to_compute

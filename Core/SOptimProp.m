@@ -312,7 +312,8 @@ if (ct>timeout)
   return;
 end
 
-Ptmp.pts(Ptmp.dim,1)=x;
+Ptmp = SPurge(Ptmp);
+Ptmp.pts(Ptmp.dim,1) = x;
 try
     Ptmp = ComputeTraj(Sys, Ptmp, tspan);
 catch  %#ok<CTCH>
@@ -354,8 +355,8 @@ if (ct>timeout)
   return;
 end
 
-
-Ptmp.pts(Ptmp.dim,1)=x;
+Ptmp = SPurge(Ptmp);
+Ptmp.pts(Ptmp.dim,1) = x;
 try
     Ptmp = ComputeTraj(Sys, Ptmp, tspan);
 catch %#ok<CTCH>
@@ -384,6 +385,7 @@ end
 function val = fun_zero(x, Sys, phi, tspan, tau)
 %% function fun_zero
 global Ptmp fopt traj_opt xopt timeout
+Ptmp = SPurge(Ptmp);
 Ptmp.pts(Ptmp.dim,1)=x;
 try
     Ptmp = ComputeTraj(Sys, Ptmp, tspan);

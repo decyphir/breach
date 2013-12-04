@@ -1,9 +1,7 @@
 function h=rect(i,d,c,alpha)
-
 %RECT function to draw a 2-D rectangle
 %
-%Usage
-%   rect(start,size,color,alpha);
+% Synopsis: rect(start, size, color, alpha);
 %
 %   will draw a rectangle at 'start' of size 'size' of color 'color' and
 %   transparency alpha (1 for opaque, 0 for transparent)
@@ -22,27 +20,29 @@ function h=rect(i,d,c,alpha)
 
 
 switch(nargin),
-case 0
-    disp('Too few arguements for rect');
-    return;
-case 1
-    l=1;    %default length of side of rectangle is 1
-    c='b';  %default color of voxel is blue
-case 2,
-    c='b';
-case 3,
-    alpha=1;
-case 4,
-    %do nothing
-otherwise
-    disp('Too many arguements for voxel');
+    case 0
+        disp('Too few arguements for rect');
+        return;
+    case 1
+        l=1;    %default length of side of rectangle is 1
+        c='b';  %default color of voxel is blue
+    case 2,
+        c='b';
+    case 3,
+        alpha=1;
+    case 4,
+        %do nothing
+    otherwise
+        disp('Too many arguements for voxel');
 end;
 
 x=[i(1)+[0 d(1) d(1) 0]; ...
-        i(2)+[0 0 d(2) d(2)]];
-if (strcmp(c,'none'))
+    i(2)+[0 0 d(2) d(2)]];
+if strcmp(c,'none')
     p = patch(x(1,:), x(2,:),'r');
-    set(p, 'FaceColor', 'none');    
+    set(p, 'FaceColor', 'none');
     return
 end
-h= fill(x(1,:), x(2,:),c,'FaceAlpha',alpha);
+h = fill(x(1,:), x(2,:),c,'FaceAlpha',alpha);
+
+end

@@ -1,5 +1,5 @@
 function P = SConcat(P, P2)
-%SCONCAT Concatenates two parameter sets.
+%SCONCAT concatenates two parameter sets.
 % 
 % Synopsis: P = SConcat(P, P2)
 % 
@@ -12,7 +12,7 @@ function P = SConcat(P, P2)
 %  trajectories coming from Pj is 0.
 % 
 % Example (Lorentz84):
-%   CreateSystem;
+%   CreateSystem
 %   P1 = CreateParamSet(Sys,'a',[0.15,0.75],3);
 %   P2 = CreateParamSet(Sys,'b',[3,9],3);
 %   P = SConcat(P1,P2);  % contains 6 parameter vectors. Two are the same.

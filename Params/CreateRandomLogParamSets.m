@@ -1,24 +1,25 @@
 function [PRLog] = CreateRandomLogParamSets(Sys, params, ranges, N, varargin)
-%CREATERANDOMLOGPARAMSETS Create a logarithmic random sampling of parameters.
-% The unknown parameters are defined by the argument params. If the lower
-% limit of an interval is zero, it is replaced by the absolute tolerance of
-% the system. There should not be a negative range limit. It must not be
-% two (or more) times the same parameter in the params argument.
-%
-% Synopsis: PRLog = CreateRandomLogParamSets(Sys, params, ranges, N [ , 'strictlyInside' ] )
-%
+%CREATERANDOMLOGPARAMSETS creates a logarithmic random sampling of
+% parameters. The unknown parameters are defined by the argument params. If
+% the lower limit of an interval is zero, it is replaced by the absolute
+% tolerance of the system. There should not be a negative range limit. It
+% cannot be two (or more) times the same parameter in the params argument.
+% 
+% Synopsis: PRLog = CreateRandomLogParamSets(Sys, params, ranges, N[, 'strictlyInside'])
+% 
 % Inputs:
 %  - Sys    : The considered system
-%  - params : List of varying parameters
-%  - ranges : Parameters ranges
+%  - params : List of names or indexes of varying parameters
+%  - ranges : array of size numel(params) x 2 describing the parameters
+%             ranges
 %  - N      : Number of random generated points
 %  - 'strictlyInside' : (Optional, default=not set) If set, all generated
 %                       parameter sets are strictly within the ranges.
 %                       Otherwise, only the center of the generated
 %                       parameter sets are within the provided ranges.
-%
+% 
 % Output:
-%  - PRLog : A random logarithmic sampling of N points
+%  - PRLog : A random logarithmic sampling of N parameter vectors
 %
 % Example (Lorentz84):
 %    CreateSystem;
@@ -27,7 +28,7 @@ function [PRLog] = CreateRandomLogParamSets(Sys, params, ranges, N, varargin)
 %            % that a is logarithmicly distributed in [1.0e-3 , 1.0e2]
 %            % and b in [3 , 5]
 %    SplotBoxPts(PLog);
-%
+% 
 %See also CreateParamSet RandomLogRefine SAddUncertainParam
 %
 
@@ -55,7 +56,11 @@ strictlyInside = nargin==5 && strcmpi(varargin{1},'strictlyinside');
 
 
 % if there are null range limits, we replace them by the AbsTol
-ranges(ranges==0) = Sys.CVodesOptions.AbsTol;
+if numel(Sys.CVodesOptions.AbsTol)==1
+    ranges(ranges==0) = Sys.CVodesOptions.AbsTol;
+else
+    ranges(ranges==0) = Sys.CVodesOptions.AbsTol(ranges==0);
+end
 
 ranges = log10(ranges); %from normal scale to log scale
 
@@ -66,20 +71,11 @@ else
     PRLog = QuasiRefine(PRLog,N);
 end
 
-for ii=1:nbParam % we rescale each param, in the order of epsi
-    epsi = PRLog.epsi(ii,:);
-    value = PRLog.pts(PRLog.dim(ii),:);
-    
-    vinf = value-epsi;
-    vsup = value+epsi;
-
-    vinf = 10.^vinf; %lowest new value on normal scale
-    vsup = 10.^vsup; %highest new value on normal scale
-    epsi = (vsup-vinf)/2; %new epsi on normal scale
-    value = vinf + epsi; %compute new value on normal scale    
-    
-    PRLog.epsi(ii,:) = epsi;
-    PRLog.pts(PRLog.dim(ii),:) = value;
-end
+% Translate back to linear scale, using the midpoint and the upper bound to
+% compute pts and epsi (using lower bound and upper bound may lead to pts
+% beyond intervals)
+val = PRLog.pts(PRLog.dim,:);
+PRLog.pts(PRLog.dim,:) = 10.^val;
+PRLog.epsi = 10.^(val+PRLog.epsi) - PRLog.pts(PRLog.dim,:); % epsi = sup - value
 
 end

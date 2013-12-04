@@ -67,12 +67,6 @@ if ~isstruct(P0)
     
 end
 
-% if no trajectories to compute, we return the param set itself
-if isfield(P0, 'traj_to_compute') && isempty(P0.traj_to_compute)
-    Pf = P0;
-    return
-end
-
 % checks for an initialization function
 if isfield(Sys, 'init_fun')
     P0 = Sys.init_fun(P0);
@@ -80,6 +74,12 @@ end
 
 if isfield(P0, 'init_fun')
     P0 = P0.init_fun(P0);
+end
+
+% if no trajectories to compute, we return the param set itself
+if isfield(P0, 'traj_to_compute') && isempty(P0.traj_to_compute)
+    Pf = P0;
+    return
 end
 
 if ~isfield(Sys, 'type')
