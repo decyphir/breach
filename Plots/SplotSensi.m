@@ -8,15 +8,15 @@ function SplotSensi(P, iX, iP, ipts)
 % project on dimensions specified by field 'plot_proj'.
 % 
 % Inputs:
-%  -  P    : Parameter set. Trajectories and the sensitivities must be
-%            computed. If the trajectories are not computed, an error is
-%            thrown.
-%  -  iX   : (Optional, default=all variables) indice or names of the
-%            variables for which the sensitivity is plotted
-%  -  iP   : (Optional, default=P.dim) indexes or names of the sensitive
-%            parameter
-%  -  ipts : (Optional, default=all traj) indices of the trajectories in P
-%            to plot
+%  - P    : Parameter set. Trajectories and the sensitivities must be
+%           computed. If the trajectories are not computed, an error is
+%           thrown.
+%  - iX   : (Optional, default=all variables) indice or names of the
+%           variables for which the sensitivity is plotted
+%  - iP   : (Optional, default=P.dim) indexes or names of the sensitive
+%           parameter
+%  - ipts : (Optional, default=all traj) indices of the trajectories in P
+%           to plot
 % 
 % Output:
 %  - none, but a figure.

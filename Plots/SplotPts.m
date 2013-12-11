@@ -1,11 +1,11 @@
 function SplotPts(P,proj,ipts,opt)
-%SPLOTPTS Plots parameters points (aka: the field pts) in a parameter set
-%
-% Synopsis: SplotPts(S [, proj, ipts, opt])
-%
+%SPLOTPTS plots parameters points (aka: the field pts) in a parameter set
+% 
+% Synopsis: SplotPts(P [, proj, ipts, opt])
+% 
 % Inputs:
 %  -  P    : A Parameter set or an array of parameter set
-%  -  proj : (optional) chooses the parameters to plot; can be numbers or
+%  -  proj : (Optional) chooses the parameters to plot; can be numbers or
 %            parameters names; if not provided, is defined by
 %            P(1).plot_proj if it exist. If not, is defined by the three
 %            first parameter described by P(1).dim . If it contains more
@@ -13,7 +13,7 @@ function SplotPts(P,proj,ipts,opt)
 %  -  ipts : indices of the pts to plot; all if absent or []
 %  -  opt  : plot options; uses the plotting options defined in field
 %            X0plot_opt or default if this is absent
-%
+% 
 % see demoVDP1 for examples
 % 
 

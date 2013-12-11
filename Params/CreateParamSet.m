@@ -6,11 +6,11 @@ function P = CreateParamSet(Sys, Param, Ranges, Nb_pts)
 % Inputs:
 %  -  Sys    : System under study
 %  -  Param  : (Optional, default=all parameters) list of varying
-%              parameters names. If it contains a parameter name not
-%              existing in Sys.ParamList, this parameter is added to the
-%              generated parameter set. The value of these new parameters
-%              is either the mean value of the interval in the Ranges is
-%              provided, zero otherwise.
+%              parameters names or indexes. If it contains a parameter name
+%              not existing in Sys.ParamList, this parameter is added to
+%              the generated parameter set. The value of these new
+%              parameters is either the mean value of the interval in the
+%              Ranges is provided, zero otherwise.
 %  -  Ranges : (Optional, default=[0.9*Sys.p, 1.1*Sys.p] for Sys.p~=0, 1
 %              otherwise) array of size numel(Param) x 2 describing
 %              parameter ranges.
@@ -53,31 +53,35 @@ if exist('Param','var')
         dim = reshape(Param,1,nbParam); % ensure that dim is a line vector
         ParamList = Sys.ParamList;
     else
-        ind = FindParam(Sys,Param);
-        new_params = Param(ind>size(pts,1)); %in case param contains parameters not
-                                             %in Sys.ParamList (aka:we create parameters)
-        ParamList = [Sys.ParamList{:} new_params];
-        dim = ind;
+        dim = FindParam(Sys,Param);
+        ParamList = [Sys.ParamList{:}, Param(dim>size(pts,1))]; % extend ParamList to include formula parameters
     end
     %Here dim contains the indexes in pts of the varying parameters
     
-    pts(dim) = 0; %initialize all parameters (new and not new) values to 0
-    
-    dim_sys = dim(dim<=size(Sys.p,1));
-    pts(dim_sys) = Sys.p(dim_sys); % copy the not new parameters
+    pts(dim(dim>size(pts,1))) = 0; %initialize formula parameters to 0
     
     epsi = zeros(nbParam,1);
     if exist('Ranges','var')
+        if(size(Ranges,1)==2 && size(Ranges,2)==nbParam && nbParam~=2)
+            warning('CreateParamSet:badRangesSize','Caution: size(Ranges) must be numel(Params) x 2. Fixed.');
+            Ranges = Ranges'; % in case Ranges is in the wrong direction
+        elseif(size(Ranges,2)~=2)
+            error('CreateParamSet:wrongRangesSize','The size of the Ranges argument must be numel(Params) x 2.');
+        end
         pts(dim) = (Ranges(:,2)+Ranges(:,1))/2;
         epsi(:,1) = Ranges(:,2)-pts(dim);
     else
         ptsun = pts(dim);
-        epsi(ptsun~=0) = abs(ptsun(ptsun~=0)/10);
-        epsi(ptsun==0) = 1;
+        epsi(ptsun~=0,1) = abs(ptsun(ptsun~=0)/10);
+        epsi(ptsun==0,1) = 1;
     end
     
 elseif(~isfield(Sys,'type')||(Sys.DimX==Sys.DimP))
     dim = 1:size(pts,1); %All the parameters are varying
+    ParamList = Sys.ParamList;
+    epsi = zeros(size(pts,1),1);
+    epsi(pts~=0,1) = abs(pts(pts~=0)/10);
+    epsi(pts==0,1) = 1;
     
 else
     switch(Sys.type)
@@ -88,8 +92,8 @@ else
     end
     ptsun = pts(dim);
     epsi = zeros(numel(dim),1);
-    epsi(ptsun~=0) = abs(ptsun(ptsun~=0)/10);
-    epsi(ptsun==0) = 1;
+    epsi(ptsun~=0,1) = abs(ptsun(ptsun~=0)/10);
+    epsi(ptsun==0,1) = 1;
     ParamList = Sys.ParamList;
 end
 

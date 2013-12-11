@@ -23,15 +23,14 @@ function P = SetEpsi(P, ParamList, EpsiValues)
 %    val10 = 10*val; 
 %    Pr10 = SetEpsi(Pr, 'a', val10); % epsi for 'a' in Pr10 are ten
 %                                     % times those in Pr
-% Other example :
-% 
-%    CreateSystem;
-%    P = CreateParamSet(Sys, {'a', 'b'}, [0 10; 0 5]);
+% Other example:
+%    CreateSystem
+%    P = CreateParamSet(Sys, {'a', 'b'}, [0, 10; 0, 5]);
 %    Pr = Refine(P, 3);
-%    Pr_2 = SetEpsi(Pr, {'a','G','blah'}, [0.4; 0.6 ; 2]);
+%    Pr_2 = SetEpsi(Pr, {'a','G','blah','b'}, [0.4; 0.6; 2; 0.2]);
 %                     % epsilon for 'a'is set to 0.4 for the nine parameter
 %                     % sets. Nothing has changed for 'G'.
-%    
+% 
 %See also GetEpsi CreateParamSet SetParam SAddUncertainParam
 %SDelUncertainParam
 %
@@ -49,7 +48,9 @@ if(ischar(ParamList) || iscell(ParamList))
     ParamList = FindParam(P,ParamList);
 end
 
-[~,ind,ind_epsi] = intersect(P.dim,ParamList);
-P.epsi(ind,:) = EpsiValues(ind_epsi,:);
+[~,ind,ind_epsi] = intersect(P.dim,ParamList); % keep only existing uncertain params
+for ii=1:numel(ind) % affect epsi (loop needed in case size(EpsiValues,2)==1)
+    P.epsi(ind(ii),:) = EpsiValues(ind_epsi(ii),:);
+end
 
 end

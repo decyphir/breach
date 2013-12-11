@@ -273,7 +273,7 @@ for ii = iv(1:Ninit)
         if isfield(Popt, 'init_fun')
             Popt = Popt.init_fun(Popt);
         end
-        val_opt = val_opt(kk);
+        val_opt = val_opt(kk); %NM: why not found or fopt ?!
         if strcmp(OptimType,'max')
             val_opt = -val_opt;
         end

@@ -20,21 +20,26 @@ function [PRLog] = CreateRandomLogParamSets(Sys, params, ranges, N, varargin)
 % 
 % Output:
 %  - PRLog : A random logarithmic sampling of N parameter vectors
-%
+% 
 % Example (Lorentz84):
-%    CreateSystem;
-%    PLog = CreateRandomLogParamSets(Sys,{'a','b'},[1.0e-3,1.0e2;3,5],50);
+%    CreateSystem
+%    params = {'a','b','x0','x1','x2','F'};
+%    ranges = [1,1e4;1e-4,1e5;1e-5,1e7;1e-2,1e6;1e-4,1e5;1e5,1e7];
+%    Pall = CreateParamSet(Sys,params,ranges);
+%    PLog = CreateRandomLogParamSets(Sys,params,ranges,50);
 %            % PLog is a parameter set containing 50 parameter values such
 %            % that a is logarithmicly distributed in [1.0e-3 , 1.0e2]
 %            % and b in [3 , 5]
-%    SplotBoxPts(PLog);
+%    PLog = SetEpsi(PLog,params,zeros(numel(params),1));
+%    PInclude(PLog,Pall) % should be true
+%    SplotBoxPts(Pall);
+%    SplotPts(PLog);
 % 
 %See also CreateParamSet RandomLogRefine SAddUncertainParam
 %
 
 % we check if all range limits are strictly positive
 if ~isempty(find(sign(ranges)<0,1))
-    %return;
     error('CreateRandomLogParamSets:rangeBound',...
             'Range limits must be positive or null.');
 end
@@ -56,7 +61,7 @@ strictlyInside = nargin==5 && strcmpi(varargin{1},'strictlyinside');
 
 
 % if there are null range limits, we replace them by the AbsTol
-if numel(Sys.CVodesOptions.AbsTol)==1
+if(numel(Sys.CVodesOptions.AbsTol)==1)
     ranges(ranges==0) = Sys.CVodesOptions.AbsTol;
 else
     ranges(ranges==0) = Sys.CVodesOptions.AbsTol(ranges==0);

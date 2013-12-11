@@ -2,10 +2,10 @@ function [p, rob] = GetPropParamBin(Sys, phi, P, params, monotony, p_interval, p
 %GETPROPPARAMBIN search values for parameters in a formula phi so that phi
 % is satisfied by a set of traces - assumes monotonicity, to be specified
 % by the user
-%
+% 
 % Synopsis: [p, rob] = GetPropParamBin(Sys, phi, P, params, monotony, p_interval, p_tol, traj)
-%
-% Input:
+% 
+% Inputs:
 %  - Sys        : is a system structure for Breach
 %  - phi        : is an STL (QMITL) property
 %  - P          : is a Breach set of parameters with param values for phi
@@ -22,8 +22,8 @@ function [p, rob] = GetPropParamBin(Sys, phi, P, params, monotony, p_interval, p
 %  - p_interval : is the search interval(s) for parameter values
 %  - p_tol      : Precision of the binary search in each parameter
 %  - traj       : is an array of trajectories
-%
-% Output:
+% 
+% Outputs:
 %  - p   : 
 %  - rob : 
 %
