@@ -9,15 +9,15 @@ function [include, outside] = PInclude(Pin, P, epsi)
 % is said included in P iff
 %   GetParam(P,'pp')*(1-epsi) <= GetParam(Pin,'pp')-GetEpsi(Pin,'pp')  &&
 %   GetParam(Pin,'pp')+GetEpsi(Pin,'pp') <= GetParam(P,'pp')*(1+epsi)
-%
+% 
 % Synopsis: [include, outside] = PInclude(Pin, P [, epsi] )
-%
-% Input:
+% 
+% Inputs:
 %  - Pin  : A parameter set which may contain many parameter vectors
 %  - P    : A parameter set with the same parameters than Pin
 %  - epsi : Optional, default=eps. Indicate the admissible relative error.
-%
-% Output:
+% 
+% Outputs:
 %  - include : true if all parameter sets in Pin are included in a
 %              parameter set of P, false otherwise.
 %  - info    : provides more details if Pin is not included in P. If
@@ -27,29 +27,29 @@ function [include, outside] = PInclude(Pin, P, epsi)
 %              included in P, info is set to 0.
 % 
 % Example (Lorentz84):
-%  CreateSystem
-%  P = CreateParamSet(Sys,{'x0','x1','a'},[-5,-2;3,4;0,0.5]);
-%  Pin = CreateParamSet(Sys,{'x1','x0'},[3.5,3.8;-4,-3]);
-%  PInclude(Pin,P) % should be 1
-%  
-%  Pout = SetParam(Pin,'a',1);
-%  PInclude(Pout,P) % should be 0
-%  
-%  Pin = SAddUncertainParam(Pin,'a');
-%  Pin = SetParam(Pin,'a',0.35);
-%  Pin = SDelUncertainParam(Pin,'x0');
-%  Pin = SAddUncertainParam(Pin,'x0'); % change order in epsi
-%  PInclude(Pin,P)
-%  
-%  Pout = SetEpsi(Pin,'a',0.2);
-%  PInclude(Pout,P)
-%  
-%  Pboth = Refine(Pout,3); % 27 parameter vectors (param 'a' is splitted
-%                          % into [0.15, 0.283], [0.283, 0.416] and
-%                          % [0.416 0.55] )
-%  [include,outside] = PInclude(Pboth,P)
-%  a = GetParam(Pboth,'a')+GetEpsi(Pboth,'a'); % upper bound for 'a'
-%  a(outside) % should only get 0.55
+%   CreateSystem
+%   P = CreateParamSet(Sys,{'x0','x1','a'},[-5,-2;3,4;0,0.5]);
+%   Pin = CreateParamSet(Sys,{'x1','x0'},[3.5,3.8;-4,-3]);
+%   PInclude(Pin,P) % should be 1
+%   
+%   Pout = SetParam(Pin,'a',1);
+%   PInclude(Pout,P) % should be 0
+%   
+%   Pin = SAddUncertainParam(Pin,'a');
+%   Pin = SetParam(Pin,'a',0.35);
+%   Pin = SDelUncertainParam(Pin,'x0');
+%   Pin = SAddUncertainParam(Pin,'x0'); % change order in epsi
+%   PInclude(Pin,P)
+%   
+%   Pout = SetEpsi(Pin,'a',0.2);
+%   PInclude(Pout,P)
+%   
+%   Pboth = Refine(Pout,3); % 27 parameter vectors (param 'a' is splitted
+%                           % into [0.15, 0.283], [0.283, 0.416] and
+%                           % [0.416 0.55] )
+%   [include,outside] = PInclude(Pboth,P)
+%   a = GetParam(Pboth,'a')+GetEpsi(Pboth,'a'); % upper bound for 'a'
+%   a(outside) % should only get 0.55
 % 
 %See also SConcat SSelect SAddUncertainParam
 %

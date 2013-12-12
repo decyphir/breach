@@ -1,8 +1,8 @@
 function [val_opt, Popt]  = SOptimProp(Sys, P, phi, opt)
 %SOPTIMPROP optimizes the satisfaction of a property
-%
+% 
 % Synopsis: [val_opt, Popt] = SOptimProp(Sys, P, phi, opt)
-%
+% 
 % Inputs:
 %  - Sys : is a system
 %  - P  : is a parameter set. Parameter values in P are used for
@@ -307,8 +307,8 @@ if(StopWhenFound&&~isempty(found)) %positive value found, do not need to continu
 end
 
 ct = toc;
-if (ct>timeout)
-  val = -fopt;     %forces convergence of the optimizer in case timeout occured;
+if(ct>timeout)
+  val = -fopt; %forces convergence of the optimizer in case timeout occured
   return;
 end
 
@@ -316,13 +316,12 @@ Ptmp = SPurge(Ptmp);
 Ptmp.pts(Ptmp.dim,1) = x;
 try
     Ptmp = ComputeTraj(Sys, Ptmp, tspan);
+    val = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
 catch  %#ok<CTCH>
     warning('SOptimProp:ComputeTraj','Error during trajectory computation when optimizing. Keep going.')
     val = inf; % do not care of the exit condition -3 for nelder-mead algo, it only happens when using global optim
     return ; % we can also set val=-inf and let the function terminates
 end
-
-val = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
 
 if(val>0)
     found = val;
@@ -350,8 +349,8 @@ if(StopWhenFound&&~isempty(found)) %negative value found, do not need to continu
 end
 
 ct = toc; 
-if (ct>timeout)
-  val = fopt;     %forces convergence of the optimizer in case timeout occured;
+if(ct>timeout)
+  val = fopt;  %forces convergence of the optimizer in case timeout occured
   return;
 end
 
@@ -359,13 +358,12 @@ Ptmp = SPurge(Ptmp);
 Ptmp.pts(Ptmp.dim,1) = x;
 try
     Ptmp = ComputeTraj(Sys, Ptmp, tspan);
+    val = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
 catch %#ok<CTCH>
     warning('SOptimProp:ComputeTraj','Error during trajectory computation when optimizing. Keep going.')
     val = inf; % do not care of the exit condition -3 for nelder-mead algo, it only happens when using global optim
     return ; % we can also let the function terminates
 end
-
-val = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
 
 if(val<0)
     found = val;
@@ -385,23 +383,24 @@ end
 function val = fun_zero(x, Sys, phi, tspan, tau)
 %% function fun_zero
 global Ptmp fopt traj_opt xopt timeout
+
+ct = toc; 
+if(ct>timeout)
+  val = fopt;  %forces convergence of the optimizer in case timeout occured
+  return ;
+end
+
 Ptmp = SPurge(Ptmp);
 Ptmp.pts(Ptmp.dim,1)=x;
 try
     Ptmp = ComputeTraj(Sys, Ptmp, tspan);
+    val = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
 catch %#ok<CTCH>
     warning('SOptimProp:ComputeTraj','Error during trajectory computation when optimizing. Keep going.')
     val = inf; % do not care of the exit condition -3 for nelder-mead algo, it only happens when using global optim
     return ; % we can also let the function terminates
 end
 
-ct = toc; 
-if (ct>timeout)
-  val = fopt;     %forces convergence of the optimizer in case timeout occured;
-  return ;
-end
-
-val = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
 status = sprintf('Robustness value: %g Current optimal: %g',val,fopt);
 rfprintf(status);
 
@@ -413,4 +412,3 @@ if(val<fopt)
 end
 
 end
-

@@ -5,7 +5,7 @@ function P = SetParam(P, ParamList, ParamValues)
 % 
 % Synopsis: P = SetParam(P, ParamList, ParamValues)
 % 
-% Input:
+% Inputs:
 %  - P          : the parameter set to modify ;
 %  - ParamList  : the list of parameters for which the value is changed or
 %                 created. If empty, nothing is done :
@@ -43,7 +43,7 @@ function P = SetParam(P, ParamList, ParamValues)
 %   Pr_5 = SetParam(Pr,'a',2);
 %   Pr_5.traj_ref            % should be all zero
 %   Pr_5.traj_to_compute     % should be [1,4,7]
-%   
+% 
 %See also GetParam CreateParamSet SetEpsi
 %
 

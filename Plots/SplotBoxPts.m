@@ -1,7 +1,7 @@
 function SplotBoxPts(P, proj, ipts, opt, col, alph)
 %SPLOTBOXPTS plots the points in the field pts of a parameter set and the
 % boxes they represent.
-%
+% 
 % Synopsis:  SplotBoxPts(P, proj, ipts, opt, col, alpha)
 % 
 % Inputs:
@@ -21,7 +21,7 @@ function SplotBoxPts(P, proj, ipts, opt, col, alph)
 %  - none, but a figure
 % 
 % Example (Lorentz84):
-%  See SConcat
+%   See SConcat
 %
 
 if(~isfield(P,'pts') || size(P.pts,2)==0)

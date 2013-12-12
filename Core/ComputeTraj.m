@@ -18,25 +18,25 @@ function Pf = ComputeTraj(Sys, P0, tspan, u)
 %             - tin : times when the input changes
 %             - values : values of the parameters
 % 
-% Outputs:
+% Output:
 %  -  Pf   Parameter set augmented with the field traj containing
 %          computed trajectories if the input is a param set. The field
 %          traj_ref is filled. If the P0 is an  array of parameter values,
 %          then Pf is an array of trajectories.
 % 
 % Examples (Lorentz84):
-%  CreateSystem;
-%  P = CreateParamSet(Sys,'a',[1,2]);
-% 
-%  P1 = Refine(P,2);
-%  P1 = ComputeTraj(Sys,P1,0:0.1:10);
-%  P1 = ComputeTraj(Sys,P1,0:0.1:10); % Here, nothing shows because nothing happens
-%  
-%  P2 = SetParam(P,'paramProp',2);
-%  P2 = SAddUncertainParam(P2,'paramProp');
-%  P2 = Refine(P2,2);
-%  P2 = ComputeTraj(Sys,P2,0:0.1:10);
-%  P2.traj_ref  % should be [1 2 1 2]
+%   CreateSystem;
+%   P = CreateParamSet(Sys,'a',[1,2]);
+%   
+%   P1 = Refine(P,2);
+%   P1 = ComputeTraj(Sys,P1,0:0.1:10);
+%   P1 = ComputeTraj(Sys,P1,0:0.1:10); % Here, nothing shows because nothing happens
+%   
+%   P2 = SetParam(P,'paramProp',2);
+%   P2 = SAddUncertainParam(P2,'paramProp');
+%   P2 = Refine(P2,2);
+%   P2 = ComputeTraj(Sys,P2,0:0.1:10);
+%   P2.traj_ref  % should be [1 2 1 2]
 % 
 %See also CreateParamSet Sselect SConcat SPurge
 %

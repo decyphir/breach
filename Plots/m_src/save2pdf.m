@@ -1,38 +1,40 @@
-%SAVE2PDF Saves a figure as a properly cropped pdf
+function save2pdf(pdfFileName, handle, dpi)
+%SAVE2PDF saves a figure as a properly cropped pdf (ie: with margins
+% cropped to match the figure size)
+% 
+% (c) Gabe Hoffmann, gabe.hoffmann@gmail.com
+% Written 8/30/2007
+% Revised 9/22/2007
+% Revised 1/14/2007
+% 
+% Synopsis: save2pdf(pdfFileName[, handle, dpi])
+% 
+% Inputs:
+%  - pdfFileName : Destination to write the pdf to.
+%  - handle      : (Optional, default=gcf) Handle of the figure to write to
+%                  a pdf. If omitted, the current figure is used. Note that
+%                  handles are typically the figure number.
+%  - dpi         : (Optional, default=150) Integer value of dots per inch
+%                  (DPI).  Sets resolution of output pdf. Note that 150
+%                  dpi is the Matlab default and this function's default,
+%                  but 600 dpi is typical for production-quality.
 %
-%   save2pdf(pdfFileName,handle,dpi)
-%
-%   - pdfFileName: Destination to write the pdf to.
-%   - handle:  (optional) Handle of the figure to write to a pdf.  If
-%              omitted, the current figure is used.  Note that handles
-%              are typically the figure number.
-%   - dpi: (optional) Integer value of dots per inch (DPI).  Sets
-%          resolution of output pdf.  Note that 150 dpi is the Matlab
-%          default and this function's default, but 600 dpi is typical for
-%          production-quality.
-%
-%   Saves figure as a pdf with margins cropped to match the figure size.
-
-%   (c) Gabe Hoffmann, gabe.hoffmann@gmail.com
-%   Written 8/30/2007
-%   Revised 9/22/2007
-%   Revised 1/14/2007
-
-function save2pdf(pdfFileName,handle,dpi)
 
 % Verify correct number of arguments
 error(nargchk(0,3,nargin));
 
 % If no handle is provided, use the current figure as default
-if nargin<1
+if(nargin<1)
     [fileName,pathName] = uiputfile('*.pdf','Save to PDF file:');
-    if fileName == 0; return; end
+    if(fileName == 0)
+        return;
+    end
     pdfFileName = [pathName,fileName];
 end
-if nargin<2
+if(nargin<2)
     handle = gcf;
 end
-if nargin<3
+if(nargin<3)
     dpi = 150;
 end
 
@@ -65,3 +67,5 @@ set(handle,'PaperUnits',prePaperUnits);
 set(handle,'Units',preUnits);
 set(handle,'PaperPosition',prePaperPosition);
 set(handle,'PaperSize',prePaperSize);
+
+end

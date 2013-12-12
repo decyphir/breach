@@ -5,7 +5,7 @@ function P = SDelUncertainParam(P, ParamList, Exception, Verbose)
 % 
 % Synopsis: P = SDelUncertainParam(P, ParamList[, Exception[, Verbose]])
 % 
-% Input:
+% Inputs:
 %   - P         : the parameter set to modify
 %   - ParamList : indexes or names of parameters to remove from P (excepted
 %                 if they are also in Exception). Indexes or names not

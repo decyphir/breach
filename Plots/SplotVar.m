@@ -1,32 +1,33 @@
 function SplotVar(P, i_var, ipts, opt, same_axe)
-%SPLOTVAR Plots trajectories variables separatly
-%
-% Synopsis:  SplotVar(P, [i_var[, ipts[, opt[, same_axe]]]])
-%
+%SPLOTVAR plots trajectories variables separatly
+% 
+% Synopsis:  SplotVar(P,[ i_var[, ipts[, opt[, same_axe]]]])
+% 
 % Inputs:
-%  -  P       : Parameter set. The trajectories must be computed or an
-%               error is thrown.
-%  -  i_var   : (Optional, default or empty=all variables) indices or names
-%               of the variables to plot
-%  -  ipts    : (Optional, default or empty=all trajectories) indices of
-%               the parameter vectors in P for which the trajectory must be
-%               plotted. For traces sets, it must set to [], so all traces
-%               will be plotted (otherwise, some traces may be not
-%               plotted).
-%  - opt      : (Optional) plotting options
-%  - same_axe : (Optional, default=0) boolean indicating if all variables
-%               must be plotted on the same axe.
-%
+%  - P       : Parameter set. The trajectories must be computed or an error
+%              is thrown.
+%  - i_var   : (Optional, default or empty=all variables) indices or names
+%              of the variables to plot
+%  - ipts    : (Optional, default or empty=all trajectories) indices of the
+%              parameter vectors in P for which the trajectory must be
+%              plotted. For traces sets, it must set to [], so all traces
+%              will be plotted (otherwise, some traces may be not plotted).
+%  - opt     : (Optional, default=empty) plotting options. If not defined
+%              or empty and if it exist a field traj_plot_opt in P, this
+%              field is considered for opt
+%  - ame_axe : (Optional, default=0) boolean indicating if all variables
+%              must be plotted on the same axe.
+% 
 % Output:
 %  - none, but a figure
 % 
 % Example (Lorentz84):
-%  CreateSystem;
-%  P = CreateParamSet(Sys,'x0', [-5, 5], 4);
-%  P = ComputeTraj(Sys,P,0:0.01:10);
-%  figure ; SplotVar(P)
-%  clf ; SplotVar(P,'x0')  % plot only x0
-%  clf ; SplotVar(P,[],1)  % plot only the first trajectory
+%   CreateSystem;
+%   P = CreateParamSet(Sys,'x0', [-5, 5], 4);
+%   P = ComputeTraj(Sys,P,0:0.01:10);
+%   figure ; SplotVar(P)
+%   clf ; SplotVar(P,'x0')  % plot only x0
+%   clf ; SplotVar(P,[],1)  % plot only the first trajectory
 % 
 %See also SplotBoxPts SplotPts SplotTraj SplotSensi
 %
