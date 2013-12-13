@@ -23,7 +23,7 @@ function [P, val] = SEvalProp(Sys, P, phis, taus, ipts, break_level, method, VER
 %                  are evaluated at all time points provided in taus. As
 %                  the two last possibilities may be confusing, it is
 %                  recommanded to use a cell array.
-%  - ipts        : (optional, default or empty=all parameter sets) Indices
+%  - ipts        : (Optional, default or empty=all parameter sets) Indices
 %                  of parameter vectors for which the formulas are evaluated.
 %  - break_level : (Optional, default=0) defines the depth of breaking of
 %                  the formulas. If lower or equal to 1, it is ignored. If
