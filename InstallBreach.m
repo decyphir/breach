@@ -1,5 +1,6 @@
 function InstallBreach
-% INSTALLBREACH Compiles C/C++ mex functions used by Breach. Needs only to be called once after an update of Breach
+%INSTALLBREACH compiles C/C++ mex functions used by Breach. Needs only to
+% be called once after an update of Breach
 
 cdr = pwd;
 dr = which('Breach');
@@ -9,7 +10,6 @@ dr = which('Breach');
 breach_dir = dr(1:end-9);
 breach_src_dir = [breach_dir filesep 'Core' filesep 'src']; 
 qmitl_src_dir  = [breach_dir filesep '@QMITL_Formula' filesep 'private' filesep 'src'];
-cvodes_src_dir = [breach_dir filesep 'Toolboxes' filesep 'sundials' filesep 'src'];
 
 % compile qmitl C functions
 
@@ -97,12 +97,27 @@ blitz_dir = [breach_dir filesep 'Toolboxes' filesep 'blitz'];
 cd(blitz_dir);
 CompileBlitzLib;
 
+% Compile mydiff
+
+cd([breach_dir filesep 'Toolboxes' filesep 'mydiff']);
+fprintf('mex mydiff_mex.cpp\n');
+try
+    mex -lginac mydiff_mex.cpp
+catch %#ok<CTCH>
+    warning('InstallBreach:noMydiffCompilation',...
+            ['An error occurs when compiling mydiff. Maybe GiNaC not available.\n'...
+            'Some functionnalities will not be available.']);
+    fprintf('\n'); % for a nice printing
+end
+
 % cd back and clean variable
 cd(cdr);
+
+end
     
 function qst = qwrap(st)
-  % necessary for dealing with £¨% spaces in dirnames...
-  
-  qst = ['''' st ''' '];
-  
-  
+% necessary for dealing with £¨% spaces in dirnames...
+
+qst = ['''' st ''' '];
+
+end
