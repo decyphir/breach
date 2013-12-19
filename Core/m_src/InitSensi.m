@@ -1,5 +1,5 @@
 function InitSensi(Sys, P)
-%INITSENSI Initializes Cvodes for sensitivity computation of system Sys
+%INITSENSI initializes Cvodes for sensitivity computation of system Sys
 % w.r.t. varying parameters in the set P. Options can be changed in the
 % field CVodesSensiOptions
 % 
