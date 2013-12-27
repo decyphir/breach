@@ -43,25 +43,23 @@ function [P, val] = SEvalProp(Sys, P, phis, taus, ipts, break_level, method, VER
 %          dimension of val is numel(props) x numel(ipts)
 % 
 % Example (Lorentz84):
-%  CreateSystem;
-%  P = CreateParamSet(Sys, 'F', [10, 20]);
-%  P = SetParam(P, 'the_threshold', 2);
-%  P = ComputeTraj(Sys, P, 0:.01:10);
-%  phi = QMITL_Formula('phi','ev_[0,1] (x0[t]>the_threshold)');
-%  [~,val] = SEvalProp(Sys, P, phi, 0)
-%  [P,val] = SEvalProp(Sys, P, phi, [3,7]);
-%  val
-%  idx_phi = find(strcmp('phi',P.props_names)); % find the index of phi in formula evaluations
-%  P.props_values(idx_phi).val % fist value is equal to val
-%  
-%  P = SEvalProp(Sys, P, phi, 0:0.01:10);
-%  PplotFormula(Sys, P, phi);
+%   CreateSystem;
+%   P = CreateParamSet(Sys, 'F', [10, 20]);
+%   P = SetParam(P, 'the_threshold', 2);
+%   P = ComputeTraj(Sys, P, 0:.01:10);
+%   phi = QMITL_Formula('phi','ev_[0,1] (x0[t]>the_threshold)');
+%   [~,val] = SEvalProp(Sys, P, phi, 0)
+%   [P,val] = SEvalProp(Sys, P, phi, [3,7]);
+%   val
+%   idx_phi = find(strcmp('phi',P.props_names)); % find the index of phi in formula evaluations
+%   P.props_values(idx_phi).val % fist value is equal to val
+%   
+%   P = SEvalProp(Sys, P, phi, 0:0.01:10);
+%   PplotFormula(Sys, P, phi);
 % 
 %See also QMITL_Formula DiscrimPropValues ComputeTraj Sselect PplotFormula
 %Spurge_props
 %
-
-%  SEvalProp(Sys, P, phi, 0:0.1:10, [], 1); % plots the evaluation
 
 % check arguments
 if ~exist('VERBOSE','var')

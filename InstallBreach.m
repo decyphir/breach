@@ -100,7 +100,7 @@ CompileBlitzLib;
 % Compile mydiff
 
 cd([breach_dir filesep 'Toolboxes' filesep 'mydiff']);
-fprintf('mex mydiff_mex.cpp\n');
+fprintf('mex -lginac mydiff_mex.cpp\n');
 try
     mex -lginac mydiff_mex.cpp
 catch %#ok<CTCH>

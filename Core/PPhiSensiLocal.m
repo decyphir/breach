@@ -40,7 +40,7 @@ function [M, val] = PPhiSensiLocal(Sys, P, phis, tspan, taus, params, ipts, stat
 %                times the highest sensitivity will be set to 0.
 %  - VERBOSE   : (Optional, default=true) Boolean indicating if the
 %                computation progress bar is shown.
-%
+% 
 % Outputs:
 %  - M   : the values of sensitivities. The dimension of M is
 %          numel(phis) x numel(params).

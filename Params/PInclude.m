@@ -10,12 +10,12 @@ function [include, outside] = PInclude(Pin, P, epsi)
 %   GetParam(P,'pp')*(1-epsi) <= GetParam(Pin,'pp')-GetEpsi(Pin,'pp')  &&
 %   GetParam(Pin,'pp')+GetEpsi(Pin,'pp') <= GetParam(P,'pp')*(1+epsi)
 % 
-% Synopsis: [include, outside] = PInclude(Pin, P [, epsi] )
+% Synopsis: [include, outside] = PInclude(Pin, P[, epsi])
 % 
 % Inputs:
 %  - Pin  : A parameter set which may contain many parameter vectors
 %  - P    : A parameter set with the same parameters than Pin
-%  - epsi : Optional, default=eps. Indicate the admissible relative error.
+%  - epsi : (Optional, default=eps) indicate the admissible relative error.
 % 
 % Outputs:
 %  - include : true if all parameter sets in Pin are included in a
