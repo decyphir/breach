@@ -1,53 +1,59 @@
-function [P, answer] = structdlg(P,title,prompt, default)
-  
- % helper function that opens a dialog window to edit the fields of a
- % given structure
-   
-   if (nargin == 1)
-     title = 'Edit params';
-   end
-   if (~exist('prompt'))
-     prompt= fieldnames(P);
-   end
-   
-   if (~exist('default'))
-     default_values = struct2cell(P);
-   elseif (isempty(default))
-       default_values = struct2cell(P);
-   else
-       default_values = default;
-   end     
-     
-   for i = 1:numel(prompt)
-     if isnumeric(default_values{i})
-       defaultanswer{i}= num2str(default_values{i});
-     elseif ~isstr(default_values{i}) 
-       defaultanswer{i}= '';
-     else
-       defaultanswer{i}=default_values{i};
-     end
-   end
-         
-   options.Resize='on';
-   options.WindowStyle='normal';
-   options.Interpreter='tex';
- 
-   answer = inputdlg(prompt,title ,1,defaultanswer,options); 
-   if isempty(answer)
-       P = [];
-       return
-   end
-   fnames = fieldnames(P);
-   for i = 1:numel(prompt)
-       %if (isstr(default_values{i}))
-       %  P.(fnames{i}) = answer{i}; 
-       %  continue;
-       %end
-       if (~strcmp(answer{i},'')&&~(isempty(answer{i})))
-         try 
-           P.(fnames{i}) = eval(answer{i});
-         catch
-           warndlg('Invalid value');
-         end
-       end
-   end
+function [P, answer] = structdlg(P, title, prompt, default)
+%STRUCTDLG is an helper function that opens a dialog window to edit the
+% fields of a given structure
+% 
+% Synopsis: [P, answer] = structdlg(P[, title[, prompt[, default]]])
+%
+
+% manage inputs
+if(nargin == 1)
+    title = 'Edit params';
+end
+if ~exist('prompt','var')
+    prompt = fieldnames(P);
+end
+
+if(~exist('default','var')||isempty(default))
+    default_values = struct2cell(P);
+else
+    default_values = default;
+end
+
+defaultanswer = cell(1,numel(prompt));
+for ii = 1:numel(prompt)
+    if isnumeric(default_values{ii})
+        defaultanswer{ii} = num2str(default_values{ii});
+    elseif ~ischar(default_values{ii})
+        defaultanswer{ii} = '';
+    else
+        defaultanswer{ii} = default_values{ii};
+    end
+end
+
+% do stuff
+
+options.Resize = 'on';
+options.WindowStyle = 'normal';
+options.Interpreter = 'tex';
+
+answer = inputdlg(prompt,title,1,defaultanswer,options);
+if isempty(answer)
+    P = [];
+    return;
+end
+fnames = fieldnames(P);
+for ii = 1:numel(prompt)
+    %if ischar(default_values{ii})
+    %  P.(fnames{i}) = answer{ii};
+    %  continue;
+    %end
+    if(~strcmp(answer{ii},'')&&~(isempty(answer{ii})))
+        try
+            P.(fnames{ii}) = eval(answer{ii});
+        catch %#ok<CTCH>
+            warndlg('Invalid value');
+        end
+    end
+end
+
+end
