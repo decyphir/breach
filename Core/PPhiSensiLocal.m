@@ -6,7 +6,9 @@ function [M, val] = PPhiSensiLocal(Sys, P, phis, tspan, taus, params, ipts, stat
 % Inputs:
 %  - Sys       : the system
 %  - P         : a parameter set. It must contain a field pts or an error
-%                is thrown. It may contain many parameter vectors.
+%                is thrown. It may contain many parameter vectors. The
+%                trajectories does not need to be computed, nor the
+%                evaluation of phis.
 %  - phis      : array of QMITL_Formula defining the properties for which
 %                the sensitivity is computed.
 %  - tspan     : time point(s) for trajectories computation. May be not
