@@ -83,7 +83,7 @@ if(numPparam~=numel(Pin.ParamList)) % check that number of parameter is the same
 end
 
 if(nargin<=2)
-    epsi = eps;
+    epsi = 2*eps; % "times 2" because we got two operations (P.pts+/-P.epsi and Pin.pts+/-Pin.epsi)
 end
 
 numPdim = numel(P.dim);
