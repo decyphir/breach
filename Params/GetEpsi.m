@@ -1,79 +1,50 @@
 function [EpsiValues, EpsiNames] = GetEpsi(P,ParamList)
-% GETEPSI get the epsi of parameters in a parameter set. Each line contains
-% the epsi of one parameter. The function return an empty set if a
-% parameter name or a parameter indice is not valid.
-%
+%GETEPSI gets the epsi of parameters in a parameter set. Each line contains
+% the epsi of one parameter. The function does not provide a value for
+% parameter name or indice not valid or not uncertain.
+% 
 % Synopsis: [EpsiValues, EpsiNames] = GetEpsi(P, ParamList)
-%
-% Input:
-%  - P         : the parameter set
-%  - ParamList : the list of parameter for which we get the epsilon. if it
+% 
+% Inputs:
+%  - P         : the parameter set. It may contain many parameter vectors.
+%  - ParamList : the list of parameter for which we get the epsilon. If it
 %                is empty, nothing is done.
 %
-% Output:
-%  - EpsiValues : the values of the epsilon for the uncertain parameters
-%  - EpsiNames  : the name of uncertain parameters for which the epsilon
-%                 has been provided in EpsiValue
-%
-% Example (for Lorenz84 system):
-%
-%    CreateSystem;
-%    P = CreateParamSet(Sys, {'a', 'b'}, [0 10; 0 5]);
-%    Pr = Refine(P, 3);
-%    val = GetEpsi(Pr, 'a'); % here the epsi value of a is always the same
-%    [val,epsi] = GetEpsi(Pr, {'F','b','blah'}); % epsi is 'b', and val
-%                            % contains its epsilon value
-%
+% Outputs:
+%  - EpsiValues : an array of size numel(EpsiNames) x size(P.pts,2)
+%                 containing the values of the epsi for the uncertain
+%                 parameters.
+%  - EpsiNames  : cell array containing the name of uncertain parameters
+%                 for which the epsilon has been provided in EpsiValue.
+% 
+% Example (Lorenz84):
+%   CreateSystem;
+%   P = CreateParamSet(Sys, {'a','b'}, [0,9;0,5]);
+%   P = Refine(P, 3);
+%   val = GetEpsi(P, 'a') % epsi value of a is always the same (ie: 1.5)
+%   [val,names] = GetEpsi(P, {'F','b','blah'}) % names is 'b', val contains
+%                                             % its epsi value
+% 
 %See also GetParam SetEpsi SAddUncertainParam SDelUncertainParam
 %
 
+EpsiValues = [];
+EpsiNames = {};
+
+if(ischar(ParamList) || iscell(ParamList))
+    ParamList = FindParam(P,ParamList);
+end
+
 if isempty(ParamList)
-    EpsiValues = [];
-    EpsiNames = {};
+    return; % here, we manage empty array as well as empty cell array
 end
 
-% case 1 : the ParamList argument is an array char of one parameter
-% name
-if ischar(ParamList)
-    ind = FindParam(P,ParamList);
-    ind = P.dim==ind;
-    if ~isempty(ind) %check epsi existence
-        EpsiValues = P.epsi(ind,:);
-        EpsiNames = {ParamList};
-    else
-        EpsiValues = [];
-        EpsiNames = {};
-    end
-    return
-
-% case 2 : the ParamList parameter is a list of integer
-elseif isnumeric(ParamList)
-    %check if we ask for unexisting or not unknown parameters
-    if ~isempty(setdiff(ParamList,P.dim))
-        EpsiValues = [];
-        return
-    end
-    %initialize EpsiValues
-    EpsiValues = zeros(numel(ParamList),size(P.pts,2));
-    %copy the values
-    for i = 1:numel(ParamList)
-        ind = P.dim==ParamList(i);
-        EpsiValues(i,:) = P.epsi(ind,:);
-    end
-    return
-
-% case 3 : the ParamList parameter is a list of parameter name
-elseif iscell(ParamList)
-    inds = FindParam(P,ParamList);
-    [inds,~,i_dim] = intersect(inds,P.dim,'stable');
-    %initialization
-    if isempty(inds)
-        EpsiValues = [];
-        EpsiNames = {};
-        return;
-    end
-    EpsiValues = P.epsi(i_dim,:);
-    EpsiNames = P.ParamList(inds);
-end
+%keep only valid parameters
+[valid,idx_epsi] = ismember(ParamList,P.dim);
+ParamList = ParamList(valid);
+idx_epsi = idx_epsi(valid); % indexes in P.epsi
+%set EpsiNames and EpsiValues
+EpsiNames = P.ParamList(ParamList);
+EpsiValues = P.epsi(idx_epsi,:);
 
 end
