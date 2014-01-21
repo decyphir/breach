@@ -166,7 +166,7 @@ for np = 1:numel(phis) % for each property
         end
         
         if(VERBOSE)
-            while(floor(60*i_pt/numel(ipts))>iprog)
+            while(floor(60*ii/numel(ipts))>iprog)
                 fprintf('^');
                 iprog = iprog+1;
             end

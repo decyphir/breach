@@ -1,55 +1,55 @@
 function P = Refine(P0, delta)
-%REFINE Generates grid points in a N-dimensional parameter set
-%
+%REFINE generates a grid points in a N-dimensional parameter set.
+% 
 % Synopsis: P = Refine(P0, delta)
-%
+% 
 % Inputs:
 %   - P0    : is a parameter set which may contain many parameter vectors
-%
 %   - delta : is a vector of dimension numel(P0.dim) x 1. It also may be a
-%             scalar, and, in this case, it is interpreted as vector with
-%             all components equal to its value. The ith line corresponds
-%             to the ith parameter in P0.dim. Its values can be either
-%             integer or real. If it is integer, P has delta(i) points in
-%             dimension i. If it is real (ie: any(floor(delta) ~= delta) is
-%             true), then delta is interpreted as a distance and P is
-%             divided into points that are at distance delta from one
-%             another. If any value in delta in lower or equal to 0, P0 is
-%             answered.
-%
+%             scalar. In this case, it is interpreted as a column vector
+%             with all components equal to its value. The ith line
+%             corresponds to the ith parameter in P0.dim. Its values can be
+%             either integers or reals. If they are integers, P has
+%             delta(i) points in dimension i. If they are real (ie:
+%             any(floor(delta)~=delta) is true), then delta is interpreted
+%             as a distance and P is divided into points that are at
+%             distance delta from one another. If any value in delta in
+%             lower or equal to 0, P0 is answered.
+% 
 % Output:
-%  - P  is the generated parameter set
-%
-% This function is better understood through examples. First, create
-% some parameter set, 2 dimensions ranging from -1 to 1:
-%
-% Examples (lorentz84):
+%  - P : is the generated parameter set
+% 
+% Example (lorentz84):
+%   %First, create some parameter set, 2 dimensions ranging from 0 to 2:
+%   
 %   CreateSystem;
 %   P0 = CreateParamSet(Sys, [1, 2], [0, 2; 0, 2]);
-%
+%   
 %   %Then :
-%
+%   
 %   P = Refine(P0, 2); % creates a 2x2 grid in [0 2 0 2]
-%   P.pts   % show the generated parameter vectors
-%
+%   P.pts              % show the generated parameter vectors
+%   
 %   P = ComputeTraj(Sys,P0,1:0.1:10);
-%   P = Refine(P, [3;3]);  % creates a 3x3 grid
-%   P.traj_ref     % should be [0 0 0 0 1 0 0 0 0]
-%   P.traj_to_compute  % should be [1 2 3 4 6 7 8 9]
+%   P = Refine(P, [3;3]);   % creates a 3x3 grid
+%   P.traj_ref              % should be [0 0 0 0 1 0 0 0 0]
+%   P.traj_to_compute       % should be [1 2 3 4 6 7 8 9]
 %   P.traj
-%
-%   P = Refine(P0, .1); % creates a grid with resolution (.1,.1)
-%   P.pts(:,[1,2,3,19,20,21,22,400])
-%
+%   
+%   P = Refine(P0, .1);    % creates a grid with resolution (.1,.1)
+%   P.pts(:,[1,2,3,19,20,21,22,400])  % show some parameter vectors: the
+%                                     % difference between to parameter
+%                                     % vectors is 0.1
+%   
 %   Refine(P0, [.1;.2]) % creates a grid with resolution (.1,.2) (works
 %                       % well as .1 and .2 are divisor of 2*P.epsi)
-%
+%   
 %   P = Refine(P0, [1.3;1.3]); % creates a grid with "resolution (1.3,1.3)"
 %   P.pts    % pay attention here to the values !
-%
-%   P = Refine(P0, [2.1 2.2]);   % returns P0:
+%   
+%   P = Refine(P0, [2.1;2.2]);   % returns P0:
 %   all(size(P.pts)==size(P0.pts)) & all((P.pts==P0.pts)  % true
-%
+% 
 %See also CreateParamSet RandomLogRefine QuasiRefine SAddUncertainParam
 %SetEpsi
 %
