@@ -23,17 +23,10 @@ if isfield(Sys,'CVodesSensiOptions')
 else
     AbsTol = Sys.CVodesOptions.AbsTol;
     if isscalar(AbsTol)
-        pscales = AbsTol*1e6*ones(Ns,1);
+        pscales = AbsTol*1e6*ones(1,Ns); %NM: guess that pscales is a row
     else
-        if isscalar(AbsTol)
-            AbsTol = ones(1,Sys.DimP)*AbsTol;
-        end
-        pscales = ones(Ns,1);
-        %if ~isempty(ix0)
-            pscales(1:numel(find(dims<=N))) = AbsTol(dims(dims<=N))*1e6;
-        %else
-        %    pscales(dims>N) = 1;
-        %end
+        pscales = ones(1,Ns);
+        pscales(1:numel(ix0)) = AbsTol(ix0)*1e6;
     end
     method = 'Simultaneous';
     FSAoptions = CVodeSetFSAOptions('SensErrControl', 'on',...
