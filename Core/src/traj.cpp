@@ -671,7 +671,7 @@ void trajectory::ComputeTraj(Array1D& tspan) {
 
 			/* Integrate system until tout */
 
-			while (1) {
+			while (status>=0) {
 
 				/* Integrate one step */
 #if _DEBUG >= 3
@@ -681,12 +681,9 @@ void trajectory::ComputeTraj(Array1D& tspan) {
 
 				/* give up trajectory on CVode error */
 				if (status < 0) {
-					cout << "CVodes error, ending computation of current trajectory before tend." << endl;
-					nb_points = i;
-					tout =tret;
-					(*X).resizeAndPreserve(N,nb_points);
-					(*U).resizeAndPreserve(dimu,nb_points);
-					(*time).resizeAndPreserve(nb_points);
+					cout << "CVodes error status" << status << ": traj values defaulted to 0 - needless to say, the result is unreliable." << endl;
+					tret = tout;
+					x=0;
 				}
 
 
@@ -711,10 +708,10 @@ void trajectory::ComputeTraj(Array1D& tspan) {
 
 					switch (itol) {
 					case CV_SS:
-						status = CVodeReInit(cvode_mem, f, tret,y, itol, reltol, &Sabstol);
+						CVodeReInit(cvode_mem, f, tret,y, itol, reltol, &Sabstol);
 						break;
 					case CV_SV:
-						status = CVodeReInit(cvode_mem, f, tret,y, itol, reltol, NV_abstol);
+						CVodeReInit(cvode_mem, f, tret,y, itol, reltol, NV_abstol);
 						break;
 					}
 					CVodeSetInitStep(cvode_mem,h);
@@ -1462,8 +1459,8 @@ void trajectory::ComputeTrajSensi(Array1D& tspan) {
 			CVodeSetStopTime(cvode_mem,tout);
 			//	tlast = tret;
 
-
-			while (1) {
+			status = 1;
+			while (status>=0) {
 
 #if _DEBUG>=3
 				cout << "Minor Step tret=" << tret <<  endl;
@@ -1476,29 +1473,25 @@ void trajectory::ComputeTrajSensi(Array1D& tspan) {
 
 				if (status < 0) {
 
+#if _DEBUG>=3
 					cout << "aie, problem." << endl;
 					cout << "status (see cvodes guide):" << status << endl;
 					cout << "traj no: " << j << endl;
 					cout << "tout:" << tout << endl;
 					cout << "p:" << p << endl;
 					cout << "x:" << x << endl;
-#if _DEBUG>=3
 					cout << "time:" << *time << endl;
 					cout << "X:" << *X << endl;
 					cout << "XS:" << *XS << endl;
 					cout << "U:" << *U << endl;
 #endif
 					CVodeGetDky(cvode_mem, tout, 1, y);
-					cout << "dx:" << x << endl;
 					cout << "CVODES failed for some reason. Yep. Status= " << status << endl;
-					cout << "Ending computation of current trajectory before tend." << endl;
-					nb_points = i;
-					tout=tret;
+					cout << "current trajectory values and sensitivities defaulted to 0. Needless to say, probably not good." << endl;
 
-					(*X).resizeAndPreserve(N,nb_points);
-					(*XS).resizeAndPreserve(N*Ns,nb_points);
-					(*U).resizeAndPreserve(dimu,nb_points);
-					(*time).resizeAndPreserve(nb_points);
+					tret=tout;
+					x=0;
+					xS=0;
 				}
 
 

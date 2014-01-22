@@ -1313,7 +1313,14 @@ fnames = fieldnames(handles.properties);
 content={};
 
 for i = 1:numel(fnames)
-    st = disp(handles.properties.(fnames{i}),-1);
+    try 
+        st = disp(handles.properties.(fnames{i}),-1);
+    catch % a common issue is backward incompatibility - trying using RecoverFormula 
+        warning('Likely a backward compatibility issue, trying to recover formula.');
+        handles.properties.(fnames{i})= RecoverFormula(handles.properties.(fnames{i}));
+        st = disp(handles.properties.(fnames{i}),-1);
+    end
+    
     iprop = find_prop(fnames{i},  handles.working_sets.(handles.current_set));
     if (iprop)
         content = {content{:}, ['*' fnames{i} ': ' st]};

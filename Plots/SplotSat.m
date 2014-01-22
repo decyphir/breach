@@ -2,11 +2,6 @@ function [P, val] =  SplotSat(Sys, P, phis, depth, tau, ipts)
 %SplotSat computes and plots the satisfaction function wrt time of
 % properties for computed trajectories
 % 
-% 
-% TODO: THIS FUNCTION SHOULD BE USED ONLY TO PLOT, NOT TO COMPUTE
-% PROPERTIES SATISFACTIONS !!!
-% 
-% 
 % Synopsis: [Pf, val] = SplotSat(Sys, Ptraj, phis[, depth[, tau[, ipts]]])
 % 
 % Inputs:

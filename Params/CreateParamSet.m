@@ -78,11 +78,12 @@ if exist('Param','var')
     
 elseif(~isfield(Sys,'type')||(Sys.DimX==Sys.DimP))
     dim = 1:size(pts,1); %All the parameters are varying
+    ptsun = pts(dim);
+    epsi = zeros(numel(dim),1);
+    epsi(ptsun~=0) = abs(ptsun(ptsun~=0)/10);
+    epsi(ptsun==0) = 1;
     ParamList = Sys.ParamList;
-    epsi = zeros(size(pts,1),1);
-    epsi(pts~=0,1) = abs(pts(pts~=0)/10);
-    epsi(pts==0,1) = 1;
-    
+
 else
     switch(Sys.type)
         case 'Breach'
@@ -95,7 +96,9 @@ else
     epsi(ptsun~=0,1) = abs(ptsun(ptsun~=0)/10);
     epsi(ptsun==0,1) = 1;
     ParamList = Sys.ParamList;
+    
 end
+
 
 P.DimX = Sys.DimX;
 P.DimP = Sys.DimP;
