@@ -137,6 +137,7 @@ switch(numel(proj))
                 x = P.traj(ii).X(proj(1),time>=t0)*rescale;
                 y = P.traj(ii).X(proj(2),time>=t0)*rescale;
                 plot(x,y,opt{:});
+                plot(x(1),y(1),'xr');
             end
         end
         %drawnow
@@ -165,17 +166,18 @@ switch(numel(proj))
                 y = P.traj(ii).X(proj(2),time>=t0)*rescale;
                 z = P.traj(ii).X(proj(3),time>=t0)*rescale;
                 plot3(x,y,z,opt{:});
+                plot3(x(1),y(1),z(1),'xr');
             end
             %drawnow
         end
 end
 
 grid on;
-if(t0==0)&&(numel(proj)>1)
-    SplotPts(P,proj,ipts);
-    if isfield(P,'Xf')
-        SplotXf(P,proj,ipts);
-    end
-end
+%if(t0==0)&&(numel(proj)>1)
+%    SplotPts(P,proj,ipts);
+%    if isfield(P,'Xf')
+%        SplotXf(P,proj,ipts);
+%    end
+%end
 
 end

@@ -73,7 +73,6 @@ end
   cs.set_param('StopTime', 'tspan(end)');   % Stop time 
 
 % Data Import/Export pane
-  cs.set_param('DSMLoggingName', 'dsmout');   % Data stores logging name 
   cs.set_param('ExternalInput', '[t__, u__]');   % Input 
 % cs.set_param('FinalStateName', 'xFinal');   % Final states 
   cs.set_param('InspectSignalLogs', 'off');   % Record and inspect simulation output 
@@ -84,7 +83,8 @@ end
   cs.set_param('SignalLoggingName', 'logsout');   % Signal logging name 
 
   if (~verLessThan('matlab','R2011a'))
-    cs.set_param('SignalLoggingSaveFormat', 'Dataset');   % Signal logging format 
+      cs.set_param('DSMLoggingName', 'dsmout');   % Data stores logging name
+      cs.set_param('SignalLoggingSaveFormat', 'Dataset');   % Signal logging format 
     simfn = 'sim_breach';
   else
     simfn = 'sim_breach_old_ver';   % call a different sim function for older versions of Simulink 

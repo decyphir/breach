@@ -1600,7 +1600,7 @@ function new_plot= plot_param(handles,ax)
       SplotTraj(handles.TrajSet, param_to_plot,handles.current_pts, handles.traj_opt);
       children = get(gca, 'Children');
       if (numel(param_to_plot)>1)
-        new_plot=  children(1:3);
+        new_plot=  children(1:2);
       else
         new_plot=  children(1);
       end
