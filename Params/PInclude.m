@@ -21,11 +21,11 @@ function [include, outside, badParam] = PInclude(Pin, P, epsi)
 % Outputs:
 %  - include  : true if all parameter sets in Pin are included in a
 %               parameter set of P, false otherwise.
-%  - info     : provides more details if Pin is not included in P. If
-%               Pin.ParamList is not included in P.ParamList, info is set
-%               to -1. Otherwise, info indicates the indexes of the
+%  - outside  : provides more details if Pin is not included in P. If
+%               Pin.ParamList is not included in P.ParamList, outside is
+%               set to -1. Otherwise, outside indicates the indexes of the
 %               parameter vectors in Pin which are not included in P. If
-%               Pin is included in P, info is set to 0.
+%               Pin is included in P, outside is set to 0.
 %  - badParam : name of the parameter which are not in the intervals
 %               defined by P in at least one parameter vector of Pin.
 % 
