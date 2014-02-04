@@ -1,7 +1,8 @@
 %% Init system and nominal trajectory (in P0)
 
-tuto_simulink_system;
-close;
+init_autotrans;
+P0 = CreateParamSet(Sys);
+P0 =  ComputeTraj(Sys, P0, Sys.tspan)
 
 %%  define property phi1
 
@@ -19,29 +20,30 @@ P0 = SetParam(P0, params_phi.names, params_phi.values);
 
 % Eval satisfaction function for phi1, P0 and P0.traj at time tau=0
 
-val = QMITL_Eval(Sys, phi1, P0, P0.traj);
+val = QMITL_Eval(Sys, phi1, P0, P0.traj, tau);
 
-% plot satisfaction function for all tau>0
-
+% computes and plots satisfaction function for all tau>0
 figure;
 SplotSat(Sys, P0, phi1 );
 pause  
-% plot satisfaction function with sub formula 
 
+% plot satisfaction function with sub formula 
 figure;
 depth = 3;
 SplotSat(Sys, P0, phi1, depth);
 pause
+
 % plot satisfaction function as a function of the system input
-
 Pu = CreateParamSet(Sys, {'dt_u0'}, [0 10], 100); % 100 samples with dt_u0 in range [0 10]
-Pu = ComputeTraj(Sys, Pu, Sys.tspan); 
+Pu = ComputeTraj(Sys, Pu, Sys.tspan);   % Pu.traj now contains 100 trajectories 
 
-Pu = SetParam(Pu, params_phi.names, params_phi.values);
-Pu = SEvalProp(Sys, Pu, phi1);
-
+Pu = SetParam(Pu, params_phi.names, params_phi.values); % set property parameters vmax and rpm_max
+[Pu, valu] = SEvalProp(Sys, Pu, phi1);  % SEvalProp calls QMITL_Eval for all trajectories in Pu
+                                        % valu(i) contains the satisfaction
+                                        % value of traj(i)
+                                        
 figure;
-SplotProp(Pu, phi1);
+SplotProp(Pu, phi1); 
 
 
 

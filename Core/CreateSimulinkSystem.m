@@ -278,7 +278,7 @@ end
   end
   
   Sys.type= 'Simulink';
-  eval(['Sys.sim = @' simfn]); 
+  eval(['Sys.sim = @' simfn ';']); 
   Sys.mdl= [mdl '_breach'];
   Sys.Dir= pwd;
   

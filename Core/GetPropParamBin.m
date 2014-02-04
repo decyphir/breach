@@ -1,4 +1,4 @@
-function [p, rob] = GetPropParamBin(Sys, phi, P, params, monotony, p_interval, p_tol, traj)
+function [p, rob] = GetPropParamBin(Sys, phi, P, params, monotony, p_interval, p_tol, traj,opt)
 %GETPROPPARAMBIN search values for parameters in a formula phi so that phi
 % is satisfied by a set of traces - assumes monotonicity, to be specified
 % by the user
@@ -9,7 +9,7 @@ function [p, rob] = GetPropParamBin(Sys, phi, P, params, monotony, p_interval, p
 %  - Sys        : is a system structure for Breach
 %  - phi        : is an STL (QMITL) property
 %  - P          : is a Breach set of parameters with param values for phi
-%  - param      : is a cell of property param names to find
+%  - params     : is a cell of property param names to find
 %  - monotony   : is an array specifying the monotonicity of phi wrt each
 %                 parameter. should be maximized (optim[i] = j) or
 %                 minimized (optim[i] = -1); in the case of multiple
@@ -24,9 +24,18 @@ function [p, rob] = GetPropParamBin(Sys, phi, P, params, monotony, p_interval, p
 %  - traj       : is an array of trajectories
 % 
 % Outputs:
-%  - p   : 
-%  - rob : 
+%  - p   :  parameter values for phi
+%  - rob :  corresponding robust satisfaction
 %
+
+if exist('opt','var')    
+    if ~isfield(opt,'verbose')
+        opt.verbose=1;
+    end
+else
+  opt.verbose=1;
+end
+
 
 % NM: I assume that p_interval is a 2D array
 num_params = numel(params);
@@ -48,44 +57,50 @@ Pw = SetParam(P, params, pw');
 valb = QMITL_Eval(Sys, phi, Pb, traj, 0);
 valw = QMITL_Eval(Sys, phi, Pw, traj, 0);
 
-
 %% Check if everybody is sat
 
 if all(valw>=0)
     p = pw;
     rob = min(valw);
-    fprintf(['\n Warning: Interval contains only sat params, result may be not tight. ' ...
-        'Try larger parameter region. \n']);
+    if opt.verbose
+        fprintf(['Warning: Interval contains only sat params, result may be not tight. ' ...
+            'Try larger parameter region. \n']);
+    end
     return;
     
 end
 
+%% Check if at least somebody is sat
 if any(valb<0)
     p = pb;
     rob = max(valb);
-    fprintf(['\n Error: Interval contains only unsat params, result not tight. Try larger parameter ' ...
+    if opt.verbose
+        fprintf(['Error: Interval contains only unsat params, result not tight. Try larger parameter ' ...
         'region. \n']);
+    end
     return;
 end
 
 traj = traj(valw<0);
-% Now we know that there are satisfiable values
+% Now we know that there are satisfying and unsatisfying values
 
 val = min(valb);
 rob = inf;
 p = zeros(1,num_params); % initialize p
 for ii = 1:num_params      % optimize independently in the order
     % given in params
-    
-    fprintf('\nOptimizing %s ', params{ii});
-    
+    if opt.verbose
+        fprintf('Optimizing %s ', params{ii});
+    end
     timeout = 100;
     pimax = p_interval(ii,2);
     pimin = p_interval(ii,1);
     
     err = p_tol(ii);
     
-    rfprintf_reset();
+    if opt.verbose
+        rfprintf_reset();
+    end
     while (abs(pimax-pimin)>err)
         
         p_i = (pimax+pimin)/2;
@@ -96,8 +111,9 @@ for ii = 1:num_params      % optimize independently in the order
         
 %       fprintf('  pimin: %g  pimax: %g p_i: %g val %g \n', pimin, pimax, p_i, val);
         res = num2str(p_i);
-        rfprintf(res);
-        
+        if opt.verbose
+            rfprintf(res);
+        end
         if(val>0)
             rob = min(val,rob);
             if(monotony(ii)<0)
@@ -132,7 +148,8 @@ for ii = 1:num_params      % optimize independently in the order
         end
     end
     Pb = SetParam(Pb, params(ii),p(ii)');
+    if opt.verbose
+        fprintf('\n');
+    end
 end
-fprintf('\n');
-
 end

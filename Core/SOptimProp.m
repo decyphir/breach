@@ -367,7 +367,7 @@ end
 
 if(val<0)
     found = val;
-    return;
+%    return;
 end
 
 if(val<fopt)
