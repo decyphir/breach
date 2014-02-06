@@ -8,10 +8,10 @@ function params = PplotParamLog(P, varargin)
 %  - params : (Optional, default or empty=P.ParamList) names or indexes in
 %             P of the parameter to be plotted. Unvalid parameter names or
 %             indexes are not plotted
-%  - Pall   : (Optional, default=min and max of values) parameter set used
-%             to define the lower and upper bound of the plot of each
-%             parameter. It must contain only one parameter vector. It is
-%             used only for parameter which are uncertain parameter of
+%  - Pall   : (Optional, default or empty=min and max of values) parameter
+%             set used to define the lower and upper bound of the plot of
+%             each parameter. It must contain only one parameter vector. It
+%             is used only for parameter which are uncertain parameter of
 %             Pall. Otherwise, the minimal and maximal value of parameter
 %             in P is considered.
 %  - method : (Optional, default='color') string describing the method used
@@ -86,7 +86,7 @@ colormap(my_map); % define the color map associated to the figure
 for ii = 1:nParam
     param = params{ii};
     val_log = log10(GetParam(P,param)); % param value on log scale
-    if( exist('Pall','var') && ~isempty(GetEpsi(Pall,param)) )
+    if( exist('Pall','var') && ~isempty(Pall) && ~isempty(GetEpsi(Pall,param)) )
         ptsAll = GetParam(Pall,param);
         epsiAll = GetEpsi(Pall,param);
         vl_min = log10(ptsAll-epsiAll);
@@ -209,7 +209,7 @@ for ii = 1:nParam
 
     subplot(numel(P.ParamList),1,ii);
     plot(val,ones(1,numel(val)),'*');
-    if exist('Pall','var')
+    if(exist('Pall','var')&&~isempty(Pall))
         epsiAll = GetEpsi(Pall,param);
         if ~isempty(epsiAll)
             ptsAll = GetParam(Pall,param);

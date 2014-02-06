@@ -13,35 +13,38 @@ qmitl_src_dir  = [breach_dir filesep '@QMITL_Formula' filesep 'private' filesep 
 
 % compile qmitl C functions
 
+MEX = 'mex ';
+FLAGS = ' ';
+
 try 
     cd(qmitl_src_dir);
     
-    fprintf('mex -outdir .. lemire_engine.c\n');
+    fprintf([MEX FLAGS '-outdir .. lemire_engine.c\n']);
     mex -outdir .. lemire_engine.c
-    fprintf('mex -outdir .. lemire_nd_engine.c\n');
+    fprintf([MEX FLAGS '-outdir .. lemire_nd_engine.c\n']);
     mex -outdir .. lemire_nd_engine.c
-    fprintf('mex -outdir .. lemire_nd_maxengine.c\n');
+    fprintf([MEX FLAGS '-outdir .. lemire_nd_maxengine.c\n']);
     mex -outdir .. lemire_nd_maxengine.c
-    fprintf('mex -outdir .. lemire_nd_minengine.c\n');
+    fprintf([MEX FLAGS '-outdir .. lemire_nd_minengine.c\n']);
     mex -outdir .. lemire_nd_minengine.c
-    fprintf('mex -outdir .. until_inf.c\n');
+    fprintf([MEX FLAGS '-outdir .. until_inf.c\n']);
     mex -outdir .. until_inf.c
-    fprintf('mex -outdir .. lim_inf.c\n');
+    fprintf([MEX FLAGS '-outdir .. lim_inf.c\n']);
     mex -outdir .. lim_inf.c
-    fprintf('mex -outdir .. lim_inf_inv.c\n');
+    fprintf([MEX FLAGS '-outdir .. lim_inf_inv.c\n']);
     mex -outdir .. lim_inf_inv.c
-    fprintf('mex -outdir .. lim_inf_indx.c\n');
+    fprintf([MEX FLAGS '-outdir .. lim_inf_indx.c\n']);
     mex -outdir .. lim_inf_indx.c
-    fprintf('mex -outdir ../../../Core/m_src ltr.c\n');
+    fprintf([MEX FLAGS '-outdir ../../../Core/m_src ltr.c\n']);
     mex -outdir ../../../Core/m_src/ ltr.c
-    fprintf('mex -outdir ../../../Core/m_src rtr.c\n');
+    fprintf([MEX FLAGS '-outdir ../../../Core/m_src rtr.c\n']);
     mex -outdir ../../../Core/m_src/ rtr.c
     
     cd robusthom;
     CompileRobusthom;
     
 catch
-   error('Problem compiling STL monitoring stuff.'); 
+   error('InstallBreach:compilingSTLError','Problem compiling STL monitoring stuff.'); 
 end
 
 % compiles cvodes common stuff
@@ -91,13 +94,13 @@ sundials_src_files = [
 out_dir = qwrap([breach_src_dir  filesep 'cv_obj']);
 
 % Compose and execute compilation command for CVodes common files.
-compile_cvodes = ['mex -c -outdir ' out_dir ' ' sundials_inc_flags ' ' sundials_src_files ];
+compile_cvodes = [MEX FLAGS '-c -outdir ' out_dir ' ' sundials_inc_flags ' ' sundials_src_files ];
 fprintf(regexprep(compile_cvodes,'\','\\\\'));
 fprintf('\n');
 try 
     eval(compile_cvodes);
 catch
-    error('Problem compiling CVodes');
+    error('InstallBreach:compilingCVOdesError','Problem compiling CVodes');
 end
 % Compile blitz library
 
@@ -106,12 +109,12 @@ cd(blitz_dir);
 try 
     CompileBlitzLib;
 catch
-   error('Compilation problem with Blitz++.'); 
+   error('InstallBreach:compilingBlitzError','Compilation problem with Blitz++.'); 
 end
 % Compile mydiff
 
 cd([breach_dir filesep 'Toolboxes' filesep 'mydiff']);
-fprintf('mex -lginac mydiff_mex.cpp\n');
+fprintf([MEX FLAGS '-lginac mydiff_mex.cpp\n']);
 try
     mex -lginac mydiff_mex.cpp
 catch %#ok<CTCH>
