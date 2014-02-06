@@ -1,7 +1,7 @@
 function [EpsiValues, EpsiNames] = GetEpsi(P,ParamList)
-%GETEPSI gets the epsi of parameters in a parameter set. Each line contains
-% the epsi of one parameter. The function does not provide a value for
-% parameter name or indice not valid or not uncertain.
+%GETEPSI gets the epsi of parameters in a parameter set. The function does
+% not provide a value for parameter name or indice not valid or not
+% uncertain.
 % 
 % Synopsis: [EpsiValues, EpsiNames] = GetEpsi(P, ParamList)
 % 
@@ -13,9 +13,12 @@ function [EpsiValues, EpsiNames] = GetEpsi(P,ParamList)
 % Outputs:
 %  - EpsiValues : an array of size numel(EpsiNames) x size(P.pts,2)
 %                 containing the values of the epsi for the uncertain
-%                 parameters.
+%                 parameters. Each line contains the epsi for one
+%                 parameter.
 %  - EpsiNames  : cell array containing the name of uncertain parameters
-%                 for which the epsilon has been provided in EpsiValue.
+%                 for which the epsilon has been provided in EpsiValue. It
+%                 is empty if ParamList is empty or contains only not valid
+%                 or fixed parameters.
 % 
 % Example (Lorenz84):
 %   CreateSystem;
