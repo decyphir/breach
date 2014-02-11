@@ -1529,7 +1529,7 @@ function new_plot= plot_param(handles,ax)
       end
                  
       
-      ylabel(short_disp(prop,18),'Interpreter','none');
+      ylabel(get_id(prop),'Interpreter','none');
       xlabel(['time']);
             
       new_plot = plot(phi_tspan*time_mult, phi_val); 

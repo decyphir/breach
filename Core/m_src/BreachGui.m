@@ -1423,37 +1423,42 @@ else
     set(handles.button_plot_selected, 'String', 'Plot selected')
 end
 
-% menu for param pts plot
-
-ParamList = handles.working_sets.(handles.current_set).ParamList;
-dim = handles.working_sets.(handles.current_set).dim;
-
-set(handles.popup_pts1,'String',ParamList);
-handles.current_plot_pts{1} = ParamList(dim(1));
-set(handles.popup_pts1,'Value', dim(1));
-set(handles.popup_pts2,'String',{'', ParamList{:}});
-
-if(numel(dim)>=2)
-    handles.current_plot_pts{2} = ParamList(dim(2));
-    set(handles.popup_pts2,'Value', dim(2)+1);
-else
-    handles.current_plot_pts{2} = '';
-    set(handles.popup_pts2,'Value', 1);
-end
-
-set(handles.popup_pts3,'String',{'', ParamList{:}});
-if(numel(dim)>=3)
-    handles.current_plot_pts{3} = ParamList(dim(3));
-    set(handles.popup_pts3,'Value', dim(3)+1);
-else
-    handles.current_plot_pts{3} = '';
-    set(handles.popup_pts3,'Value', 1);
-end
 
 if(DimP ~= handles.Sys.DimP)||(DimX ~= handles.Sys.DimX)
     handles= info(handles, 'WARNING: Dimensions of System and Parameter set are inconsistent - This parameter set was probably created for another system configuration');
 end
-handles =  plot_pts(handles);
+% menu for param pts plot
+
+try 
+    handles =  plot_pts(handles);
+catch
+
+    ParamList = handles.working_sets.(handles.current_set).ParamList;
+    dim = handles.working_sets.(handles.current_set).dim;
+
+    set(handles.popup_pts1,'String',ParamList);
+    handles.current_plot_pts{1} = ParamList(dim(1));
+    set(handles.popup_pts1,'Value', dim(1));
+    set(handles.popup_pts2,'String',{'', ParamList{:}});
+
+    if(numel(dim)>=2)
+        handles.current_plot_pts{2} = ParamList(dim(2));
+        set(handles.popup_pts2,'Value', dim(2)+1);
+    else
+        handles.current_plot_pts{2} = '';
+        set(handles.popup_pts2,'Value', 1);
+    end
+
+    set(handles.popup_pts3,'String',{'', ParamList{:}});
+    if(numel(dim)>=3)
+        handles.current_plot_pts{3} = ParamList(dim(3));
+        set(handles.popup_pts3,'Value', dim(3)+1);
+    else
+        handles.current_plot_pts{3} = '';
+        set(handles.popup_pts3,'Value', 1);
+    end
+    handles =  plot_pts(handles);
+end 
 
 function handles = update_system_panel(handles)
 
@@ -1507,6 +1512,7 @@ st = [st ': ' dbl2str(pts) ' +/- ' dbl2str(epsi) ' i.e ' '[' min ',' max, ']' ];
 function handles= plot_pts(handles)
 
 axes(handles.axes_pts);
+hold off;
 cla;
 legend off;
 set(gca,'YLimMode','auto');
@@ -1530,20 +1536,21 @@ if ~strcmp(param_to_plot,'')
     end
 end
 
-SplotPts(handles.working_sets.(handles.current_set), param_to_plot);
-
-if ~isempty(ipts(2:end))
-    SplotBoxPts(handles.working_sets.(handles.current_set), param_to_plot,ipts(2:end),'+b','y',.1);
-end
-
-SplotPts(handles.working_sets.(handles.current_set), param_to_plot,handles.current_pts,{'ok', 'MarkerSize',14});
-SplotBoxPts(handles.working_sets.(handles.current_set), param_to_plot,handles.current_pts,{'xk', 'MarkerSize',14} ,'k',.1);
-S = DiscrimPropValues(handles.working_sets.(handles.current_set));
-SplotPts(S,param_to_plot);
 
 P = handles.working_sets.(handles.current_set);
 i0=0;
-if isfield(P, 'props_values')
+if ~isfield(P, 'props_values')
+    SplotPts(P, param_to_plot);
+
+    if ~isempty(ipts(2:end))
+        SplotBoxPts(P, param_to_plot,ipts(2:end),'+b','y',.1);
+    end
+
+    SplotPts(P, param_to_plot,handles.current_pts,{'ok', 'MarkerSize',14});
+    SplotBoxPts(P, param_to_plot,handles.current_pts,{'xk', 'MarkerSize',14} ,'k',.1);
+    S = DiscrimPropValues(P);
+    SplotPts(S,param_to_plot);
+else
     for i=1:numel(P.props_names)
         if strcmp(P.props_names{i}, handles.current_prop)
             i0 = i;
@@ -1587,14 +1594,25 @@ if isfield(P, 'props_values')
         hold on;
         
         if ~isempty(ipts(2:end))
-            SplotBoxPts(handles.working_sets.(handles.current_set), param_to_plot,ipts(2:end),'+b','y',.1);
+            SplotBoxPts(P, param_to_plot,ipts(2:end),'+b','y',.1);
         end
         
-        SplotPts(handles.working_sets.(handles.current_set), param_to_plot,handles.current_pts,{'ok', 'MarkerSize',14});
-        SplotBoxPts(handles.working_sets.(handles.current_set), param_to_plot,handles.current_pts,{'xk', 'MarkerSize',14} ,'k',.1);
-        
+        SplotPts(P, param_to_plot,handles.current_pts,{'ok', 'MarkerSize',14});
+        SplotBoxPts(P, param_to_plot,handles.current_pts,{'xk', 'MarkerSize',14} ,'k',.1);
+    else
+        SplotPts(P, param_to_plot);
+
+        if ~isempty(ipts(2:end))
+            SplotBoxPts(P, param_to_plot,ipts(2:end),'+b','y',.1);
+        end
+
+        SplotPts(P, param_to_plot,handles.current_pts,{'ok', 'MarkerSize',14});
+        SplotBoxPts(P, param_to_plot,handles.current_pts,{'xk', 'MarkerSize',14} ,'k',.1);
+        S = DiscrimPropValues(P);
+        SplotPts(S,param_to_plot);
     end
 end
+
 
 
 % --------------------------------------------------------------------

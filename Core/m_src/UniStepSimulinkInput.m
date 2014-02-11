@@ -24,5 +24,8 @@ function U = UniStepSimulinkInput(cp, InputNames, pts, tspan)
       U.t(k,1) = (k-1)*tspan(end)/cp;
     end              
     U.t(cp+1,1) = tspan(end);
+     
+    U.u = reshape( [U.u'; U.u'], [size(U.u',1) 2*size(U.u',2)] )';
+    U.t = reshape( [U.t'; [U.t(2:end)' U.t(end)'*2]-10*eps], [1 2*numel(U.t)] )';
     
   end
