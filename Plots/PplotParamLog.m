@@ -185,12 +185,12 @@ for ii = 1:nParam
     set(gca,'YTick',[]);
     set(gca,'TickDir','out','TickLength',get(gca,'TickLength').*2./3);
     XTick = ceil(vl_min):floor(vl_max);
-    %if(numel(XTick)>10) % if too much ticks, we remove some
-    %    XTick = ceil(vl_min):2:floor(vl_max);
-    %    if(XTick(end)~=floor(vl_max))
-    %        XTick = [XTick,floor(vl_max)];
-    %    end
-    %end
+    if(numel(XTick)>14) % if too much ticks, we remove some
+        XTick = ceil(vl_min):2:floor(vl_max);
+        if(XTick(end)~=floor(vl_max))
+            XTick = [XTick,floor(vl_max)];
+        end
+    end
     if(10^vl_min<0.96*10^ceil(vl_min)) % if far enougth from last tick
         XTick = [vl_min,XTick];
     end
