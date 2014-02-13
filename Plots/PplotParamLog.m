@@ -1,7 +1,7 @@
 function params = PplotParamLog(P, varargin)
 %PPLOTPARAMLOG_COLOR plots the value of each parameter separately.
 % 
-% Synopsis: params = PplotParamLog(P, [params, [Pall, [method]]])
+% Synopsis: params = PplotParamLog(P, [params, [Pall, [method[, title]]]])
 % 
 % Inputs:
 %  - P      : the parameter set for which parameter values are plotted
@@ -14,8 +14,12 @@ function params = PplotParamLog(P, varargin)
 %             is used only for parameter which are uncertain parameter of
 %             Pall. Otherwise, the minimal and maximal value of parameter
 %             in P is considered.
-%  - method : (Optional, default='color') string describing the method used
-%             to plot parameter values. It must be either 'color' or 'star'
+%  - method : (Optional, default or empty='color') string describing the
+%             method used to plot parameter values. It must be either
+%             'color' or 'star'.
+%  - title  : (Optional, default='') string describing the title shown at
+%             the top of the figure. It is interpreted with TeX
+%             interpretor.
 % 
 % Output:
 %  - params : a cell array containing the name of plotted parameter
@@ -35,11 +39,13 @@ function params = PplotParamLog(P, varargin)
 %See also SplotVar SplotTraj
 %
 
-if(nargin==4)
-    if strcmp(varargin{3},'star')
-        params = PplotParamLog_star(P,varargin{1:2});
+if(nargin>=4)
+    method = varargin{3};
+    varargin(3) = []; % remove the method from varargin
+    if strcmpi(method,'star')
+        params = PplotParamLog_star(P,varargin{:});
     else
-        params = PplotParamLog_color(P,varargin{1:2});
+        params = PplotParamLog_color(P,varargin{:});
     end
 else
     params = PplotParamLog_color(P,varargin{:});
@@ -47,10 +53,10 @@ end
 
 end
 
-function params = PplotParamLog_color(P, params, Pall)
+function params = PplotParamLog_color(P, params, Pall, title_str)
 %PPLOTPARAMLOG_COLOR plots the value of each parameter separately.
 % 
-% Synopsis: params = PplotParamLog(P[, params[, Pall]])
+% Synopsis: params = PplotParamLog(P[, params[, Pall[, title_str]]])
 % 
 % Inputs:
 %  - P      : the parameter set for which parameter values are plotted
@@ -78,19 +84,46 @@ nParam = numel(params);
 figure(gcf);
 nParamVect = size(P.pts,2);
 toRemove = floor(nParamVect*.125); % colormap part to remove to avoid dark colors
-my_map = jet(nParamVect+2*toRemove+1); %size(my_map,2) must be nParamVect+1
-my_map = my_map(1+toRemove:end-toRemove,:);
+my_map = jet(nParamVect+2*toRemove+1);
+my_map = my_map(1+toRemove:end-toRemove,:); %size(my_map,2) must be nParamVect+1
 my_map(1,:) = [1,1,1]; % lowest color is white
 colormap(my_map); % define the color map associated to the figure
 
 for ii = 1:nParam
+    subplot(nParam,1,ii); % one subplot for each parameter
     param = params{ii};
     val_log = log10(GetParam(P,param)); % param value on log scale
+    
+    % clean val_log values
+    vl_real = arrayfun(@(x) isreal(x{:}), num2cell(val_log)); % remove complex
+    if any(~vl_real)
+        warning('PplotParamLog:negativeValue',...
+            'A value for parameter %s is negative, it is removed.',param);
+        val_log = val_log(vl_real);
+    end
+    vl_inf = isinf(val_log); % remove inf
+    if any(vl_inf)
+        warning('PplotParamLog:infiniteValue',...
+            'A value for parameter %s is 0 or Inf, it is removed.',param);
+        val_log = val_log(~vl_inf);
+    end
+    
+    % define graph upper and lower bound
     if( exist('Pall','var') && ~isempty(Pall) && ~isempty(GetEpsi(Pall,param)) )
         ptsAll = GetParam(Pall,param);
         epsiAll = GetEpsi(Pall,param);
         vl_min = log10(ptsAll-epsiAll);
         vl_max = log10(ptsAll+epsiAll);
+        if(isinf(vl_min) || ~isreal(vl_min))
+            warning('PplotParamLog:badLowerLimit',...
+                'The lower bound for parameter %s is <=0 or Inf, set to lowest valid value of param set.',param);
+            vl_min = min(val_log);
+        end
+        if(isinf(vl_max) || ~isreal(vl_max))
+            warning('PplotParamLog:badLowerLimit',...
+                'The upper bound for parameter %s is <=0 or Inf, set to highest valid value of param set.',param);
+            vl_max = max(val_log);
+        end
         if(min(val_log)<vl_min)
             warning('PplotParamLog:badLowerBound',...
                 'Some parameter values for %s are lower than the interval.',param);
@@ -102,22 +135,30 @@ for ii = 1:nParam
     else
         vl_min = min(val_log);
         vl_max = max(val_log);
-        if(abs(vl_max-vl_min)<0.1) % in case of a singular point
-            if(vl_min>0)
-                vl_min = vl_min/1.02;
-            elseif(vl_min==0)
-                vl_min = -0.05;
-            else
-                vl_min = vl_min*1.02;
-            end
-            if(vl_max>0)
-                vl_max = vl_max*1.02;
-            elseif(vl_max==0)
-                vl_max=0.05;
-            else
-                vl_max = vl_max/1.02;
-            end
+    end
+    if(abs(vl_max-vl_min)<0.1) % in case of a singular point
+        if(vl_min>0)
+            vl_min = vl_min/1.02;
+        elseif(vl_min==0)
+            vl_min = -0.05;
+        else
+            vl_min = vl_min*1.02;
         end
+        if(vl_max>0)
+            vl_max = vl_max*1.02;
+        elseif(vl_max==0)
+            vl_max=0.05;
+        else
+            vl_max = vl_max/1.02;
+        end
+    end
+    
+    % check validity of parameter
+    if isempty(val_log)
+        box on;
+        set(gca,'XTick',[],'YTick',[]); % display empty graph
+        ylabel(param,'Interpreter','none','Rotation',0,'HorizontalAlignment','Right');
+        continue;
     end
     
     % compute repartition
@@ -131,7 +172,6 @@ for ii = 1:nParam
     edge = (edge(1:end-1)+edge(2:end))/2; % middle of edge (numel(edge)=N)
     
     % plot
-    subplot(nParam,1,ii); % one plot for each parameter
     h = bar(edge,ones(1,N),1);
     delete(findobj('marker','*')) % delete all (unwanted) stars on x axis (maybe not mandatory)
     set(gca,'XLim',[vl_min,vl_max],'YLim',[0,1]); % so the bar fill all vertical space
@@ -141,10 +181,16 @@ for ii = 1:nParam
     bar_child = get(h,'Children');
     set(bar_child,'CData',histo(1:end-1)) % define the color for each bar
     
-    % print ticks
+    % define and print ticks
     set(gca,'YTick',[]);
     set(gca,'TickDir','out','TickLength',get(gca,'TickLength').*2./3);
     XTick = ceil(vl_min):floor(vl_max);
+    %if(numel(XTick)>10) % if too much ticks, we remove some
+    %    XTick = ceil(vl_min):2:floor(vl_max);
+    %    if(XTick(end)~=floor(vl_max))
+    %        XTick = [XTick,floor(vl_max)];
+    %    end
+    %end
     if(10^vl_min<0.96*10^ceil(vl_min)) % if far enougth from last tick
         XTick = [vl_min,XTick];
     end
@@ -159,7 +205,9 @@ for ii = 1:nParam
     box off;
     
     ylabel(param,'Interpreter','none','Rotation',0,'HorizontalAlignment','Right');
-    
+    if(ii==1 && exist('title_str','var'))
+        title(title_str);
+    end
 end
 
 % print a colorbar in an other windows.
@@ -182,11 +230,11 @@ set(gca,'position',x1)
 end
 
 
-function params = PplotParamLog_star(P, params, Pall)
+function params = PplotParamLog_star(P, params, Pall, title_str)
 %PPLOTPARAMLOG_STAR plots a each parameter separately. For each parameter,
 % a star is drawn at the value of the parameter
 % 
-% Synopsis: params = PplotParamLog_star(P[, params[, Pall]])
+% Synopsis: params = PplotParamLog_star(P[, params[, Pall[, title_str]]])
 %
 
 if ~exist('params','var')
@@ -203,6 +251,7 @@ if isempty(params)
 end
 nParam = numel(params);
 
+figure(gcf);
 for ii = 1:nParam
     param = params{ii};
     val = GetParam(P,param);
@@ -218,6 +267,9 @@ for ii = 1:nParam
     end
     set(gca,'XScale','log','YTick',[]);
     ylabel(param,'Interpreter','none','Rotation',0,'HorizontalAlignment','Right');
+    if(ii==1 && exist('title_str','var'))
+        title(title_str);
+    end
     
 end
 
