@@ -1,34 +1,33 @@
 function Pn = Sselect(P, kn)
-%SSELECT extract parameters from indices
-%
-% Synopsis:  Pn = Sselect(P [, kn])
-%
+%SSELECT extracts parameters from indices
+% 
+% Synopsis:  Pn = Sselect(P[, kn])
+% 
 % Inputs:
-%  - P : the parameter set from which we extract a sub-parameter set
-%
-%  - kn: (Optional, defaut = find(P.selected~=0)) the indices of the
-%        parameter vectors to extract from P. If kn is not given and P does
-%        not have a field selected, Pn is P. If kn is empty, Pn is P and a
-%        warning is thrown.
-%
+%  - P  : the parameter set from which we extract a sub-parameter set
+%  - kn : (Optional, defaut=find(P.selected~=0)) the indices of the
+%         parameter vectors to extract from P. If kn is not given and P
+%         does not have a field selected, Pn is P. If kn is empty, Pn is P
+%         and a warning is thrown.
+% 
 % Output:
-%  - Pn: parameter set containing the selected required sub-parameter set.
-%        If the fields traj_ref or traj_to_compute wasn't defined in P,
-%        they are created in Pn.
-%
+%  - Pn : parameter set containing the selected required sub-parameter set.
+%         If the fields traj_ref or traj_to_compute wasn't defined in P,
+%         they are created in Pn.
+% 
 % Example (Lorentz84):
 %   CreateSystem;
 %   P = CreateParamSet(Sys, {'a','F'}, [0.15,0.35;5,25], 4); % creates 16 param vectors
-%
+%   
 %   Peven = Sselect(P, 2:2:16);
 %   Podd = Sselect(P, 1:2:15);  % split P into two param sets
-%
+%   
 %   P = ComputeTraj(Sys, P, 0:0.01:10);
 %   phi = QMITL_Formula('phi', 'ev (x1[t]<-3)');
 %   [~,val] = SEvalProp(Sys,P,phi,0);
 %   Pvalid = Sselect(P,find(val>0));  % the four select param vectors verifying phi
 %   figure ; SplotVar(Pvalid)
-%
+%   
 %   P2 = CreateParamSet(Sys,'a',[0,2]);
 %   P2 = ComputeTraj(Sys,P2,1:0.1:10);
 %   P2 = SetParam(P2,'propParam',2);
@@ -36,10 +35,10 @@ function Pn = Sselect(P, kn)
 %   P2 = Refine(P2,[3,3]);
 %   P2.traj_ref   % have three parameter vector leading to the trajectory
 %   P2 = Sselect(P2,[2,5]);  % select two of them
-%   size(P2.traj)   % only one traj
+%   size(P2.traj,2) % only one traj
 %   P2.traj_ref     % with both parameter vector leading to it
 %   P2.traj_to_compute  % and no parameter vector remaining to compute
-%
+% 
 %See also SConcat PInclude CreateParamSet SAddUncertainParam
 %
 
@@ -48,6 +47,8 @@ function Pn = Sselect(P, kn)
 
 % Manage input
 if exist('kn','var')
+    kn = kn(kn>0); % keep only valid kn
+    kn = kn(kn<=size(P.pts,2));
     if isempty(kn)
         warning('Sselect:EmptyKn','The optional parameter ''kn'' is empty. Pn is defined as P.');
         Pn = P;
@@ -61,12 +62,12 @@ else
         kn = find(P.selected~=0);
     catch %#ok<CTCH>
         Pn = P;
-        return ;
+        return;
     end
 end
 
 % Do the copy
-Pn = [];
+Pn = struct();
 
 
 field_list_copy = {'dim', 'ParamList', 'DimX', 'DimP', 'props_names', 'props', 'time_mult'};
