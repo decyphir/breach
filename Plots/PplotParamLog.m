@@ -1,7 +1,8 @@
-function params = PplotParamLog(P, varargin)
-%PPLOTPARAMLOG_COLOR plots the value of each parameter separately.
+function [params,h] = PplotParamLog(P, varargin)
+%PPLOTPARAMLOG_COLOR plots the value of each parameter separately in the
+% current figure.
 % 
-% Synopsis: params = PplotParamLog(P, [params, [Pall, [method[, title]]]])
+% Synopsis: [params, h] = PplotParamLog(P, [params, [Pall, [method[, title]]]])
 % 
 % Inputs:
 %  - P      : the parameter set for which parameter values are plotted
@@ -21,8 +22,13 @@ function params = PplotParamLog(P, varargin)
 %             the top of the figure. It is interpreted with TeX
 %             interpretor.
 % 
-% Output:
+% Outputs:
 %  - params : a cell array containing the name of plotted parameter
+%  - h      : array of handle containing handle of each figure shown in the
+%             order of appearance. If using 'star' method, it contains the
+%             handle of the only shown figure. If using 'color' method, it
+%             contains in the first position, the handle of the figure, and
+%             in second position, the handle of the legend.
 % 
 % Example (Lorentz84):
 %   CreateSystem;
@@ -34,7 +40,7 @@ function params = PplotParamLog(P, varargin)
 %   P = CreateParamSet(Sys,{'a','b'},[1,10;10,100]);
 %   P = SetParam(P,{'x0','x1','x2'},[1;1;1]);
 %   P = RandomLogRefine(P,10);
-%   PplotParamLog(P,{'x0','a','b'}); % homogeneous repartition (on log scale)
+%   PplotParamLog(P,{'x0','a','b'}); % homogeneous repartition (log scale)
 % 
 %See also SplotVar SplotTraj
 %
@@ -43,28 +49,30 @@ if(nargin>=4)
     method = varargin{3};
     varargin(3) = []; % remove the method from varargin
     if strcmpi(method,'star')
-        params = PplotParamLog_star(P,varargin{:});
+        [params,h] = PplotParamLog_star(P,varargin{:});
     else
-        params = PplotParamLog_color(P,varargin{:});
+        [params,h] = PplotParamLog_color(P,varargin{:});
     end
 else
-    params = PplotParamLog_color(P,varargin{:});
+    [params,h] = PplotParamLog_color(P,varargin{:});
 end
 
 end
 
-function params = PplotParamLog_color(P, params, Pall, title_str)
+function [params,h] = PplotParamLog_color(P, params, Pall, title_str)
 %PPLOTPARAMLOG_COLOR plots the value of each parameter separately.
 % 
-% Synopsis: params = PplotParamLog(P[, params[, Pall[, title_str]]])
+% Synopsis: [params, h] = PplotParamLog(P[, params[, Pall[, title_str]]])
 % 
 % Inputs:
 %  - P      : the parameter set for which parameter values are plotted
 %  - params : parameter to plot
 %  - Pall   : parameter set describing the interval of the parameter
 % 
-% Output:
+% Outputs:
 %  - params : name of plotted parameters
+%  - h      : array containing the handle of the figure and the handle of
+%             the legend
 %
 
 if ~exist('params','var')
@@ -81,7 +89,7 @@ if isempty(params)
 end
 nParam = numel(params);
 
-figure(gcf);
+h1 = figure(gcf);
 nParamVect = size(P.pts,2);
 toRemove = floor(nParamVect*.125); % colormap part to remove to avoid dark colors
 my_map = jet(nParamVect+2*toRemove+1);
@@ -126,13 +134,17 @@ for ii = 1:nParam
         end
         if(min(val_log)<vl_min)
             warning('PplotParamLog:badLowerBound',...
-                'Some parameter values for %s are lower than the interval.',param);
+                'Some parameter values for %s (aka: %g) are lower than the interval (%g).',param,10^min(val_log),10^vl_min);
         end
         if(max(val_log)>vl_max)
             warning('PplotParamLog:badUpperBound',...
-                'Some parameter values for %s are higher than the interval.',param);
+                'Some parameter values for %s (aka: %g) are higher than the interval (%g).',param,10^max(val_log),10^vl_max);
         end
     else
+        if(exist('Pall','var') && ~isempty(Pall)) % here isempty(GetEpsi(Pall,param)) holds
+            warning('PplotParamLog:uncompletePall',...
+                'The parameter set Pall does not define the interval for parameter %s. Using valid values to define interval.',param);
+        end
         vl_min = min(val_log);
         vl_max = max(val_log);
     end
@@ -212,7 +224,7 @@ end
 
 % print a colorbar in an other windows.
 % All this part is based on matlab default values
-figure();
+h2 = figure();
 axis off
 pos = get(gcf,'Position');
 set(gcf,'Position', [pos(1), pos(2), pos(3)/5, pos(4)]);
@@ -227,14 +239,16 @@ x(3)=x(3)*5;
 set(cb,'Position',x)
 set(gca,'position',x1)
 
+h = [h1,h2]; % array of handle
+
 end
 
 
-function params = PplotParamLog_star(P, params, Pall, title_str)
+function [params,h] = PplotParamLog_star(P, params, Pall, title_str)
 %PPLOTPARAMLOG_STAR plots a each parameter separately. For each parameter,
 % a star is drawn at the value of the parameter
 % 
-% Synopsis: params = PplotParamLog_star(P[, params[, Pall[, title_str]]])
+% Synopsis: [params, h] = PplotParamLog_star(P[, params[, Pall[, title_str]]])
 %
 
 if ~exist('params','var')
@@ -251,7 +265,7 @@ if isempty(params)
 end
 nParam = numel(params);
 
-figure(gcf);
+h = figure(gcf);
 for ii = 1:nParam
     param = params{ii};
     val = GetParam(P,param);

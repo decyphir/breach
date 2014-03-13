@@ -36,7 +36,9 @@ function [M, val] = PPhiSensiLocal(Sys, P, phis, tspan, taus, params, ipts, stat
 %                sensitivity is computed at each time instant in tspan and
 %                the highest is keept. Then, the sensitivity is averaged
 %                over all trajectories. The 'aver_sum' case is not
-%                implemented.
+%                implemented. When it will be implemented, it will compute
+%                the sensitivity for all time step in tspan, then average
+%                over the trajectory, then average over all trajectories.
 %  - cutoff    : (Optional, default=0) cut off limit in percentage of
 %                the highest value: all sensitivity lower than cutoff
 %                times the highest sensitivity will be set to 0.
@@ -111,7 +113,7 @@ else
 end
 
 % what type of computation do we do (default: average)
-if(~exist('stat_type','var') || (~strcmp(stat_type,'aver_max')&&~strcmp(stat_type,'aver_sum')) )
+if( ~exist('stat_type','var') || (~strcmp(stat_type,'aver_max')&&~strcmp(stat_type,'aver_sum')) )
     stat_type = 'aver_time';
 end
 
