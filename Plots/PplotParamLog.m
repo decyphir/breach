@@ -2,7 +2,7 @@ function [params,h] = PplotParamLog(P, varargin)
 %PPLOTPARAMLOG_COLOR plots the value of each parameter separately in the
 % current figure.
 % 
-% Synopsis: [params, h] = PplotParamLog(P, [params, [Pall, [method[, title]]]])
+% Synopsis: [params, h] = PplotParamLog(P[, params[, Pall[, method[, title]]]])
 % 
 % Inputs:
 %  - P      : the parameter set for which parameter values are plotted
@@ -32,14 +32,16 @@ function [params,h] = PplotParamLog(P, varargin)
 % 
 % Example (Lorentz84):
 %   CreateSystem;
-%   P = CreateParamSet(Sys,{'a','b'},[1,10;10,100]);
+%   P = CreateParamSet(Sys,{'a','b'},[1,10;10,1000]);
 %   P = SetParam(P,{'x0','x1','x2'},[1;1;1]);
-%   P = Refine(P,10);
+%   P = Refine(P,10); % 100 parameter vectors generated
+%   figure();
 %   PplotParamLog(P); % plot repartition (on log scale)
 %   
-%   P = CreateParamSet(Sys,{'a','b'},[1,10;10,100]);
+%   P = CreateParamSet(Sys,{'a','b'},[1,10;10,1000]);
 %   P = SetParam(P,{'x0','x1','x2'},[1;1;1]);
-%   P = RandomLogRefine(P,10);
+%   P = RandomLogRefine(P,100); % 100 parameter vectors generated
+%   figure();
 %   PplotParamLog(P,{'x0','a','b'}); % homogeneous repartition (log scale)
 % 
 %See also SplotVar SplotTraj
@@ -106,13 +108,13 @@ for ii = 1:nParam
     vl_real = arrayfun(@(x) isreal(x{:}), num2cell(val_log)); % remove complex
     if any(~vl_real)
         warning('PplotParamLog:negativeValue',...
-            'A value for parameter %s is negative, it is removed.',param);
+            'At least one value for parameter %s is negative, it is removed.',param);
         val_log = val_log(vl_real);
     end
     vl_inf = isinf(val_log); % remove inf
     if any(vl_inf)
         warning('PplotParamLog:infiniteValue',...
-            'A value for parameter %s is 0 or Inf, it is removed.',param);
+            'One (or more) value for parameter %s is 0 or Inf, it is removed.',param);
         val_log = val_log(~vl_inf);
     end
     
@@ -186,7 +188,7 @@ for ii = 1:nParam
     % plot
     h = bar(edge,ones(1,N),1);
     delete(findobj('marker','*')) % delete all (unwanted) stars on x axis (maybe not mandatory)
-    set(gca,'XLim',[vl_min,vl_max],'YLim',[0,1]); % so the bar fill all vertical space
+    set(gca,'XLim',[vl_min,vl_max],'YLim',[0,1]); % make the bar fills all vertical space
     
     % define the colors
     caxis([0,nParamVect]); % define the range of color value for the current axis
@@ -196,18 +198,27 @@ for ii = 1:nParam
     % define and print ticks
     set(gca,'YTick',[]);
     set(gca,'TickDir','out','TickLength',get(gca,'TickLength').*2./3);
-    XTick = ceil(vl_min):floor(vl_max);
-    if(numel(XTick)>14) % if too much ticks, we remove some
-        XTick = ceil(vl_min):2:floor(vl_max);
-        if(XTick(end)~=floor(vl_max))
-            XTick = [XTick,floor(vl_max)];
+    tick_step = ceil((floor(vl_max)-ceil(vl_min))/13); % 1 if [2,14] ticks, 2 if [15,27] ticks
+    tick_step = max(tick_step,1); % tick_step may be 0
+    XTick = ceil(vl_min):tick_step:floor(vl_max);
+    if isempty(XTick)
+        XTick = [vl_min,vl_max];
+    else
+%        if(XTick(end)~=floor(vl_max) && floor(vl_max)-XTick(end) > 0.04*(vl_max-vl_min)) % add last tick if missing
+%            XTick = [XTick,floor(vl_max)];
+%        end
+%         if(10^vl_min<0.96*10^ceil(vl_min)) % if far enougth from last tick
+%             XTick = [vl_min,XTick];
+%         end
+%         if(10^vl_max>1.04*10^floor(vl_max)) % if far enougth from last tick
+%             XTick = [XTick,vl_max];
+%         end
+        if(ceil(vl_min)-vl_min > 0.04*(vl_max-vl_min)) % if far enougth from last tick
+            XTick = [vl_min,XTick];
         end
-    end
-    if(10^vl_min<0.96*10^ceil(vl_min)) % if far enougth from last tick
-        XTick = [vl_min,XTick];
-    end
-    if(10^vl_max>1.04*10^floor(vl_max)) % if far enougth from last tick
-        XTick = [XTick,vl_max];
+        if(vl_max-XTick(end) > 0.04*(vl_max-vl_min)) % if far enougth from last tick
+            XTick = [XTick,vl_max];
+        end
     end
     XTickLabel = cellstr(num2str((10.^XTick)','%.1e'))'; % convert to cell array with strings
     % we may improve XTickLabel by showing a "text" based on LaTeX such
