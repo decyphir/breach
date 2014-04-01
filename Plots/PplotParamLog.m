@@ -2,25 +2,28 @@ function [params,h] = PplotParamLog(P, varargin)
 %PPLOTPARAMLOG_COLOR plots the value of each parameter separately in the
 % current figure.
 % 
-% Synopsis: [params, h] = PplotParamLog(P[, params[, Pall[, method[, title]]]])
+% Synopsis: [params, h] = PplotParamLog(P[, params[, Pall[, method[, title[, common_scale]]]]])
 % 
 % Inputs:
-%  - P      : the parameter set for which parameter values are plotted
-%  - params : (Optional, default or empty=P.ParamList) names or indexes in
-%             P of the parameter to be plotted. Unvalid parameter names or
-%             indexes are not plotted
-%  - Pall   : (Optional, default or empty=min and max of values) parameter
-%             set used to define the lower and upper bound of the plot of
-%             each parameter. It must contain only one parameter vector. It
-%             is used only for parameter which are uncertain parameter of
-%             Pall. Otherwise, the minimal and maximal value of parameter
-%             in P is considered.
-%  - method : (Optional, default or empty='color') string describing the
-%             method used to plot parameter values. It must be either
-%             'color' or 'star'.
-%  - title  : (Optional, default='') string describing the title shown at
-%             the top of the figure. It is interpreted with TeX
-%             interpretor.
+%  - P            : the parameter set for which parameter values are
+%                   plotted
+%  - params       : (Optional, default or empty=P.ParamList) names or
+%                   indexes in P of the parameter to be plotted. Unvalid
+%                   parameter names or indexes are not plotted
+%  - Pall         : (Optional, default or empty=min and max of values)
+%                   parameter set used to define the lower and upper bound
+%                   of the plot of each parameter. It must contain only one
+%                   parameter vector. It is used only for parameter which
+%                   are uncertain parameter of Pall. Otherwise, the minimal
+%                   and maximal value of parameter in P is considered.
+%  - method :       (Optional, default or empty='color') string describing
+%                   the method used to plot parameter values. It must be
+%                   either 'color' or 'star'.
+%  - title        : (Optional, default='') string describing the title
+%                   shown at the top of the figure. It is interpreted with
+%                   TeX interpretor.
+%  - common_scale : (Optional, default=false) boolean true if all plot must
+%                   span over the same range.
 % 
 % Outputs:
 %  - params : a cell array containing the name of plotted parameter
@@ -43,6 +46,13 @@ function [params,h] = PplotParamLog(P, varargin)
 %   P = RandomLogRefine(P,100); % 100 parameter vectors generated
 %   figure();
 %   PplotParamLog(P,{'x0','a','b'}); % homogeneous repartition (log scale)
+%   
+%   P = CreateParamSet(Sys,{'x0','x1','x2'},[1,10;10,300;4,1000]);
+%   P2 = Refine(P,20);
+%   figure();
+%   PplotParamLog(P2,{'x0','x1','x2'},P,'','',true);
+%   figure();
+%   PplotParamLog(P2,{'x0','x1','x2'},P,'star','',true); % star version
 % 
 %See also SplotVar SplotTraj
 %
@@ -61,15 +71,18 @@ end
 
 end
 
-function [params,h] = PplotParamLog_color(P, params, Pall, title_str)
+function [params, h] = PplotParamLog_color(P, params, Pall, title_str, common_scale)
 %PPLOTPARAMLOG_COLOR plots the value of each parameter separately.
 % 
-% Synopsis: [params, h] = PplotParamLog(P[, params[, Pall[, title_str]]])
+% Synopsis: [params, h] = PplotParamLog(P[, params[, Pall[, title_str[, common_scale]]]])
 % 
 % Inputs:
-%  - P      : the parameter set for which parameter values are plotted
-%  - params : parameter to plot
-%  - Pall   : parameter set describing the interval of the parameter
+%  - P            : the parameter set for which parameter values are
+%                   plotted
+%  - params       : cell array of string or indexes of parameters to plot
+%  - Pall         : parameter set describing the interval of the parameter
+%  - title_str    : string containing the graph title
+%  - common_scale : boolean set to true if all plot are on the same scale
 % 
 % Outputs:
 %  - params : name of plotted parameters
@@ -89,10 +102,22 @@ params = params(valid);
 if isempty(params)
     params = P.ParamList;
 end
-nParam = numel(params);
 
+if ~exist('common_scale','var')
+    common_scale = false;
+end
+
+nParam = numel(params); % number of parameters to plot
+nParamVect = size(P.pts,2); % number of parameter vectors
+if(common_scale)
+    % variables used iff common_scale if true
+    min_plot = Inf;
+    max_plot = -Inf;
+    empty_box = []; % plot not to redraw
+end
+
+% define color map
 h1 = figure(gcf);
-nParamVect = size(P.pts,2);
 toRemove = floor(nParamVect*.125); % colormap part to remove to avoid dark colors
 my_map = jet(nParamVect+2*toRemove+1);
 my_map = my_map(1+toRemove:end-toRemove,:); %size(my_map,2) must be nParamVect+1
@@ -118,7 +143,18 @@ for ii = 1:nParam
         val_log = val_log(~vl_inf);
     end
     
-    % define graph upper and lower bound
+    % check validity of parameter
+    if isempty(val_log)
+        box on;
+        set(gca,'XTick',[],'YTick',[]); % display empty graph
+        ylabel(param,'Interpreter','none','Rotation',0,'HorizontalAlignment','Right');
+        if(common_scale)
+            empty_box = [empty_box,ii]; % don't redraw this one
+        end
+        continue;
+    end
+    
+    % define parameter upper and lower bounds
     if( exist('Pall','var') && ~isempty(Pall) && ~isempty(GetEpsi(Pall,param)) )
         ptsAll = GetParam(Pall,param);
         epsiAll = GetEpsi(Pall,param);
@@ -151,28 +187,14 @@ for ii = 1:nParam
         vl_max = max(val_log);
     end
     if(abs(vl_max-vl_min)<0.1) % in case of a singular point
-        if(vl_min>0)
-            vl_min = vl_min/1.02;
-        elseif(vl_min==0)
-            vl_min = -0.05;
-        else
-            vl_min = vl_min*1.02;
-        end
-        if(vl_max>0)
-            vl_max = vl_max*1.02;
-        elseif(vl_max==0)
-            vl_max=0.05;
-        else
-            vl_max = vl_max/1.02;
-        end
+        vl_min = vl_min - 0.05;
+        vl_max = vl_max + 0.05;
     end
     
-    % check validity of parameter
-    if isempty(val_log)
-        box on;
-        set(gca,'XTick',[],'YTick',[]); % display empty graph
-        ylabel(param,'Interpreter','none','Rotation',0,'HorizontalAlignment','Right');
-        continue;
+    % save highest and lowest bounds
+    if(common_scale)
+        min_plot = min(min_plot,vl_min);
+        max_plot = max(max_plot,vl_max);
     end
     
     % compute repartition
@@ -204,15 +226,6 @@ for ii = 1:nParam
     if isempty(XTick)
         XTick = [vl_min,vl_max];
     else
-%        if(XTick(end)~=floor(vl_max) && floor(vl_max)-XTick(end) > 0.04*(vl_max-vl_min)) % add last tick if missing
-%            XTick = [XTick,floor(vl_max)];
-%        end
-%         if(10^vl_min<0.96*10^ceil(vl_min)) % if far enougth from last tick
-%             XTick = [vl_min,XTick];
-%         end
-%         if(10^vl_max>1.04*10^floor(vl_max)) % if far enougth from last tick
-%             XTick = [XTick,vl_max];
-%         end
         if(ceil(vl_min)-vl_min > 0.04*(vl_max-vl_min)) % if far enougth from last tick
             XTick = [vl_min,XTick];
         end
@@ -230,6 +243,24 @@ for ii = 1:nParam
     ylabel(param,'Interpreter','none','Rotation',0,'HorizontalAlignment','Right');
     if(ii==1 && exist('title_str','var'))
         title(title_str);
+    end
+end
+
+% rescale plots
+if(common_scale && numel(empty_box)<nParam)
+    for ii = 1:nParam
+        if(~ismember(ii,empty_box))
+            subplot(nParam,1,ii);
+            xl = get(gca,'XLim');
+            set(gca,'XLim',[min_plot,max_plot]);
+            rectangle('Position',[min_plot,0,max_plot-min_plot,1],'FaceColor','none','EdgeColor','k'); % homogeneous border
+            if(xl(1)-min_plot>0)
+                rectangle('Position',[min_plot,0,xl(1)-min_plot,1],'FaceColor',[.75,.75,.75],'EdgeColor','k');
+            end
+            if(max_plot-xl(2)>0)
+                rectangle('Position',[xl(2),0,max_plot-xl(2),1],'FaceColor',[.75,.75,.75],'EdgeColor','k');
+            end
+        end
     end
 end
 
@@ -255,7 +286,7 @@ h = [h1,h2]; % array of handle
 end
 
 
-function [params,h] = PplotParamLog_star(P, params, Pall, title_str)
+function [params,h] = PplotParamLog_star(P, params, Pall, title_str, common_scale)
 %PPLOTPARAMLOG_STAR plots a each parameter separately. For each parameter,
 % a star is drawn at the value of the parameter
 % 
@@ -276,12 +307,18 @@ if isempty(params)
 end
 nParam = numel(params);
 
+if(common_scale)
+    % variables used iff common_scale if true
+    min_plot = Inf;
+    max_plot = -Inf;
+end
+
 h = figure(gcf);
 for ii = 1:nParam
     param = params{ii};
     val = GetParam(P,param);
 
-    subplot(numel(P.ParamList),1,ii);
+    subplot(nParam,1,ii);
     plot(val,ones(1,numel(val)),'*');
     if(exist('Pall','var')&&~isempty(Pall))
         epsiAll = GetEpsi(Pall,param);
@@ -296,6 +333,29 @@ for ii = 1:nParam
         title(title_str);
     end
     
+    if(common_scale)
+        xl = get(gca,'XLim');
+        min_plot = min(min_plot,xl(1));
+        max_plot = max(max_plot,xl(2));
+    end
+    
 end
+
+if(common_scale)
+    for ii = 1:nParam
+        subplot(nParam,1,ii);
+        xl = get(gca,'XLim');
+        yl = get(gca,'YLim');
+        set(gca,'XLim',[min_plot,max_plot]);
+        if(xl(1)-min_plot>0)
+            rectangle('Position',[min_plot,yl(1),xl(1)-min_plot,yl(2)-yl(1)],'FaceColor',[.75,.75,.75],'EdgeColor','none');
+        end
+        if(max_plot-xl(2)>0)
+            rectangle('Position',[xl(2),yl(1),max_plot-xl(2),yl(2)-yl(1)],'FaceColor',[.75,.75,.75],'EdgeColor','none');
+        end
+        %rectangle('Position',[xl(1),yl(1),xl(2)-xl(1),yl(2)-yl(1)],'EdgeColor',[0,0,0]); % re-draw erased border
+    end
+end
+
 
 end
