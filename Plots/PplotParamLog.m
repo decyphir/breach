@@ -1,4 +1,4 @@
-function [params,h] = PplotParamLog(P, varargin)
+function [params, h] = PplotParamLog(P, varargin)
 %PPLOTPARAMLOG_COLOR plots the value of each parameter separately in the
 % current figure.
 % 
@@ -255,10 +255,10 @@ if(common_scale && numel(empty_box)<nParam)
             set(gca,'XLim',[min_plot,max_plot]);
             rectangle('Position',[min_plot,0,max_plot-min_plot,1],'FaceColor','none','EdgeColor','k'); % homogeneous border
             if(xl(1)-min_plot>0)
-                rectangle('Position',[min_plot,0,xl(1)-min_plot,1],'FaceColor',[.75,.75,.75],'EdgeColor','k');
+                rectangle('Position',[min_plot,0,xl(1)-min_plot,1],'FaceColor',[.75,.75,.75],'EdgeColor','k'); % gray rectangle
             end
             if(max_plot-xl(2)>0)
-                rectangle('Position',[xl(2),0,max_plot-xl(2),1],'FaceColor',[.75,.75,.75],'EdgeColor','k');
+                rectangle('Position',[xl(2),0,max_plot-xl(2),1],'FaceColor',[.75,.75,.75],'EdgeColor','k'); % gray rectangle
             end
         end
     end
@@ -290,7 +290,7 @@ function [params,h] = PplotParamLog_star(P, params, Pall, title_str, common_scal
 %PPLOTPARAMLOG_STAR plots a each parameter separately. For each parameter,
 % a star is drawn at the value of the parameter
 % 
-% Synopsis: [params, h] = PplotParamLog_star(P[, params[, Pall[, title_str]]])
+% Synopsis: [params, h] = PplotParamLog_star(P[, params[, Pall[, title_str[, common_scale]]]])
 %
 
 if ~exist('params','var')
@@ -305,8 +305,12 @@ params = params(valid);
 if isempty(params)
     params = P.ParamList;
 end
-nParam = numel(params);
 
+if ~exist('common_scale','var')
+    common_scale = false;
+end
+
+nParam = numel(params);
 if(common_scale)
     % variables used iff common_scale if true
     min_plot = Inf;
@@ -353,7 +357,6 @@ if(common_scale)
         if(max_plot-xl(2)>0)
             rectangle('Position',[xl(2),yl(1),max_plot-xl(2),yl(2)-yl(1)],'FaceColor',[.75,.75,.75],'EdgeColor','none');
         end
-        %rectangle('Position',[xl(1),yl(1),xl(2)-xl(1),yl(2)-yl(1)],'EdgeColor',[0,0,0]); % re-draw erased border
     end
 end
 
