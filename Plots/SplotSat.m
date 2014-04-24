@@ -101,9 +101,7 @@ for np = npb+1:nb_phis+npb
             P.props_values(iphi,ii).val = QMITL_Eval(Sys, phi, Ptmp, traj, tau);
             val(np-npb,ii) = P.props_values(iphi,ii).val(1);
         else
-            tau = traj.time;
-            P.props_values(iphi,ii).tau = traj.time;
-            P.props_values(iphi,ii).val = QMITL_Eval(Sys, phi, Ptmp, traj, tau);
+            [P.props_values(iphi,ii).val, P.props_values(iphi,ii).tau] = QMITL_Eval(Sys, phi, Ptmp, traj);
             val(np-npb,ii) = P.props_values(iphi,ii).val(1);
         end
         
