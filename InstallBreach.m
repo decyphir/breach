@@ -126,7 +126,14 @@ end
 
 % cd back and clean variable
 cd(cdr);
+disp('-------------------------------------------------------------')
 disp('Install successful.')
+disp('Yeah, I know - unless you really know what you''re doing, you');
+disp('got that "fatal error" ginac not found.');
+disp('But I''m telling you, this was really just a warning, and you ');
+disp('will probably not need ginac anyway, so, yes, I repeat:');
+disp('Install successful.');
+disp('-------------------------------------------------------------')
 
 end
     
