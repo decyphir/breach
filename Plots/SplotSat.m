@@ -25,7 +25,7 @@ if(~exist('ipts','var')||isempty(ipts))
     ipts = 1:size(P.pts,2);
 end
 
-if(~exist('tau','var')||isempty(tau))
+if(~exist('tau','var')||isempty(tau)) % also manage empty cell
     tau = [];
 end
 
@@ -80,7 +80,7 @@ for np = npb+1:nb_phis+npb
     phi_name = get_id(phi);
     iphi = find_prop(P, phi_name);
     if(~iphi)
-        P.props_names = [P.props_names, get_id(phi)];
+        P.props_names = [P.props_names, phi_name];
         P.props = [P.props, phi];
         iphi = numel(P.props_names);
     end
