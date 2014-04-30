@@ -17,8 +17,8 @@ function [M, val, sensi] = PPhiSensiLocal(Sys, P, phis, tspan, taus, params, ipt
 %  - taus      : (Optional, default or empty=first time instant of tspan)
 %                column vector of size numel(phis) x 1 or single value
 %                indicating the time instant at which the sensitivity of
-%                phis must be computed. Not used if stat_type is set to
-%                'aver_max'
+%                phis must be computed. Note that taus is used only if
+%                stat_type is set to 'aver_time'.
 %   - params   : (Optional, default or empty=P.dim) indexes or names of the
 %                parameter for which the sensitivity is computed. Names not
 %                matching a parameter or variable name will be ignored, as
@@ -117,6 +117,7 @@ if ~isnumeric(params)
 end
 params = params(params<=size(P.pts,1)); % keep only existing parameters
 params = params(params>0);
+nParams = numel(params);
 
 if(~exist('ipts','var') || isempty(ipts))
     ipts = 1:size(P.pts,2);
@@ -147,16 +148,16 @@ end
 P = Sselect(P, ipts);
 P = ComputeTraj(Sys, P, tspan); % avoid multiple computation if aver_sum or aver_max
 
-M = zeros(nPhis, numel(params)); % average sensitivity
+M = zeros(nPhis, nParams); % average sensitivity
 val = zeros(nPhis, size(P.pts,2));
-sensi = zeros(nPhis,numel(params),size(P.pts,2));
+sensi = zeros(nPhis,nParams,size(P.pts,2));
 
 switch(stat_type)
-    case 'aver_sum'
+    case 'aver_sum' % compute average sensitivity over tspan for each traj
         for ii = 1:nPhis
-            xs_sum = zeros(numel(params),size(P.pts,2));
+            xs_sum = zeros(nParams,size(P.pts,2));
             for tau = tspan
-                [p, x, dx] = QMITL_SEvalDiff(Sys, phis(ii), P, tspan, params, taus(ii), VERBOSE);
+                [p, x, dx] = QMITL_SEvalDiff(Sys, phis(ii), P, tspan, params, tau, VERBOSE);
                 
                 % replace zeros by small quantities
                 ind = abs(x)<1e-16;
@@ -165,7 +166,7 @@ switch(stat_type)
                 
                 val(ii,:) = val(ii,:) + x; % sum of evaluation of phis(ii)
                 
-                x = repmat(x,numel(params),1);
+                x = repmat(x,nParams,1);
                 xs_sum = xs_sum + (dx.*p)./abs(x);
             end
             xs_sum = xs_sum ./ numel(tspan); % average over each trajectory
@@ -186,11 +187,13 @@ switch(stat_type)
             
             val(ii,:) = x; % store evaluation of phis(ii) for all parameter vectors
             
-            x = repmat(x,numel(params),1);
+            x = repmat(x,nParams,1);
             xs = (dx.*p)./abs(x);
             
             sensi(ii,:,:) = xs;
-            M(ii,:) = mean(xs,2)'; % Compute the average over all trajectories
+            for jj=1:nParams % avoid NaN
+                M(ii,jj) = mean( xs(jj,~isnan(xs(jj,:))) );
+            end
         end
         
 %     case 'aver_max'
@@ -219,7 +222,7 @@ switch(stat_type)
         
     case 'aver_max'
         for ii=1:nPhis
-            xs_max = zeros(numel(params),size(P.pts,2)); % zero is the lowest absolute value
+            xs_max = zeros(nParams,size(P.pts,2)); % zero is the lowest absolute value
             for tau = tspan
                 [p, x, dx] = QMITL_SEvalDiff(Sys, phis(ii), P, tspan, params, tau, VERBOSE);
                 
@@ -228,12 +231,12 @@ switch(stat_type)
                 x(ind) = sign(x(ind))*1e-16;
                 x(x==0) = 1e-16;
                 
-                % keep extremal formula evaluation
-                ind = abs(val(ii,:))<abs(x);
+                % keep extremal formula evaluation (and avoid NaN)
+                ind = abs(x)>abs(val(ii,:));
                 val(ii,ind) = x(ind);
                 
                 % keep the extremal sensitivity
-                x = repmat(x,numel(params),1);
+                x = repmat(x,nParams,1);
                 xs = (dx.*p) ./ abs(x);
                 ind = abs(xs_max)<abs(xs);
                 xs_max(ind) = xs(ind);

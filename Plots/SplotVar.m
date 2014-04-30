@@ -1,25 +1,27 @@
-function SplotVar(P, i_var, ipts, opt, same_axe)
+function hplot = SplotVar(P, i_var, ipts, opt, same_axe)
 %SPLOTVAR plots trajectories variables separatly
 % 
-% Synopsis:  SplotVar(P,[ i_var[, ipts[, opt[, same_axe]]]])
+% Synopsis: hplot = SplotVar(P,[ i_var[, ipts[, opt[, same_axe]]]])
 % 
 % Inputs:
-%  - P       : Parameter set. The trajectories must be computed or an error
-%              is thrown.
-%  - i_var   : (Optional, default or empty=all variables) indices or names
-%              of the variables to plot
-%  - ipts    : (Optional, default or empty=all trajectories) indices of the
-%              parameter vectors in P for which the trajectory must be
-%              plotted. For traces sets, it must set to [], so all traces
-%              will be plotted (otherwise, some traces may be not plotted).
-%  - opt     : (Optional, default=empty) plotting options. If not defined
-%              or empty and if it exist a field traj_plot_opt in P, this
-%              field is considered for opt
-%  - ame_axe : (Optional, default=0) boolean indicating if all variables
-%              must be plotted on the same axe.
+%  - P        : Parameter set. The trajectories must be computed or an
+%               error is thrown.
+%  - i_var    : (Optional, default or empty=all variables) indices or names
+%               of the variables to plot
+%  - ipts     : (Optional, default or empty=all trajectories) indices of
+%               the parameter vectors in P for which the trajectory must be
+%               plotted. For traces sets, it must set to [], so all traces
+%               will be plotted (otherwise, some traces may be not
+%               plotted).
+%  - opt      : (Optional, default=empty) cell array containing plotting
+%               options. If not defined or empty and if it exists a field
+%               traj_plot_opt in P, this field is considered for opt
+%  - same_axe : (Optional, default=0) boolean indicating if all variables
+%               must be plotted on the same axe.
 % 
 % Output:
-%  - none, but a figure
+%  - hplot : array of size numel(i_var) x numel(ipts) containing handles of
+%            each plotted line.
 % 
 % Example (Lorentz84):
 %   CreateSystem;
@@ -28,8 +30,13 @@ function SplotVar(P, i_var, ipts, opt, same_axe)
 %   figure ; SplotVar(P)
 %   clf ; SplotVar(P,'x0')  % plot only x0
 %   clf ; SplotVar(P,[],1)  % plot only the first trajectory
+%   clf ; SplotVar(P,[],1,{'--','LineWidth',3,'Color','m'}) % plot options
+%   clf ; h = SplotVar(P); % plot with one color for each parameter vector
+%   for ii=1:numel(h)
+%       set(h(ii),'LineWidth',3); % change line width
+%   end
 % 
-%See also SplotBoxPts SplotPts SplotTraj SplotSensi
+%See also SplotBoxPts SplotPts SplotTraj SplotSensi fig_resize
 %
 
 figure(gcf);
@@ -81,6 +88,8 @@ end
 colors = hsv(numel(ipts));
 colors = colors(:,[3 2 1]); %NM: why ?
 
+hplot = zeros(numel(i_var),numel(ipts)); % lines handles
+
 if(same_axe==1)
     for ii = ipts
         time = P.traj(ii).time;
@@ -89,7 +98,7 @@ if(same_axe==1)
         hold on;
         
         X = P.traj(ii).X(i_var(:),:);
-        plot(time*time_mult,X);
+        hplot(:,ii) = plot(time*time_mult,X);
         
     end
     
@@ -98,7 +107,7 @@ if(same_axe==1)
         if isfield(P,'ParamList')
             lg{ii} = P.ParamList{i_var(ii)};
         else
-            lg{ii} = ['x_' num2str(i_var(ii))];
+            lg{ii} = sprintf('x_%d',i_var(ii));
         end
     end
     hl = legend(lg);
@@ -117,7 +126,7 @@ else % plots on multi axes
         if isfield(P,'ParamList')
             ylabel(h,P.ParamList{i_var(ii)},'Interpreter','none');
         else
-            ylabel(h,['x_' num2str(i_var(ii))],'Interpreter','tex');
+            ylabel(h, sprintf('x_%d',i_var(ii)), 'Interpreter', 'tex');
         end
         
         for jj = 1:numel(ipts)
@@ -125,10 +134,10 @@ else % plots on multi axes
             time = P.traj(i_pt).time;
             x = P.traj(i_pt).X(i_var(ii),:);
             if isempty(opt)
-                %plot(h,time*time_mult, x, 'Color', colors(jj,:)); % plotting all in once with cell arrays is not faster
-                line(time*time_mult,x,'Color', colors(jj,:));
+                %hplot(ii,jj) = plot(h,time*time_mult,x,'Color',colors(jj,:)); % plotting all in once with cell arrays is not faster
+                hplot(ii,jj) = line(time*time_mult,x,'Color',colors(jj,:));
             else
-                plot(h,time*time_mult, x, opt{:});
+                hplot(ii,jj) = plot(h,time*time_mult,x,opt{:});
             end
         end
         
