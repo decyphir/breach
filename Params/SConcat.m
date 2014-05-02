@@ -12,9 +12,11 @@ function P = SConcat(P, P2)
 %  trajectories coming from Pj is 0.
 % 
 % Example (Lorentz84):
-%   CreateSystem
+%   CreateSystem;
 %   P1 = CreateParamSet(Sys,'a',[0.15,0.75],3);
+%   P1 = SetParam(P1,'b',4);
 %   P2 = CreateParamSet(Sys,'b',[3,9],3);
+%   P2 = SetParam(P2,'a',0.25);
 %   P = SConcat(P1,P2);  % contains 6 parameter vectors. Two are the same.
 %   figure ; SplotBoxPts(P);
 %   
@@ -86,19 +88,24 @@ end
 % selected
 % %%%%
 
-if(isfield(P2,'selected') && isfield(P,'pts'))
-    P2.selected = P2.selected+size(P.pts,2);
-    if isfield(P,'selected')
-        P.selected = [P.selected,P2.selected];
-    else
-        P.selected = P2.selected;
+if ~isfield(P,'selected')
+    nParam = 0;
+    if isfield(P,'pts')
+        nParam = size(P.pts,2);
     end
-else
-    P2.selected = []; % if P.pts is empty, selected field may not disappear
+    P.selected = false(1,nParam);
 end
+if ~isfield(P2,'selected')
+    nParam = 0;
+    if isfield(P2,'pts')
+        nParam = size(P2.pts,2);
+    end
+    P2.selected = false(1,nParam);
+end
+P.selected = [P.selected,P2.selected];
 
 if isempty(P2.pts)
-    return
+    return;
 end
 
 if isempty(P.pts)
@@ -227,5 +234,14 @@ if isfield(P,'traj') % optimizing test
     P.traj_to_compute = setdiff(P.traj_to_compute,find(P.traj_ref~=0)); % don't keep those already computed
 end
 P.traj_to_compute = sort(reshape(P.traj_to_compute,1,[]));
+
+
+% %%%%
+% init_fun
+% %%%%
+
+if(isfield(P2,'init_fun') && ~isfield(P,'init_fun'))
+    P.init_fun = P2.init_fun;
+end
 
 end

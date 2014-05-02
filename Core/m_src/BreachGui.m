@@ -84,12 +84,12 @@ handles.figp=[];
 
 %% Init working sets panel
 
-handles.working_sets_file_name = [SysName '_param_sets.mat'];
+handles.working_sets_file_name = [SysName, '_param_sets.mat'];
 try
     handles.working_sets = load(handles.working_sets_file_name);
 catch
-    P0 = CreateParamSet(Sys,min(Sys.DimX+1, Sys.DimP));
-    save([SysName '_param_sets.mat'], 'P0');
+    P0 = CreateParamSet(Sys,min(Sys.DimX+1, Sys.DimP)); %#ok<NASGU>
+    save([SysName, '_param_sets.mat'], 'P0');
     handles.working_sets = load(handles.working_sets_file_name);
 end
 
@@ -109,7 +109,7 @@ handles.properties_file_name = [SysName '_properties.mat'];
 try
     handles.properties = load(handles.properties_file_name);
 catch
-    phi0 = QMITL_Formula('phi0',[Sys.ParamList{1} '[t]<=.1']) ;
+    phi0 = QMITL_Formula('phi0',[Sys.ParamList{1} '[t]<=.1']) ; %#ok<NASGU>
     save([SysName '_properties.mat'], 'phi0');
     handles.properties = load(handles.properties_file_name);
 end
@@ -797,27 +797,24 @@ function menu_load_working_set_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 
-[FileName,PathName,FilterIndex] = uigetfile('*.mat','Load Parameter Set...');
+[FileName,PathName] = uigetfile('*.mat','Load Parameter Set...');
 
-if (FileName==0)
+if(FileName==0)
     return;
 end
 
-handles.working_sets_file_name = FileName;
+handles.working_sets_file_name = [PathName, FileName];
 try
     handles.working_sets = load(handles.working_sets_file_name);
-    handles.current_pts=1;
+    handles.current_pts = 1;
     set(handles.working_sets_listbox, 'Value', 1);
-    contents = get(handles.working_sets_listbox,'String');
     fn = fieldnames(handles.working_sets);
     handles.current_set = fn{1};
     handles = update_working_sets_panel(handles);
     guidata(hObject,handles);
-catch
-    s = lasterror;
-    warndlg(['Problem loading: ' s.message] );
-    error(s);
-    return
+catch err
+    warndlg(['Problem loading: ' err.message] );
+    rethrow(err);
 end
 
 
@@ -828,23 +825,21 @@ function menu_save_as_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 try
-    FileName = uiputfile('*.mat','Save Parameter Set  As...');
-    if (FileName==0)
+    [FileName,PathName] = uiputfile('*.mat','Save Parameter Set As...');
+    if(FileName==0)
         return;
     end
     
-    handles.working_sets_file_name = FileName;
+    handles.working_sets_file_name = [PathName, FileName];
     ws = handles.working_sets;
     handles = info(handles, 'Saving parameter set...');
-    save(FileName, '-struct','ws');
+    save(handles.working_sets_file_name, '-struct','ws');
     handles = info(handles, 'Saving parameter set... Done.');
     handles = update_working_sets_panel(handles);
     guidata(hObject,handles);
-catch
-    s = lasterror;
-    warndlg(['Problem saving: ' s.message] );
-    error(s);
-    return
+catch err
+    warndlg(['Problem saving: ' err.message] );
+    rethrown(err);
 end
 
 
@@ -1055,7 +1050,7 @@ function menu_save_Callback(hObject, eventdata, handles)
 
 handles = info(handles, 'Saving parameter set...\n');
 fprintf('Saving parameter set...');
-ws = handles.working_sets;
+ws = handles.working_sets; %#ok<NASGU>
 save(handles.working_sets_file_name, '-struct', 'ws');
 handles = info(handles, 'Saving parameter set... Done');
 fprintf('Done.\n');
@@ -1256,46 +1251,58 @@ guidata(hObject, handles);
 function handles = update_working_sets_panel(handles)
 
 try
-    str_name = ['Param. Set (' handles.working_sets_file_name ')'];
+    k = strfind(handles.working_sets_file_name,filesep);
+    if ~isempty(k)
+        str_name = handles.working_sets_file_name(k(end)+1:end);
+    else
+        str_name = handles.working_sets_file_name;
+    end
+    str_name = sprintf('Param. Set (%s)', str_name(1:end-4)); % remove the ".mat"
     if(numel(str_name)>35)
-        str_name= [str_name(1:30) '...' str_name(end-5:end)];
+        str_name = [str_name(1:26) '...' str_name(end-5:end)];
     end
     set(handles.working_sets_panel,'Title',str_name );
     fn = fieldnames(handles.working_sets);
     
-    for i=1:numel(fn)
+    for ii=1:numel(fn)
         % check if field is indeed a param set
-        if ~isfield(handles.working_sets.(fn{i}),'pts')
-            handles.working_sets = rmfield(handles.working_sets, fn{i});
+        if ~isfield(handles.working_sets.(fn{ii}),'pts')
+            handles.working_sets = rmfield(handles.working_sets, fn{ii});
         end
     end
     
     fn = fieldnames(handles.working_sets);
     
-    for i=1:numel(fn)
+    for ii=1:numel(fn)
         pref = '';
-        if(handles.working_sets.(fn{i}).DimP ~=handles.Sys.DimP)
-            pref = ['!'];
+        if(handles.working_sets.(fn{ii}).DimP ~= handles.Sys.DimP)
+            pref = '!';
         end
         
-        if isfield(handles.working_sets.(fn{i}),'traj');
-            pref = [pref '*'];
+        if isfield(handles.working_sets.(fn{ii}),'traj_ref')
+            if all(handles.working_sets.(fn{ii}).traj_ref~=0)
+                pref = [pref,'*']; %#ok<AGROW>
+            elseif any(handles.working_sets.(fn{ii}).traj_ref~=0)
+                pref = [pref,'+']; %#ok<AGROW>
+            end
+        elseif isfield(handles.working_sets.(fn{ii}),'traj');
+            pref = [pref, '*']; %#ok<AGROW>
         end
         
-        fn{i} = [pref fn{i}];
+        fn{ii} = [pref, fn{ii}];
         
     end
     
     set(handles.working_sets_listbox,'String', fn);
     set(handles.edit_rename,'String',handles.current_set);
-    if (get(handles.autosave_checkbox, 'Value'))
+    if get(handles.autosave_checkbox, 'Value')
         handles = info(handles, 'Autosaving parameter sets...');
-        ws = handles.working_sets;
+        ws = handles.working_sets; %#ok<NASGU>
         save(handles.working_sets_file_name, '-struct', 'ws');
         handles = info(handles, '');
     end
 catch
-    return
+    return;
 end
 
 function handles = update_properties_panel(handles)
@@ -1994,10 +2001,9 @@ try
     end
     eval(com{:});
     guidata(hObject, handles);
-catch
-    s = lasterror;
-    warndlg(['Problem executing command: ' s.message] );
-    error(s);
+catch err
+    warndlg(['Problem executing command: ', err.message]);
+    rethrown(err);
     return
 end
 
@@ -2599,7 +2605,7 @@ function button_save_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-ws= handles.working_sets;
+ws = handles.working_sets; %#ok<NASGU>
 save(handles.working_sets_file_name, '-struct', 'ws');
 
 

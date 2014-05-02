@@ -9,7 +9,7 @@ function ParamValues = GetParam(S,ParamList)
 %
 % Inputs:
 %   - S         : a system or a parameter set
-%   - ParamList : either a cell matrix containing the name of the
+%   - ParamList : either a cell array containing the names of the
 %                 parameters to get, or an array containing the indexes of
 %                 the parameters, or a string containing the name of the
 %                 parameter.
