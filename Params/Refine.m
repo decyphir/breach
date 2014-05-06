@@ -10,7 +10,7 @@ function P = Refine(P0, delta)
 %             with all components equal to its value. The ith line
 %             corresponds to the ith parameter in P0.dim. Its values can be
 %             either integers or reals. If they are integers, P has
-%             delta(i) points in dimension i. If they are real (ie:
+%             delta(i) points in dimension i. If any is real (ie:
 %             any(floor(delta)~=delta) is true), then delta is interpreted
 %             as a distance and P is divided into points that are at
 %             distance delta from one another. If any value in delta in
@@ -45,10 +45,11 @@ function P = Refine(P0, delta)
 %                       % well as .1 and .2 are divisor of 2*P.epsi)
 %   
 %   P = Refine(P0, [1.3;1.3]); % creates a grid with "resolution (1.3,1.3)"
-%   P.pts    % pay attention here to the values !
+%   P.pts    % the difference between two consecutive values is not 1.3 as
+%            % 1.3 is not a divisor of 2*P.epsi
 %   
 %   P = Refine(P0, [2.1;2.2]);   % returns P0:
-%   all(size(P.pts)==size(P0.pts)) & all((P.pts==P0.pts)  % true
+%   all(size(P.pts)==size(P0.pts)) & all(P.pts==P0.pts)  % true
 % 
 %See also RandomLogRefine QuasiRefine CountRefine CreateParamSet
 %SAddUncertainParam SetEpsi
@@ -64,12 +65,16 @@ end
 if isscalar(delta)
     delta = delta*ones(numel(P0.dim),1);
 elseif(size(delta,1)==1)
+    warning('Refine:BadDeltaShape','delta must have the format numel(P0.dim) x 1. Transposed.');
     delta = delta'; % try to transpose if needed
 end
 
 if(numel(delta)>numel(P0.dim))
-    delta = delta(P0.dim);
-end;
+    warning('Refine:TooLargeDelta','The number of element in delta is higher than P0.dim. Only first elements kept.');
+    delta = delta(1:numel(P0.dim));
+elseif(numel(delta)<numel(P0.dim))
+    error('Refine:SizeOfDelta','The number of element in delta is different than P0.dim.');
+end
 
 n = numel(P0.dim);
 P.dim = P0.dim;
@@ -93,7 +98,7 @@ for ii = 1:size(P0.pts,2)
         nepsi = repmat(P0.epsi(:,ii)./(deltai), 1, nb_new);
 
         for jj=1:n
-            if(deltai(jj)>1) %NM: there maybe a bug here (delta(P0.dim(jj)) ?
+            if(deltai(jj)>1)
                 d1 = xlim(jj,1);
                 d2 = xlim(jj,2);
                 dx = (d2-d1)./(deltai(jj));
@@ -127,6 +132,10 @@ end
 
 if isfield(P0,'selected')
     P.selected = zeros(1, size(P.pts,2));
+end
+
+if isfield(P0,'time_mult')
+    P.time_mult = P0.time_mult;
 end
 
 P.DimX = P0.DimX;

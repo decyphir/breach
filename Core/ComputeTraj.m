@@ -77,9 +77,9 @@ if isfield(P0, 'init_fun')
 end
 
 % if no trajectories to compute, we return the param set itself
-if isfield(P0, 'traj_to_compute') && isempty(P0.traj_to_compute)
+if(isfield(P0, 'traj_to_compute') && isempty(P0.traj_to_compute))
     Pf = P0;
-    return
+    return;
 end
 
 if ~isfield(Sys, 'type')
@@ -92,7 +92,7 @@ if strcmp(Sys.type,'traces') % No model
     for ii = 1:numel(Pf.traj)
         Pf.traj(ii).param = Pf.pts(1:Pf.DimP,ii)';
     end
-elseif isfield(P0, 'traj_to_compute') && ~isempty(P0.traj_to_compute) && ~isequal(P0.traj_to_compute,1:size(P0.pts,2))
+elseif(isfield(P0,'traj_to_compute') && ~isempty(P0.traj_to_compute) && ~isequal(P0.traj_to_compute,1:size(P0.pts,2)))
     % Here, we assume:
     % 1/ that the index of a param vector is not in traj_to_compute if
     % there is a valid simulation for this param vector
@@ -115,6 +115,9 @@ elseif isfield(P0, 'traj_to_compute') && ~isempty(P0.traj_to_compute) && ~isequa
         Pf.traj_ref(i_traj_ref) = numTrajP0+ii;
     end
     Pf.traj_to_compute = [];
+    if(isfield(Sys,'time_mult') && ~isfield(Pf,'time_mult'))
+        Pf.time_mult = Sys.time_mult;
+    end
     
     return;
 end
@@ -244,7 +247,7 @@ switch Sys.type
         end
 end
 
-if isfield(Sys, 'time_mult')
+if(isfield(Sys,'time_mult') && ~isfield(Pf,'time_mult'))
     Pf.time_mult = Sys.time_mult;
 end
 
