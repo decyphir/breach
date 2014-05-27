@@ -35,19 +35,25 @@ function P = SetEpsi(P, ParamList, EpsiValues)
 %SDelUncertainParam
 %
 
+% check ParamList
 if isempty(ParamList)
-    return ;
+    return;
 end
-
-if(size(EpsiValues,1)==1 && ~ischar(ParamList) && numel(ParamList)~=1)
-    % in case when we have one value for many parameters
-    EpsiValues = EpsiValues';
-end
-
 if(ischar(ParamList) || iscell(ParamList))
     ParamList = FindParam(P,ParamList);
 end
 
+% check EpsiValues
+if(size(EpsiValues,1)==1 && numel(ParamList)~=1)
+    % try to be smart
+    warning('SetEpsi:badDimensionEpsiValues','The number of row of EpsiValues is not numel(ParamList). Transposed.');
+    EpsiValues = EpsiValues';
+end
+if(size(EpsiValues,1)~=numel(ParamList))
+    error('SetEpsi:wrongSize','The number of row of EpsiValues is not equal to numel(ParamList).');
+end
+
+% set epsi
 [~,ind,ind_epsi] = intersect(P.dim,ParamList); % keep only existing uncertain params
 for ii=1:numel(ind) % affect epsi (loop needed in case size(EpsiValues,2)==1)
     P.epsi(ind(ii),:) = EpsiValues(ind_epsi(ii),:);

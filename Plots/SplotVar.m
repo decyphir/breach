@@ -1,5 +1,6 @@
 function hplot = SplotVar(P, i_var, ipts, opt, same_axe)
-%SPLOTVAR plots trajectories variables separatly
+%SPLOTVAR plots trajectories variables separatly in the current figure if
+% it exists. Otherwize, it creates a new figure.
 % 
 % Synopsis: hplot = SplotVar(P,[ i_var[, ipts[, opt[, same_axe]]]])
 % 

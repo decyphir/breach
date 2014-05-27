@@ -6,7 +6,7 @@ function [mu, mustar, sigma, Pr] = SPropSensi(Sys, P, phi, opt)
 %
 % Synopsis: [mu, mustar, sigma] = SPropSensi(Sys, P, phi, opt)
 %
-% Input:
+% Inputs:
 %  - Sys : the system
 %  - P   : is a parameter set for Sys. P may contains many parameter sets,
 %          but only the first will be considered, so it is recommanded that
@@ -35,7 +35,7 @@ function [mu, mustar, sigma, Pr] = SPropSensi(Sys, P, phi, opt)
 %      - sigmaGraphOpt   if plot=1, graphical options for sigma graph
 %                        (optional)
 % 
-% Output:
+% Outputs:
 %  - mu     : expectation of elementary effects
 %  - mustar : expectation of absolute values of elementary effects
 %  - sigma  : variance of elementary effects

@@ -70,14 +70,14 @@ function [Mend, opts] =  SplotSensiBar(Sys, P, ipts, opts)
 %  - opts : the structure of options used
 % 
 % Example (Lorentz84):
-%   CreateSystem
+%   CreateSystem;
 %   P = CreateParamSet(Sys, {'x1','G'}, [-10 10; 0 5],4);
 %   P = SetParam(P, {'x1h', 'x1l', 'T'}, [.3, -.3, 5]);
 %   [~,phis] = QMITL_ReadFile('oscil_prop.stl');
 %   phis = [phis{[1,end]}] % keep the first and the last formula
 %   opts.plot_histo = 1;
 %   opts.open_dialog = 0;
-%   opts.args.iX = [];
+%   opts.args.iX = {'x2'};
 %   opts.args.iP = {'F','x1'};
 %   opts.args.tspan = 0:0.1:10;
 %   opts.phis = phis;
@@ -85,7 +85,7 @@ function [Mend, opts] =  SplotSensiBar(Sys, P, ipts, opts)
 %   opts.stat_type = 'aver_time';
 %   Sensi = SplotSensiBar(Sys,P,[],opts)
 % 
-%See also 
+%See also PphiSensiLocal
 %
 
 %
@@ -137,7 +137,7 @@ if(open_dialog)
         catch ME
             warndlg(['Problem: ' ME.message ', giving up'] );
             close;
-            return ;
+            return;
         end
     end
     

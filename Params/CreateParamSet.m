@@ -5,7 +5,7 @@ function P = CreateParamSet(Sys, Param, Ranges, Nb_pts)
 % 
 % Inputs:
 %  - Sys    : System under study
-%  - Param  : (Optional, default=all parameters) list of varying parameters
+%  - Param  : (Optional, default=Sys.ParamList) list of varying parameters
 %             names or indexes. If it contains a parameter name not in
 %             Sys.ParamList, this parameter is added to the created
 %             parameter set. The value of these new parameters is either
@@ -15,19 +15,19 @@ function P = CreateParamSet(Sys, Param, Ranges, Nb_pts)
 %             otherwise) array of size numel(Param) x 2 describing
 %             parameter ranges.
 %  - Nb_pts : (Optional, default=1) number of parameter vectors in the
-%             created parameter set;   same argument as Refine function
+%             created parameter set;  same argument as Refine function
 % 
 % Output:
 %  - P : An initial parameter set with one or many parameter vectors
 % 
 % Example 1 (Lorentz84):
-%   CreateSystem
+%   CreateSystem;
 %   P = CreateParamSet(Sys); % x0, x1, x2, a, b, F and G are unknown
 %   P.dim   % should be 1:7
 %   GetParam(P,{'x0','x1','x2','a','b','F','G'})  % values are (resp.) 0, 0, 0, 0.25, 4, 15 and 2
 %   GetEpsi(P,{'x0','x1','x2','a','b','F','G'})  % epsi are (resp.) 1, 1, 1, 0.025, 1.5 and 0.2
 % 
-%   P2 = CreateParamSet(Sys,'blah'); % defune blah as an unknown parameter
+%   P2 = CreateParamSet(Sys,'blah'); % define blah as an unknown parameter
 %   P2.ParamList  % blah is added at the end of the ParamList
 %   P2.ParamList(P2.dim)  % blah is the only variable parameter
 %   GetParam(P2,'blah')   % default value is 0

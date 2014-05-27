@@ -4,28 +4,36 @@ function h = plot_histo(M, P, iX, phis, iP, taus)
 % Synopsis : h = plot_histo(M, P, iX, phis, iP, taus)
 % 
 % Inputs:
-%  - M    : the matrix containing data
+%  - M    : the matrix containing data. Its number of line is
+%           numel(iX)+numel(phis). The numel(iX) first lines contain
+%           sensitivity of variables to parameters in iP. The following
+%           lines contain the sensitivity of formula in phis to parameters
+%           in iP.
 %  - P    : the parameter set
-%  - iX   : 
-%  - phis : 
-%  - iP   : indexes of parameters
-%  - taus : time point at which phis are evaluated.
+%  - iX   : indice of the variable for which the sensitivity is plotted
+%  - phis : array of formula for which the sensitivity is plotted
+%  - iP   : indexes of parameters or variables for which the sensitivity of
+%           variables and formulas in plotted.
+%  - taus : time point at which phis are evaluated. It is a vector of size
+%           numel(phis).
 % 
 % Output:
-%  - h
+%  - h : handle of the create figure
 %
 
 h = figure;
-nb_histo = numel(iX)+numel(phis);
+niX = numel(iX);
+niP = numel(iP);
+nb_histo = niX+numel(phis);
 
 % y labels
-ytick_labels = cell(1,numel(iP));
-for ii = 1:numel(iP)
-    ylabel = P.ParamList{iP(ii)};
+ytick_labels = cell(1,niP);
+for ii = 1:niP
+    y_label = P.ParamList{iP(ii)};
     if(iP(ii) <= P.DimX)
-        ylabel = [ylabel '(0)']; %#ok<AGROW>
+        y_label = [y_label '(0)']; %#ok<AGROW>
     end
-    ytick_labels(ii) = {ylabel};
+    ytick_labels{ii} = y_label;
 end
 
 
@@ -33,30 +41,25 @@ end
 
 nh = min(3,nb_histo);
 
-for ii = 1:numel(iX)
+for ii = 1:niX
     subplot(ceil(nb_histo/3),nh,ii);
     barh(M(ii,:));
-    set(gca, 'YTick', 1:numel(iP), 'YTickLabel', ytick_labels);
+    set(gca, 'YTick', 1:niP, 'YTickLabel', ytick_labels);
     axis tight;
     grid on;
-    hy = get(gca, 'ylabel');
-    set(hy, 'Interpreter', 'none');
     st = ['S(' P.ParamList{iX(ii)} '[t])'];
     title(st, 'Interpreter', 'none');
     
 end
 
 % plotting sensitivities of properties TODO
-for ii = numel(iX)+1:nb_histo
+for ii = niX+1:nb_histo
     subplot(ceil(nb_histo/3),nh,ii);
     barh(M(ii,:));
-    set(gca, 'YTick', 1:numel(iP), 'YTickLabel', ytick_labels);
+    set(gca, 'YTick', 1:niP, 'YTickLabel', ytick_labels);
     axis tight;
     grid on;
-    hy = get(gca, 'ylabel');
-    set(hy, 'Interpreter', 'none');
-    phi = struct2cell(phis(ii-numel(iX)));
-    st = ['S(' phi{1} '[' num2str(taus(ii-numel(iX))) '])'];
+    st = ['S(' get_id(phis(ii-niX)) '[' num2str(taus(ii-niX)) '])'];
     title(st, 'Interpreter', 'none');
 end
 
