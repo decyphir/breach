@@ -166,11 +166,9 @@ int CVM_ComputeTrajSensi(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prh
 	Array1D xS0(N*Ns);
 
 	if (nb_pts>1) {
-		cout << "\nComputing "  << nb_pts <<  " trajectories " << endl;
-		cout << "[             25%            50%            75%              ] "<< endl;
-		cout << " ";
-		mexEvalString("drawnow;");
-		cout.flush();
+		mexPrintf("\nComputing %d trajectories\n",nb_pts);
+		mexPrintf("[             25%            50%            75%              ]\n");
+		mexPrintf(" ");
 	}
 
 	int iprog=0;
@@ -197,10 +195,9 @@ int CVM_ComputeTrajSensi(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prh
 		if (nb_pts>1) {
 			cout.flush();
 			while (60*(j+1)/nb_pts>iprog) {
-				cout << "^";
+				mexPrintf("^");
 				iprog++;
 			}
-			mexEvalString("drawnow;");
 		}
 
 	}
@@ -305,11 +302,9 @@ int CVM_ComputeTraj(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) 
 
 	/* Progress bar init */
 	if (nb_pts>1) {
-		cout << "\nComputing "  << nb_pts <<  " trajectories " << endl;
-		cout << "[             25%            50%            75%              ] "<< endl;
-		cout << " ";
-		mexEvalString("drawnow;");
-		cout.flush();
+		mexPrintf("\nComputing %d trajectories\n",nb_pts);
+		mexPrintf("[             25%            50%            75%              ]\n");
+		mexPrintf(" ");
 	}
 
 	int iprog=0;
@@ -352,10 +347,9 @@ int CVM_ComputeTraj(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) 
 		if (nb_pts>1) {
 			cout.flush();
 			while (60*(j+1)/nb_pts>iprog) {
-				cout << "^";
+				mexPrintf("^");
 				iprog++;
 			}
-			mexEvalString("drawnow;");
 		}
 
 	}
