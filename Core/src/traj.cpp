@@ -167,7 +167,7 @@ int CVM_ComputeTrajSensi(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prh
 
 	if (nb_pts>1) {
 		mexPrintf("\nComputing %d trajectories\n",nb_pts);
-		mexPrintf("[             25%            50%            75%              ]\n");
+		mexPrintf("[             25%%            50%%            75%%              ]\n");
 		mexPrintf(" ");
 	}
 
@@ -303,7 +303,7 @@ int CVM_ComputeTraj(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) 
 	/* Progress bar init */
 	if (nb_pts>1) {
 		mexPrintf("\nComputing %d trajectories\n",nb_pts);
-		mexPrintf("[             25%            50%            75%              ]\n");
+		mexPrintf("[             25%%            50%%            75%%              ]\n");
 		mexPrintf(" ");
 	}
 
