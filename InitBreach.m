@@ -1,5 +1,8 @@
 % This script initializes Breach, in particular adding paths to Breach directories
 
+id = 'MATLAB:dispatcher:nameConflict';
+warning('off',id);
+
 cdr_ = pwd;
 dr_ = which('InitBreach');
 dr_ =  dr_(1:end-13);
@@ -47,3 +50,5 @@ end
 
 cd(cdr_);
 clear cdr_ dr_;
+
+warning('on',id);
