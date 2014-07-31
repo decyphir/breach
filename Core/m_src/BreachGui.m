@@ -1366,10 +1366,10 @@ for i=1:DimX
     st = ParamList{i};
     if isfield(handles.Sys, 'type')
         switch handles.Sys.type
-            case {'Simulink', 'Extern'}
-                st = strcat(st, ':','--');
-            case {'Breach'}
-                st = strcat(st, '[0]:',' ',dbl2str(handles.working_sets.(handles.current_set).pts(i,k)));
+         case {'Simulink'}
+             st = strcat(st, ':','--');
+         case {'Breach', 'Extern'}
+          st = strcat(st, '[0]:',' ',dbl2str(handles.working_sets.(handles.current_set).pts(i,k)));
         end
     else
         st = strcat(st, '[0]:',' ',dbl2str(handles.working_sets.(handles.current_set).pts(i,k)));
@@ -1436,12 +1436,11 @@ if(DimP ~= handles.Sys.DimP)||(DimX ~= handles.Sys.DimX)
 end
 % menu for param pts plot
 
-try 
-    handles =  plot_pts(handles);
-catch
 
-    ParamList = handles.working_sets.(handles.current_set).ParamList;
-    dim = handles.working_sets.(handles.current_set).dim;
+
+%try 
+%    handles =  plot_pts(handles);
+%catch
 
     set(handles.popup_pts1,'String',ParamList);
     handles.current_plot_pts{1} = ParamList(dim(1));
@@ -1465,7 +1464,7 @@ catch
         set(handles.popup_pts3,'Value', 1);
     end
     handles =  plot_pts(handles);
-end 
+%end 
 
 function handles = update_system_panel(handles)
 

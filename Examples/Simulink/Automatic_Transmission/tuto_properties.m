@@ -20,7 +20,7 @@ params_phi.values =  [140 4000];
 P0 = SetParam(P0, params_phi.names, params_phi.values);
 
 % Eval satisfaction function for phi1, P0 and P0.traj at time tau=0
-
+tau=0;
 val = QMITL_Eval(Sys, phi1, P0, P0.traj, tau);
 
 % computes and plots satisfaction function for all tau>0
