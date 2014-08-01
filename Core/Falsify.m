@@ -1,4 +1,4 @@
-function Pf = Falsify (Sys, phi, falsif_opt, params_prop)
+function [Pf, val_opt] = Falsify (Sys, phi, falsif_opt, params_prop)
 %FALSIFY Tries to falsify property phi
 % 
 % Synopsis: Pf = Falsify(Sys, phi, falsif_opt[, param_prop])
