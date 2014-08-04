@@ -26,7 +26,7 @@ function Sys = CreateExternSystem(name, vars, params, p0, simfn)
           nvars = vars;
           vars = {};
           for i=1:nvars
-              vars = {vars{:} ['y' num2str(i)]};
+              vars = {vars{:} ['x' num2str(i)]};
           end
       end
       
@@ -35,7 +35,7 @@ function Sys = CreateExternSystem(name, vars, params, p0, simfn)
           params = {};
           
           for i=1:nparams
-              params = {params{:} ['y' num2str(i)]};
+              params = {params{:} ['x' num2str(i)]};
           
           end          
       end
