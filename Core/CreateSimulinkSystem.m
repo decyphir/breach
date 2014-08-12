@@ -1,7 +1,7 @@
-function Sys = CreateSimulinkSystem(mdl, signals, params, p0,  inputfn )
+function Sys = CreateSimulinkSystem(mdl, signals, params, p0,  inputfn, pu0 )
 % CreateSimulinkSystem  Create a Breach system structure from a simulink model
 %  
-% Synopsis: Sys =  CreateSimulinkSystem(mdl, signals, params, p0, inputfn)
+% Synopsis: Sys =  CreateSimulinkSystem(mdl, signals, params, p0, inputfn, pu0)
 %
 %  - mdl       name of the Simulink model - note that breach will use its own copy of this model
 %  - signals   can be either 'logged' or {'s1','s2', ..., 'sn'} where s1, s2,..., sn are logged signals in the model  
@@ -12,7 +12,7 @@ function Sys = CreateSimulinkSystem(mdl, signals, params, p0,  inputfn )
 %  - inputfn   'UniStepXX' | 'VarStepXX' | 'UniPWAXX' where XX is a number (defaut is UniStep1)
 %               E.g. UniStep5 will use piecewise constant input functions with 5 different values 
 %               and a constant time step depending on the simulation time.  
-%
+%  - pu0        default values for input parameters (default to 0)
 
 %% default arguments
 
@@ -267,8 +267,13 @@ end
     
  
   params = {params{:} U.params{:}};
+  
+  if (exist('pu0'))  
+      pu(1:numel(pu0)) = pu0;
+  end
+      
   p0 = [zeros(1,numel(signals)) p0 pu];
-    
+     
   Sys = CreateSystem(signals, params, p0'); % define signals and parameters
 
   Sys.DimY = numel(sig_out);
