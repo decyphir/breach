@@ -36,7 +36,10 @@ function [val_opt, Popt]  = SOptimProp(Sys, P, phi, opt)
 %                             necessarily compute all trajectories in P0
 %       - Ninit   : (Optional, default=all parameter vectors) tries the
 %                   Ninit best initial pts
-% 
+%       - timeout : (optional), default = inf; forces convergence after 
+%                   timeout s. of computation        
+%
+%
 % Outputs:
 %  - val_opt : the truth value of phi for the param set Popt. It is a
 %              scalar if StopWhenFound or StopWhenFoundInit is set to 1.
@@ -367,7 +370,6 @@ end
 
 if(val<0)
     found = val;
-%    return;
 end
 
 if(val<fopt)

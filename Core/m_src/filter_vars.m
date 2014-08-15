@@ -13,7 +13,7 @@ function [vars vals] =  filter_vars(mdl, exclude)
 %
 %
 
-load_system(mdl);
+  load_system(mdl);
   MAX_EL = 100;
   VarsOut = Simulink.findVars(mdl, 'WorkspaceType', 'base');
   newp = 0; % counts parameters found
@@ -35,25 +35,30 @@ load_system(mdl);
       continue;
     end
     v = evalin('base',vname);
-    if (isscalar(v))      
-      newp= newp+1;
-      vars{newp}= vname;
-      vals(newp) = v;            
-    else
-      fprintf('found %s, %d %d table\n', vname,size(v,1), size(v,2) );         
-      if numel(v) > MAX_EL
-        if input(['Wait, this has ' num2str( numel(v)) ' elements, are you ' ...
-                            ' sure to continue (0 or 1) ?'])
-          for  i = 1:size(v,1)
-            for j= 1:size(v,2)
-              if (v(i,j)~=0)   
-                newp=newp+1;
-                vars{newp} = [vname '_tab_' num2str(i) '_' num2str(j)];
-                vals(newp) = v(i,j);                    
-              end
+    
+    if (isnumeric(v))
+        if (isscalar(v))
+            newp= newp+1;
+            vars{newp}= vname;
+            vals(newp) = v;
+        else
+            fprintf('found %s, %d %d table\n', vname,size(v,1), size(v,2) );
+            if numel(v) > MAX_EL
+                if input(['Wait, this has ' num2str( numel(v)) ' elements, are you ' ...
+                        ' sure to continue (0 or 1) ?'])
+                    for  i = 1:size(v,1)
+                        for j= 1:size(v,2)
+                            if (v(i,j)~=0)
+                                newp=newp+1;
+                                vars{newp} = [vname '_tab_' num2str(i) '_' num2str(j)];
+                                vals(newp) = v(i,j);
+                            end
+                        end
+                    end
+                end
             end
-          end             
         end
-      end
-    end                 
+    else
+        fprintf('WARNING: found non numeric parameter %s, ignored\n', vname);
+    end
   end
