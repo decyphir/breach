@@ -17,7 +17,6 @@ function [tout X] = sim_breach(Sys, tspan, pts)
   set_param(mdl, 'OutputTimes', 'tspan',...
                  'OutputOption','SpecifiedOutputTimes'); 
   
-  
   try                
     simout= sim(mdl);
   catch
@@ -29,10 +28,10 @@ function [tout X] = sim_breach(Sys, tspan, pts)
   end
   
   lg = simout.get('logsout');
-   
   tout = simout.get('tout')';
   Y = simout.get('yout');    
   X=[];
+  
   if ~isempty(Y)
     for i=1:numel(Y.signals)
       xx = interp1(tout', Y.signals(i).values, tspan')';
