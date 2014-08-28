@@ -40,6 +40,9 @@ if exist('params_prop','var')
         params_prop.values);
 end
 
+opt.timeout = getfield_default(falsif_opt, 'timeout', inf);
+nb_restart = getfield_default(falsif_opt, 'nb_restart', 0); 
+
 nb_init = falsif_opt.nb_init;
 nb_iter = falsif_opt.nb_iter;
 
@@ -51,23 +54,42 @@ opt.StopWhenFoundInit = 1;
 opt.StopWhenFound = 1;
 opt.ubound = ranges(:,2);
 opt.lbound = ranges(:,1);
+opt.Ninit = 10; 
+nb_init_total = 1;
 
-% Get a set of initial search points
-Pr_new = QuasiRefine(Pu, nb_init);
+tic;
+for restart = 0:nb_restart
+    
+    % Get a set of initial search points
+    Pr_new = QuasiRefine(Pu, nb_init, nb_init_total);
+    
+    % Falsification step
+    [val_opt, Propt] = SOptimPropNM(Sys, Pr_new, phi, opt);
+    ifalse = find(val_opt<0);
+    tspent = toc;  
 
-% Falsification step
-[val_opt, Propt] = SOptimProp(Sys, Pr_new, phi, opt);
-ifalse = find(val_opt<0);
+    if ~isempty(ifalse)
+        Pf = Sselect(Propt, ifalse);
+        fprintf('  ---- Falsified !');
+        return;
+    else
+        Pf = Propt;
+        opt.timeout = opt.timeout - tspent;
+        fprintf('Restart %d, time left: %g\n',restart, opt.timeout); 
 
-if ~isempty(ifalse)
-    Pf = Sselect(Propt, ifalse);
-    fprintf('  ---- Falsified !');
-else
-    Pf = Propt;
-    fprintf(['\nStopped. Final robustness: ' num2str(val_opt)]);
+        if opt.timeout <0
+            fprintf('Timeout.\n')
+            break;
+        end
+    
+    end
     fprintf('\n');
-    return
+    
+    nb_init_total = nb_init_total + nb_init;
+    nb_init = nb_init_total; % Fibo-increasing numbers of initials   
 end
+
+fprintf(['\nFalsification stopped after max iterations or time out. Final robustness: ' num2str(val_opt)]);
 fprintf('\n');
 
 end

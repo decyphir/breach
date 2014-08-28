@@ -102,6 +102,8 @@ for ii = 1:num_params      % optimize independently in the order
     if opt.verbose
         rfprintf_reset();
     end
+    
+    p_i = (pimax+pimin)/2; % initialize p_i in case we don't enter the loop
     while (abs(pimax-pimin)>err)
         
         p_i = (pimax+pimin)/2;
@@ -138,6 +140,9 @@ for ii = 1:num_params      % optimize independently in the order
         
     end % end while
     
+    if opt.verbose
+        rfprintf(num2str(p_i));
+    end    
     
     if(val>0)
         p(ii) = p_i;
