@@ -1,4 +1,4 @@
-function [val_opt, Popt]  = SOptimPropNM(Sys, P, phi, opt)
+function [val_opt, Popt, status]  = SOptimPropNM(Sys, P, phi, opt)
 %SOPTIMPROP optimizes the satisfaction of a property
 % 
 % Synopsis: [val_opt, Popt] = SOptimProp(Sys, P, phi, opt)
@@ -52,7 +52,8 @@ function [val_opt, Popt]  = SOptimPropNM(Sys, P, phi, opt)
 %              truth value of phi is found, Popt is this parameter vector.
 %              Otherwise, Popt contains the optimum found for each
 %              parameter vector of P.
-% 
+%  - status  : Can be 1 (found), 2 ( stopped after max iteration), -1 (stopped)
+%
 %See also SOptimPropLog Falsify
 %
 
@@ -66,6 +67,11 @@ global traj_opt; % trajectory leading to fopt truth value of phi
 global xopt; % parameter set leading to the trajectory traj_opt
 global timeout;
 global x_is_prop_param; 
+global wait_bar_handle stop_requested wait_bar_step; % for the waitbar
+
+
+stop_requested = 0; 
+wait_bar_handle = waitbar(0,'Optimizing formula...', 'CreateCancelBtn', 'setappdata(gcf, ''cancel'', 1)'); 
 
 found = [];
 if isfield(opt, 'tspan')
@@ -162,17 +168,34 @@ if(StopWhenFoundInit)
             end
             nb_errors = nb_errors + 1;
         end
- 
-        % Not sure this output is useful
-%        status = sprintf('Init %d/%d Robustness value: %g\n',ii,size(P.pts,2),val(ii));
-%        rfprintf(status);
         
+        % Update wait bar
+        wait_bar_title = sprintf('Init %d/%d Rob: %g\n',ii,size(P.pts,2),val(ii));
+        set(wait_bar_handle, 'Name',wait_bar_title);
+        wait_bar_status = sprintf('Current Robustness: %g',val(ii));
+        wait_bar_step = ii/(size(P.pts,2)+1);
+        waitbar(wait_bar_step, wait_bar_handle, wait_bar_status);
+        
+        drawnow;
+        stop_requested = ~isempty(getappdata(wait_bar_handle, 'cancel'));
+
         if( (strcmp(OptimType,'max')&&val(ii)>0) || (strcmp(OptimType,'min')&&val(ii)<0) )
             val_opt = val(ii);
             Popt = Ptmp;
             fprintf('\n'); % to have a pretty display
+            delete(wait_bar_handle);
+            status=1;
             return;
         end
+        
+        if ( stop_requested )
+            val_opt = val(ii);
+            Popt = Ptmp;
+            fprintf('\n'); % to have a pretty display
+            delete(wait_bar_handle);
+            status = -1;
+        end
+
         
         if(ii==1)
             Popt = Ptmp; % first time in the loop, do affectation, not concatenatation
@@ -199,27 +222,37 @@ switch OptimType
         if(val(iv(1))>0) % if the highest value is positive
             found = val(iv(1));
         end
-        fun = @(x) fun_max(x, Sys, phi, tspan, tau);
+        fun = @(x) fun_opt(1,x, Sys, phi, tspan, tau);
         
     case 'min'
         [~, iv] = sort(val);
         if(val(iv(1))<0) % if the lowest value is negative
             found = val(iv(1));
         end
-        fun = @(x) fun_min(x, Sys, phi, tspan, tau);
+        fun = @(x) fun_opt(-1, x, Sys, phi, tspan, tau);
         
     case 'zero'
         [~, iv] = sort(abs(val));
         fun = @(x) fun_zero(x, Sys, phi, tspan, tau);
 end
 
-if( ((StopWhenFound)&&(~isempty(found))) || (MaxIter<=0) )
+if ((StopWhenFound)&&(~isempty(found)))
     Popt = Sselect(Popt,iv(1));
     val_opt = val(iv(1)); 
+    delete(wait_bar_handle);
+    status = 1;
     return ;
 end
 
+if (MaxIter<=0) 
+    delete(wait_bar_handle);
+    status =2;
+    return;
+end
+
 %% Main Loop
+
+x_is_prop_param = all(dim>Sys.DimP);
 
 % Check param again (eventually generate idim)
 if ~isfield(opt,'lbound')
@@ -259,14 +292,18 @@ for ii = iv(1:Ninit)
         error('SOptimProp:badIntervals','A lower bound is higher than the corresponding upper one.');
     end
     
-    fprintf('\nOptimize from init point %d/%d Initial value: %g\n', kk, numel(iv), val(ii));
-    rfprintf_reset();
+    % update wait bar
+    wait_bar_title = sprintf('Init %d/%d with rob: %g', kk, numel(iv), val(ii));
+    set(wait_bar_handle, 'Name',wait_bar_title);            
+    wait_bar_step = kk/(numel(iv)+1);
+    
+    
     x0 = Popt.pts(dim,ii);
     fopt = val(ii); % we initialize with the only truth value computed for this set of values
     traj_opt = Popt.traj(Popt.traj_ref(ii));
     xopt = Popt.pts(dim,ii);
     [~, val_opt(kk)] = optimize(fun,x0,lbound,ubound,[],[],[],[],[],[],options,'NelderMead');
-    fprintf('\n');
+    
     Popt.pts(dim,ii) = xopt;
     Popt.traj(Popt.traj_ref(ii)) = traj_opt;
     Popt.Xf(:,ii) = traj_opt.X(:,end);
@@ -283,6 +320,8 @@ for ii = iv(1:Ninit)
         if strcmp(OptimType,'max')
             val_opt = -val_opt;
         end
+        delete(wait_bar_handle);
+        status =1;
         return;
     end
 end
@@ -300,54 +339,25 @@ if strcmp(OptimType,'max')
     val_opt = -val_opt;
 end
 
+if (stop_requested)
+    status = -1;
+else
+    status=2;
+end
+
+delete(wait_bar_handle);
+
 
 end
 
-function val = fun_max(x, Sys, phi, tspan, tau)
-%% function fun_max
-global Ptmp fopt traj_opt found StopWhenFound xopt timeout x_is_prop_param 
+function val = fun_opt(optim_dir, x, Sys, phi, tspan, tau)
+%% function fun 
+global Ptmp found StopWhenFound fopt traj_opt xopt timeout x_is_prop_param wait_bar_handle stop_requested wait_bar_step
 
-if(StopWhenFound&&~isempty(found)) %positive value found, do not need to continue
-    val = -found; % optimize tries to minimize the objective function, so
-    return ;          % we provide it the opposite of the truth value
-end
+% updates the waitbar 
+drawnow;
+stop_requested = ~isempty(getappdata(wait_bar_handle, 'cancel'));
 
-ct = toc;
-if(ct>timeout)
-  val = -fopt; %forces convergence of the optimizer in case timeout occured
-  return;
-end
-
-Ptmp.pts(Ptmp.dim,1) = x;
-try
-    Ptmp = SPurge(Ptmp);
-    Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-    val = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
-catch  %#ok<CTCH>
-    warning('SOptimProp:ComputeTraj','Error during trajectory computation when optimizing. Keep going.')
-    val = inf; % do not care of the exit condition -3 for nelder-mead algo, it only happens when using global optim
-    return ; % we can also set val=-inf and let the function terminates
-end
-
-if(val>0)
-    found = val;
-end
-
-if(val>fopt)
-    fopt = val;
-    traj_opt = Ptmp.traj; % we can improve that by using only Ptmp instead of traj_opt and xopt
-    xopt = Ptmp.pts(Ptmp.dim,1); % as ComputeTraj launch init_fun, Ptmp.pts can be different than x
-end
-
-status = sprintf('Robustness value: %g Current optimal: %g',val,fopt);
-rfprintf(status);
-val = -val; % optimize tries to minimize the objective function, so we
-            % provide it -val instead of val
-end
-
-function val = fun_min(x, Sys, phi, tspan, tau)
-%% function fun_min
-global Ptmp found StopWhenFound fopt traj_opt xopt timeout x_is_prop_param
 
 if(StopWhenFound&&~isempty(found)) %negative value found, do not need to continue
     val = found;
@@ -355,39 +365,62 @@ if(StopWhenFound&&~isempty(found)) %negative value found, do not need to continu
 end
 
 ct = toc; 
-if(ct>timeout)
+if(ct>timeout||stop_requested)
   val = fopt;  %forces convergence of the optimizer in case timeout occured
   return;
 end
 
+
 Ptmp.pts(Ptmp.dim,1) = x;
-try
-    Ptmp = SPurge(Ptmp);
-    Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-    val = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
-catch %#ok<CTCH>
-    warning('SOptimProp:ComputeTraj','Error during trajectory computation when optimizing. Keep going.')
-    val = inf; % do not care of the exit condition -3 for nelder-mead algo, it only happens when using global optim
-    return ; % we can also let the function terminates
+
+if (x_is_prop_param == 0)
+    try
+        Ptmp = SPurge(Ptmp);
+        Ptmp = ComputeTraj(Sys, Ptmp, tspan);
+    catch %#ok<CTCH>
+        warning('SOptimProp:ComputeTraj','Error during trajectory computation when optimizing. Keep going.')
+        val = inf; % do not care of the exit condition -3 for nelder-mead algo, it only happens when using global optim
+        return ; % we can also let the function terminates
+    end
 end
 
-if(val<0)
-    found = val;
+val = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
+
+
+switch optim_dir
+
+    case -1
+        if(val<0)
+            found = val;
+        end
+
+        if(val<fopt)
+            fopt = val;
+            traj_opt = Ptmp.traj;
+            xopt = Ptmp.pts(Ptmp.dim,1);
+        end
+    case 1
+        if(val>0)
+            found = val;
+        end
+        
+        if(val>fopt)
+            fopt = val;
+            traj_opt = Ptmp.traj; % we can improve that by using only Ptmp instead of traj_opt and xopt
+            xopt = Ptmp.pts(Ptmp.dim,1); % as ComputeTraj launch init_fun, Ptmp.pts can be different than x
+        end
+        val = -val;
 end
 
-if(val<fopt)
-    fopt = val;
-    traj_opt = Ptmp.traj;
-    xopt = Ptmp.pts(Ptmp.dim,1);
-end
+wait_bar_status = sprintf('Current Robustness: %g Current optimal: %g',val,fopt);
+waitbar(wait_bar_step, wait_bar_handle, wait_bar_status);
 
-status = sprintf('Robustness value: %g Current optimal: %g',val,fopt);
-rfprintf(status);
+
 end
 
 function val = fun_zero(x, Sys, phi, tspan, tau)
-%% function fun_zero
-global Ptmp fopt traj_opt xopt timeout x_is_prop_param
+%% FIXME function fun_zero 
+global Ptmp fopt traj_opt xopt timeout 
 
 ct = toc; 
 if(ct>timeout)

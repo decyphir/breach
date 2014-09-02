@@ -64,7 +64,7 @@ for restart = 0:nb_restart
     Pr_new = QuasiRefine(Pu, nb_init, nb_init_total);
     
     % Falsification step
-    [val_opt, Propt] = SOptimPropNM(Sys, Pr_new, phi, opt);
+    [val_opt, Propt, status] = SOptimPropNM(Sys, Pr_new, phi, opt);
     ifalse = find(val_opt<0);
     tspent = toc;  
 
@@ -78,18 +78,26 @@ for restart = 0:nb_restart
         fprintf('Restart %d, time left: %g\n',restart, opt.timeout); 
 
         if opt.timeout <0
-            fprintf('Timeout.\n')
+            fprintf('\nFalsification timed out.\n')
+            fprintf(['Final robustness: ' num2str(val_opt)]);
+        
             break;
         end
     
     end
-    fprintf('\n');
     
     nb_init_total = nb_init_total + nb_init;
     nb_init = nb_init_total; % Fibo-increasing numbers of initials   
+    % break if stop was requested
+    if (status == -1)
+        fprintf('\nFalsification stopped at user''s request.\n')       
+        fprintf(['Final robustness: ' num2str(val_opt)]);
+        return;
+    end
 end
 
-fprintf(['\nFalsification stopped after max iterations or time out. Final robustness: ' num2str(val_opt)]);
+fprintf(['\nMax number of req mining iterations reached.']);
+fprintf(['Final robustness: ' num2str(val_opt)]);
 fprintf('\n');
 
 end
