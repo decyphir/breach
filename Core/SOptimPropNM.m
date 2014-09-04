@@ -1,7 +1,7 @@
-function [val_opt, Popt, status]  = SOptimPropNM(Sys, P, phi, opt)
+function [val_opt, Popt, status, nb_call]  = SOptimPropNM(Sys, P, phi, opt)
 %SOPTIMPROP optimizes the satisfaction of a property
 % 
-% Synopsis: [val_opt, Popt] = SOptimProp(Sys, P, phi, opt)
+% Synopsis: [val_opt, Popt, status] = SOptimProp(Sys, P, phi, opt)
 % 
 % Inputs:
 %  - Sys : is a system
@@ -38,6 +38,8 @@ function [val_opt, Popt, status]  = SOptimPropNM(Sys, P, phi, opt)
 %                   Ninit best initial pts
 %       - timeout : (optional), default = inf; forces convergence after 
 %                   timeout s. of computation        
+%       - nb_max_call : (optional), default = inf; forces convergence after 
+%                   nb_max_call simulations
 %
 %
 %    
@@ -52,13 +54,13 @@ function [val_opt, Popt, status]  = SOptimPropNM(Sys, P, phi, opt)
 %              truth value of phi is found, Popt is this parameter vector.
 %              Otherwise, Popt contains the optimum found for each
 %              parameter vector of P.
-%  - status  : Can be 1 (found), 2 ( stopped after max iteration), -1 (stopped)
+%  - status  : Can be 1 (found), 2 ( stopped after max iteration), 3 (stopped after max number of simulations), -1 (stopped)
 %
 %See also SOptimPropLog Falsify
 %
 
-%% process options
-
+% FIXME waitbar is cool but should be given the option to deactivate it (overhead not negligible)
+   
 global Ptmp; % temporary param set used to get non-variables parameter values in optim func
 global found; % non empty if we found a positive or negative truth value of phi
 global StopWhenFound; % See doc
@@ -68,10 +70,12 @@ global xopt; % parameter set leading to the trajectory traj_opt
 global timeout;
 global x_is_prop_param; 
 global wait_bar_handle stop_requested wait_bar_step; % for the waitbar
-
+global nb_call nb_max_call; 
 
 stop_requested = 0; 
 wait_bar_handle = waitbar(0,'Optimizing formula...', 'CreateCancelBtn', 'setappdata(gcf, ''cancel'', 1)'); 
+
+%% process options
 
 found = [];
 if isfield(opt, 'tspan')
@@ -119,30 +123,13 @@ else
     error('SOptimProp:noMaxIter','The field opt.MaxIter is not provided.');
 end
 
-if isfield(opt,'StopWhenFound')
-    StopWhenFound = opt.StopWhenFound;
-else
-    StopWhenFound = 0;
-end
-
-if isfield(opt,'StopWhenFoundInit')
-    StopWhenFoundInit = opt.StopWhenFoundInit;
-    StopWhenFound = StopWhenFound | StopWhenFoundInit;
-else
-    StopWhenFoundInit = 0;
-end
-
-if isfield(opt,'Ninit')
-    Ninit = opt.Ninit;
-else
-    Ninit = size(P.pts, 2);
-end
-
-if isfield(opt,'timeout')
-  timeout = opt.timeout;
-else
-  timeout = inf;
-end
+StopWhenFound = getfield_default(opt, 'StopWhenFound', 0);
+StopWhenFoundInit = getfield_default(opt, 'StopWhenFoundInit', 0);
+StopWhenFound = StopWhenFound | StopWhenFoundInit;
+Ninit = getfield_default(opt, 'Ninit', size(P.pts, 2) );
+timeout = getfield_default(opt, 'timeout', inf);
+nb_max_call = getfield_default(opt, 'nb_max_call', inf);
+nb_call = 0;
 
 tic;
 phi = QMITL_OptimizePredicates(Sys,phi); % optimization of the predicates
@@ -157,6 +144,7 @@ if(StopWhenFoundInit)
         try
             Ptmp = ComputeTraj(Sys, Ptmp, tspan);
             val(ii) = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj, tau);
+            nb_call = nb_call+1;
         catch Me % in case an error occurs during computation of ComputeTraj
             warning('SOptimProp:ComputeTraj','Error during computation of an initial trajectory, keep going.\n');
             disp(Me.getReport);
@@ -176,13 +164,13 @@ if(StopWhenFoundInit)
         wait_bar_step = ii/(size(P.pts,2)+1);
         waitbar(wait_bar_step, wait_bar_handle, wait_bar_status);
         
-        drawnow;
+        drawnow; % for waitbar
         stop_requested = ~isempty(getappdata(wait_bar_handle, 'cancel'));
 
         if( (strcmp(OptimType,'max')&&val(ii)>0) || (strcmp(OptimType,'min')&&val(ii)<0) )
             val_opt = val(ii);
             Popt = Ptmp;
-            fprintf('\n'); % to have a pretty display
+            fprintf('\n'); 
             delete(wait_bar_handle);
             status=1;
             return;
@@ -191,12 +179,21 @@ if(StopWhenFoundInit)
         if ( stop_requested )
             val_opt = val(ii);
             Popt = Ptmp;
-            fprintf('\n'); % to have a pretty display
+            fprintf('\n'); 
             delete(wait_bar_handle);
             status = -1;
+            return;
         end
 
-        
+        if (nb_call>nb_max_call) 
+            val_opt = val(ii);
+            Popt = Ptmp;
+            fprintf('\n'); 
+            delete(wait_bar_handle);
+            status = 3;
+            return;
+        end
+            
         if(ii==1)
             Popt = Ptmp; % first time in the loop, do affectation, not concatenatation
         else
@@ -204,7 +201,7 @@ if(StopWhenFoundInit)
         end
     end
     Ninit = min(Ninit,size(P.pts,2)-nb_errors); % we dont consider parameter sets generating an error of ComputeTraj
-else
+else % FIXME timeout and nb_max_call not implemented here  
     try
         Popt = ComputeTraj(Sys, P, tspan);
     catch err
@@ -341,6 +338,8 @@ end
 
 if (stop_requested)
     status = -1;
+elseif (nb_call>nb_max_call)
+    status=3;
 else
     status=2;
 end
@@ -352,12 +351,12 @@ end
 
 function val = fun_opt(optim_dir, x, Sys, phi, tspan, tau)
 %% function fun 
-global Ptmp found StopWhenFound fopt traj_opt xopt timeout x_is_prop_param wait_bar_handle stop_requested wait_bar_step
+global Ptmp found StopWhenFound fopt traj_opt xopt timeout x_is_prop_param nb_call nb_max_call
+global wait_bar_handle stop_requested wait_bar_step
 
 % updates the waitbar 
 drawnow;
 stop_requested = ~isempty(getappdata(wait_bar_handle, 'cancel'));
-
 
 if(StopWhenFound&&~isempty(found)) %negative value found, do not need to continue
     val = found;
@@ -370,6 +369,11 @@ if(ct>timeout||stop_requested)
   return;
 end
 
+nb_call = nb_call+1;
+if nb_call>nb_max_call
+    val = fopt;
+    return;
+end
 
 Ptmp.pts(Ptmp.dim,1) = x;
 
@@ -385,7 +389,6 @@ if (x_is_prop_param == 0)
 end
 
 val = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
-
 
 switch optim_dir
 
@@ -412,9 +415,8 @@ switch optim_dir
         val = -val;
 end
 
-wait_bar_status = sprintf('Current Robustness: %g Current optimal: %g',val,fopt);
+wait_bar_status = sprintf('Sim#: %g/%g  Rob: %g  Opt: %g',nb_call,nb_max_call, val,fopt);
 waitbar(wait_bar_step, wait_bar_handle, wait_bar_status);
-
 
 end
 
@@ -440,7 +442,7 @@ catch %#ok<CTCH>
     return ; % we can also let the function terminates
 end
 
-status = sprintf('Robustness value: %g Current optimal: %g',val,fopt);
+status = sprintf('Robustness value: %g Current optimal:%g',val,fopt);
 rfprintf(status);
 
 val = abs(val);

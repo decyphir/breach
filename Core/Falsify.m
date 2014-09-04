@@ -1,4 +1,4 @@
-function [Pf, val_opt] = Falsify (Sys, phi, falsif_opt, params_prop)
+function [Pf, val_opt, nb_call_total] = Falsify (Sys, phi, falsif_opt, params_prop)
 %FALSIFY Tries to falsify property phi
 % 
 % Synopsis: Pf = Falsify(Sys, phi, falsif_opt[, param_prop])
@@ -42,6 +42,7 @@ end
 
 opt.timeout = getfield_default(falsif_opt, 'timeout', inf);
 nb_restart = getfield_default(falsif_opt, 'nb_restart', 0); 
+opt.nb_max_call = getfield_default(falsif_opt, 'nb_max_call', inf); 
 
 nb_init = falsif_opt.nb_init;
 nb_iter = falsif_opt.nb_iter;
@@ -56,6 +57,7 @@ opt.ubound = ranges(:,2);
 opt.lbound = ranges(:,1);
 opt.Ninit = 10; 
 nb_init_total = 1;
+nb_call_total = 0;
 
 tic;
 for restart = 0:nb_restart
@@ -64,7 +66,7 @@ for restart = 0:nb_restart
     Pr_new = QuasiRefine(Pu, nb_init, nb_init_total);
     
     % Falsification step
-    [val_opt, Propt, status] = SOptimPropNM(Sys, Pr_new, phi, opt);
+    [val_opt, Propt, status,nb_call] = SOptimPropNM(Sys, Pr_new, phi, opt);
     ifalse = find(val_opt<0);
     tspent = toc;  
 
@@ -88,15 +90,25 @@ for restart = 0:nb_restart
     
     nb_init_total = nb_init_total + nb_init;
     nb_init = nb_init_total; % Fibo-increasing numbers of initials   
+    nb_call_total = nb_call_total+nb_call;
+    opt.nb_max_call = opt.nb_max_call - nb_call;
+    
     % break if stop was requested
     if (status == -1)
         fprintf('\nFalsification stopped at user''s request.\n')       
         fprintf(['Final robustness: ' num2str(val_opt)]);
-        return;
+        return;    
     end
+    % break if stop was requested
+    if (status == 3)
+        fprintf('\nFalsification stopped after max number of simulations.\n')       
+        fprintf(['Final robustness: ' num2str(val_opt)]);
+        return;    
+    end
+   
 end
 
-fprintf(['\nMax number of req mining iterations reached.']);
+fprintf(['\nMax number of falsification restarts reached.\n']);
 fprintf(['Final robustness: ' num2str(val_opt)]);
 fprintf('\n');
 
