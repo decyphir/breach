@@ -62,6 +62,8 @@ end
 
 switch algo
     case 'nelder-mead'
-        [val_opt, Popt]  = SOptimPropNM(Sys, P, phi, opt);
-    % will implement other algo soon...    
+     [val_opt, Popt]  = SOptimPropNM_no_waitbar(Sys, P, phi, opt);
+    case 'nelder-mead-wait-bar' % FIXME temporary     
+     [val_opt, Popt]  = SOptimPropNM(Sys, P, phi, opt);
+     % will implement other algo soon...    
 end
