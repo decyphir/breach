@@ -81,8 +81,8 @@ if any(valb<0)
     return;
 end
 
-idx = find(valw<0);
-Pb = Sselect(Pb, idx);
+% idx = find(valw<0);
+% Pb = Sselect(Pb, idx);
 % Now we know that there are satisfying and unsatisfying values
 
 val = min(valb);
