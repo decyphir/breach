@@ -24,9 +24,9 @@ falsif_opt.ranges = [ 0 20   ;  ...
                       0 325 ;
                        ];
   
-falsif_opt.iter_max = 5;
 falsif_opt.nb_init =  100;
 falsif_opt.nb_iter = 0;  
 
+falsif_opt.iter_max = 5;
 [p,rob] = ReqMining(Sys, phi_template, falsif_opt, prop_opt)
 

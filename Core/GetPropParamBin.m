@@ -36,7 +36,6 @@ else
   opt.verbose=1;
 end
 
-
 % NM: I assume that p_interval is a 2D array
 num_params = numel(params);
 pb = zeros(1,num_params);
@@ -64,7 +63,7 @@ if all(valw>=0)
     rob = min(valw);
     if opt.verbose
         fprintf(['Warning: Interval contains only sat params, result may be not tight. ' ...
-            'Try larger parameter region. \n']);
+                 'Try larger parameter region. \n']);
     end
     return;
     
@@ -81,15 +80,13 @@ if any(valb<0)
     return;
 end
 
-% idx = find(valw<0);
-% Pb = Sselect(Pb, idx);
 % Now we know that there are satisfying and unsatisfying values
 
 val = min(valb);
 rob = inf;
 p = zeros(1,num_params); % initialize p
 for ii = 1:num_params      % optimize independently in the order
-    % given in params
+                           % given in params
     if opt.verbose
         fprintf('Optimizing %s ', params{ii});
     end

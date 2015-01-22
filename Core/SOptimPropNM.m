@@ -1,4 +1,4 @@
-function [val_opt, Popt, status, nb_call]  = SOptimPropNM(Sys, P, phi, opt)
+function [val_opt, Popt, status, nb_call_total]  = SOptimPropNM(Sys, P, phi, opt)
 %SOPTIMPROP optimizes the satisfaction of a property
 % 
 % Synopsis: [val_opt, Popt, status] = SOptimProp(Sys, P, phi, opt)
@@ -56,7 +56,7 @@ function [val_opt, Popt, status, nb_call]  = SOptimPropNM(Sys, P, phi, opt)
 %              parameter vector of P.
 %  - status  : Can be 1 (found), 2 ( stopped after max iteration), 3 (stopped after max number of simulations), -1 (stopped)
 %
-%See also SOptimPropLog Falsify
+%  See also SOptimPropLog Falsify
 %
 
 % FIXME waitbar is cool but should be given the option to deactivate it (overhead not negligible)
@@ -70,7 +70,8 @@ global xopt; % parameter set leading to the trajectory traj_opt
 global timeout;
 global x_is_prop_param; 
 global wait_bar_handle stop_requested wait_bar_step; % for the waitbar
-global nb_call nb_max_call; 
+global nb_call;
+global nb_max_call; 
 
 stop_requested = 0; 
 wait_bar_handle = waitbar(0,'Optimizing formula...', 'CreateCancelBtn', 'setappdata(gcf, ''cancel'', 1)'); 
@@ -128,8 +129,8 @@ StopWhenFoundInit = getfield_default(opt, 'StopWhenFoundInit', 0);
 StopWhenFound = StopWhenFound | StopWhenFoundInit;
 Ninit = getfield_default(opt, 'Ninit', size(P.pts, 2) );
 timeout = getfield_default(opt, 'timeout', inf);
-nb_max_call = getfield_default(opt, 'nb_max_call', inf);
 nb_call = 0;
+nb_max_call = getfield_default(opt, 'nb_max_call', inf);
 
 tic;
 phi = QMITL_OptimizePredicates(Sys,phi); % optimization of the predicates
@@ -173,6 +174,7 @@ if(StopWhenFoundInit)
             fprintf('\n'); 
             delete(wait_bar_handle);
             status=1;
+            nb_call_total= nb_call;
             return;
         end
         
@@ -182,15 +184,17 @@ if(StopWhenFoundInit)
             fprintf('\n'); 
             delete(wait_bar_handle);
             status = -1;
+            nb_call_total= nb_call;
             return;
         end
 
-        if (nb_call>nb_max_call) 
+        if ( nb_call >nb_max_call) 
             val_opt = val(ii);
             Popt = Ptmp;
             fprintf('\n'); 
             delete(wait_bar_handle);
             status = 3;
+            nb_call_total= nb_call;
             return;
         end
             
@@ -238,12 +242,15 @@ if ((StopWhenFound)&&(~isempty(found)))
     val_opt = val(iv(1)); 
     delete(wait_bar_handle);
     status = 1;
+    nb_call_total= nb_call;
     return ;
 end
 
 if (MaxIter<=0) 
     delete(wait_bar_handle);
     status =2;
+    nb_call_total= nb_call;    
+    val_opt = val(iv(1)); 
     return;
 end
 
@@ -319,6 +326,7 @@ for ii = iv(1:Ninit)
         end
         delete(wait_bar_handle);
         status =1;
+        nb_call_total= nb_call;
         return;
     end
 end
@@ -344,6 +352,7 @@ else
     status=2;
 end
 
+nb_call_total= nb_call;
 delete(wait_bar_handle);
 
 
@@ -351,7 +360,7 @@ end
 
 function val = fun_opt(optim_dir, x, Sys, phi, tspan, tau)
 %% function fun 
-global Ptmp found StopWhenFound fopt traj_opt xopt timeout x_is_prop_param nb_call nb_max_call
+global Ptmp found StopWhenFound fopt traj_opt xopt timeout x_is_prop_param nb_call nb_max_call 
 global wait_bar_handle stop_requested wait_bar_step
 
 % updates the waitbar 

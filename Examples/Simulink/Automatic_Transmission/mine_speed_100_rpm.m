@@ -11,9 +11,10 @@ Sys.tspan = 0:.01:50;
 
 %% Property parameters 
 prop_opt.params = {'t1', 'rpm_min'};
+%prop_opt.params = {'rpm_min', 't1'};
 prop_opt.monotony = [-1 -1];
 prop_opt.p_tol = [.1 5];
-prop_opt.order = [1 2];
+prop_opt.order = [2 1];
 prop_opt.p_interval = [0 50; ...
                        0 6000; ... 
                        ];
@@ -25,9 +26,10 @@ falsif_opt.ranges = [ 0 20   ;  ...
                       0 325 ;
                        ];
   
-falsif_opt.iter_max = 2;
 falsif_opt.nb_init  = 2;
 falsif_opt.nb_iter = 100;  
+falsif_opt.nb_max_call = 1000;
 
-
-[p,rob] = ReqMining(Sys, phi_template, falsif_opt, prop_opt)
+%% Max number of mining iterations
+iter_max= 100;
+[p,rob] = ReqMining(Sys, phi_template, falsif_opt, prop_opt, iter_max);
