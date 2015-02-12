@@ -9,16 +9,14 @@ function [p, rob] = GetPropParamBin(Sys, phi, P, params, monotony, p_interval, p
 %  - Sys        : is a system structure for Breach
 %  - phi        : is an STL (QMITL) property
 %  - P          : is a Breach set of parameters with param values for phi
-%  - params     : is a cell of property param names to find
-%  - monotony   : is an array specifying the monotonicity of phi wrt each
-%                 parameter. should be maximized (optim[i] = j) or
-%                 minimized (optim[i] = -1); in the case of multiple
+%  - params     : is a cell of property param names to find. In the case of multiple
 %                 possible satisfying values, the order in which the
 %                 parameter appears determines the priority order in which
-%                 they are optimized e.g. [1 2] means params{1} is
-%                 maximized, then params{2} is maximized; [-2 1] means
-%                 params{2} is minimized, then params{1} is maximized,
-%                 etc...
+%                 they are optimized 
+%  - monotony   : is an array specifying the monotonicity of phi wrt each
+%                 parameter. should be maximized (monotony[i] = j) or
+%                 minimized (monotony[i] = -1); note  monotony[i] is the 
+%                 monotonicity of param[i];
 %  - p_interval : is the search interval(s) for parameter values
 %  - p_tol      : Precision of the binary search in each parameter
 %  - traj       : is an array of trajectories
