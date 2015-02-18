@@ -34,7 +34,6 @@ else
   opt.verbose=1;
 end
 
-% NM: I assume that p_interval is a 2D array
 num_params = numel(params);
 pb = zeros(1,num_params);
 pw = zeros(1,num_params);
@@ -107,7 +106,6 @@ for ii = 1:num_params      % optimize independently in the order
         valb = QMITL_Eval(Sys, phi, Pb, traj, 0);
         val = min(valb);
         
-%       fprintf('  pimin: %g  pimax: %g p_i: %g val %g \n', pimin, pimax, p_i, val);
         res = num2str(p_i);
         if opt.verbose
             rfprintf(res);
@@ -153,4 +151,9 @@ for ii = 1:num_params      % optimize independently in the order
         fprintf('\n');
     end
 end
+
+if (rob==0 || rob==inf)
+    warning('Final robustness is 0 or Inf. This can sometimes indicate that the parameters mined are not tight.');
+end
+
 end
