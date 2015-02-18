@@ -110,7 +110,7 @@ for ii = 1:num_params      % optimize independently in the order
         if opt.verbose
             rfprintf(res);
         end
-        if(val>0)
+        if(val>=0)
             rob = min(val,rob);
             if(monotony(ii)<0)
                 pimin = p_i;
@@ -137,7 +137,7 @@ for ii = 1:num_params      % optimize independently in the order
         rfprintf(num2str(p_i));
     end    
     
-    if(val>0)
+    if(val>=0)
         p(ii) = p_i;
     else
         if(monotony(ii)>0)
@@ -152,8 +152,8 @@ for ii = 1:num_params      % optimize independently in the order
     end
 end
 
-if (rob==0 || rob==inf)
-    warning('Final robustness is 0 or Inf. This can sometimes indicate that the parameters mined are not tight.');
-end
+%if (rob==0 || rob==inf)
+%    warning('Final robustness is 0 or Inf. This can sometimes indicate that the parameters mined are not tight.');
+%end
 
 end
