@@ -57,7 +57,7 @@ function [val_opt, Popt]  = SOptimProp(Sys, P, phi, opt)
 if isfield(opt, 'algo')
     algo = lower(opt.algo);
 else
-    algo = 'nelder-mead';
+    algo = 'nelder-mead-wait-bar';
 end
 
 switch algo
