@@ -27,9 +27,11 @@ falsif_opt.ranges = [ 0 20   ;  ...
                        ];
   
 falsif_opt.nb_init  = 2;
-falsif_opt.nb_iter = 100;  
-falsif_opt.nb_max_call = 1000;
+falsif_opt.nb_iter = 50;  
+falsif_opt.nb_max_call = 100;
 
 %% Max number of mining iterations
 iter_max= 100;
-[p,rob] = ReqMining(Sys, phi_template, falsif_opt, prop_opt, iter_max);
+[p,rob,Pr] = ReqMining(Sys, phi_template, falsif_opt, prop_opt, iter_max);
+
+Psave(Sys, 'Pr');
