@@ -245,6 +245,7 @@ switch Sys.type
         if(output_trajs)
             Pf = Pf.traj;
         end
+                
 end
 
 if(isfield(Sys,'time_mult') && ~isfield(Pf,'time_mult'))
