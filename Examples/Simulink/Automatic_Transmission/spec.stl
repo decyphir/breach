@@ -3,8 +3,8 @@
   speed_bnded := speed[t] < vmax  
   RPM_bnded := RPM[t] < rpm_max
 
-  gear2 := (abs(gear[t] - 2)-.1) < 0 
-  gear3 := (abs(gear[t] - 3)-.1) < 0 
+  gear2 := (abs(gear[t] - 2)-.1) < 0 # approximates gear == 2
+  gear3 := (abs(gear[t] - 3)-.1) < 0 # approximates gear == 3
 
 
 # subformulas (next event)
