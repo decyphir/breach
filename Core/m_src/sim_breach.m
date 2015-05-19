@@ -34,7 +34,7 @@ function [tout X] = sim_breach(Sys, tspan, pts)
   
   if ~isempty(Y)
     for i=1:numel(Y.signals)
-      xx = interp1(tout', Y.signals(i).values, tspan')';
+      xx = interp1(tout', double(Y.signals(i).values), tspan')';
       X = [X; xx];
     end
   end

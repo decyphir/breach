@@ -2,7 +2,7 @@ function Pf = ComputeTraj(Sys, P0, tspan, u)
 %COMPUTETRAJ computes trajectories for a system given initial conditions
 % and parameters
 % 
-% Synopsis:   Pf = ComputeTraj(Sys,P0,tspan [,u])
+% Synopsis:   Pf = ComputeTraj(Sys,P0,[tspan ,u])
 % 
 % Inputs:
 % -  Sys   : System (needs to be compiled)
@@ -10,7 +10,8 @@ function Pf = ComputeTraj(Sys, P0, tspan, u)
 %            an array of size Sys.DimP x size(P0,2). size(P0,2) is the
 %            number of trajectories that will be computed.
 % -  tspan : Interval of the form [t0, tf]. Fixed time instants can also
-%            be specified tspan = [t0 t1 ... tN];
+%            be specified tspan = [t0 t1 ... tN]; if absent, uses
+%            Sys.tspan.
 % -  u     : is a structure array of nb_traj inputs. u(i) must be a struct
 %            with fields
 %             - params_idx : indicates which parameters are made time
@@ -40,6 +41,10 @@ function Pf = ComputeTraj(Sys, P0, tspan, u)
 % 
 %See also CreateParamSet Sselect SConcat SPurge
 %
+
+if nargin==2
+    tspan=Sys.tspan;
+end
 
 
 % checks if we have a parameter set or an array of parameter values

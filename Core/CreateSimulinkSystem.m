@@ -3,16 +3,21 @@ function Sys = CreateSimulinkSystem(mdl, signals, params, p0,  inputfn, pu0 )
 %  
 % Synopsis: Sys =  CreateSimulinkSystem(mdl, signals, params, p0, inputfn, pu0)
 %
-%  - mdl       name of the Simulink model - note that breach will use its own copy of this model
-%  - signals   can be either 'logged' or {'s1','s2', ..., 'sn'} where s1, s2,..., sn are logged signals in the model  
-%              if signals=='logged', Breach will find and use all logged signals in the model 
+%  - mdl       name of the Simulink model - note that breach will use its 
+%              own copy of this model
+%  - signals   can be either 'logged' (default) or {'s1','s2', ..., 'sn'}
+%              where s1, s2,..., sn are logged signals in the model  
+%              if signals=='logged', Breach will find and use all logged
+%              signals in the model. In either case, Breach will look for
+%              and monitor input and output signals 
 %  - params    {'p1',...,'pn'} where pi are tunable parameters in mdl. If
 %              empty or absent, Breach will try to find tunable parameters
 %  - p0        default values for the tunable parameters (0 if empty)
-%  - inputfn   'UniStepXX' | 'VarStepXX' | 'UniPWAXX' where XX is a number (defaut is UniStep1)
-%               E.g. UniStep5 will use piecewise constant input functions with 5 different values 
-%               and a constant time step depending on the simulation time.  
-%  - pu0        default values for input parameters (default to 0)
+%  - inputfn   'UniStepXX' | 'VarStepXX' | 'UniPWAXX' where XX is a number 
+%              (defaut is UniStep1) E.g. UniStep5 will use piecewise 
+%              constant input functions with 5 different values  and a 
+%              constant time step depending on the simulation time.  
+%  - pu0       default values for input parameters (default to 0)
 
 %% default arguments
 
