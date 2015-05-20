@@ -29,4 +29,4 @@ falsif_opt.nb_max_call = 1000;
 
 %% Max number of mining iterations
 iter_max= 100;
-%[p, rob, Pr] = ReqMining(Sys, phi_template, falsif_opt, prop_opt, iter_max);
+[p, rob, Pr] = ReqMining(Sys, phi_template, falsif_opt, prop_opt, iter_max);
