@@ -4,7 +4,7 @@ function [P, val] = SEvalProp(Sys, P, phis, taus, ipts, break_level, method, VER
 % Synopsis: [P, val] = SEvalProp(Sys, P, phis[ , taus[, ipts[, break_level[, method[, VERBOSE]]]]])
 % 
 % Inputs:
-%  - Sys         : The system
+%  - Sys         : System structure
 %  - P           : Parameter set. It may contain many parameter vectors.
 %                  All trajectories must be computed or an error is thrown.
 %  - phis        : an array of QMITL property(ies)

@@ -4,7 +4,6 @@ function [log_sig] = find_signals(mdl)
 %  
         
   % find logged signals
-  
   l = find_system(mdl,'FindAll','on', 'type','line');
 
   log_sig= {};
@@ -12,7 +11,7 @@ function [log_sig] = find_signals(mdl)
     nm = get(l(i),'Name');
     if (~isempty(nm))     
       if (get(l(i),'DataLogging'))        
-        log_sig = {log_sig{:}, nm};                
+        log_sig = {log_sig{:}, nm};       
       end      
     end
   end

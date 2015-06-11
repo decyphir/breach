@@ -36,8 +36,7 @@ ranges = falsif_opt.ranges;
 Pu = CreateParamSet(Sys, params, ranges);
 
 if exist('params_prop','var')
-    Pu = SetParam(Pu, params_prop.names, ...
-        params_prop.values);
+    Pu = SetParam(Pu, params_prop.params,params_prop.values);
 end
 
 opt.timeout = getfield_default(falsif_opt, 'timeout', inf);

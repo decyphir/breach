@@ -4,7 +4,7 @@
 
 init_autotrans;
 P0 = CreateParamSet(Sys); % nominal parameter set for Sys
-P0 =  ComputeTraj(Sys, P0, Sys.tspan)
+P0 = ComputeTraj(Sys, P0, Sys.tspan)
 
 %%  define property phi1
 

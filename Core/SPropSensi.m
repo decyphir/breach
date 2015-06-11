@@ -81,7 +81,7 @@ else
     tspan = 0:.2:10;
 end
 
-if isfield(op, 'tau')
+if isfield(opt, 'tau')
     tau = opt.tau;
 elseif isfield(opt, 'tprop')
     tau = opt.tprop;

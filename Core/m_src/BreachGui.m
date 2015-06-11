@@ -1594,7 +1594,10 @@ else
         
         legend(stats)
         
-        set(gca, 'CLim', sym_clim(val));
+        clim = sym_clim(val);
+        if diff(clim)>0
+            set(gca, 'CLim',clim );
+        end
         colormap([ 1 0 0; 0 1 0 ]);
         
         hold on;
