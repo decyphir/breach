@@ -12,7 +12,7 @@ Sys.tspan = 0:.01:50;
 %% Property parameters 
 prop_opt.params = {'vmax', 'rpm_max'};
 prop_opt.monotony   = [1 1];
-prop_opt.p_interval = [0 200   ;...  % for vmax
+prop_opt.ranges = [0 200   ;...  % for vmax
                        0 6000 ];     % for rmp_max
 prop_opt.p_tol      = [1 1];
   
@@ -30,3 +30,4 @@ falsif_opt.nb_max_call = 1000;
 %% Max number of mining iterations
 iter_max= 100;
 [p, rob, Pr] = ReqMining(Sys, phi_template, falsif_opt, prop_opt, iter_max);
+Psave(Sys, 'Pr'); % run Breach(Sys) to explore the successive counter-examples 
