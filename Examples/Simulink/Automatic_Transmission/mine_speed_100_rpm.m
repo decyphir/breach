@@ -15,7 +15,7 @@ prop_opt.params = {'t1', 'rpm_min'};
 prop_opt.monotony = [-1 -1];
 prop_opt.p_tol = [.1 5];
 prop_opt.order = [2 1];
-prop_opt.p_interval = [0 50; ...
+prop_opt.ranges = [0 50; ...
                        0 6000; ... 
                        ];
   
@@ -32,6 +32,6 @@ falsif_opt.nb_max_call = 100;
 
 %% Max number of mining iterations
 iter_max= 100;
-[p,rob,Pr] = ReqMining(Sys, phi_template, falsif_opt, prop_opt, iter_max);
+[p,rob,Pr_speed_100_rpm] = ReqMining(Sys, phi_template, falsif_opt, prop_opt, iter_max);
 
-Psave(Sys, 'Pr');
+Psave(Sys, 'Pr_speed_100_rpm');, % run Breach(Sys) to explore the successive counter-examples 
