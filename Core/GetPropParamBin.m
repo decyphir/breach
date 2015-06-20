@@ -72,8 +72,8 @@ pw = zeros(1,num_params);
 % indices for best and worst corners in range
 % note: these are scalar indices for 2D arrays
 % recall that (i,j) == i+nb_row*j
-i_best  = (1:num_params) + num_params*(monotony+1)/2 
-i_worst = (1:num_params) + num_params*(1-monotony)/2
+i_best  = (1:num_params) + num_params*(monotony+1)/2;
+i_worst = (1:num_params) + num_params*(1-monotony)/2;
 
 pb = ranges(i_best);
 pw = ranges(i_worst);

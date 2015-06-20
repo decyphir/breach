@@ -11,6 +11,7 @@ P = CreateParamSet(Sys);
 P = ComputeTraj(Sys,P);
 SplotVar(P);
 pause
+close
 
 %% load properties
 QMITL_ReadFile('specs.stl');
@@ -27,7 +28,9 @@ prop_opt.p_tol = [.01];
 
 figure;
 SplotSat(Sys, P, phi, 3);
+%title('Candidate specification for nominal trace');
 pause
+close
 
 %% System and falsification for nominal parameter
 falsif_opt.params = {'K' ... ,
@@ -44,10 +47,24 @@ prop_opt.values= p;
 Pfalse = Falsify(Sys, phi, falsif_opt, prop_opt);
 
 figure;
-SplotSat(Sys, P, phi, 3);
+SplotSat(Sys, Pfalse, phi, 3);
+%title('Falsifying trace');
 pause
+close 
 
 %% Max number of mining iterations
 iter_max= 10;
 [p, rob, Pr] = ReqMining(Sys, phi_template, falsif_opt, prop_opt, iter_max);
+Psave(Sys, 'Pr');
+
+%% Ground truth
+Pground = SetParam(P,'K', 9); 
+Pground = ComputeTraj(Sys,Pground);
+
+[p_ground, rob, Pground] = GetPropParamBin(Sys, phi, Pground, prop_opt);
+
+
+
+
+
 
