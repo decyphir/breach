@@ -1,3 +1,4 @@
+clear 
 InitBreach;
 
 %% Init system
@@ -54,7 +55,7 @@ close
 
 %% Max number of mining iterations
 iter_max= 10;
-[p, rob, Pr] = ReqMining(Sys, phi_template, falsif_opt, prop_opt, iter_max);
+[p, rob, Pr] = ReqMining(Sys, phi, falsif_opt, prop_opt, iter_max);
 Psave(Sys, 'Pr');
 
 %% Ground truth
