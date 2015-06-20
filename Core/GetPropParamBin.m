@@ -1,4 +1,4 @@
-function [p, rob] = GetPropParamBin(Sys, phi, P, prop_opt, traj)
+function [p,rob,Pb] = GetPropParamBin(Sys, phi, P, prop_opt, traj)
 %GETPROPPARAMBIN search values for parameters in a formula phi so that phi
 % is satisfied by a set of traces - assumes monotonicity, to be specified
 % by the user

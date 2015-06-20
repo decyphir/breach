@@ -7,7 +7,7 @@ function [Pf, val_opt, nb_call_total] = Falsify (Sys, phi, falsif_opt, params_pr
 %  - Sys        : System Breach structure
 %  - phi        : property to falsify
 %  - falsif_opt : parameters for falsification - contains fields params, ranges, nb_init, nb_iter
-%  - param_prop : parameters for phi -  contains fields names , values
+%  - param_prop : parameters for phi -  contains fields params , values
 % 
 % Output:
 %  - Pf : parameter set leading to falsification, or least robust
