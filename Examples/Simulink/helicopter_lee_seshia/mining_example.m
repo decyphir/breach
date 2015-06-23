@@ -21,7 +21,7 @@ QMITL_ReadFile('specs.stl');
 
 % Property parameters 
 prop_opt.params = {'tau'};
-prop_opt.monotony   = [1];
+prop_opt.monotony = [1];
 prop_opt.ranges = [0 10];
 prop_opt.p_tol = [.01];
 
@@ -29,7 +29,6 @@ prop_opt.p_tol = [.01];
 
 figure;
 SplotSat(Sys, P, phi, 3);
-%title('Candidate specification for nominal trace');
 pause
 close
 
@@ -49,7 +48,6 @@ Pfalse = Falsify(Sys, phi, falsif_opt, prop_opt);
 
 figure;
 SplotSat(Sys, Pfalse, phi, 3);
-%title('Falsifying trace');
 pause
 close 
 
