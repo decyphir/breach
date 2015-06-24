@@ -28,7 +28,7 @@ P = ComputeTraj(Sys,P); % P now contains a field P.traj with the result of
 figure;
 SplotVar(P);
 
-%% Parameter synthesis for nominal trajectory
+%% Parameter synthesis
 % In the following, we analyse how fast $\dot{\theta}$ converges toward 
 % the input $\psi$ by using the parameter synthesis algorithm on a PSTL 
 % formula. 
