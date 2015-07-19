@@ -126,14 +126,17 @@ end
 
 % cd back and clean variable
 cd(cdr);
-disp('-------------------------------------------------------------')
-disp('Install successful.')
-disp('Yeah, I know - unless you really know what you''re doing, you');
-disp('got that "fatal error" ginac not found.');
-disp('But I''m telling you, this was really just a warning, and you ');
-disp('will probably not need ginac anyway, so, yes, I repeat:');
-disp('Install successful.');
-disp('-------------------------------------------------------------')
+disp('-------------------------------------------------------------------');
+disp('- Install successful.                                            --')
+disp('- Yeah, I know: unless you really know what you''re doing, you   --');
+disp('- got that "fatal error: ginac not found". This issue can be     --');
+disp('- resolved under Debian-based Linux distros by installing the    --');
+disp('- following packages: ginac, ginac-devel and ginac-utils.        --');
+disp('- However, GinaC is used only by a few functions, so that for    --');
+disp('- most users, it is still fair to say already:                   --');
+disp('-------------------------------------------------------------------');
+disp('- Install successful.                                            --');
+disp('-------------------------------------------------------------------');
 
 end
     

@@ -14,7 +14,7 @@ prop_opt = [];
 prop_opt.params = { 't1'};
 prop_opt.monotony = [-1];
 prop_opt.p_tol = [.02];
-prop_opt.p_interval = [0 40]
+prop_opt.ranges = [0 40]
                
 %% System and falsification parameters
 falsif_opt = [];
@@ -23,9 +23,11 @@ falsif_opt.ranges = [ 0 20   ;  ...
                       0 100  ;  ...
                       0 325 ;
                        ];
-  
-falsif_opt.iter_max = 5;
-falsif_opt.nb_init =  100;
-falsif_opt.nb_iter = 0;  
+ 
+falsif_opt.nb_init =  1000;
+falsif_opt.nb_iter = 1000;  
+falsif_opt.nb_max_call = 10000;
 
-[p,rob] = ReqMining(Sys, phi_template, falsif_opt, prop_opt)
+iter_max= 100;
+[p,rob,Pr_stay_gear2] = ReqMining(Sys, phi_template, falsif_opt, prop_opt,iter_max)
+Psave(Sys, 'Pr_stay_gear2'); % run Breach(Sys) to explore the successive counter-examples 

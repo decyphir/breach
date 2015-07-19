@@ -10,7 +10,7 @@ function P = QuasiRefine(P, nb, varargin)
 %           values. If lower or equal to one, nothing is done. If nb is not
 %           an integer, it is rounded toward 0.
 %  - step : (Optional, default=0) number of generated parameter to skip
-%  - strictlyInside : (Optional, default=not set) If set (aka, write
+%  - strictlyInside : (Optional, default=not set) If set (i.e., write
 %                     'strictlyInside' in the function call), all generated
 %                     parameter sets are strictly inside the initial one.
 %                     Otherwise, the center of each generated parameter set

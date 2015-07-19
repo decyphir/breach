@@ -1594,7 +1594,10 @@ else
         
         legend(stats)
         
-        set(gca, 'CLim', sym_clim(val));
+        clim = sym_clim(val);
+        if diff(clim)>0
+            set(gca, 'CLim',clim );
+        end
         colormap([ 1 0 0; 0 1 0 ]);
         
         hold on;
@@ -2306,52 +2309,11 @@ function menu_import_traj_Callback(hObject, eventdata, handles)
 
 try
     
-    str = inputdlg({'Enter filename:'});
-    
-    if isempty(str)
-        return;
-    end
-    
-    data_values = load(str{1});
-    traj.time = data_values(:,1)';
-    traj.X = data_values(:,2:end)';
-    
+    traj = load_traj;
     P = handles.working_sets.(handles.current_set);
+    P.traj = traj;
+    P.traj_ref(:) = 1;
     
-    P.ParamList = {};
-    
-    for j = 0:size(traj.X,1)-1
-        P.ParamList = {P.ParamList{:} ['x' num2str(j)]};
-    end
-    
-    P.ParamList = {P.ParamList{:} 'no'};
-    
-    handles.Sys.ParamList = P.ParamList;
-    handles.Sys.x0 = traj.X(:,1);
-    handles.Sys.DimX = numel(handles.Sys.x0);
-    P.DimX = numel(handles.Sys.x0);
-    P.DimP = numel(P.ParamList);
-    
-    if isfield(P, 'traj')
-        
-        nbt = numel(P.traj);
-        traj.param = [traj.X(:,1)' nbt];
-        P.pts = [P.pts [traj.X(:,1); nbt]];
-        P.epsi = [P.epsi 1];
-        P.selected = [P.selected 0];
-        P.traj = [P.traj traj];
-        
-    else
-        
-        nbt = 0;
-        traj.param = [traj.X(:,1)' nbt];
-        P.selected = 0;
-        P.traj = traj;
-        P.pts = [P.traj.X(:,1);nbt];
-        
-    end
-    Sys = handles.Sys;
-    save(handles.system_name_file, 'Sys');
     handles.working_sets.(handles.current_set)=P;
     handles = update_working_sets_panel(handles);
     handles = update_modif_panel(handles);

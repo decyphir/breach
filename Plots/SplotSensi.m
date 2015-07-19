@@ -47,7 +47,7 @@ end
 if ~exist('iX','var')
     iX = [];
 elseif ~isnumeric(iX)
-    iX = FindParam(iX);
+    iX = FindParam(P,iX);
 end
 iX = iX(iX>0);
 iX = iX(iX<=P.DimX);
@@ -58,7 +58,7 @@ end
 if ~exist('iP','var')
     iP = [];
 elseif ~isnumeric(iP)
-    iP = FindParam(iP);
+    iP = FindParam(P,iP);
 end
 iP = iP(iP>0);
 iP = iP(iP<=size(P.pts,1));

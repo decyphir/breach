@@ -114,7 +114,6 @@ for np = npb+1:nb_phis+npb
         phi_tspan = P.props_values(iphi,ii).tau;
         phi_val = P.props_values(iphi,ii).val;
         plot(phi_tspan*time_mult, phi_val);
-        %plot([phi_tspan(1) phi_tspan(end)]*time_mult, [0 0],'-k');
         stairs(phi_tspan*time_mult, (phi_val>0)*max(abs(phi_val))/2,'-r');
         
         legend('Quant. sat', 'Bool. sat');

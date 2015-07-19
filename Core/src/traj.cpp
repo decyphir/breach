@@ -202,7 +202,7 @@ int CVM_ComputeTrajSensi(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prh
 
 	}
 	if (nb_pts>1)
-		cout <<endl;
+		mexPrintf("\n");
 	/* Writing outputs */
 
 	plhs[0] = mxDuplicateArray(prhs[0]);
@@ -356,7 +356,7 @@ int CVM_ComputeTraj(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) 
 
 	/* End progress bar */
 	if (nb_pts>1)
-		cout << endl;
+		mexPrintf("\n");
 
 	/* Writing outputs */
 

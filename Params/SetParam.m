@@ -58,7 +58,7 @@ end
 
 if(size(ParamValues,1) == 1 && numel(ParamList)~=1)
     % in case when we have one value for many parameters
-    ParamValues = ParamValues'; % we corrige the input
+    ParamValues = ParamValues'; % we fix the input
 end
 
 if(numel(ParamList) ~= size(ParamValues,1))
