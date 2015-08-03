@@ -71,4 +71,8 @@ P.pts(P.dim,:) = P.pts(P.dim,:) + (2*S2.pts-1).*P.epsi;
 P.epsi = P.epsi*delta;   % <-- NOT SURE OF THAT
 P.D = S2.D;
 
+% Purge trajectories and properties
+P = SPurge_props(P);
+P = SPurge(P);
+
 end

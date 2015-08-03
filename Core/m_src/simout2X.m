@@ -47,32 +47,35 @@ for iV = 1:lenVars
 end
 
 logs = simout.get('logsout');
-logs_names = logs.getElementNames();
 
-%% logs
-for ilg = 1:numel(logs_names)
-    if ~(ismember(logs_names{ilg}, signals))
-        signame = logs_names{ilg};
-        if ~ismember(signame,signals)
-            
-            sig = logs.getElement(signame);
-            nbdim = size(sig.Values.Data,2);
-            
-            % getting signal data
-            for idim =1:nbdim
-                try
-                    xdata = interp1(sig.Values.Time',double(sig.Values.Data(:,idim)),tout, 'linear','extrap');
-                    X = [X ; xdata(1,:)];
-                end
-            end
-            
-            % naming multidimensional signal= name_signal_i_
-            if nbdim==1
-                signals = {signals{:} signame};
-            else
+if ~isempty(logs)
+    logs_names = logs.getElementNames();
+    
+    %% logs
+    for ilg = 1:numel(logs_names)
+        if ~(ismember(logs_names{ilg}, signals))
+            signame = logs_names{ilg};
+            if ~ismember(signame,signals)
+                
+                sig = logs.getElement(signame);
+                nbdim = size(sig.Values.Data,2);
+                
+                % getting signal data
                 for idim =1:nbdim
-                    signamei = [signame '_' num2str(idim)  '_'];
-                    signals = {signals{:} signamei};
+                    try
+                        xdata = interp1(sig.Values.Time',double(sig.Values.Data(:,idim)),tout, 'linear','extrap');
+                        X = [X ; xdata(1,:)];
+                    end
+                end
+                
+                % naming multidimensional signal= name_signal_i_
+                if nbdim==1
+                    signals = {signals{:} signame};
+                else
+                    for idim =1:nbdim
+                        signamei = [signame '_' num2str(idim)  '_'];
+                        signals = {signals{:} signamei};
+                    end
                 end
             end
         end

@@ -1,4 +1,4 @@
-function Sys = CreateSimulinkSystem(mdl, signals, params, p0,  inputfn, pu0 )
+function Sys = CreateSimulinkSystem(mdl, signals, params, p0,  inputfn, pu0, options )
 % CreateSimulinkSystem  Create a Breach system structure from a simulink model
 %
 % Synopsis: Sys =  CreateSimulinkSystem(mdl, signals, params, p0, inputfn, pu0)
@@ -20,22 +20,28 @@ function Sys = CreateSimulinkSystem(mdl, signals, params, p0,  inputfn, pu0 )
 %  - pu0       default values for input parameters (default to 0)
 
 %% default arguments
+if ~exist('signals', 'var')||isempty('signals')
+   signals='logged'; 
+end
 
-switch nargin
-    case 1
-        signals ='logged';
-        params={};
-        p0=[];
-        inputfn = 'UniStep1';
-    case 2
-        params={};
-        p0=[];
-        inputfn = 'UniStep1';
-    case 3
-        p0=[];
-        inputfn = 'UniStep1';
-    case 4
-        inputfn = 'UniStep1';
+if ~exist('params', 'var')||isempty('params')
+   params={}; 
+end
+
+if ~exist('p0', 'var')||isempty('p0')
+   p0=[]; 
+end
+
+if ~exist('inputfn', 'var')||isempty('inputfn')
+   inputfn='UniStep1'; 
+end
+
+if ~exist('pu0', 'var')||isempty('pu0')
+   pu0=[]; 
+end
+
+if ~exist('options', 'var')||isempty('options')
+   options=struct; 
 end
 
 
@@ -49,8 +55,14 @@ save_system(mdl,mdl_breach);
 close_system(mdl,0);
 load_system(mdl_breach);
 
-%% Adjust configuration parameters of the model
+%% Checks options
 
+% add scaling parameters to the lookup tables
+if isfield(options, 'scale_lookup_tables')
+    add_scale_param_lookup_tables(mdl_breach);
+end
+
+%% Adjust configuration parameters of the model
 cs = getActiveConfigSet(mdl_breach);
 
 % Do not change the order of the following commands. There are dependencies between the parameters.
@@ -136,28 +148,24 @@ find_input_signals();
 
 %% logged signals, by default none
 sig_log = {};
-find_logged_signals()
+find_logged_signals();
 
 
 %% Scope signals
-find_scope_signals(mdl_breach);
+sig_scopes = find_scope_signals(mdl_breach);
 
 %% define parameters
-if exist('params')
+if exist('params','var')
     if (isempty(params))
         exclude = {'tspan','u__','t__'};
         assignin('base','tspan', 0:1);
-        [params p0] = filter_vars(mdl_breach, exclude);
+        [params, p0] = filter_vars(mdl_breach, exclude);
     end
     
 else
     exclude = {'tspan','u__','t__'};
     assignin('base','tspan', 0:1);
-    [params p0] = filter_vars(mdl_breach, exclude);
-end
-
-if ~exist('p0')
-    p0 = zeros(1,numel(params));
+    [params, p0] = filter_vars(mdl_breach, exclude);
 end
 
 if isempty(p0)
@@ -166,11 +174,11 @@ end
 
 params = {params{:} U.params{:}};
 
-if (exist('pu0'))
+if ~isempty(pu0)
     pu(1:numel(pu0)) = pu0;
 end
-%%  try out
 
+%%  Run the model for time 0 to check proper initialization and collect signal names
 tspan = evalin('base', 'tspan;');
 assignin('base','tspan',[0 0]);
 assignin('base','t__',0);
@@ -204,12 +212,12 @@ close_system(mdl_breach);
         ins = find_system(mdl_breach,'SearchDepth',1, 'BlockType', 'Inport');
         
         for i = 1:numel(ins)
-             
-            in =  get_param(ins(i),'Name');
-            in = regexprep(in,'\W','_'); 
-%            in = set_param(ins(i),'Name',in);
             
-            %Ensures port and its output line have the same name  
+            in =  get_param(ins(i),'Name');
+            in = regexprep(in,'\W','_');
+            %            in = set_param(ins(i),'Name',in);
+            
+            %Ensures port and its output line have the same name
             lh = get_param(ins(i), 'LineHandles');
             lh=lh{1}.Outport;
             set(lh, 'Name', in{1});
@@ -272,8 +280,7 @@ close_system(mdl_breach);
             
         end
         
-        
-        
+       
     end
 
     function find_logged_signals

@@ -33,7 +33,6 @@ end
 % Reset field traj_to_compute and traj_ref
 [~,P.traj_to_compute] = unique(P.pts(1:P.DimP,:)','rows');
 P.traj_to_compute = sort(reshape(P.traj_to_compute,1,[]));
-
 P.traj_ref = zeros(1,size(P.pts,2));
 
 end

@@ -115,9 +115,7 @@ if tau < tspan(1)
 end
 
 Pr = ComputeTraj(Sys, Pr, tspan);
-
 [Pr, Y] = SEvalProp(Sys, Pr, phi, tau);
-
 [mu, mustar, sigma] = EEffects(Y, Pr.D, opt.p);
 
 

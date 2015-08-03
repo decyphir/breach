@@ -15,8 +15,14 @@ nb_scopes = numel(scopes);
 signals={};
 new_signals = {};
 
+scope_save_names = {};
+
 for i_scope = 1:nb_scopes
     scope = scopes{i_scope};
+    scope_save_name = get_param(scope, 'SaveName');
+    scope_save_name = genvarname(scope_save_name, scope_save_names);
+    scope_save_names = {scope_save_names{:}, scope_save_name};
+    set_param(scope, 'SaveName', scope_save_name);
     find_signals();
     signals = {signals{:} new_signals{:}};
 end
@@ -48,7 +54,7 @@ end
             new_signals = {new_signal, new_signals{:}};
         end
         
-        set_param(scope,'SaveToWorkspace', 'off');
-        set_param(scope,'LimitDataPoints','on');
+        set_param(scope,'SaveToWorkspace', 'on');
+        set_param(scope,'LimitDataPoints','off');
     end
 end
