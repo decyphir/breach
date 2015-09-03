@@ -2,7 +2,7 @@
 
 mdl = 'Autotrans_shift';
 Sys = CreateSimulinkSystem(mdl, 'logged', {}, [], 'VarStep2');
-Sys.tspan = 0:.1:50; %default time spa
+Sys.tspan = 0:.1:50; %default time span
 
 % Set default input values (other than 0) 
 

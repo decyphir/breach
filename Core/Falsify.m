@@ -19,7 +19,7 @@ function [Pf, val_opt, nb_call_total] = Falsify (Sys, phi, falsif_opt, params_pr
 %  Sys.tspan = 0:.01:50;
 %
 %  falsif_prop.params_u = {'throttle_u0'};
-%  falsif_opt.range = [0 100];
+%  falsif_opt.ranges = [0 100];
 %
 %  falsif_opt.nb_init = 10;
 %  falsif_opt.nb_iter = 100;

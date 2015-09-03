@@ -81,13 +81,19 @@ cs.set_param('ReturnWorkspaceOutputs', 'on');   % Save simulation output as sing
 % cs.set_param('SaveOutput', 'on');   % Output
 cs.set_param('SaveTime', 'on');   % Time
 
-% cs.set_param('SolverType', 'Fixed-step');   % Type
+% Solver pane - times
 
-% Solver pane
-%  cs.set_param('FixedStep', 'auto');   % Fixed-step size (fundamental sample time)
-%  cs.set_param('Solver', 'ode5');   % Solver
+t_end= str2num(cs.get_param('StopTime'));
+try 
+    t_step= str2num(cs.get_param('FixedStep'));
+catch % default fixed step is t_end/1000 
+    t_step= t_end/1000;
+end
+
 cs.set_param('StartTime', '0.0');   % Start time
 cs.set_param('StopTime', 'tspan(end)');   % Stop time
+
+
 
 % Data Import/Export pane
 cs.set_param('ExternalInput', '[t__, u__]');   % Input
@@ -203,6 +209,7 @@ Sys.type= 'Simulink';
 eval(['Sys.sim = @' simfn ';']);
 Sys.mdl= [mdl '_breach'];
 Sys.Dir= pwd;
+Sys.tspan = 0:t_step:t_end;
 
 save_system(mdl_breach);
 close_system(mdl_breach);
