@@ -3,8 +3,9 @@ disp('Initializing Breach...');
 disp('%-------------------------------------------------------------------%')
 disp('% Important!                                                        %')
 disp('% The prefix ''QMITL'' has (finally) been replaced by ''STL''.      %');
-disp('% Please update your code accordingly if needed.                    %'); 
-disp('%  - Find/replace QMITL with STL in all m-files will do the trick.) %');
+disp('% Please update your code accordingly if needed:                    %'); 
+disp('%  - Run InstallBreach                                              %');
+disp('%  - Find/replace QMITL with STL in all your m-files                %');
 disp('%  - Use RecoverFormula to convert previously saved QMITL_Formula   %')
 disp('%    Object into STL_Formula.                                       %')
 disp('%-------------------------------------------------------------------%')
