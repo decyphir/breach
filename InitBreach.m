@@ -1,4 +1,11 @@
 % This script initializes Breach, in particular adding paths to Breach directories
+disp('Initializing Breach...'); 
+disp('%-------------------------------------------------------------------%')
+disp('% Important!                                                        %')
+disp('% The prefix ''QMITL'' has (finally) been replaced by ''STL''.      %');
+disp('% Please update your code accordingly if needed.                    %'); 
+disp('% (find/replace QMITL with STL in all m-files will do the trick.)   %');
+disp('%-------------------------------------------------------------------%')
 
 id = 'MATLAB:dispatcher:nameConflict';
 warning('off',id);
