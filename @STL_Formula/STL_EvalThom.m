@@ -173,46 +173,46 @@ switch(phi.type)
         [time_values, valarray] = RobustOr(time_values1, valarray1, time_values2, valarray2);
         
     case 'always'
-        DDDI = eval(phi.interval);
-        DDDI = max([DDDI; 0 0]);
-        DDDI(1) = min(DDDI(1), DDDI(2));
-        next_interval = DDDI+interval;
+        I___ = eval(phi.interval);
+        I___ = max([I___; 0 0]);
+        I___(1) = min(I___(1), I___(2));
+        next_interval = I___+interval;
         [valarray, time_values] = GetValues(Sys, phi.phi, P, traj, next_interval);
-        if(DDDI(end)~=inf)
-            time_values = [time_values time_values(end)+DDDI(end)];
+        if(I___(end)~=inf)
+            time_values = [time_values time_values(end)+I___(end)];
             valarray = [valarray valarray(end)];
         end
-        [time_values, valarray] = RobustEv(time_values, -valarray, DDDI);
+        [time_values, valarray] = RobustEv(time_values, -valarray, I___);
         valarray = -valarray;
         
     case 'eventually'
-        DDDI = eval(phi.interval);
-        DDDI = max([DDDI; 0 0]);
-        DDDI(1) = min(DDDI(1), DDDI(2));
-        next_interval = DDDI+interval;
+        I___ = eval(phi.interval);
+        I___ = max([I___; 0 0]);
+        I___(1) = min(I___(1), I___(2));
+        next_interval = I___+interval;
         [valarray1, time_values1] = GetValues(Sys, phi.phi, P, traj, next_interval);
-        if(DDDI(end)~=inf)
-            time_values1 = [time_values1 time_values1(end)+DDDI(end)];
+        if(I___(end)~=inf)
+            time_values1 = [time_values1 time_values1(end)+I___(end)];
             valarray1 = [valarray1 valarray1(end)];
         end
-        [time_values, valarray] = RobustEv(time_values1, valarray1, DDDI);
+        [time_values, valarray] = RobustEv(time_values1, valarray1, I___);
         
     case 'until'
-        DDDI = eval(phi.interval);
-        DDDI = max([DDDI; 0 0]);
-        DDDI(1) = min(DDDI(1), DDDI(2));
-        interval1 = [interval(1), DDDI(2)+interval(2)];
-        interval2 = DDDI+interval;
+        I___ = eval(phi.interval);
+        I___ = max([I___; 0 0]);
+        I___(1) = min(I___(1), I___(2));
+        interval1 = [interval(1), I___(2)+interval(2)];
+        interval2 = I___+interval;
         
         [valarray1, time_values1] = GetValues(Sys, phi.phi1, P, traj, interval1);
         [valarray2, time_values2] = GetValues(Sys, phi.phi2, P, traj, interval2);
-        if(DDDI(end)~=inf)
-            time_values1 = [time_values1 time_values1(end)+DDDI(end)];
+        if(I___(end)~=inf)
+            time_values1 = [time_values1 time_values1(end)+I___(end)];
             valarray1 = [valarray1 valarray1(end)];
-            time_values2 = [time_values2 time_values2(end)+DDDI(end)];
+            time_values2 = [time_values2 time_values2(end)+I___(end)];
             valarray2 = [valarray2 valarray2(end)];
         end
-        [time_values, valarray] = RobustUntil(time_values1, valarray1, time_values2, valarray2, DDDI);
+        [time_values, valarray] = RobustUntil(time_values1, valarray1, time_values2, valarray2, I___);
 end
 
 %%  Sanity checks

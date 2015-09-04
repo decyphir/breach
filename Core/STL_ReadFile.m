@@ -85,7 +85,7 @@ while ischar(tline)
     
     if ~isempty(tline)
         % checks if we are declaring signals
-        tokens = regexp(tline, 'signal (.*)','tokens');
+        tokens = regexp(tline, '^signal (.*)','tokens');
         if ~isempty(tokens)
             new_signals= strsplit(tokens{1}{1},',');
             signal_names = {signal_names{:} new_signals{:}};
@@ -95,7 +95,7 @@ while ischar(tline)
     
     if ~isempty(tline)
         % checks if we are declaring parameters
-        tokens = regexp(tline, 'param (.*)','tokens');
+        tokens = regexp(tline, '^param (.*)','tokens');
         
         if ~isempty(current_id)
            try

@@ -81,6 +81,9 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	plhs[1] = mxCreateDoubleMatrix(1, N+1, mxREAL);
 
 	writeSignal(*yev, plhs[0], plhs[1]);
+
 	delete y;
-    delete yev;
+
+    if (b-a > 0)
+        delete yev;
 }

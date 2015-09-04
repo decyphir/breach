@@ -80,8 +80,8 @@ pw = ranges(i_worst);
 
 Pb = SetParam(P, params, pb');
 Pw = SetParam(P, params, pw');
-valb = QMITL_Eval(Sys, phi, Pb, traj, 0);
-valw = QMITL_Eval(Sys, phi, Pw, traj, 0);
+valb = STL_Eval(Sys, phi, Pb, traj, 0);
+valw = STL_Eval(Sys, phi, Pw, traj, 0);
 
 %% Check if everybody is sat
 if all(valw>=0)
@@ -149,7 +149,7 @@ end
     function res =  bisect(ip)
         p_i = (pmax(ip)+pmin(ip))/2;
         Pb = SetParam(Pb, params(ip), p_i');
-        valb = QMITL_Eval(Sys, phi, Pb, traj, 0);
+        valb = STL_Eval(Sys, phi, Pb, traj, 0);
         val = min(valb);
         
         res = num2str(p_i);
