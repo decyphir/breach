@@ -8,7 +8,7 @@ function [val_opt, Popt]  = SOptimPropNM_no_waitbar(Sys, P, phi, opt)
 %  - P  : is a parameter set. Parameter values in P are used for
 %          initializing the optimization algorithm. It may contain many
 %          parameter vectors. Trajectories don't need to be computed.
-%  - phi : is a QMITL formula
+%  - phi : is a STL formula
 %  - opt : is an option structure with the following fields:
 %       - tspan   : the time domain computation of the trajectories. If
 %                   not provided, either Sys must have a tspan field, or P
@@ -141,7 +141,7 @@ end
 
 tic;
 
-phi = QMITL_OptimizePredicates(Sys,phi); % optimization of the predicates
+phi = STL_OptimizePredicates(Sys,phi); % optimization of the predicates
 
 %% Initial values
 if(StopWhenFoundInit)
@@ -152,7 +152,7 @@ if(StopWhenFoundInit)
         Ptmp = Sselect(P,ii);
         try
             Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-            val(ii) = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj, tau);
+            val(ii) = STL_Eval(Sys, phi, Ptmp, Ptmp.traj, tau);
         catch Me % in case an error occurs during computation of ComputeTraj
             warning('SOptimProp:ComputeTraj','Error during computation of an initial trajectory, keep going.\n');
             disp(Me.getReport);
@@ -323,7 +323,7 @@ Ptmp.pts(Ptmp.dim,1) = x;
 try
     Ptmp = SPurge(Ptmp);
     Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-    val = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
+    val = STL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
 catch  %#ok<CTCH>
     warning('SOptimProp:ComputeTraj','Error during trajectory computation when optimizing. Keep going.')
     val = inf; % do not care of the exit condition -3 for nelder-mead algo, it only happens when using global optim
@@ -365,7 +365,7 @@ Ptmp.pts(Ptmp.dim,1) = x;
 try
     Ptmp = SPurge(Ptmp);
     Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-    val = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
+    val = STL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
 catch %#ok<CTCH>
     warning('SOptimProp:ComputeTraj','Error during trajectory computation when optimizing. Keep going.')
     val = inf; % do not care of the exit condition -3 for nelder-mead algo, it only happens when using global optim
@@ -401,7 +401,7 @@ try
 
     Ptmp = SPurge(Ptmp);
     Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-    val = QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
+    val = STL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
 catch %#ok<CTCH>
     warning('SOptimProp:ComputeTraj','Error during trajectory computation when optimizing. Keep going.')
     val = inf; % do not care of the exit condition -3 for nelder-mead algo, it only happens when using global optim

@@ -21,7 +21,7 @@ function val = fun0(x, Sys,Stmp, prop, tspan)
   
   Stmp.pts(Stmp.dim)=x;
   Sf = ComputeTraj(Sys, Stmp, tspan);
-  val = QMITL_Eval(Sys, prop,Sf.traj(1),0);
+  val = STL_Eval(Sys, prop,Sf.traj(1),0);
   val = -val;
   
   

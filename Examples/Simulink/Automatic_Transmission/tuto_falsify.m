@@ -6,7 +6,7 @@ Sys = CreateSimulinkSystem(mdl, {}, {}, [], 'UniStep1');
 Sys.tspan = 0:.01:50;
 
 % define the formula
-QMITL_Formula('phi1', '(alw (speed[t]<vmax)) and (alw (RPM[t]<rpm_max))');
+STL_Formula('phi1', '(alw (speed[t]<vmax)) and (alw (RPM[t]<rpm_max))');
 
 % set values for property parameters
 params_prop.params = {'vmax', 'rpm_max'};

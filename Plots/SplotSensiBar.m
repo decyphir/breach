@@ -33,7 +33,7 @@ function [Mend, opts] =  SplotSensiBar(Sys, P, ipts, opts)
 %         --- tspan    : time point(s) for trajectories computation. May be
 %                        not provided if Sys contains a field tspan.
 %                        Otherwise, an error will *very likely* be thrown.
-%     -- phis        : (default=empty) array of QMITL_Formula defining the
+%     -- phis        : (default=empty) array of STL_Formula defining the
 %                      properties for which the sensitivity must be
 %                      computed.
 %     -- props       : DEPRECATED, use phis instead.
@@ -73,7 +73,7 @@ function [Mend, opts] =  SplotSensiBar(Sys, P, ipts, opts)
 %   CreateSystem;
 %   P = CreateParamSet(Sys, {'x1','G'}, [-10 10; 0 5],4);
 %   P = SetParam(P, {'x1h', 'x1l', 'T'}, [.3, -.3, 5]);
-%   [~,phis] = QMITL_ReadFile('oscil_prop.stl');
+%   [~,phis] = STL_ReadFile('oscil_prop.stl');
 %   phis = [phis{[1,end]}] % keep the first and the last formula
 %   opts.plot_histo = 1;
 %   opts.open_dialog = 0;
@@ -305,7 +305,7 @@ switch(stat_type)
         Mend(numel(iX)+1:end,:) = PPhiSensiLocal(Sys,P,phis,tspan,taus,iP,ipts,'aver_time',cutoff);
 %         for jj = 1:numel(phis)
 %             
-%             [p, x, dx] = QMITL_SEvalDiff(Sys, phis(jj), P, tspan, iP, taus(jj));
+%             [p, x, dx] = STL_SEvalDiff(Sys, phis(jj), P, tspan, iP, taus(jj));
 %             
 %             % replace zeros by small quantities
 %             ind = abs(x)<1e-16;
@@ -318,7 +318,7 @@ switch(stat_type)
 %             Mend(numel(iX)+jj,:) = mean(xs,2)'; % Compute the average over all trajectories
 %             
 % %             for kk = 1:numel(iP) % for each parameter
-% %                 [p, x, dx] = QMITL_SEvalDiff(Sys, phis(jj), P, tspan, iP(kk), taus(jj));
+% %                 [p, x, dx] = STL_SEvalDiff(Sys, phis(jj), P, tspan, iP(kk), taus(jj));
 % %                 
 % %                 % replace zeros by small quantities
 % %                 ind = abs(x)<1e-16;
@@ -368,7 +368,7 @@ switch(stat_type)
 %             for kk = 1:numel(iP)
 %                 xs_max = zeros(1,size(P.pts,2)); %zero is the lowest absolute value
 %                 for tau = tspan
-%                     [p, x, dx] = QMITL_SEvalDiff(Sys, phis(jj), P, tspan, iP(kk), tau);
+%                     [p, x, dx] = STL_SEvalDiff(Sys, phis(jj), P, tspan, iP(kk), tau);
 %                     
 %                     % replace zeros by small quantities
 %                     ind = find(abs(x)<1e-16);

@@ -114,7 +114,7 @@ if ~exist('verbose','var')
     verbose = 0;
 end
 
-phi = QMITL_OptimizePredicates(Sys,phi); % optimization of the predicates
+phi = STL_OptimizePredicates(Sys,phi); % optimization of the predicates
 if strcmp(OptimType,'min')
     val_best = inf;
 else

@@ -7,7 +7,7 @@ function [P, val] = SEvalProp(Sys, P, phis, taus, ipts, break_level, method, VER
 %  - Sys         : System structure
 %  - P           : Parameter set. It may contain many parameter vectors.
 %                  All trajectories must be computed or an error is thrown.
-%  - phis        : an array of QMITL property(ies)
+%  - phis        : an array of STL property(ies)
 %  - taus        : (Optional) Time point(s) when to estimate properties. If
 %                  not provided, the formulas are evaluated at the first
 %                  time point of the trajectories. It is a cell array of
@@ -47,7 +47,7 @@ function [P, val] = SEvalProp(Sys, P, phis, taus, ipts, break_level, method, VER
 %   P = CreateParamSet(Sys, 'F', [10, 20]);
 %   P = SetParam(P, 'the_threshold', 2);
 %   P = ComputeTraj(Sys, P, 0:.01:10);
-%   phi = QMITL_Formula('phi','ev_[0,1] (x0[t]>the_threshold)');
+%   phi = STL_Formula('phi','ev_[0,1] (x0[t]>the_threshold)');
 %   [~,val] = SEvalProp(Sys, P, phi, 0)
 %   [P,val] = SEvalProp(Sys, P, phi, [3,7]);
 %   val
@@ -57,7 +57,7 @@ function [P, val] = SEvalProp(Sys, P, phis, taus, ipts, break_level, method, VER
 %   P = SEvalProp(Sys, P, phi, 0:0.01:10);
 %   PplotFormula(Sys, P, phi);
 % 
-%See also QMITL_Formula DiscrimPropValues ComputeTraj Sselect PplotFormula
+%See also STL_Formula DiscrimPropValues ComputeTraj Sselect PplotFormula
 %Spurge_props
 %
 
@@ -76,7 +76,7 @@ end
 if(break_level>0)
     phis_tmp = [];
     for ii = 1:numel(phis)
-        broken_props = QMITL_Break(phis(ii),break_level);
+        broken_props = STL_Break(phis(ii),break_level);
         phis_tmp = [phis_tmp broken_props(:)]; %#ok<AGROW>
     end
     phis = phis_tmp;
@@ -142,7 +142,7 @@ for np = 1:numel(phis) % for each property
         i_phi = numel(P.props_names);
     end
     
-    phi = QMITL_OptimizePredicates(Sys,phi);
+    phi = STL_OptimizePredicates(Sys,phi);
     if(VERBOSE)
         fprintf('Checking  %s  on %d parameter vector(s)\n',phi_name,numel(ipts));
         fprintf('[             25%%           50%%            75%%               ]\n ');
@@ -155,9 +155,9 @@ for np = 1:numel(phis) % for each property
         Ptmp = Sselect(P,i_pt);
         
         if(isempty(taus)||isempty(taus{np}))
-            [props_values(i_pt).val, props_values(i_pt).tau] = QMITL_Eval(Sys, phi, Ptmp, traj_tmp, traj_tmp.time(1), method);
+            [props_values(i_pt).val, props_values(i_pt).tau] = STL_Eval(Sys, phi, Ptmp, traj_tmp, traj_tmp.time(1), method);
         else
-            [props_values(i_pt).val, props_values(i_pt).tau] = QMITL_Eval(Sys, phi, Ptmp, traj_tmp, taus{np}, method);
+            [props_values(i_pt).val, props_values(i_pt).tau] = STL_Eval(Sys, phi, Ptmp, traj_tmp, taus{np}, method);
         end
         
         val(np,ii) = props_values(i_pt).val(1); % fill val with first evaluation at the first time point

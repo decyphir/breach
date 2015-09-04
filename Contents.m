@@ -11,5 +11,5 @@
 %   Core/             - Folder with routines for trajectory computations and higher-level functions
 %   Params/           - Folder with routines for manipulating parameter sets
 %   Plots/            - Folder with routines for guess what
-%   @QMITL_Formula/Contents.m  - Folder for QMITL formula objects    
+%   @STL_Formula/Contents.m  - Folder for STL formula objects    
 %

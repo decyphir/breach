@@ -971,7 +971,7 @@ function edit_change_param_Callback(hObject, eventdata, handles)
       
       if (~strcmp( new_val , disp(prop,0)  ))
 
-        handles.properties.(pnames{handles.selected_prop}) = QMITL_Formula(get_id(prop), new_val);
+        handles.properties.(pnames{handles.selected_prop}) = STL_Formula(get_id(prop), new_val);
         handles = update_listbox_param(handles,1);               
         handles = UpdatePlots(handles);               
         guidata(hObject,handles);
@@ -1467,7 +1467,7 @@ function new_plot= plot_param(handles,ax)
             isf =find(handles.TrajSet.traj(handles.current_pts).sensis==sensi_param(is));
             if ~isempty(isf) % ok, no need to recompute
               phi_tspan = handles.TrajSet.traj(handles.traj_ref(ipts)).time;
-              [phi_val phivald] = QMITL_EvalSensi(handles.Sys,prop,handles.TrajSet.traj(handles.traj_ref(ipts)),phi_tspan);
+              [phi_val phivald] = STL_EvalSensi(handles.Sys,prop,handles.TrajSet.traj(handles.traj_ref(ipts)),phi_tspan);
               plot(phi_tspan*time_mult, phi_vald,colors{is});            
               plot_done=1;            
             end
@@ -1494,7 +1494,7 @@ function new_plot= plot_param(handles,ax)
             handles.TrajSet.Xf(:,handles.current_pts) = Pftmp.Xf;
             
             phi_tspan = handles.TrajSet.traj(handles.traj_ref(ipts)).time;
-            [phi_val phi_vald] = QMITL_EvalSensi(prop,Pftmp.traj,phi_tspan);
+            [phi_val phi_vald] = STL_EvalSensi(prop,Pftmp.traj,phi_tspan);
             plot(phi_tspan*time_mult, phi_vald,colors{is});
           end
         
@@ -1517,15 +1517,15 @@ function new_plot= plot_param(handles,ax)
       % checks if sensitivities needs be (re)computed for the formula
       
       %% OBSOLETE, TO REMOVE OR UPDATE...
-      is = QMITL_ExtractSensi(prop);
+      is = STL_ExtractSensi(prop);
       if (~isempty(is))        
         Ptmp = CreateParamSet(handles.Sys,is);
         Ptmp.pts = handles.TrajSet.pts(:,handles.current_pts);
         Pftmp = ComputeTrajSensi(handles.Sys, Ptmp, handles.TrajSet.traj(handles.traj_ref(ipts)).time);          
-        phi_val = QMITL_Eval(handles.Sys,prop,Ptmp, Pftmp.traj,phi_tspan);
+        phi_val = STL_Eval(handles.Sys,prop,Ptmp, Pftmp.traj,phi_tspan);
       else        
         Ptmp = Sselect(handles.TrajSet, ipts);
-        phi_val = QMITL_Eval(handles.Sys,prop,Ptmp,handles.TrajSet.traj(handles.traj_ref(ipts)),phi_tspan);   
+        phi_val = STL_Eval(handles.Sys,prop,Ptmp,handles.TrajSet.traj(handles.traj_ref(ipts)),phi_tspan);   
       end
                  
       
@@ -1868,7 +1868,7 @@ function handles = update_trajectories(handles)
           traj = handles.TrajSet.traj(traj_ref(j));
           P = Sselect(handles.TrajSet,j);
           handles.TrajSet.props_values(i,j).val = ...
-          QMITL_Eval(handles.Sys,props, P, traj,handles.TrajSet.props_values(i,j).tspan);         
+          STL_Eval(handles.Sys,props, P, traj,handles.TrajSet.props_values(i,j).tspan);         
         end
       end
     end    

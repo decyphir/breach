@@ -34,7 +34,7 @@ if ~exist('depth','var')
 end
 
 if ischar(phis)
-    QMITL_Formula('phi_tmp__', phis );
+    STL_Formula('phi_tmp__', phis );
     [P,val] = SplotSat(Sys,P, phi_tmp__ , depth, tau, ipts);
     evalin('base', 'clear phi_tmp__');
     return;
@@ -43,7 +43,7 @@ end
 if(depth>0)
     nphis = [];
     for ii = 1:numel(phis)
-        nphis = [nphis QMITL_Break(phis(ii), depth) ]; %#ok<*AGROW>
+        nphis = [nphis STL_Break(phis(ii), depth) ]; %#ok<*AGROW>
     end
     phis = nphis;
 end
@@ -89,7 +89,7 @@ for np = npb+1:nb_phis+npb
     hold on;
     title(disp(phi), 'Interpreter', 'none');
     
-    phi = QMITL_OptimizePredicates(Sys, phi);
+    phi = STL_OptimizePredicates(Sys, phi);
     fprintf(['Checking ' phi_name  '\n[             25%%           50%%            75%%               ]\n ']);
     iprog = 0;
     
@@ -98,10 +98,10 @@ for np = npb+1:nb_phis+npb
         Ptmp.pts = P.pts(:,ii);
         if ~isempty(tau)
             P.props_values(iphi,ii).tau = tau;
-            P.props_values(iphi,ii).val = QMITL_Eval(Sys, phi, Ptmp, traj, tau);
+            P.props_values(iphi,ii).val = STL_Eval(Sys, phi, Ptmp, traj, tau);
             val(np-npb,ii) = P.props_values(iphi,ii).val(1);
         else
-            [P.props_values(iphi,ii).val, P.props_values(iphi,ii).tau] = QMITL_Eval(Sys, phi, Ptmp, traj);
+            [P.props_values(iphi,ii).val, P.props_values(iphi,ii).tau] = STL_Eval(Sys, phi, Ptmp, traj);
             val(np-npb,ii) = P.props_values(iphi,ii).val(1);
         end
         

@@ -8,7 +8,7 @@ P0 = ComputeTraj(Sys, P0, Sys.tspan)
 
 %%  define property phi1
 
-QMITL_Formula('phi1', '(alw (speed[t]<vmax)) and (alw (RPM[t]<rpm_max))');
+STL_Formula('phi1', '(alw (speed[t]<vmax)) and (alw (RPM[t]<rpm_max))');
 
 %% Eval and plot property phi1
 
@@ -21,7 +21,7 @@ P0 = SetParam(P0, params_phi.names, params_phi.values);
 
 % Eval satisfaction function for phi1, P0 and P0.traj at time tau=0
 tau=0;
-val = QMITL_Eval(Sys, phi1, P0, P0.traj, tau);
+val = STL_Eval(Sys, phi1, P0, P0.traj, tau);
 
 % computes and plots satisfaction function for all tau>0
 figure;
@@ -39,7 +39,7 @@ Pu = CreateParamSet(Sys, {'dt_u0'}, [0 10], 100); % 100 samples with dt_u0 in ra
 Pu = ComputeTraj(Sys, Pu, Sys.tspan);   % Pu.traj now contains 100 trajectories 
 
 Pu = SetParam(Pu, params_phi.names, params_phi.values); % set property parameters vmax and rpm_max
-[Pu, valu] = SEvalProp(Sys, Pu, phi1);  % SEvalProp calls QMITL_Eval for all trajectories in Pu
+[Pu, valu] = SEvalProp(Sys, Pu, phi1);  % SEvalProp calls STL_Eval for all trajectories in Pu
                                         % valu(i) contains the satisfaction
                                         % value of traj(i)      
 figure;

@@ -4,7 +4,9 @@ disp('%-------------------------------------------------------------------%')
 disp('% Important!                                                        %')
 disp('% The prefix ''QMITL'' has (finally) been replaced by ''STL''.      %');
 disp('% Please update your code accordingly if needed.                    %'); 
-disp('% (find/replace QMITL with STL in all m-files will do the trick.)   %');
+disp('%  - Find/replace QMITL with STL in all m-files will do the trick.) %');
+disp('%  - Use RecoverFormula to convert previously saved QMITL_Formula   %')
+disp('%    Object into STL_Formula.                                       %')
 disp('%-------------------------------------------------------------------%')
 
 id = 'MATLAB:dispatcher:nameConflict';

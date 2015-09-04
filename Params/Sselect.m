@@ -23,7 +23,7 @@ function Pn = Sselect(P, kn)
 %   Podd = Sselect(P, 1:2:15);  % split P into two param sets
 %   
 %   P = ComputeTraj(Sys, P, 0:0.01:10);
-%   phi = QMITL_Formula('phi', 'ev (x1[t]<-3)');
+%   phi = STL_Formula('phi', 'ev (x1[t]<-3)');
 %   [~,val] = SEvalProp(Sys,P,phi,0);
 %   Pvalid = Sselect(P,find(val>0));  % the four select param vectors verifying phi
 %   figure ; SplotVar(Pvalid)
@@ -42,7 +42,7 @@ function Pn = Sselect(P, kn)
 %See also SConcat PInclude CreateParamSet SAddUncertainParam
 %
 
-% val = QMITL_Eval(Sys, phi, P, P.traj, 0);     % this code also works for
+% val = STL_Eval(Sys, phi, P, P.traj, 0);     % this code also works for
 % Pvalid = Sselect(P, P.traj_ref(find(val>0))); % selecting valid parameter sets
 
 % Manage input

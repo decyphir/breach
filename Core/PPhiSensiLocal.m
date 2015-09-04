@@ -9,7 +9,7 @@ function [M, val, sensi] = PPhiSensiLocal(Sys, P, phis, tspan, taus, params, ipt
 %                is thrown. It may contain many parameter vectors. The
 %                trajectories does not need to be computed, nor the
 %                evaluation of phis.
-%  - phis      : array of QMITL_Formula defining the properties for which
+%  - phis      : array of STL_Formula defining the properties for which
 %                the sensitivity is computed.
 %  - tspan     : time point(s) for trajectories computation. May be not
 %                provided (aka: set to empty) if Sys contains a field
@@ -66,7 +66,7 @@ function [M, val, sensi] = PPhiSensiLocal(Sys, P, phis, tspan, taus, params, ipt
 %   CreateSystem;
 %   P = CreateParamSet(Sys, {'x1','G'}, [-10 10; 0 5], 3);
 %   P = SetParam(P,{'x1h','x1l','T'},[1;-1;3]);
-%   [~,phis] = QMITL_ReadFile('oscil_prop.stl');
+%   [~,phis] = STL_ReadFile('oscil_prop.stl');
 %   phis = [phis{[1,end]}] % keep the first and the last formula
 %   [Sensi, val_extr] = PPhiSensiLocal(Sys, P, phis, 0:0.5:10, 0, {'F','x1'}, [], 'aver_max')
 %   
@@ -157,7 +157,7 @@ switch(stat_type)
         for ii = 1:nPhis
             xs_sum = zeros(nParams,size(P.pts,2));
             for tau = tspan
-                [p, x, dx] = QMITL_SEvalDiff(Sys, phis(ii), P, tspan, params, tau, VERBOSE);
+                [p, x, dx] = STL_SEvalDiff(Sys, phis(ii), P, tspan, params, tau, VERBOSE);
                 
                 % replace zeros by small quantities
                 ind = abs(x)<1e-16;
@@ -178,7 +178,7 @@ switch(stat_type)
     
     case 'aver_time'
         for ii = 1:nPhis
-            [p, x, dx] = QMITL_SEvalDiff(Sys, phis(ii), P, tspan, params, taus(ii), VERBOSE);
+            [p, x, dx] = STL_SEvalDiff(Sys, phis(ii), P, tspan, params, taus(ii), VERBOSE);
             
             % replace zeros by small quantities
             ind = abs(x)<1e-16;
@@ -201,7 +201,7 @@ switch(stat_type)
 %             for jj = 1:numel(params)       %TODO: CAN BE OPTIMIZED
 %                 xs_max = zeros(1,size(P.pts,2)); % zero is the lowest absolute value
 %                 for tau = tspan
-%                     [p, x, dx] = QMITL_SEvalDiff(Sys, phis(ii), P, tspan, params(jj), tau, VERBOSE);
+%                     [p, x, dx] = STL_SEvalDiff(Sys, phis(ii), P, tspan, params(jj), tau, VERBOSE);
 % 
 %                     % replace zeros by small quantities
 %                     ind = find(abs(x)<1e-16);
@@ -224,7 +224,7 @@ switch(stat_type)
         for ii=1:nPhis
             xs_max = zeros(nParams,size(P.pts,2)); % zero is the lowest absolute value
             for tau = tspan
-                [p, x, dx] = QMITL_SEvalDiff(Sys, phis(ii), P, tspan, params, tau, VERBOSE);
+                [p, x, dx] = STL_SEvalDiff(Sys, phis(ii), P, tspan, params, tau, VERBOSE);
                 
                 % replace zeros by small quantities
                 ind = find(abs(x)<1e-16);

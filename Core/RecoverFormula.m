@@ -5,16 +5,16 @@ function  phi = RecoverFormula(phi_old)
 % Synopsis:  phi = RecoverFormula(phi_old)
 % 
 % Input:
-%  - phi_old : is a QMITL formula or a struct converted from a QMITL
+%  - phi_old : is a STL formula or a struct converted from a STL
 %              formula created with an older version of Breach.
 % 
 % Output:
-%  - phi : is a valid QMITL formula
+%  - phi : is a valid STL formula
 % 
-%See also QMITL_Formula QMITL_ReadFile
+%See also STL_Formula STL_ReadFile
 %
 
-if isa(phi_old,'QMITL_Formula')
+if isa(phi_old,'STL_Formula')
     phi_old = struct(phi_old);
 end
 
@@ -24,7 +24,7 @@ else
     st = form_string(phi_old);
 end
 
-phi = QMITL_Formula(phi_old.id, st);
+phi = STL_Formula(phi_old.id, st);
 
 end
 
@@ -58,7 +58,7 @@ switch(phi.type)
         st = ['(' st1 ') and (' st2 ')'];
         
     case 'andn'
-        %Expand andn because QMITL_Formula cannot construct formula with it
+        %Expand andn because STL_Formula cannot construct formula with it
         st = form_string(phi.phin(1));
         for ii=2:numel(phi.phin)
             st = ['(' st ') and (' form_string(phi.phin(ii)) ')']; %#ok<AGROW>

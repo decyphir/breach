@@ -109,7 +109,7 @@ handles.properties_file_name = [SysName '_properties.mat'];
 try
     handles.properties = load(handles.properties_file_name);
 catch
-    phi0 = QMITL_Formula('phi0',[Sys.ParamList{1} '[t]<=.1']) ; %#ok<NASGU>
+    phi0 = STL_Formula('phi0',[Sys.ParamList{1} '[t]<=.1']) ; %#ok<NASGU>
     save([SysName '_properties.mat'], 'phi0');
     handles.properties = load(handles.properties_file_name);
 end
@@ -1217,7 +1217,7 @@ end
 try
     id = get_id(prop);
     phi_st = str{1};
-    PHI = eval(['QMITL_Formula(''' id ''',''' phi_st ''')']);
+    PHI = eval(['STL_Formula(''' id ''',''' phi_st ''')']);
     eval([get_id(PHI) '=PHI']);
 catch
     s = lasterror;
@@ -2080,7 +2080,7 @@ end
 try
     id = str{1};
     phi_st = str{2};
-    PHI = eval(['QMITL_Formula(''' id ''',''' phi_st ''')']);
+    PHI = eval(['STL_Formula(''' id ''',''' phi_st ''')']);
     eval([get_id(PHI) '=PHI']);
 catch
     s = lasterror;
@@ -2174,7 +2174,7 @@ try
         nprops = [];
         
         for j = 1:numel(fnames)
-            if isa(props.(fnames{j}), 'QMITL_Formula')
+            if isa(props.(fnames{j}), 'STL_Formula')
                 nprops = [ nprops props.(fnames{j}) ];
             end
         end
@@ -2190,7 +2190,7 @@ try
         handles.idx_prop = 1;
         
     elseif strcmp(ext,'.stl')
-        formulas = QMITL_ReadFile([PathName FileName]);
+        formulas = STL_ReadFile([PathName FileName]);
         Propsave(handles.Sys, formulas{:});
         
     end
@@ -2740,7 +2740,7 @@ function button_break_prop_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 prop = handles.properties.(handles.current_prop);
-props = QMITL_Break(prop);
+props = STL_Break(prop);
 
 for i = 1:numel(props)
     PHI_ = props(i);

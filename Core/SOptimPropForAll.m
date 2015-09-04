@@ -8,7 +8,7 @@ function [val_opt, Pout, timed_out]  = SOptimProp(Sys, P, phi, opt)
 %    - Sys is a system
 %    - P0 is a parameter set for Sys. Parameter values in P0 are used for
 %                  initializing the optimization algorithm
-%    - phi is a QMITL property
+%    - phi is a STL property
 %    - opt is an option structure with the following fields :
 %
 %        - tspan   : the time domain computation of the trajectories. If
@@ -123,7 +123,7 @@ else
     max_time=inf;
 end
 
-phi = QMITL_OptimizePredicates(Sys,phi); % optimization of the predicates
+phi = STL_OptimizePredicates(Sys,phi); % optimization of the predicates
 fun = @(x) fun_rob(x, max_time, Sys, phi, tspan, tau);
 
 %% Initial values
@@ -211,7 +211,7 @@ end
 Ptmp= SetParam(Ptmp,dim, x);
 Ptmp = ComputeTraj(Sys, Ptmp, tspan);
 
-val = min(QMITL_Eval(Sys, phi, Ptmp, Ptmp.traj, tau));
+val = min(STL_Eval(Sys, phi, Ptmp, Ptmp.traj, tau));
 
 if(val>0)
     found = val;

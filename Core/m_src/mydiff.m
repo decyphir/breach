@@ -17,7 +17,7 @@ function f_st = mydiff(f_st, param)
 %  
 %  
 %
-% See also DiffFormula QMITL_SEvalDiff
+% See also DiffFormula STL_SEvalDiff
 %
 
 f_st = regexprep(f_st,'\.\*','*');

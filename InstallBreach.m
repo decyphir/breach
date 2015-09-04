@@ -9,7 +9,7 @@ dr = which('Breach');
 
 breach_dir = dr(1:end-9);
 breach_src_dir = [breach_dir filesep 'Core' filesep 'src']; 
-qmitl_src_dir  = [breach_dir filesep '@QMITL_Formula' filesep 'private' filesep 'src'];
+qmitl_src_dir  = [breach_dir filesep '@STL_Formula' filesep 'private' filesep 'src'];
 
 % compile qmitl C functions
 

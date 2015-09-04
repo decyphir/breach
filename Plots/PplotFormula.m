@@ -30,7 +30,7 @@ end
 if(break_level>0)
     phis_tmp = [];
     for i_pt = 1:numel(phis)
-        broken_props = QMITL_Break(phis(i_pt),break_level);
+        broken_props = STL_Break(phis(i_pt),break_level);
         phis_tmp = [phis_tmp broken_props(:)]; %#ok<AGROW>
     end
     phis = phis_tmp;

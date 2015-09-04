@@ -35,7 +35,7 @@ SplotVar(P);
 
 %% 
 % The following loads the PSTL property phi in the workspace:
-QMITL_ReadFile('specs.stl');
+STL_ReadFile('specs.stl');
 
 %% 
 % We define the options for the parameter synthesis algorithm. The algorithm 

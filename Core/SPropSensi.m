@@ -43,7 +43,7 @@ function [mu, mustar, sigma, Pr] = SPropSensi(Sys, P, phi, opt)
 % Example1 (Lorentz84):
 %   CreateSystem;
 %   P = CreateParamSet(Sys);
-%   phi = QMITL_Formula('phi','ev (x1[t] > 3)');
+%   phi = STL_Formula('phi','ev (x1[t] > 3)');
 %   opt.tspan = 2:0.1:5;
 %   opt.params = {'a','F'};
 %   opt.lbound = [0.15, 5];
@@ -58,7 +58,7 @@ function [mu, mustar, sigma, Pr] = SPropSensi(Sys, P, phi, opt)
 %   CreateSystem;
 %   P = CreateParamSet(Sys);
 %   P = SetParam(P, {'x1h', 'x1l', 'T'}, [.3; -.3; 5]);
-%   [~,props] = QMITL_ReadFile('oscil_prop.stl');
+%   [~,props] = STL_ReadFile('oscil_prop.stl');
 %   phi = props{end};
 %   opt.tspan = 0:0.1:5;
 %   opt.params = {'a','F'};
@@ -67,7 +67,7 @@ function [mu, mustar, sigma, Pr] = SPropSensi(Sys, P, phi, opt)
 %   opt.plot = 1;
 %   [mu, mustar, sigma] = SPropSensi(Sys, P, phi, opt);
 % 
-%See also QMITL_Formula QMITL_ReadFile PPhiSensiLocal SplotSensiBar
+%See also STL_Formula STL_ReadFile PPhiSensiLocal SplotSensiBar
 %
 
 

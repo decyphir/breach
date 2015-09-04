@@ -8,7 +8,7 @@ function [val_opt, Popt]  = SOptimProp(Sys, P, phi, opt)
 %  - P  : is a parameter set. Parameter values in P are used for
 %          initializing the optimization algorithm. It may contain many
 %          parameter vectors. Trajectories don't need to be computed.
-%  - phi : is a QMITL formula
+%  - phi : is a STL formula
 %  - opt : is an option structure with the following fields:
 %       - tspan   : the time domain computation of the trajectories. If
 %                   not provided, either Sys must have a tspan field, or P

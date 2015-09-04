@@ -1,7 +1,7 @@
 InitBreach;
 
 %% load formula
-formulas = QMITL_ReadFile('spec.stl');
+formulas = STL_ReadFile('spec.stl');
 phi_template = phi_return3;
 
 %% Create system and input strategy 
