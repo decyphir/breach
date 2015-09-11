@@ -79,7 +79,7 @@ switch numel(varargin)
             st = regexprep(st,'always','alw');
             st = regexprep(st,'<=', '<');
             st = regexprep(st,'>=', '>');
-             % deals with true and false
+            % deals with true and false
             st = regexprep(st, 'true', 'inf>0');
             st = regexprep(st, 'false', 'inf<0');
             varargin{1}= st;
@@ -96,7 +96,7 @@ assignin('base', phi.id, phi);
 end
 
 function phi = STL_Parse(phi,varargin)
-%STL_PARSE fills the field type, phi, phi1 and phi2 
+%STL_PARSE fills the field type, phi, phi1 and phi2
 %
 % Synopsis: phi = STL_Parse(phi, phi_str)
 %
@@ -123,16 +123,16 @@ function phi = STL_Parse(phi,varargin)
 %  - phi : a STL Formula structure
 %
 
-  
+
 switch(numel(varargin))
     
     case 1 % Here, the formula is defined by a string. We parse this string
         if ~ischar(varargin{1})
             error('STL_Formula:STL_Parse','Invalid formula');
         end
-        st = varargin{1}; 
+        st = varargin{1};
         st = regexprep(st, '^\s*', '');
-
+        
         %% test or
         [success, st1, st2] = parenthesisly_balanced_split(st, '\<or\>');
         if success
@@ -141,7 +141,7 @@ switch(numel(varargin))
             phi = STL_Parse(phi,'or', phi1, phi2);
             return
         end
-      
+        
         %% test implies
         [success, st1, st2] = parenthesisly_balanced_split(st, '\<=>\>');
         if success
@@ -150,7 +150,7 @@ switch(numel(varargin))
             phi = STL_Parse(phi,'=>', phi1, phi2);
             return
         end
-       
+        
         %% test and
         [success, st1, st2] = parenthesisly_balanced_split(st, '\<and\>');
         if success
@@ -194,7 +194,7 @@ switch(numel(varargin))
             phi = STL_Parse(phi,'ev',interval,phi1);
             return
         end
-
+        
         
         %% test always
         [success,st1, st2] = parenthesisly_balanced_split(st, '\<alw\>');
@@ -211,15 +211,15 @@ switch(numel(varargin))
             phi = STL_Parse(phi,'alw',interval,phi1);
             return
         end
-
-               
+        
+        
         %% test not
         [success,st1, st2] = parenthesisly_balanced_split(st, '\<not\>');
         if success && isempty(st1)
             phi1 = STL_Formula([phi.id '1__'],st2);
             phi = STL_Parse(phi, 'not', phi1);
             return
-        end        
+        end
         
         % test expr op expr | params
         
@@ -239,7 +239,7 @@ switch(numel(varargin))
         
         % parse operator
         [success, st1, st2] = parenthesisly_balanced_split(st, '<');
- 
+        
         %tokens = regexp(st, '(.+)\s*<\s*(.+)','tokens');
         if success
             phi.type='predicate';
@@ -250,16 +250,16 @@ switch(numel(varargin))
         end
         
         [success, st1, st2] = parenthesisly_balanced_split(st, '>');
-%        tokens = regexp(st, '(.+)\s*>\s*(.+)','tokens');
+        %        tokens = regexp(st, '(.+)\s*>\s*(.+)','tokens');
         if success
             phi.type = 'predicate';
             phi.st = st;
-            phi.params.fn = [ '(' st1 ')-(' st2 ')' ];         
+            phi.params.fn = [ '(' st1 ')-(' st2 ')' ];
             phi.evalfn = @(mode,traj,t,params) feval('generic_predicate',mode,traj,t,params);
             return
         end
-
-        % should probably discontinue this - or review its implementation 
+        
+        % should probably discontinue this - or review its implementation
         tokens = regexp(st, '(.+)\s*=\s*(.+)', 'tokens');
         if ~isempty(tokens)
             phi.type = 'predicate';
@@ -296,14 +296,14 @@ switch(numel(varargin))
                 
             case 'ev'
                 phi.type = 'eventually';
-                phi.phi = varargin{2};                
+                phi.phi = varargin{2};
                 phi.interval = '[0 inf]';
-                                
+                
             case 'alw'
                 phi.type = 'always' ;
                 phi.phi = varargin{2};
                 phi.interval = '[0 inf]';
-                                
+                
             case 'andn'
                 phi.type = 'andn';
                 phi.phin = varargin{2}; % array of STL_Formula
@@ -335,7 +335,7 @@ switch(numel(varargin))
                 phi.type = 'eventually' ;
                 phi.interval = varargin{2};
                 phi.phi = varargin{3};
-         
+                
             case 'evp'
                 phi.type = 'evp' ;
                 phi.interval = varargin{2};
@@ -391,12 +391,18 @@ for i = 1:numel(start_idx)
     if success==-1
         error(['STL_Parse: expression ' st ':' diag]);
     elseif success==1
-      if nargout == 4
-        interval= ['[' tokens{i}{1} ']'];
-      end
-      return
+        if nargout == 4
+            interval= ['[' tokens{i}{1} ']'];
+        end
+        st1 = strtrim(st1);
+        st2 = strtrim(st2);
+        
+        return
     end
 end
+
+st1 = strtrim(st1);
+st2 = strtrim(st2);
 
 end
 
@@ -427,7 +433,7 @@ if (diff_par>0)
     return;
 elseif (diff_par<0)
     diag=sprintf('Too many (%d) closing parenthesis in expr', -diff_par);
-    success=-1; 
+    success=-1;
     return;
 end
 
@@ -445,30 +451,30 @@ if (diff1 ~=0)
     else % alright, so diff1>0 should be the number of enclosing parenthesis
         % we remove them
         
-        % checks if there is nothing but blanks before enclosing par. 
-        pre_st1 = st1(1:idx_left_par1(diff1));  
-        if ~isempty(regexp(pre_st1, '[^\(\s]')) 
+        % checks if there is nothing but blanks before enclosing par.
+        pre_st1 = st1(1:idx_left_par1(diff1));
+        if ~isempty(regexp(pre_st1, '[^\(\s]'))
             success= 0;
             return;
         end
         
-        % checks if there is nothing but blanks after enclosing par. 
-        post_st2 = st2(idx_right_par2(end-diff1+1):end);  
-        if ~isempty(regexp(post_st2, '[^\)\s]')) 
+        % checks if there is nothing but blanks after enclosing par.
+        post_st2 = st2(idx_right_par2(end-diff1+1):end);
+        if ~isempty(regexp(post_st2, '[^\)\s]'))
             success= 0;
             return;
         end
-
+        
         st1 = st1(1+idx_left_par1(diff1):end);
         idx_left_par1 = idx_left_par1(1+diff1:end);
         
         st2 = st2(1:idx_right_par2(end-diff1+1)-1);
         idx_right_par2 = idx_right_par2(1:end-diff1);
-      
+        
     end
-end    
-    % At this point, no enclosing parenthesis any more, st1 and st2 should be balanced
-    success = check_par(idx_left_par1, idx_right_par1) && check_par(idx_left_par2, idx_right_par2);
+end
+% At this point, no enclosing parenthesis any more, st1 and st2 should be balanced
+success = check_par(idx_left_par1, idx_right_par1) && check_par(idx_left_par2, idx_right_par2);
 end
 
 function success = check_par(idx_left_par, idx_right_par)
@@ -484,7 +490,7 @@ rcount =1;
 nb_par = numel(idx_left_par);
 
 while (1)
-
+    
     % no more left or right par.
     if (lcount > nb_par) && (rcount>nb_par)
         break;

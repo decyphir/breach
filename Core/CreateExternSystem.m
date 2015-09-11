@@ -41,7 +41,6 @@ function Sys = CreateExternSystem(name, vars, params, p0, simfn)
       end
   end
   
-  
   Sys.DimX = numel(vars);
   Sys.DimU =0; 
   Sys.DimP = numel(vars)+numel(params); 

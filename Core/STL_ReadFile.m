@@ -98,16 +98,16 @@ while ischar(tline)
         tokens = regexp(tline, '^param (.*)','tokens');
         
         if ~isempty(current_id)
-           try
+%           try
                 phi = STL_Formula(current_id, current_formula);
                 phi = set_params(phi, new_params);
                 props = [props, {phi}]; %#ok<*AGROW>              
                 props_names = [props_names, {current_id}]; %#ok<AGROW>
-            catch err
-                fprintf(['ERROR: Problem with formula ' current_id ' at line ' ...
-                   int2str(num_line-1) '\n']);
-                rethrow(err);
-            end
+%            catch err
+%                fprintf(['ERROR: Problem with formula ' current_id ' at line ' ...
+%                   int2str(num_line-1) '\n']);
+%                rethrow(err);
+%            end
             
         end % we're done : if current_id is empty this is our first formula
         
