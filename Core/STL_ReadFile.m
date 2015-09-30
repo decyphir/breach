@@ -1,7 +1,7 @@
-function [props_names, props, signal_names] = STL_ReadFile(fname)
+function [props_names, props, signal_names, param_names] = STL_ReadFile(fname)
 %STL_READFILE defines formulas from a text file.
 %
-% Synopsis: [props_names, prop] = STL_ReadFile(fname)
+% Synopsis: [props_names, props, signal_names, param_names] = STL_ReadFile(fname)
 %
 % Input:
 %  - fname the text file containing formulas. This text file fname should
@@ -53,6 +53,7 @@ signal_names = {};
 param_names = {};
 p0 = [];
 
+got_it =0; 
 
 while ischar(tline)
     num_line = num_line+1;
@@ -98,16 +99,17 @@ while ischar(tline)
         tokens = regexp(tline, '^param (.*)','tokens');
         
         if ~isempty(current_id)
-%           try
+           try
                 phi = STL_Formula(current_id, current_formula);
                 phi = set_params(phi, new_params);
                 props = [props, {phi}]; %#ok<*AGROW>              
                 props_names = [props_names, {current_id}]; %#ok<AGROW>
-%            catch err
-%                fprintf(['ERROR: Problem with formula ' current_id ' at line ' ...
-%                   int2str(num_line-1) '\n']);
-%                rethrow(err);
-%            end
+                got_it = 1;
+           catch err
+                fprintf(['ERROR: Problem with formula ' current_id ' at line ' ...
+                   int2str(num_line-1) '\n']);
+                rethrow(err);
+            end
             
         end % we're done : if current_id is empty this is our first formula
         
@@ -117,6 +119,7 @@ while ischar(tline)
             for ip = 1:numel(param_defs)
                 name_value = strsplit(param_defs{ip},'=');
                 new_params.(name_value{1})= str2num(name_value{2});
+                param_names = unique({param_names{:} name_value{1}});
             end
             tline ='';
         end
@@ -127,12 +130,11 @@ while ischar(tline)
         tokens = regexp(tline, '(\w+)\s*:=(.*)','tokens');
         if ~isempty(tokens)
             % ok try wrapping up what we have so far before starting a new formula
-            if ~isempty(current_id)
+            if (~isempty(current_id)&& got_it == 0)
                 try
                     phi = STL_Formula(current_id, current_formula);
                     phi = set_params(phi, new_params);
-                    props = [props, {phi}]; %#ok<*AGROW>
-                    
+                    props = [props, {phi}]; %#ok<*AGROW>                   
                     props_names = [props_names, {current_id}]; %#ok<AGROW>
                 catch err
                     fprintf(['ERROR: Problem with formula ' current_id ' at line ' ...
@@ -152,7 +154,7 @@ while ischar(tline)
             
             % start definition of formula
             current_formula = tokens{1}{2};
-            
+            got_it = 0;
         else % we're continuing the definition of a formula
             
             if isempty(current_id)

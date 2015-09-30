@@ -1113,7 +1113,20 @@ idx_prop = get(hObject,'Value');
 fnames = fieldnames(handles.properties);
 handles.current_prop = fnames{idx_prop};
 prop = handles.properties.(handles.current_prop);
-set(handles.text_info, 'String', disp(prop,0));
+
+info_msg = disp(prop,0);
+def_par = get_params(prop);
+fnames = fieldnames(def_par);
+
+ndf = numel(fnames);
+if ndf>0
+   info_msg = [info_msg '   |  default params:']; 
+end
+for idf =1:ndf
+    info_msg = [info_msg ' ' fnames{idf} '=' num2str(def_par.(fnames{idf}))];    
+end
+
+set(handles.text_info, 'String', info_msg);
 handles = plot_pts(handles);
 guidata(hObject,handles);
 
@@ -1219,6 +1232,7 @@ try
     phi_st = str{1};
     PHI = eval(['STL_Formula(''' id ''',''' phi_st ''')']);
     eval([get_id(PHI) '=PHI']);
+    
 catch
     s = lasterror;
     warndlg(['Invalid formula: ' s.message] );

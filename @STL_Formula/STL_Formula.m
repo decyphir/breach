@@ -88,7 +88,9 @@ switch numel(varargin)
         phi = STL_Parse(phi,varargin{:});
 end
 
+
 phi=class(phi, 'STL_Formula');
+phi = check_params(phi);
 phistruct = struct(phi);
 assignin('caller', phi.id, phi);
 assignin('base', phi.id, phi);
@@ -138,7 +140,7 @@ switch(numel(varargin))
         if success
             phi1 = STL_Formula([phi.id '1__'],st1);
             phi2 = STL_Formula([phi.id '2__'],st2);
-            phi = STL_Parse(phi,'or', phi1, phi2);
+            phi = STL_Parse(phi,'or', phi1, phi2);     
             return
         end
         
