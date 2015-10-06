@@ -4,7 +4,9 @@ function Sys = CreateExternSystem(name, vars, params, p0, simfn)
 % Synopsis: Sys = CreateExternSystem(name, vars, params, p0, simfn)
 %  
 % Creates a system structure Sys to be used with Breach and a potential external
-% simulator. Note: for Simulink, use CreateSimulinkSystem.  
+% simulator. Note: for Simulink, use CreateSimulinkSystem.  simfn must be a
+% function with prototype  
+%   function  [t X] = simfn(Sys, tspan, pts)  
 % 
 % Example:   
 %

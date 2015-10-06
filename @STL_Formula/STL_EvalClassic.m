@@ -83,7 +83,7 @@ for ii=1:numTrajs
         dt__ = trajs(ii).time(2)-trajs(ii).time(1);
     end
 
-    interval = [t(1), t(end)];
+    interval = [0 t(end)];
     [valarray, time_values] = GetValues(Sys, phi, P, trajs(ii), interval,dt__);
     
     if isscalar(valarray)

@@ -80,7 +80,6 @@ end
 
 %%%%%%
 % set params
-
 if iscell(ParamList)
     inds = FindParam(P,ParamList);
     new_params = ParamList(inds>size(P.(pts),1));
@@ -105,7 +104,6 @@ end
 
 %%%%%%
 % manage traj_ref and traj_to_compute
-
 P.traj_ref = zeros(1,size(P.(pts),2)); % initialise traj_ref
 if isfield(P,'traj')
     param_traj = cat(1,P.traj(:).param)'; % param value for computed traj

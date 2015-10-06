@@ -140,10 +140,16 @@ o = find_system(mdl_breach,'SearchDepth',1, 'BlockType', 'Outport');
 sig_out= {};
 for i = 1:numel(o)
     nm = regexprep(o{i},[mdl_breach '/'],'');
+           
+    nm = regexprep(nm,'\W','_');
+     
+   
     sig_out = {sig_out{:}, nm};
     % ensure consistency of signal and output block name
     line_out = get_param(o{i}, 'LineHandles');
-    set(line_out.Inport,'Name', get_param(o{i},'Name'));
+    set(line_out.Inport,'Name',nm);
+    set_param(o{i},'Name', nm); 
+
 end
 
 %% inputs
@@ -222,7 +228,6 @@ close_system(mdl_breach);
             
             in =  get_param(ins(i),'Name');
             in = regexprep(in,'\W','_');
-            %            in = set_param(ins(i),'Name',in);
             
             %Ensures port and its output line have the same name
             lh = get_param(ins(i), 'LineHandles');

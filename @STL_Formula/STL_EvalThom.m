@@ -96,7 +96,7 @@ for ii=1:numTrajs % we loop on every traj in case we check more than one
             val__{ii} = NaN(1,numel(t));
         end
     else
-        interval = [trajs(ii).time(1) trajs(ii).time(end)];
+        interval = [0 trajs(ii).time(end)];
         [val__ii, time_values__ii] = GetValues(Sys, phi, Pii, trajs(ii), interval);
           
         val__{ii} = val__ii(time_values__ii<=trajs(ii).time(end)); 
