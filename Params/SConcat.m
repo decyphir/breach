@@ -28,6 +28,14 @@ function P = SConcat(P, P2)
 %See also Sselect
 %
 
+% Do nothing if one argument is empty
+if isempty(P2)
+    return;
+end
+if isempty(P)
+    P = P2;
+    return;
+end
 
 % check consistency between the to parameter sets
 if(P.DimP~=P2.DimP)
