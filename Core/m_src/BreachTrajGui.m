@@ -1516,6 +1516,7 @@ function new_plot= plot_param(handles,ax)
       
       % checks if sensitivities needs be (re)computed for the formula
       
+      
       %% OBSOLETE, TO REMOVE OR UPDATE...
       is = STL_ExtractSensi(prop);
       if (~isempty(is))        
@@ -1883,8 +1884,7 @@ function handles = update_trajectories(handles)
     
   else % only one traj needs to be computed
     
-    Ptmp = Sselect(handles.TrajSet,handles.current_pts);
-    
+    Ptmp = Sselect(handles.TrajSet,handles.current_pts);    
     % check if sensi had been computed for this traj
            
     if (handles.has_dynamics==1)
@@ -1902,6 +1902,10 @@ function handles = update_trajectories(handles)
     handles.TrajSet.traj(traj_ref(handles.current_pts)) = Pftmp.traj;
     handles.TrajSet.Xf(:,traj_ref(handles.current_pts)) = Pftmp.traj.X(:,end);
     
+    % This is needed if, e.g., ComputeTraj called an init_fun which changed
+    % some other values in Ptmp.pts
+    handles.TrajSet.pts(:,handles.current_pts) = Pftmp.pts;
+    
     new_plot = plot_param(handles,1);
     handles.current_plot{1} = new_plot;
     
@@ -1910,7 +1914,7 @@ function handles = update_trajectories(handles)
   
     new_plot = plot_param(handles,3);
     handles.current_plot{3} = new_plot;
- 
+    
   end
   
 function handles =  update_listbox_param(handles, changed)
