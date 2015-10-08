@@ -1,8 +1,40 @@
-function phi = set_params(phi, P)
+function phi = set_params(phi, P, values)
 %SET_PARAMS adds a parameter structure to a formula
-%  
-if ~isempty(fieldnames(P))
-    phi.params.default_params = P; 
-    % make sure the base formula gets updated with new parameters     
-    assignin('base', phi.id, phi);
+%
+%  syntax : phi = set_params(phi, P [, values] )
+%
+%  phi = set_params(phi, P) assumes P is a parameter structure of the form
+%  P.p1 = val1, P.p2 = val2, etc
+%
+%  phi = set_params(phi, P, values) assumes P is parameter name (string)
+%  or a cell of parameter names and values are corresponding values
+
+
+switch nargin
+    
+    % assumes P is
+    case 2
+        Pstruct =P;
+    case 3
+        if ischar(P)
+            Pstruct = struct(P, values);
+        else
+            for ip = 1:numel(P)
+                Pstruct.(P{ip})= values(ip);
+            end
+        end
+        
+        
+end
+
+fn = fieldnames(Pstruct);
+if ~isempty(fn)
+    for ifn= 1:numel(fn)
+        
+        phi.params.default_params.(fn{ifn}) = Pstruct.(fn{ifn});
+        % make sure the base formula gets updated with new parameters
+        assignin('base', phi.id, phi);
+        
+    end
+end
 end

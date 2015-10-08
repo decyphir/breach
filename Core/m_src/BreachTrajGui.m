@@ -968,10 +968,12 @@ function edit_change_param_Callback(hObject, eventdata, handles)
       new_val = get(hObject,'String');
       pnames = fieldnames(handles.properties);
       prop = handles.properties.(pnames{handles.selected_prop});
-      
+      prop_params = get_params(prop);
       if (~strcmp( new_val , disp(prop,0)  ))
 
         handles.properties.(pnames{handles.selected_prop}) = STL_Formula(get_id(prop), new_val);
+     
+        handles.properties.(pnames{handles.selected_prop}) = set_params(handles.properties.(pnames{handles.selected_prop}), prop_params); 
         handles = update_listbox_param(handles,1);               
         handles = UpdatePlots(handles);               
         guidata(hObject,handles);
