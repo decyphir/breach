@@ -1,5 +1,6 @@
 function [props_names, props, signal_names, param_names] = STL_ReadFile(fname)
-%STL_READFILE defines formulas from a text file.
+%STL_READFILE reads formulas from a text file and loads them in the base
+%workspace 
 %
 % Synopsis: [props_names, props, signal_names, param_names] = STL_ReadFile(fname)
 %
@@ -53,7 +54,7 @@ signal_names = {};
 param_names = {};
 p0 = [];
 
-got_it =0; 
+got_it =0;
 
 while ischar(tline)
     num_line = num_line+1;
@@ -61,7 +62,7 @@ while ischar(tline)
     % first, dismiss comments  (anything starting with a #) and starting spaces
     tline = regexprep(tline, '^\s*','');
     tline = regexprep(tline, '\s*$','');
- 
+    
     if ~isempty(tline)
         % checks if we are declaring a test (from a CPSgrader spec.
         % file)
@@ -71,7 +72,7 @@ while ischar(tline)
             break
         end
     end
-   
+    
     
     if regexp(tline, '^\#')
         tline = '';
@@ -89,7 +90,9 @@ while ischar(tline)
         tokens = regexp(tline, '^signal (.*)','tokens');
         if ~isempty(tokens)
             new_signals= strsplit(tokens{1}{1},',');
-            signal_names = {signal_names{:} new_signals{:}};
+            for isig = 1:numel(new_signals)
+                signal_names = {signal_names{:} strtrim(new_signals{isig})};
+            end
             tline = '';
         end
     end
@@ -99,15 +102,14 @@ while ischar(tline)
         tokens = regexp(tline, '^param (.*)','tokens');
         
         if ~isempty(current_id)
-           try
-                phi = STL_Formula(current_id, current_formula);
-                phi = set_params(phi, new_params);
-                props = [props, {phi}]; %#ok<*AGROW>              
-                props_names = [props_names, {current_id}]; %#ok<AGROW>
+            try
+                phi = wrap_up(current_id, current_formula, new_params);
+                props = [props, {phi}];
+                props_names = [props_names, {current_id}];
                 got_it = 1;
-           catch err
+            catch err
                 fprintf(['ERROR: Problem with formula ' current_id ' at line ' ...
-                   int2str(num_line-1) '\n']);
+                    int2str(num_line-1) '\n']);
                 rethrow(err);
             end
             
@@ -124,7 +126,7 @@ while ischar(tline)
             tline ='';
         end
     end
-        
+    
     if ~isempty(tline)
         % Checks if we're starting the def. of a new formula
         tokens = regexp(tline, '(\w+)\s*:=(.*)','tokens');
@@ -132,10 +134,9 @@ while ischar(tline)
             % ok try wrapping up what we have so far before starting a new formula
             if (~isempty(current_id)&& got_it == 0)
                 try
-                    phi = STL_Formula(current_id, current_formula);
-                    phi = set_params(phi, new_params);
-                    props = [props, {phi}]; %#ok<*AGROW>                   
-                    props_names = [props_names, {current_id}]; %#ok<AGROW>
+                    phi = wrap_up(current_id, current_formula, new_params);
+                    props = [props, {phi}]; %#ok<*AGROW>
+                    props_names = [props_names, {current_id}];
                 catch err
                     fprintf(['ERROR: Problem with formula ' current_id ' at line ' ...
                         int2str(num_line-1) '\n']);
@@ -148,7 +149,7 @@ while ischar(tline)
             current_id = tokens{1}{1};
             try
                 assignin('base', current_id, 0);
-            catch %#ok<CTCH>
+            catch
                 error('STL_ReadFile:IdError',[current_id ' on line ' int2str(num_line) ' is not a valid id.']);
             end
             
@@ -169,11 +170,9 @@ end
 
 
 try
-    phi = STL_Formula(current_id, current_formula);
-    phi = set_params(phi, new_params);
-    props = [props, {phi}]; %#ok<*AGROW>
-    
-    props_names = [props_names, {current_id}]; %#ok<AGROW>
+    phi = wrap_up(current_id, current_formula, new_params);
+    props = [props, {phi}];
+    props_names = [props_names, {current_id}];
 catch err
     fprintf(['ERROR: Problem with formula ' current_id ' at line ' ...
         int2str(num_line-1) '\n']);
@@ -182,3 +181,10 @@ end
 
 
 end
+
+function phi = wrap_up(current_id, current_formula, new_params)
+phi = STL_Formula(current_id, current_formula);
+phi = set_params(phi, new_params);
+assignin('base', current_id,phi);
+end
+

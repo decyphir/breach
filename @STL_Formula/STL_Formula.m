@@ -31,17 +31,19 @@ function [phi, phistruct] = STL_Formula(varargin)
 %     | STL_Formula(id,'until',phi1,interval, phi2)
 %
 
+global BreachGlobOpt
 
 % test if formula already exists
 
 if(nargin==2)
     try % check copy operation
         st = varargin{2};
-        phi = evalin('base', st);
+        phi = BreachGlobOpt.STLDB.(st); 
         if isa(phi,'STL_Formula')
             phi.id = varargin{1};
             phistruct = struct(phi);
-            assignin('base', phi.id, phi);
+%           assignin('base', phi.id, phi);
+            BreachGlobOpt.STLDB.(phi.id) = phi;
             return;
         end
     end
@@ -92,8 +94,9 @@ end
 phi=class(phi, 'STL_Formula');
 phi = check_params(phi);
 phistruct = struct(phi);
-assignin('caller', phi.id, phi);
-assignin('base', phi.id, phi);
+%assignin('caller', phi.id, phi);
+%assignin('base', phi.id, phi);
+BreachGlobOpt.STLDB.(phi.id) = phi;
 
 end
 
@@ -125,6 +128,7 @@ function phi = STL_Parse(phi,varargin)
 %  - phi : a STL Formula structure
 %
 
+global BreachGlobOpt
 
 switch(numel(varargin))
     
@@ -284,7 +288,11 @@ switch(numel(varargin))
         
         try
             id = phi.id;
-            phi = struct(evalin('base', st));
+            % this makes formula with parenthesis more permissive
+            % e.g. alw (phi)))) should be accepted
+            % wonder how much an issue this can be? 
+            st = regexprep(st,'[()]','');
+            phi = struct(BreachGlobOpt.STLDB.(st));
             phi.id = id;
         catch
             error('STL_Parse',['Unknown predicate or malformed formula: ' st]);

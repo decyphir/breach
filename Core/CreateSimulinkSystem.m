@@ -1,7 +1,7 @@
 function Sys = CreateSimulinkSystem(mdl, signals, params, p0,  inputfn, pu0, options )
 % CreateSimulinkSystem  Create a Breach system structure from a simulink model
 %
-% Synopsis: Sys =  CreateSimulinkSystem(mdl, signals, params, p0, inputfn, pu0)
+% Synopsis: Sys = CreateSimulinkSystem(mdl, signals, params, p0, inputfn, pu0)
 %
 %  - mdl       name of the Simulink model - note that breach will use its
 %              own copy of this model

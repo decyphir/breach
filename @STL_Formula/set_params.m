@@ -9,6 +9,7 @@ function phi = set_params(phi, P, values)
 %  phi = set_params(phi, P, values) assumes P is parameter name (string)
 %  or a cell of parameter names and values are corresponding values
 
+global BreachGlobOpt
 
 switch nargin
     
@@ -23,18 +24,16 @@ switch nargin
                 Pstruct.(P{ip})= values(ip);
             end
         end
-        
-        
+         
 end
 
 fn = fieldnames(Pstruct);
 if ~isempty(fn)
-    for ifn= 1:numel(fn)
-        
+    for ifn= 1:numel(fn)        
         phi.params.default_params.(fn{ifn}) = Pstruct.(fn{ifn});
         % make sure the base formula gets updated with new parameters
-        assignin('base', phi.id, phi);
-        
+       %  assignin('base', phi.id, phi);
+        BreachGlobOpt.STLDB.(phi.id) = phi;
     end
 end
 end
