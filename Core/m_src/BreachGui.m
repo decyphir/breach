@@ -2334,7 +2334,8 @@ try
     handles = update_system_panel(handles);
     
     guidata(hObject,handles);
-    
+    h = BreachTrajGui('varargin', handles);
+
 catch
     s = lasterror;
     warndlg(['Problem importing trajectory: ' s.message] );

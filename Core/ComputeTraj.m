@@ -180,7 +180,7 @@ switch Sys.type
         
         for ii = ipts
             if isfield(Sys,'init_u')
-                U = Sys.init_u(Sys.ParamList(Sys.DimX-Sys.DimU+1:Sys.DimX), P0.pts(1:Sys.DimP,ii), tspan);
+                U = Sys.init_u(Sys.InputOpt, P0.pts(1:Sys.DimP,ii), tspan);
                 assignin('base','t__',U.t);
                 assignin('base', 'u__',U.u);
             end

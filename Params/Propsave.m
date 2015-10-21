@@ -6,8 +6,6 @@ function Propsave(Sys, varargin)
 %See also Psave
 %
 
-
-
 filename = [Sys.Dir filesep SysName(Sys) '_properties.mat'];
 
 for i = 1:numel(varargin)

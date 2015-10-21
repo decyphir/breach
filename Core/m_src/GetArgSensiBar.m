@@ -1,6 +1,6 @@
 function [iX, iP, t, args] = GetArgSensiBar(DimX, ParamList, args, props)
 %
-% Init default parameters
+% Init default parameters for sensitivity analysis.
 % Might be obsolete
 %
 if ~exist('args','var')
@@ -51,7 +51,7 @@ end
 
 % Call input dialog box
 
-prompt = {'Choose variables to get sensitivities', ...
+prompt = {'Choose variables to get sensitivities from ', ...
     'Choose parameters', 'tspan for computing trajectories and sensitivities ([] uses tspan of pre-computed trajectories)'};
 name = 'Choose variables and parameters to plot sensitivities';
 

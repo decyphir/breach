@@ -1,5 +1,39 @@
-function params_u = FindParamsInput(Sys)
+function [params_u, idx_u] = FindParamsInput(Sys, InputName)
+% FINDPARAMSINPUT returns the name and indices of control point parameters
+
 
 InputNames = Sys.InputList;
-U = Sys.init_u(InputNames, [], []);
-params_u= U.params;
+InputOpt  = Sys.InputOpt; 
+params_u = {};    
+    
+switch InputOpt.type
+
+    case 'UniStep'
+    for ku = 1:numel(InputNames)
+       for k = 1:InputOpt.cp(ku)
+           params_u = {params_u{:} [InputNames{ku} '_u' num2str(k-1)]};
+      end
+    end
+    
+    % FIXME - this is not working with the old syntax VarStepXX which has
+    % dt defined for all inputs
+    case 'VarStep'
+    for ku = 1:numel(InputNames)
+       for k = 1:InputOpt.cp(ku)
+           params_u = {params_u{:} [InputNames{ku} '_dt' num2str(k-1)] [InputNames{ku} '_u' num2str(k-1)]};
+       end
+    end
+    
+end
+
+if nargin==2
+    res = regexp(params_u, ['^' InputName]);
+    res = ~cellfun(@isempty,res);
+    params_u = params_u(res);
+end
+
+if nargout ==2 
+idx_u = FindParam(Sys, params_u);
+end
+
+end

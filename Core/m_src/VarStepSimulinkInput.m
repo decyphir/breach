@@ -1,7 +1,13 @@
-function U = VarStepSimulinkInput(cp, InputNames, pts, tspan)  
+function U = VarStepSimulinkInput(cp, Sys, pts, tspan)  
+% FIXME this function does two things, which is bad: it names input signals or compute input signals
+% It is currently obsolete - to be removed soon 
   
-  DimU = numel(InputNames);
-  
+if isstruct(Sys)
+    DimU = Sys.DimU;
+else
+    InputNames = Sys; % not very nice.
+end
+
   if (isempty(pts)&&isempty(tspan))
 
     U.params = {};
@@ -22,4 +28,5 @@ function U = VarStepSimulinkInput(cp, InputNames, pts, tspan)
     U.t =[0 ; cumsum(U.u(:,1))];
     U.u = U.u(:,2:end);
     U.u = [U.u ; U.u(end,:)];        
+
   end

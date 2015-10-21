@@ -10,8 +10,8 @@ st_phi = disp(phi);
 phi_list = {};
 
 % For now we assume that we only have one signal
-sig_to_rep= varargin{1}{1};
-sig_to_rep_with_list = varargin{1}{2};
+sig_to_rep= varargin{1};
+sig_to_rep_with_list = varargin{2};
 
 if ischar(sig_to_rep_with_list)
     sig_to_rep_with_list =  {sig_to_rep_with_list};

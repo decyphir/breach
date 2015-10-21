@@ -42,7 +42,6 @@ if(nargin==2)
         if isa(phi,'STL_Formula')
             phi.id = varargin{1};
             phistruct = struct(phi);
-%           assignin('base', phi.id, phi);
             BreachGlobOpt.STLDB.(phi.id) = phi;
             return;
         end
@@ -50,7 +49,6 @@ if(nargin==2)
 end
 
 % OK, new formula or erroneous args, let's proceed
-
 if(numel(varargin)==0)
     varargin{1} = 'phi';
 end
