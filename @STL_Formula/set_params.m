@@ -33,7 +33,7 @@ if ~isempty(fn)
         phi.params.default_params.(fn{ifn}) = Pstruct.(fn{ifn});
         % make sure the base formula gets updated with new parameters
        %  assignin('base', phi.id, phi);
-        BreachGlobOpt.STLDB.(phi.id) = phi;
+        BreachGlobOpt.STLDB(phi.id) = phi;
     end
 end
 end

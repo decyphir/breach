@@ -38,11 +38,11 @@ global BreachGlobOpt
 if(nargin==2)
     try % check copy operation
         st = varargin{2};
-        phi = BreachGlobOpt.STLDB.(st); 
+        phi = BreachGlobOpt.STLDB(st); 
         if isa(phi,'STL_Formula')
             phi.id = varargin{1};
             phistruct = struct(phi);
-            BreachGlobOpt.STLDB.(phi.id) = phi;
+            BreachGlobOpt.STLDB(phi.id) = phi;
             return;
         end
     end
@@ -94,7 +94,7 @@ phi = check_params(phi);
 phistruct = struct(phi);
 %assignin('caller', phi.id, phi);
 %assignin('base', phi.id, phi);
-BreachGlobOpt.STLDB.(phi.id) = phi;
+BreachGlobOpt.STLDB(phi.id) = phi;
 
 end
 
@@ -290,7 +290,7 @@ switch(numel(varargin))
             % e.g. alw (phi)))) should be accepted
             % wonder how much an issue this can be? 
             st = regexprep(st,'[()]','');
-            phi = struct(BreachGlobOpt.STLDB.(st));
+            phi = struct(BreachGlobOpt.STLDB(st));
             phi.id = id;
         catch
             error('STL_Parse',['Unknown predicate or malformed formula: ' st]);

@@ -14,7 +14,7 @@ for iV = 1:lenVars
     Y = get(simout,Vars{iV});
     if ~isempty(Y)
         
-        if ~strcmp(Vars{iV}, 'tout')&&~strcmp(Vars{iV},'logsout')
+        if ~strcmp(Vars{iV}, 'tout')&&~strcmp(Vars{iV},'logsout')&&(isstruct(Y))
             for iS=1:numel(Y.signals)
                 signame = Y.signals(iS).label;
                 if ~ismember(signame,signals)

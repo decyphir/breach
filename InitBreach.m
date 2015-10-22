@@ -60,4 +60,14 @@ end
 cd(cdr_);
 clear cdr_ dr_;
 
+%% Init STL_Formula database
+
+if isfield(BreachGlobOpt, 'STLDB') 
+    if ~strcmp(class(BreachGlobOpt.STLDB), 'containers.Map')
+        BreachGlobOpt.STLDB = containers.Map();
+    end
+else
+        BreachGlobOpt.STLDB = containers.Map();    
+end
+
 warning('on',id);
