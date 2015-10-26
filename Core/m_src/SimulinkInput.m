@@ -48,7 +48,11 @@ end
         u_values = cp_values(2:2:end);
         u_values = u_values(1:min([numel(t_cp) numel(u_values)]));
         t_cp = t_cp(1:min([numel(t_cp) numel(u_values)]));
-        Ui.u = interp1(t_cp, u_values, tspan', method, 'extrap');
+        if numel(t_cp)==1
+            Ui.u = u_values(1)*ones(numel(tspan),1);
+        else
+            Ui.u = interp1(t_cp, u_values, tspan', method, 'extrap');
+        end
         
     end
 
