@@ -250,35 +250,25 @@ close_system(mdl_breach);
                 Sys.InputOpt = struct('type','UniStep','cp', ones(1, sig_in));
                 init_u =  @(sig_in,pts,tspan)UniStepSimulinkInput(1,sig_in,pts,tspan);
             else
+                % backward compatibility with syntax UniStepXX and
+                % VarStepXX (later might not work though)
                 if ischar(inputfn)
                     init_u = [];
                     
-                    pref = 'UniStep'; 
+                    pref = 'UniStep';
                     if regexp(inputfn, [pref '[0-9]+'])
                         cp = str2num(inputfn(numel(pref)+1:end));
-                        InputOpt = struct('type','UniStep','cp', cp*ones(1, numel(sig_in)));
-                        init_u =  @(sig_in,pts,tspan)UniStepSimulinkInput(cp ,sig_in,pts,tspan);
-                        U = init_u(sig_in, [],[]);
-                        pu  = U.p0;
-                        
-                    end
-                    
-                    if isempty(init_u)
+                        inputfn = struct('type','UniStep','cp', cp*ones(1, numel(sig_in)));
+                    else
                         pref = 'VarStep';
                         if regexp(inputfn, [pref '[0-9]+'])
                             cp = str2num(inputfn(numel(pref)+1:end));
-                            InputOpt = struct('type','VarStep','cp', cp*ones(1, numel(sig_in)));
-                            init_u =  @(sig_in,pts,tspan)VarStepSimulinkInput(cp ,sig_in,pts,tspan);
-                            U = init_u(sig_in, [],[]);
-                            pu  = U.p0;
+                            inputfn = struct('type','VarStep','cp', cp*ones(1, numel(sig_in)));
                         end
                     end
+                end
+                if isstruct(inputfn)
                     
-                    if isempty(init_u)
-                        eval(['init_u=@' inputfn ';']);
-                    end
-                elseif isstruct(inputfn)
-
                     InputOpt = inputfn;
                     % checks number of control points
                     DimU = numel(sig_in);
@@ -293,7 +283,7 @@ close_system(mdl_breach);
                     U.params = FindParamsInput(Sys);
                     pu = zeros(1,numel(U.params));
                     init_u = @SimulinkInput;
-
+                    
                     
                     % checks interpolation method
                     
@@ -315,49 +305,49 @@ close_system(mdl_breach);
                     elseif numel(InputOpt.method)~= DimU
                         error('find_input_signal:invalid_interp_methods_number', ['Invalid number of interpolation methods, should be ' num2str(DimU)]);
                     end
-            else
-                error('Invalid input function.');
+                else
+                    error('Invalid input function or input parameters.');
+                end
             end
-        end
-                
+            
         else
             pu = [];
             U.params = {};
             cs.set_param('LoadExternalInput', 'off');   % Input
+        end
+        
+        
     end
 
-
-end
-
-function find_logged_signals
-
-if ~exist('signals','var')
-    signals = {};
-end
-
-if ischar(signals)
-    if strcmp(signals,'logged')
-        try
-            [sig_log] = find_signals(mdl_breach);
-        catch
-            error(['Could not analyze signals in ' mdl '. Check that your model is ' ...
-                'compiling and running.' ]);
+    function find_logged_signals
+        
+        if ~exist('signals','var')
+            signals = {};
+        end
+        
+        if ischar(signals)
+            if strcmp(signals,'logged')
+                try
+                    [sig_log] = find_signals(mdl_breach);
+                catch
+                    error(['Could not analyze signals in ' mdl '. Check that your model is ' ...
+                        'compiling and running.' ]);
+                end
+            end
+            
+        elseif iscell(signals)
+            
+            for k =  1:numel(signals);
+                sig = signals{k};
+                l = find_system(mdl_breach,'FindAll','on', 'type','line', 'Name', sig);
+                if ~isempty(l)
+                    %ensure that it is logged
+                    set(lines(k),'DataLoggingName', 'Use signal name', 'DataLogging',1 ,'Name',sig);
+                else
+                    error(['Signal ' l 'not found in model.'] );
+                end
+            end
         end
     end
-    
-elseif iscell(signals)
-    
-    for k =  1:numel(signals);
-        sig = signals{k};
-        l = find_system(mdl_breach,'FindAll','on', 'type','line', 'Name', sig);
-        if ~isempty(l)
-            %ensure that it is logged
-            set(lines(k),'DataLoggingName', 'Use signal name', 'DataLogging',1 ,'Name',sig);
-        else
-            error(['Signal ' l 'not found in model.'] );
-        end
-    end
-end
-end
 
 end
