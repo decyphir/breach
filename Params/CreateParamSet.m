@@ -13,7 +13,7 @@ function P = CreateParamSet(Sys, Param, Ranges, Nb_pts)
 %             otherwise.
 %  - Ranges : (Optional, default=[0.9*Sys.p, 1.1*Sys.p] for Sys.p~=0, 1
 %             otherwise) array of size numel(Param) x 2 describing
-%             parameter ranges.
+%             parameter ranges. 
 %  - Nb_pts : (Optional, default=1) number of parameter vectors in the
 %             created parameter set;  same argument as Refine function
 % 
@@ -43,6 +43,12 @@ function P = CreateParamSet(Sys, Param, Ranges, Nb_pts)
 %
 
 pts = Sys.p;
+
+% if only Sys is given as argument, try using field ParamRanges
+if (nargin==1 && isfield(Sys,'ParamRanges'))
+    Param = find(diff(Sys.ParamRanges'));
+    Ranges = Sys.ParamRanges(Param,:);
+end
 
 if exist('Param','var')
     if ischar(Param)

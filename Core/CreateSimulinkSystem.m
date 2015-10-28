@@ -89,8 +89,13 @@ cs.set_param('ReturnWorkspaceOutputs', 'on');   % Save simulation output as sing
 t_end= str2num(cs.get_param('StopTime'));
 try
     t_step= str2num(cs.get_param('FixedStep'));
-catch % default fixed step is t_end/1000
-    t_step= t_end/1000;
+catch % default fixed step is t_end/1000, unless MaxStep is set smaller
+    t_step= t_end/1000; 
+    try
+        maxstep = cs.get_param('MaxStep');     
+        t_step = min([t_step str2num(maxstep)]);
+    catch
+    end
 end
 
 cs.set_param('StartTime', '0.0');   % Start time
@@ -217,6 +222,7 @@ eval(['Sys.sim = @' simfn ';']);
 Sys.mdl= [mdl '_breach'];
 Sys.Dir= pwd;
 Sys.tspan = 0:t_step:t_end;
+Sys.name = Sys.mdl;  % not great..
 
 save_system(mdl_breach);
 close_system(mdl_breach);
