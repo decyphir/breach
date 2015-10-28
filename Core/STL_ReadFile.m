@@ -35,6 +35,12 @@ function [props_names, props, signal_names, param_names] = STL_ReadFile(fname)
 %See also STL_Formula RecoverFormula
 %
 
+% checks if Breach (and STLDB in particular) needs initialization 
+global BreachGlobOpt
+if isempty(BreachGlobOpt)
+    InitBreach;
+end
+
 fid = fopen(fname,'r');
 
 if(fid==-1)

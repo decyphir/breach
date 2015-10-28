@@ -59,7 +59,7 @@ for ii = 1:numel(param)
     else
         newp = newp+1;
         index(ii) = newp;
-        S.ParamList = [S.ParamList, param(ii)];
+        %S.ParamList = [S.ParamList, param(ii)]; % not needed, S is not returned 
     end
 end
 

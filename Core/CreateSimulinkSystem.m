@@ -83,8 +83,6 @@ cs.set_param('LimitDataPoints', 'off');   % Limit data points to last
 cs.set_param('LoadExternalInput', 'on');   % Input
 cs.set_param('LoadInitialState', 'off');   % Initial state
 cs.set_param('ReturnWorkspaceOutputs', 'on');   % Save simulation output as single object
-% cs.set_param('SaveOutput', 'on');   % Output
-cs.set_param('SaveTime', 'on');   % Time
 
 % Solver pane - times
 
@@ -97,10 +95,11 @@ end
 
 cs.set_param('StartTime', '0.0');   % Start time
 cs.set_param('StopTime', 'tspan(end)');   % Stop time
-
+cs.set_param('TimeSaveName', 'tout');   % Time
+cs.set_param('SaveTime', 'on');   % Time
+ 
 % Data Import/Export pane
 cs.set_param('ExternalInput', '[t__, u__]');   % Input
-% cs.set_param('FinalStateName', 'xFinal');   % Final states
 cs.set_param('InspectSignalLogs', 'off');   % Record and inspect simulation output
 cs.set_param('OutputSaveName', 'yout');   % Output
 cs.set_param('ReturnWorkspaceOutputsName', 'out');   % Save simulation output as single object
@@ -114,8 +113,8 @@ if (~verLessThan('matlab','R2011a'))
     simfn = 'sim_breach';
 else
     simfn = 'sim_breach_old_ver';   % call a different sim function for older versions of Simulink
+                                    % FIXME: this likely does not work with 2010b...    
 end
-cs.set_param('TimeSaveName', 'tout');   % Time
 
 %% Find and Log input signals
 
@@ -137,7 +136,7 @@ end
 
 % by default we log all input ports and all output ports
 
-% outputs
+%% outputs
 o = find_system(mdl_breach,'SearchDepth',1, 'BlockType', 'Outport');
 
 sig_out= {};
@@ -189,7 +188,7 @@ if ~isempty(pu0)
     pu(1:numel(pu0)) = pu0;
 end
 
-%%  Run the model for time 0 to check proper initialization and collect signal names
+%% Run the model for time 0 to check proper initialization and collect signal names
 tspan = evalin('base', 'tspan;');
 assignin('base','tspan',[0 0]);
 assignin('base','t__',0);

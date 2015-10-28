@@ -13,7 +13,6 @@ global BreachGlobOpt
 
 switch nargin
     
-    % assumes P is
     case 2
         Pstruct =P;
     case 3
@@ -32,7 +31,6 @@ if ~isempty(fn)
     for ifn= 1:numel(fn)        
         phi.params.default_params.(fn{ifn}) = Pstruct.(fn{ifn});
         % make sure the base formula gets updated with new parameters
-       %  assignin('base', phi.id, phi);
         BreachGlobOpt.STLDB(phi.id) = phi;
     end
 end

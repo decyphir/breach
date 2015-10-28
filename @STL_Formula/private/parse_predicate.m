@@ -12,7 +12,7 @@ function mu = parse_predicate(S, mu)
 %         field params of mu. This field pre_pred contains three fields
 %         init_var_st, init_par_st (which contain string to execute before
 %         the evaluation of the predicate) and eval_fn. They then avoid to
-%         parse the predicat each time it is evaluated.
+%         parse the predicate each time it is evaluated.
 % 
 %See also STL_OptimizePredicates
 %
@@ -31,7 +31,7 @@ for ii=1:S.DimX
     
     % test if current variable is found at the beginning of the predicate
     [start_idx, end_idx, ~, matches, tokens] = regexp(fn_, ['^' pcurr '\[(.+?)\]']);
-    
+          
     for jj = 1:numel(matches)
         time = tokens{jj}{:}; % time is then the string indicating at which time the variable is evaluated
         newpcurr = [pcurr '__LB__' int2str(jj) '_RB_'];

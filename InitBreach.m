@@ -1,4 +1,12 @@
 % This script initializes Breach, in particular adding paths to Breach directories
+
+% checks if global configuration variable is defined
+if exist('BreachGlobOpt','var')
+  if isfield(BreachGlobOpt, 'breach_dir') % additional check  
+      return; % OK InitBreach has been run before
+  end
+end
+
 disp('Initializing Breach...'); 
 disp('%-------------------------------------------------------------------%')
 disp('% Important!                                                        %')
