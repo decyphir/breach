@@ -116,10 +116,10 @@ end
 
 Pr = ComputeTraj(Sys, Pr, tspan);
 [Pr, Y] = SEvalProp(Sys, Pr, phi, tau);
-[mu, mustar, sigma] = EEffects(Y, Pr.D, opt.p);
+[mu, mustar, sigma, sigmastar] = EEffects(Y, Pr.D, opt.p);
 
 
-if opt.plot
+if opt.plot==1
     [~,isort] = sort(abs(mu));
     h = figure;
     subplot(3,1,1);
@@ -147,6 +147,18 @@ if opt.plot
     end
     
     fig_resize(h,1,2.5)
+
+elseif opt.plot==2 
+    figure;
+    bar(mu);
+    hold on;
+    errorbar(mu,sigma,'+');
+    title('Expectation of elementary effects')
+    set(gca, 'XTickLabel',Sys.ParamList(opt.params));
+    if isfield(opt,'muGraphOpt')
+        set(gca,opt.muGraphOpt{:});
+    end
+
 end
 
 end
