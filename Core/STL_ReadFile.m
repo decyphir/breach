@@ -69,21 +69,20 @@ while ischar(tline)
     tline = regexprep(tline, '^\s*','');
     tline = regexprep(tline, '\s*$','');
     
+    % checks if we are declaring a test (from a CPSgrader spec. file)
     if ~isempty(tline)
-        % checks if we are declaring a test (from a CPSgrader spec.
-        % file)
         tokens = regexp(tline, '^test\W','tokens');
         if ~isempty(tokens)
-            tline='';
             break
         end
     end
     
-    
+    % comments at start of line ignore line
     if regexp(tline, '^\#')
         tline = '';
     end
     
+    % remove comment at the end of the line
     tokens = regexp(tline, '\s*(.*?)\#(.+)|\s*(.*)','tokens');
     if ~isempty(tokens)
         tline = tokens{1}{1};
@@ -91,8 +90,9 @@ while ischar(tline)
         tline = '';
     end
     
+    
+    % checks if we are declaring signals
     if ~isempty(tline)
-        % checks if we are declaring signals
         tokens = regexp(tline, '^signal (.*)','tokens');
         if ~isempty(tokens)
             new_signals= strsplit(tokens{1}{1},',');
@@ -103,24 +103,10 @@ while ischar(tline)
         end
     end
     
+    % checks if we are declaring parameters
     if ~isempty(tline)
-        % checks if we are declaring parameters
         tokens = regexp(tline, '^param (.*)','tokens');
-        
-        if ~isempty(current_id)
-            try
-                phi = wrap_up(current_id, current_formula, new_params);
-                props = [props, {phi}];
-                props_names = [props_names, {current_id}];
-                got_it = 1;
-            catch err
-                fprintf(['ERROR: Problem with formula ' current_id ' at line ' ...
-                    int2str(num_line-1) '\n']);
-                rethrow(err);
-            end
-            
-        end % we're done : if current_id is empty this is our first formula
-        
+                
         if ~isempty(tokens)
             param_defs = regexprep(tokens{1}{1}, '\s*','');
             param_defs = strsplit(param_defs,',');
@@ -133,8 +119,8 @@ while ischar(tline)
         end
     end
     
+    % Checks if we're starting the def. of a new formula
     if ~isempty(tline)
-        % Checks if we're starting the def. of a new formula
         tokens = regexp(tline, '(\w+)\s*:=(.*)','tokens');
         if ~isempty(tokens)
             % ok try wrapping up what we have so far before starting a new formula
@@ -163,7 +149,6 @@ while ischar(tline)
             current_formula = tokens{1}{2};
             got_it = 0;
         else % we're continuing the definition of a formula
-            
             if isempty(current_id)
                 error('STL_ReadFile:MissingId',['On line ' int2str(num_line) ', no id given yet.']);
             end

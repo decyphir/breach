@@ -30,7 +30,7 @@ function [phi, phistruct] = STL_Formula(varargin)
 %
 %     | STL_Formula(id,'until',phi1,interval, phi2)
 %
-
+evalin('base','InitBreach');
 global BreachGlobOpt
 
 % test if formula already exists
@@ -254,7 +254,6 @@ switch(numel(varargin))
         end
         
         [success, st1, st2] = parenthesisly_balanced_split(st, '>');
-        %        tokens = regexp(st, '(.+)\s*>\s*(.+)','tokens');
         if success
             phi.type = 'predicate';
             phi.st = st;
@@ -343,12 +342,7 @@ switch(numel(varargin))
                 phi.type = 'eventually' ;
                 phi.interval = varargin{2};
                 phi.phi = varargin{3};
-                
-            case 'evp'
-                phi.type = 'evp' ;
-                phi.interval = varargin{2};
-                phi.phi = varargin{3};
-                
+                                
             case 'always'
                 phi.type = 'always' ;
                 phi.interval = varargin{2};
@@ -363,15 +357,22 @@ switch(numel(varargin))
                 phi.type = 'always' ;
                 phi.interval = varargin{2};
                 phi.phi = varargin{3};
+        
+            case 'until'
+                phi.type = 'until' ;
+                phi.interval =  varargin{3};
+                phi.phi1 = varargin{2};
+                phi.phi2 = varargin{4};
+
         end
         
     case 4
         switch(varargin{1})
             case 'until'
                 phi.type = 'until' ;
-                phi.interval =  varargin{3};
+                phi.interval =  '[0,inf]';
                 phi.phi1 = varargin{2};
-                phi.phi2 = varargin{4};
+                phi.phi2 = varargin{3};
         end
     otherwise
         error('STL_Parse','Too many arguments.')

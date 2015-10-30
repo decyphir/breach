@@ -39,6 +39,7 @@ addpath( [dr_ filesep 'Plots' filesep 'm_src']);
 addpath( [dr_ filesep 'Toolboxes' filesep 'optimize']);
 addpath( [dr_ filesep 'Toolboxes' filesep 'sundials' filesep 'sundialsTB' ]);
 addpath( [dr_ filesep 'Toolboxes' filesep 'sundials' filesep 'sundialsTB' filesep 'cvodes']);
+addpath( [dr_ filesep 'Core' filesep 'STLib']);
 
 %% Init BreachGlobOpt options and fourre-tout global variable
 

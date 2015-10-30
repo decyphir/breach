@@ -71,7 +71,7 @@ for restart = 0:nb_restart
 
     if ~isempty(ifalse)
         Pf = Sselect(Propt, ifalse);
-        fprintf('  ---- Falsified !');
+        fprintf('  ---- Falsified !\n');
         return;
     else
         Pf = Propt;
@@ -81,8 +81,7 @@ for restart = 0:nb_restart
         if opt.timeout <0
             fprintf('\nFalsification timed out.\n')
             fprintf(['Final robustness: ' num2str(val_opt)]);
-        
-            break;
+            return;
         end
     
     end

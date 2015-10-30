@@ -6,22 +6,35 @@ function Propsave(Sys, varargin)
 %See also Psave
 %
 
+global BreachGlobOpt
 filename = [Sys.Dir filesep SysName(Sys) '_properties.mat'];
 
-for i = 1:numel(varargin)
-    P___ = varargin{i};
-    
-    if ~ischar(P___)
-        error('Propsave:argumentError',['Arguments should be a system structure and strings naming ' ...
-            'parameter sets']);
+if(nargin==2)
+    if isstruct(varargin{1})
+        struct2save= varargin{1};
     end
     
-    eval([P___ '= evalin(''base'',''' P___ ''');']);
-    if ~exist(filename,'file')
-        save(filename, P___);
-    else
-        save(filename, '-append', P___);
+    if ischar(varargin{1})
+        struct2save = struct(varargin{1}, BreachGlobOpt.STLDB(varargin{1}));
     end
+elseif nargin>=2
+    for i = 1:numel(varargin)
+        if ~ischar(varargin{i})
+            error('Propsave:argumentError',['Arguments should be a system structure and strings naming ' ...
+                'properties or the name of a structure with properties.']);
+        end
+        phi_id = varargin{i};
+        struct2save.(phi_id) = BreachGlobOpt.STLDB(varargin{i});
+    end
+else
+    error('Propsave:argumentError',['Arguments should be a system structure and strings naming ' ...
+        'properties or the name of a structure with properties.']);
+end
+
+if ~exist(filename,'file')
+    save(filename, '-struct', 'struct2save');
+else
+    save(filename, '-struct', 'struct2save', '-append');
 end
 
 end
