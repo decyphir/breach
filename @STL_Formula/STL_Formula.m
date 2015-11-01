@@ -31,20 +31,25 @@ function [phi, phistruct] = STL_Formula(varargin)
 %     | STL_Formula(id,'until',phi1,interval, phi2)
 %
 evalin('base','InitBreach');
+
 global BreachGlobOpt
 
 % test if formula already exists
-
 if(nargin==2)
-    try % check copy operation
-        st = varargin{2};
-        phi = BreachGlobOpt.STLDB(st); 
-        if isa(phi,'STL_Formula')
-            phi.id = varargin{1};
-            phistruct = struct(phi);
-            BreachGlobOpt.STLDB(phi.id) = phi;
-            return;
-        end
+    % here we copy a formula 
+    if isa(varargin{2},'STL_Formula')
+        phi.id = varargin{1};
+        phistruct = struct(phi);
+        BreachGlobOpt.STLDB(phi.id) = phi;
+        return;
+    elseif ischar(varargin{2}) % here we reference an existing formula 
+    st = varargin{2};
+    if isKey(BreachGlobOpt.STLDB,st)
+        phi = BreachGlobOpt.STLDB(st);
+        return;
+    end
+    else 
+       error('STL_Formula:Bad_argument_type', 'Second argument should be a string or a formula.');
     end
 end
 
@@ -92,8 +97,6 @@ end
 phi=class(phi, 'STL_Formula');
 phi = check_params(phi);
 phistruct = struct(phi);
-%assignin('caller', phi.id, phi);
-%assignin('base', phi.id, phi);
 BreachGlobOpt.STLDB(phi.id) = phi;
 
 end
@@ -142,7 +145,9 @@ switch(numel(varargin))
         if success
             phi1 = STL_Formula([phi.id '1__'],st1);
             phi2 = STL_Formula([phi.id '2__'],st2);
-            phi = STL_Parse(phi,'or', phi1, phi2);     
+            STLDB_Remove([phi.id '1__']);
+            STLDB_Remove([phi.id '2__']);
+            phi = STL_Parse(phi,'or', phi1, phi2);
             return
         end
         
@@ -151,6 +156,8 @@ switch(numel(varargin))
         if success
             phi1 = STL_Formula([phi.id '1__'],st1);
             phi2 = STL_Formula([phi.id '2__'],st2);
+            STLDB_Remove([phi.id '1__']);
+            STLDB_Remove([phi.id '2__']);
             phi = STL_Parse(phi,'=>', phi1, phi2);
             return
         end
@@ -160,6 +167,9 @@ switch(numel(varargin))
         if success
             phi1 = STL_Formula([phi.id '1__'],st1);
             phi2 = STL_Formula([phi.id '2__'],st2);
+            STLDB_Remove([phi.id '1__']);
+            STLDB_Remove([phi.id '2__']);
+            
             phi = STL_Parse(phi,'and', phi1, phi2);
             return
         end
@@ -170,6 +180,9 @@ switch(numel(varargin))
         if success
             phi1 = STL_Formula([phi.id '1__'],st1);
             phi2 = STL_Formula([phi.id '2__'],st2);
+            STLDB_Remove([phi.id '1__']);
+            STLDB_Remove([phi.id '2__']);
+            
             phi = STL_Parse(phi,'until', phi1, interval, phi2);
             return
         end
@@ -179,6 +192,9 @@ switch(numel(varargin))
         if success
             phi1 = STL_Formula([phi.id '1__'],st1);
             phi2 = STL_Formula([phi.id '2__'],st2);
+            STLDB_Remove([phi.id '1__']);
+            STLDB_Remove([phi.id '2__']);
+            
             phi = STL_Parse(phi,'until', phi1, interval, phi2);
             return
         end
@@ -187,6 +203,7 @@ switch(numel(varargin))
         [success, st1, st2] = parenthesisly_balanced_split(st, '\<ev\>');
         if success && isempty(st1)
             phi1 = STL_Formula([phi.id '1__'],st2);
+            STLDB_Remove([phi.id '1__']);
             phi = STL_Parse(phi, 'ev', phi1);
             return
         end
@@ -195,15 +212,16 @@ switch(numel(varargin))
         [success, st1, st2, interval] = parenthesisly_balanced_split(st, '\<ev_\[(.+?)\]\>');
         if success && isempty(st1)
             phi1 = STL_Formula([phi.id '1__'],st2);
+            STLDB_Remove([phi.id '1__']);
             phi = STL_Parse(phi,'ev',interval,phi1);
             return
         end
-        
         
         %% test always
         [success,st1, st2] = parenthesisly_balanced_split(st, '\<alw\>');
         if success && isempty(st1)
             phi1 = STL_Formula([phi.id '1__'],st2);
+            STLDB_Remove([phi.id '1__']);
             phi = STL_Parse(phi, 'alw', phi1);
             return
         end
@@ -212,6 +230,7 @@ switch(numel(varargin))
         [success, st1, st2, interval] = parenthesisly_balanced_split(st, '\<alw_\[(.+?)\]\>');
         if success && isempty(st1)
             phi1 = STL_Formula([phi.id '1__'],st2);
+            STLDB_Remove([phi.id '1__']);
             phi = STL_Parse(phi,'alw',interval,phi1);
             return
         end
@@ -221,6 +240,7 @@ switch(numel(varargin))
         [success,st1, st2] = parenthesisly_balanced_split(st, '\<not\>');
         if success && isempty(st1)
             phi1 = STL_Formula([phi.id '1__'],st2);
+            STLDB_Remove([phi.id '1__']);
             phi = STL_Parse(phi, 'not', phi1);
             return
         end
@@ -228,16 +248,14 @@ switch(numel(varargin))
         % test expr op expr | params
         
         % parse additional params
-        
         tokens = regexp(st, '(.+)\s*\|\s*(.+)','tokens');
-        
         if ~isempty(tokens)
             st = tokens{1}{1};
             param_st = tokens{1}{2};
             param_tokens = regexp(param_st,'\s*,\s*','split');
             for i=1:numel(param_tokens)
                 tk2 = regexp(param_tokens{i},'\s*(.+?)\s*=(.+)','tokens');
-                phi.params.(tk2{1}{1}) = eval(tk2{1}{2});
+                phi.params.default_params.(tk2{1}{1}) = eval(tk2{1}{2});
             end
         end
         
@@ -281,16 +299,13 @@ switch(numel(varargin))
             return
         end
         
-        % Last possibility, the formula already exists
-        
+        % Last possibility, the formula already exists - note: in that case
+        % we ignore id and use the id of existing formula
         try
-            id = phi.id;
-            % this makes formula with parenthesis more permissive
-            % e.g. alw (phi)))) should be accepted
-            % wonder how much an issue this can be? 
-            st = regexprep(st,'[()]','');
+            %          id = phi.id;
+            st = regexprep(st,'[()\s]','');
             phi = struct(BreachGlobOpt.STLDB(st));
-            phi.id = id;
+            %          phi.id = id;
         catch
             error('STL_Parse',['Unknown predicate or malformed formula: ' st]);
         end
@@ -342,7 +357,7 @@ switch(numel(varargin))
                 phi.type = 'eventually' ;
                 phi.interval = varargin{2};
                 phi.phi = varargin{3};
-                                
+                
             case 'always'
                 phi.type = 'always' ;
                 phi.interval = varargin{2};
@@ -357,22 +372,22 @@ switch(numel(varargin))
                 phi.type = 'always' ;
                 phi.interval = varargin{2};
                 phi.phi = varargin{3};
-        
+                
             case 'until'
                 phi.type = 'until' ;
-                phi.interval =  varargin{3};
+                phi.interval =  '[0,inf]';
                 phi.phi1 = varargin{2};
-                phi.phi2 = varargin{4};
-
+                phi.phi2 = varargin{3};
+                
         end
         
     case 4
         switch(varargin{1})
             case 'until'
                 phi.type = 'until' ;
-                phi.interval =  '[0,inf]';
+                phi.interval =  varargin{3};
                 phi.phi1 = varargin{2};
-                phi.phi2 = varargin{3};
+                phi.phi2 = varargin{4};
         end
     otherwise
         error('STL_Parse','Too many arguments.')

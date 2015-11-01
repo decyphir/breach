@@ -38,7 +38,7 @@ function [props_names, props, signal_names, param_names] = STL_ReadFile(fname)
 % checks if Breach (and STLDB in particular) needs initialization 
 global BreachGlobOpt
 if isempty(BreachGlobOpt)
-    InitBreach;
+    evalin('base','InitBreach;');
 end
 
 fid = fopen(fname,'r');
