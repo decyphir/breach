@@ -6,12 +6,14 @@ function P = SetParam(P, ParamList, ParamValues)
 % Synopsis: P = SetParam(P, ParamList, ParamValues)
 % 
 % Inputs:
-%  - P          : the parameter set to modify ;
-%  - ParamList  : the list of parameters for which the value is changed or
-%                 created. If empty, nothing is done :
-%  - ParamValue : the values of the parameters. Its size is either
-%                 ( numel(ParamList) , size(P.pts,2) ) or
-%                 ( numel(ParamList) , 1 )
+%  - P          : the parameter set to modify;
+%  - ParamList  : a cell array containting the list of parameter names for
+%                 which the value is changed or created. If empty, nothing
+%                 is done;
+%  - ParamValue : matrix containing the values of the parameters. Its size
+%                 is either ( numel(ParamList) , size(P.pts,2) ) or
+%                 ( numel(ParamList) , 1 ), in which case, the same value
+%                 is set to each parameter.
 % 
 % Output:
 %  - P : the modified parameter set
@@ -72,7 +74,7 @@ else
 end
 if ~isfield(P,'traj_ref')
     P.traj_ref = zeros(1,size(P.(pts),2));
-    if isfield(P,'traj')
+    if isfield(P,'traj') % there is a structural error in P: try to fix
         m = min(size(P.(pts),2),numel(P.traj));
         P.traj_ref(1:m) = 1:m;
     end
