@@ -72,7 +72,6 @@ else
     handles.last_tspan = '';
 end
 
-
 str_name = ['System (' handles.system_name_file ')'];
 if (numel(str_name)>35)
     str_name= [str_name(1:30) '...' str_name(end-5:end)];
@@ -250,7 +249,6 @@ end
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
 % --- Executes on selection change in working_sets_listbox.
 function working_sets_listbox_Callback(hObject, eventdata, handles)
 % hObject    handle to working_sets_listbox (see GCBO)
@@ -267,11 +265,6 @@ handles = update_modif_panel(handles);
 handles= update_properties_panel(handles);
 guidata(hObject, handles);
 
-
-% Hints: contents = get(hObject,'String') returns working_sets_listbox contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from working_sets_listbox
-
-
 % --- Executes during object creation, after setting all properties.
 function working_sets_listbox_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to working_sets_listbox (see GCBO)
@@ -283,7 +276,6 @@ function working_sets_listbox_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 % --- Executes on selection change in listbox_system.
 function listbox_system_Callback(hObject, eventdata, handles)
@@ -317,10 +309,6 @@ switch(ival)
         set(handles.edit_system_param,'String', handles.Sys.CVodesSensiOptions.FSAoptions.SensErrControl);
 end
 
-% Hints: contents = get(hObject,'String') returns listbox_system contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from listbox_system
-
-
 % --- Executes during object creation, after setting all properties.
 function listbox_system_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to listbox_system (see GCBO)
@@ -332,7 +320,6 @@ function listbox_system_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 % --- Executes on selection change in listbox_varying_parameters.
 function listbox_varying_parameters_Callback(hObject, eventdata, handles)
@@ -346,18 +333,12 @@ handles= update_modif_panel(handles);
 handles= update_properties_panel(handles);
 guidata(hObject, handles);
 
-% Hints: contents = get(hObject,'String') returns listbox_varying_parameters contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from listbox_varying_parameters
-
-
 % --- Executes during object creation, after setting all properties.
 function listbox_varying_parameters_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to listbox_varying_parameters (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
-% Hint: listbox controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -368,7 +349,6 @@ function button_add_param_Callback(hObject, eventdata, handles)
 % hObject    handle to button_add_param (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
 
 ind = handles.selected_param;
 P = handles.working_sets.(handles.current_set);
@@ -435,14 +415,6 @@ handles = update_working_sets_panel(handles);
 guidata(hObject, handles);
 h = BreachTrajGui('varargin', handles);
 
-% catch
-%   s = lasterror;
-%   warndlg(['Problem computing traj: ' s.message] );
-%   error(s);
-%   return
-% end
-
-
 % --- Executes on button press in button_remove_param.
 function button_remove_param_Callback(hObject, eventdata, handles)
 % hObject    handle to button_remove_param (see GCBO)
@@ -464,14 +436,13 @@ if(numel(st)>1)
     
     guidata(hObject,handles);
 end
+
 % --- Executes during object creation, after setting all properties.
 function edit_tspan_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to edit_tspan (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -538,19 +509,12 @@ else
     
 end
 
-
-% Hints: get(hObject,'String') returns contents of edit_default_param as text
-%        str2double(get(hObject,'String')) returns contents of edit_default_param as a double
-
-
 % --- Executes during object creation, after setting all properties.
 function edit_default_param_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to edit_default_param (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -566,10 +530,6 @@ try
     handles = update_modif_panel(handles);
     guidata(hObject,handles);
 end
-
-% Hints: get(hObject,'String') returns contents of edit_uncertainty as text
-%        str2double(get(hObject,'String')) returns contents of edit_uncertainty as a double
-
 
 % --- Executes during object creation, after setting all properties.
 function edit_uncertainty_CreateFcn(hObject, eventdata, handles)
@@ -624,18 +584,12 @@ end
 set(handles.button_go_refine,'String',['Go (' num2str(nb_pts) ' new pts)']);
 guidata(hObject,handles);
 
-% Hints: get(hObject,'String') returns contents of edit_refine as text
-%        str2double(get(hObject,'String')) returns contents of edit_refine as a double
-
-
 % --- Executes during object creation, after setting all properties.
 function edit_refine_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to edit_refine (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -645,24 +599,18 @@ function edit_value_pts_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-try
-    
+try 
     val = eval(get(hObject,'String'));
     ipts = handles.working_sets.(handles.current_set).dim(handles.selected_varying_param);
     handles.working_sets.(handles.current_set).pts(ipts,handles.current_pts) = val;
     handles = update_modif_panel(handles);
     guidata(hObject,handles);
-    
 catch
     s = lasterror;
     warndlg(['Problem edit value: ' s.message] );
     error(s);
     return
 end
-
-
-% Hints: get(hObject,'String') returns contents of edit_value_pts as text
-%        str2double(get(hObject,'String')) returns contents of edit_value_pts as a double
 
 
 % --- Executes during object creation, after setting all properties.
@@ -710,7 +658,6 @@ function compile_button_Callback(hObject, eventdata, handles)
 
 CompileSystem(handles.Sys,'all');
 
-
 % hObject    handle to compile_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -749,23 +696,15 @@ catch
 end
 
 
-% Hints: get(hObject,'String') returns contents of edit_system_param as text
-%        str2double(get(hObject,'String')) returns contents of edit_system_param as a double
-
-
 % --- Executes during object creation, after setting all properties.
 function edit_system_param_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to edit_system_param (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
 
 % --------------------------------------------------------------------
 function compile_Callback(hObject, eventdata, handles)
@@ -1355,7 +1294,6 @@ set(handles.listbox_prop,'String', content);
 function handles = update_modif_panel(handles)
 
 % parameters listbox
-
 nb_pts = size(handles.working_sets.(handles.current_set).pts,2);
 DimX = handles.working_sets.(handles.current_set).DimX;
 DimP = handles.working_sets.(handles.current_set).DimP;
@@ -1407,7 +1345,6 @@ set(handles.edit_default_param, 'String', dbl2str(handles.working_sets.(handles.
 set(handles.edit30, 'String', handles.working_sets.(handles.current_set).ParamList(handles.selected_param));
 
 %% Varying parameters listbox
-
 content = {};
 
 for i=1:numel(dim)
@@ -1449,12 +1386,6 @@ if(DimP ~= handles.Sys.DimP)||(DimX ~= handles.Sys.DimX)
     handles= info(handles, 'WARNING: Dimensions of System and Parameter set are inconsistent - This parameter set was probably created for another system configuration');
 end
 % menu for param pts plot
-
-
-
-%try 
-%    handles =  plot_pts(handles);
-%catch
 
     set(handles.popup_pts1,'String',ParamList);
     handles.current_plot_pts{1} = ParamList(dim(1));
@@ -1650,7 +1581,6 @@ function menu_compute_traj_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_compute_traj (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-%  try
 
 tspan = inputdlg('Enter tspan (Format: [ti tf] or [t0 t1 t2 ... tn] or ti:dt:tf)','Compute trajectories', 1, {handles.last_tspan});
 if isempty(tspan)
@@ -1672,12 +1602,6 @@ handles = update_working_sets_panel(handles);
 uiresume;
 set(handles.text_info, 'Simulation done.');
 guidata(hObject, handles);
-%  catch
-%    s = lasterror;
-%    warndlg(['Problem computing traj: ' s.message] );
-%    error(s);
-%    return
-%  end
 
 % --------------------------------------------------------------------
 function menu_compute_sensi_Callback(hObject, eventdata, handles)
@@ -1735,8 +1659,6 @@ function menu_refine_prop_bound_Callback(hObject, eventdata, handles)
 
 try
     
-    % first save trace if it is imported (no dynamics)
-    
     restore_traj =0;
     if isfield( handles.Sys, 'type')
         if strcmp(handles.Sys.type,'traces')
@@ -1747,8 +1669,7 @@ try
         end
     end
     
-    %  options dialog box
-    
+    %  options dialog box    
     info = 'Refine boundary between regions satisfying different properties';
     answers = { handles.current_prop,'','0','3'};
     ins = inputdlg({'Enter array of properties (e.g. [phi1, phi2])', 'Enter tspan for trajectories (empty: tspan of computed trajs)','Enter time for property checking', 'Number of iterations'}, info,1, answers );
@@ -2882,8 +2803,7 @@ function menu_select_satisfied_Callback(hObject, eventdata, handles)
 try
     
     iprop = find_prop(handles.current_prop,handles.working_sets.(handles.current_set));
-    val_threshold = 0;
-    
+    val_threshold = 0;    
     if iprop
         val = cat(1,handles.working_sets.(handles.current_set).props_values(iprop,:).val);
         val = val(:,1);
@@ -2905,9 +2825,6 @@ function edit30_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit30 as text
-%        str2double(get(hObject,'String')) returns contents of edit30 as a double
-
 
 % --- Executes during object creation, after setting all properties.
 function edit30_CreateFcn(hObject, eventdata, handles)
@@ -2915,19 +2832,15 @@ function edit30_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 
 function h = info(h,msg)
 % INFO write the message into the information panel.
 set(h.text_info, 'String', msg);
 drawnow();
-
 
 
 % --- Executes on button press in autosave_checkbox.

@@ -24,6 +24,7 @@ classdef BreachSimulinkSystem < BreachObject
             end
             BrObj.P = CreateParamSet(BrObj.Sys);
             BrObj.Sys.ParamRanges = [BrObj.Sys.p BrObj.Sys.p];
+            BrObj.Sys.SignalRanges = [];
         end
                  
     end
