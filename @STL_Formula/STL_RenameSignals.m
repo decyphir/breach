@@ -25,7 +25,7 @@ while numel(varargin)>=2
     st_phi = regexprep(st_phi, old,new);
     phi_new_id = [phi_new_id '_' sig_to_rep_with];
 end
-    phi_new_id = MakeUniqueID(phi_new_id, BreachGlobOpt.STLDB.keys);
+%    phi_new_id = MakeUniqueID(phi_new_id, BreachGlobOpt.STLDB.keys);
     phi_new = STL_Formula(phi_new_id,st_phi);
     phi_new = set_params(phi_new, def_p);
 

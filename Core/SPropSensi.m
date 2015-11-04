@@ -154,7 +154,7 @@ elseif opt.plot==2
     hold on;
     errorbar(mu,sigma,'+');
     title('Expectation of elementary effects')
-    set(gca, 'XTickLabel',Sys.ParamList(opt.params));
+    set(gca, 'XTickLabel',Sys.ParamList(opt.params), 'TickLabelInterpreter','None');
     if isfield(opt,'muGraphOpt')
         set(gca,opt.muGraphOpt{:});
     end

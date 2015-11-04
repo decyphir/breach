@@ -63,7 +63,12 @@ function [P, val] = SEvalProp(Sys, P, phis, taus, ipts, break_level, method, VER
 
 % check arguments
 if ~exist('VERBOSE','var')
-    VERBOSE = 1;
+    if numel(P.traj)==1
+        VERBOSE = 0;
+    else
+        VERBOSE= 1;
+    end
+    
 end
 
 if(~exist('method','var')||isempty(method))

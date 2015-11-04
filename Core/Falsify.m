@@ -71,7 +71,12 @@ for restart = 0:nb_restart
 
     if ~isempty(ifalse)
         Pf = Sselect(Propt, ifalse);
-        fprintf('  ---- Falsified !\n');
+        fprintf(' ---- Falsified with\n');
+        param_values = GetParam(Pf, params);
+        for ip = 1:numel(params)
+            fprintf( '        %s = %g\n', params{ip},param_values(ip))
+        end
+        fprintf('\n');
         return;
     else
         Pf = Propt;
