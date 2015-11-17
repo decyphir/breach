@@ -15,8 +15,6 @@ switch InputOpt.type
       end
     end
     
-    % FIXME - this is not working with the old syntax VarStepXX which has
-    % dt defined for all inputs
     case 'VarStep'
     for ku = 1:numel(InputNames)
        for k = 1:InputOpt.cp(ku)

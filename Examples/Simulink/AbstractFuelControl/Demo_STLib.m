@@ -24,13 +24,13 @@ idx_pos = find(val>0);
 idx_neg = find(val<0);
 
 if ~isempty(idx_neg)
-figure('Name','Negative');
 SG.PlotSignals([],idx_neg )
+set(gcf, 'Name','Negative');
 end
 
 if ~isempty(idx_pos)
-figure('Name','Positive');
 SG.PlotSignals([],idx_pos )
+set(gcf, 'Name','Positive');
 end
 
 configs = GetParam(SG.P, 'config');

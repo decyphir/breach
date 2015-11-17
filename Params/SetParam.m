@@ -87,8 +87,13 @@ if iscell(ParamList)
     new_params = ParamList(inds>size(P.(pts),1));
     P.ParamList = [P.ParamList new_params];
     
-    for ii = 1:numel(inds) % doing a loop is faster than using repmat on ParamValues or using bsxfun
-        P.(pts)(inds(ii),:) = ParamValues(ii,:);
+    if (size(P.(pts), 2)==1 && size(ParamValues,2)>1)
+        P.(pts) = repmat(P.(pts), [1 size(ParamValues,2)]);
+        P.(pts)(inds,:) = ParamValues;        
+    else
+        for ii = 1:numel(inds) % doing a loop is faster than using repmat on ParamValues or using bsxfun
+            P.(pts)(inds(ii),:) = ParamValues(ii,:);
+        end
     end
 
 elseif isnumeric(ParamList)

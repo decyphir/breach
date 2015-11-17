@@ -60,14 +60,6 @@ classdef BreachFileSystem < BreachObject
         
         function disp(BrObj)
             disp(['BreachFileSystem ' BrObj.Sys.name '.']);
-            disp(' ');
-            disp( 'Signals:')
-            disp( '-------')
-            cellfun(@disp, BrObj.Sys.ParamList(1:BrObj.Sys.DimX));
-            disp(' ')
-            disp('Parameters:')
-            disp('----------')
-            cellfun(@disp, BrObj.Sys.ParamList(BrObj.Sys.DimX+1:end));
         end
         
     end

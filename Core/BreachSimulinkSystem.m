@@ -1,11 +1,10 @@
-classdef BreachSimulinkSystem < BreachObject
+classdef BreachSimulinkSystem < BreachOpenSystem
     %BreachSimulinkSystem specializes BreachObject to Simulink systems
     
     methods
         
         % Constructor
         function BrObj = BreachSimulinkSystem(varargin)
-            BrObj = BrObj@BreachObject();
             
             try % try first to import a simulink model
                 BrObj.Sys = CreateSimulinkSystem(varargin{:});
@@ -24,8 +23,8 @@ classdef BreachSimulinkSystem < BreachObject
             end
             if ~isempty(BrObj.Sys)
                 BrObj.P = CreateParamSet(BrObj.Sys);
-                BrObj.Sys.ParamRanges = [BrObj.Sys.p BrObj.Sys.p];
-                BrObj.Sys.SignalRanges = [];
+                BrObj.ParamRanges = [BrObj.Sys.p BrObj.Sys.p];
+                BrObj.SignalRanges = [];
             end
         end
         
