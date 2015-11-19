@@ -3,32 +3,33 @@ classdef BreachSimulinkSystem < BreachOpenSystem
     
     methods
         
-        % Constructor
-        function BrObj = BreachSimulinkSystem(varargin)
+        % See CreateSimulinkSystem for arguments help
+        function this = BreachSimulinkSystem(varargin)
             
-            try % try first to import a simulink model
-                BrObj.Sys = CreateSimulinkSystem(varargin{:});
-            catch
-                switch nargin
-                    case 1
-                        inSys = varargin{1};
-                        simulink_error = lasterr;
-                        try
-                            BrObj.Sys = inSys;
-                            BrObj.P = CreateParamSet(BrObj.Sys);
-                        catch
-                            error(simulink_error);
-                        end
-                end
+            switch nargin
+                case 0 % do nothing
+                case 1 % Should be a Sys structure - check that type is right
+                    
+                    inSys = varargin{1};
+                    if isaSys(inSys) && strcmp(Sys.type, 'Simulink')
+                        this.Sys = inSys;
+                        this.ResetParamSet();
+                    elseif exist(inSys)==4  %  create Simulink system with default options
+                        this.Sys = CreateSimulinkSystem(inSys);
+                    else
+                        error('BreachSimulinkSystem with one argument assumes that the argument is a system structure of type Simulink or the name of a Simulink model.')
+                    end
+                otherwise % creates a Simulink system
+                    this.Sys = CreateSimulinkSystem(varargin{:});
             end
-            if ~isempty(BrObj.Sys)
-                BrObj.P = CreateParamSet(BrObj.Sys);
-                BrObj.ParamRanges = [BrObj.Sys.p BrObj.Sys.p];
-                BrObj.SignalRanges = [];
+            
+            if isaSys(this.Sys)
+                this.P = CreateParamSet(this.Sys);
+                this.ParamRanges = [this.Sys.p this.Sys.p];
+                this.SignalRanges = [];
             end
+            
         end
         
     end
-    
-    
 end

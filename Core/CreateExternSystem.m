@@ -10,7 +10,7 @@ function Sys = CreateExternSystem(name, vars, params, p0, simfn)
 % 
 % Example:   
 %
-%   name = 'blacky'     %  some name for the system
+%   name = 'blackbox'     %  some name for the system
 %
 %   signals = {'s0','s1'};  % variables for signals values
 %

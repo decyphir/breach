@@ -1,6 +1,6 @@
 classdef BreachFileSystem < BreachObject
-    %BreachFileSystem specializes BreachObject to monitoring traces
-    %defined in files.
+    % BreachFileSystem specializes BreachObject to monitoring traces
+    % defined in files.
     % TODO Documentation
     
     
