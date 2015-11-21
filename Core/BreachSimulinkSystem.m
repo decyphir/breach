@@ -25,7 +25,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             
             if isaSys(this.Sys)
                 this.P = CreateParamSet(this.Sys);
-                this.ParamRanges = [this.Sys.p this.Sys.p];
+                this.ParamRanges = [this.Sys.p(this.Sys.DimX+1:end) this.Sys.p(this.Sys.DimX+1:end)];
                 this.SignalRanges = [];
             end
             
