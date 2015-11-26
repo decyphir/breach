@@ -2,9 +2,10 @@ function P = CreateParamSet(Sys, Param, Ranges, Nb_pts)
 %CREATEPARAMSET creates a parameter set structure for a system.
 % 
 % Synopsis: P = CreateParamSet(Sys[, Param[, Ranges[, Nb_pts]]])
-% 
+%        or P = CreateParamSet(P  [, Param[, Ranges[, Nb_pts]]])
 % Inputs:
-%  - Sys    : System under study
+%  - Sys    : System under study 
+%  - or P0  : Parameter set - if only argument, simply returns a copy 
 %  - Param  : (Optional, default=Sys.ParamList) list of varying parameters
 %             names or indexes. If it contains a parameter name not in
 %             Sys.ParamList, this parameter is added to the created
@@ -42,7 +43,15 @@ function P = CreateParamSet(Sys, Param, Ranges, Nb_pts)
 %See also Refine SetParam SetEpsi SAddUncertainParam ComputeTraj
 %
 
-pts = Sys.p;
+if isaSys(Sys)
+    pts = Sys.p;
+else
+    if nargin == 1
+        return;
+    else
+        pts= Sys.pts;
+    end
+end
 
 % if only Sys is given as argument, try using field ParamRanges
 if (nargin==1 && isfield(Sys,'ParamRanges'))

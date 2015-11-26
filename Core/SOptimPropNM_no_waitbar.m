@@ -388,7 +388,7 @@ end
 
 function val = fun_zero(x, Sys, phi, tspan, tau)
 %% function fun_zero
-global Ptmp fopt traj_opt xopt timeout x_is_prop_param
+global Ptmp fopt traj_opt xopt timeout
 
 ct = toc; 
 if(ct>timeout)
