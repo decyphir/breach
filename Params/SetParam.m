@@ -89,7 +89,10 @@ if iscell(ParamList)
     
     if (size(P.(pts), 2)==1 && size(ParamValues,2)>1)
         P.(pts) = repmat(P.(pts), [1 size(ParamValues,2)]);
-        P.(pts)(inds,:) = ParamValues;        
+        P.(pts)(inds,:) = ParamValues;               
+        if isfield(P, 'epsi') % I guess we'll want to check other fields too,e.g., selected etc
+            P.epsi = repmat(P.epsi, [1 size(ParamValues,2)]);
+        end
     else
         for ii = 1:numel(inds) % doing a loop is faster than using repmat on ParamValues or using bsxfun
             P.(pts)(inds(ii),:) = ParamValues(ii,:);
