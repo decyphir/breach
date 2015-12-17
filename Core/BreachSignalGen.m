@@ -1,4 +1,4 @@
-classdef BreachSignalGen < BreachObject
+classdef BreachSignalGen < BreachSystem
     
     % Class to generate signals of different types 
     properties
