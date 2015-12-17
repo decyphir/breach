@@ -172,6 +172,9 @@ switch(phi.type)
         valarray1 = -valarray1;
         [time_values, valarray] = RobustOr(time_values1, valarray1, time_values2, valarray2);
         
+    case 'alw_avleft'    
+    case 'alw_avright'    
+ 
     case 'always'
         I___ = eval(phi.interval);
         I___ = max([I___; 0 0]);
@@ -184,7 +187,10 @@ switch(phi.type)
         end
         [time_values, valarray] = RobustEv(time_values, -valarray, I___);
         valarray = -valarray;
-        
+ 
+    case 'ev_avleft'    
+    case 'av_avright'            
+ 
     case 'eventually'
         I___ = eval(phi.interval);
         I___ = max([I___; 0 0]);

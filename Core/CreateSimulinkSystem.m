@@ -283,12 +283,10 @@ close_system(mdl_breach);
                     
                     Sys.InputOpt = InputOpt;
                     Sys.InputList= sig_in;
-                    
-                    
+                                       
                     U.params = FindParamsInput(Sys);
                     pu = zeros(1,numel(U.params));
                     init_u = @SimulinkInput;
-                    
                     
                     % checks interpolation method
                     

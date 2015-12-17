@@ -1,4 +1,4 @@
-classdef BreachOpenSystem < BreachObject
+classdef BreachOpenSystem < BreachSystem
     % BreachOpenSystem is a BreachObject with an input generator 
     % TODO Documentation
        
@@ -8,10 +8,11 @@ classdef BreachOpenSystem < BreachObject
     
     methods
         
+        
         % we merge parameters of the input generator with those of the
         % system, but keep both BreachObjects 
         % TODO: check consistency of number of signals
-        function SetInputGenerator(this, IG)
+        function SetInputGen(this, IG)
 
             % First remove parameters from previous input generator
             Sys = this.Sys;
@@ -29,7 +30,7 @@ classdef BreachOpenSystem < BreachObject
             
             % Adds parameters for new input generator
             i_params = IG.Sys.DimX+1:IG.Sys.DimP;
-            this.Sys = SetParam(this.Sys, IG.Sys.ParamList(i_params), IG.Sys.p(i_params));   
+            this.Sys = SetParam(this.Sys, IG.Sys.ParamList(i_params), IG.P.pts(i_params,1));   
             this.Sys.DimP = numel(this.Sys.ParamList); 
             
             % Resets P and ranges
@@ -60,7 +61,7 @@ classdef BreachOpenSystem < BreachObject
             ig_params = this.InputGenerator.Sys.DimX+1:this.InputGenerator.Sys.DimP; 
             this.InputGenerator.P = SetParam(this.InputGenerator.P,ig_params,pts(idx_u));
             this.InputGenerator.Sim(tspan);
-            U.t = tspan';
+            U.t = this.InputGenerator.P.traj.time';
             U.u = this.InputGenerator.P.traj.X';
         
         end     

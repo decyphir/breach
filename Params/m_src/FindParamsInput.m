@@ -1,7 +1,6 @@
 function [params_u, idx_u] = FindParamsInput(Sys, InputName)
 % FINDPARAMSINPUT returns the name and indices of control point parameters
 
-
 InputNames = Sys.InputList;
 InputOpt  = Sys.InputOpt; 
 params_u = {};    
@@ -31,7 +30,7 @@ if nargin==2
 end
 
 if nargout ==2 
-idx_u = FindParam(Sys, params_u);
+    idx_u = FindParam(Sys, params_u);
 end
 
 end

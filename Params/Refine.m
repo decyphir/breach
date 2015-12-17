@@ -65,7 +65,7 @@ end
 if isscalar(delta)
     delta = delta*ones(numel(P0.dim),1);
 elseif(size(delta,1)==1)
-    warning('Refine:BadDeltaShape','delta must have the format numel(P0.dim) x 1. Transposed.');
+%    warning('Refine:BadDeltaShape','delta must have the format numel(P0.dim) x 1. Transposed.');
     delta = delta'; % try to transpose if needed
 end
 

@@ -15,9 +15,13 @@ function [tout, X] = sim_breach(Sys, tspan, pts)
   
   assignin('base','tspan',tspan);
 
+ if numel(tspan)>2 
   set_param(mdl, 'OutputTimes', 'tspan',...
                  'OutputOption','SpecifiedOutputTimes'); 
-
+ else
+  set_param(mdl, 'OutputTimes', 'tspan',...
+                 'OutputOption','RefineOutput');      
+ end 
 
   try                
     simout= sim(mdl);

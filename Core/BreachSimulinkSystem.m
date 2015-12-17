@@ -6,6 +6,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         % See CreateSimulinkSystem for arguments help
         function this = BreachSimulinkSystem(varargin)
             
+            
             switch nargin
                 case 0 % do nothing
                 case 1 % Should be a Sys structure - check that type is right
@@ -25,8 +26,26 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             
             if isaSys(this.Sys)
                 this.P = CreateParamSet(this.Sys);
+                this.P.epsi(:,:) = 0;
                 this.ParamRanges = [this.Sys.p(this.Sys.DimX+1:end) this.Sys.p(this.Sys.DimX+1:end)];
                 this.SignalRanges = [];
+                % NOT TESTED: Backward compatibility: if input options were given using input_opt
+                if isfield(this.Sys, 'InputOpt')
+                    opt = this.Sys.InputOpt;
+                    inputs = this.Sys.InputList; 
+                    
+                    switch(opt.type)
+                        case 'UniStep'
+                            sg = fixed_cp_signal_gen(inputs, opt.cp, opt.method);
+                            IG = BreachSignalGen({sg});
+                            this.SetInputGen(IG);    
+                        case 'VarStep'
+                            sg = var_cp_signal_gen(inputs, opt.cp, opt.method);
+                            IG = BreachSignalGen({sg});
+                            this.SetInputGen(IG);    
+                    end
+                end
+            
             end
             
         end
