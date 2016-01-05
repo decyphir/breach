@@ -217,6 +217,16 @@ switch(numel(varargin))
             return
         end
         
+        %% test av_eventually_[ti,tf]
+        [success, st1, st2, interval] = parenthesisly_balanced_split(st, '\<av_ev_\[(.+?)\]\>');
+        if success && isempty(st1)
+            phi1 = STL_Formula([phi.id '1__'],st2);
+            STLDB_Remove([phi.id '1__']);
+            phi = STL_Parse(phi,'av_ev',interval,phi1);
+            return
+        end
+
+        
         %% test always
         [success,st1, st2] = parenthesisly_balanced_split(st, '\<alw\>');
         if success && isempty(st1)
@@ -367,7 +377,12 @@ switch(numel(varargin))
                 phi.type = 'eventually' ;
                 phi.interval = varargin{2};
                 phi.phi = varargin{3};
-                
+
+            case 'av_ev'
+                phi.type = 'av_eventually' ;
+                phi.interval = varargin{2};
+                phi.phi = varargin{3};
+
             case 'alw'
                 phi.type = 'always' ;
                 phi.interval = varargin{2};

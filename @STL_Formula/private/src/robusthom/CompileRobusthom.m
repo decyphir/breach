@@ -19,6 +19,8 @@ src_files = ['robustness.cpp ' ...
 obj_files = ['robustness' obj_ext ...
     ' signal' obj_ext    ...
     ' mex_routines' obj_ext ...
+    ' window' obj_ext ...
+    ' av_robustness' obj_ext ...
     ];
 
 MEX = 'mex ';
@@ -51,6 +53,16 @@ eval(compile_cmd);
 
 % compiles future robustness
 compile_cmd = [MEX FLAGS '-outdir ..' filesep '.. RobustEv.cpp ' obj_files];
+fprintf([regexprep(compile_cmd,'\','\\\\') '\n' ]);
+eval(compile_cmd);
+
+% compiles average right future robustness
+compile_cmd = [MEX FLAGS '-outdir ..' filesep '.. RobustAvEvRight.cpp ' obj_files];
+fprintf([regexprep(compile_cmd,'\','\\\\') '\n' ]);
+eval(compile_cmd);
+
+% compiles average left future robustness
+compile_cmd = [MEX FLAGS '-outdir ..' filesep '.. RobustAvEvLeft.cpp ' obj_files];
 fprintf([regexprep(compile_cmd,'\','\\\\') '\n' ]);
 eval(compile_cmd);
 

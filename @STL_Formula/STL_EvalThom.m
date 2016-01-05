@@ -172,10 +172,7 @@ switch(phi.type)
         valarray1 = -valarray1;
         [time_values, valarray] = RobustOr(time_values1, valarray1, time_values2, valarray2);
         
-    case 'alw_avleft'    
-    case 'alw_avright'    
- 
-    case 'always'
+     case 'always'
         I___ = eval(phi.interval);
         I___ = max([I___; 0 0]);
         I___(1) = min(I___(1), I___(2));
@@ -188,8 +185,17 @@ switch(phi.type)
         [time_values, valarray] = RobustEv(time_values, -valarray, I___);
         valarray = -valarray;
  
-    case 'ev_avleft'    
-    case 'av_avright'            
+    case 'av_eventually'    
+        I___ = eval(phi.interval);
+        I___ = max([I___; 0 0]);
+        I___(1) = min(I___(1), I___(2));
+        next_interval = I___+interval;
+        [valarray1, time_values1] = GetValues(Sys, phi.phi, P, traj, next_interval);
+        if(I___(end)~=inf)
+            time_values1 = [time_values1 time_values1(end)+I___(end)];
+            valarray1 = [valarray1 valarray1(end)];
+        end
+        [time_values, valarray] = RobustAvEvRight(time_values1, valarray1, I___);
  
     case 'eventually'
         I___ = eval(phi.interval);
