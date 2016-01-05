@@ -14,6 +14,16 @@ Signal * computeEventually(Signal *);
 Signal * computeUntil(Signal *, Signal *);
 Signal * computeTimedUntil(Signal *, Signal *, double, double);
 
+
+/*
+Modified for AvMTL
+*/
+Signal * constZero(double beginT, double endT);
+Signal * computeLeftAvEventually(Signal *, double);
+Signal * computeRightAvEventually(Signal *, double);
+Signal * computeLeftAvGrobally(Signal *, double);
+Signal * computeRightAvGrobally(Signal *, double);
+
 /* 
  * SUBROUTINES
  */
@@ -50,5 +60,8 @@ Signal * computeBoundedEventually(Signal *, double);
 Signal * plateauMin(Signal *, double);
 Signal * computeBoundedGlobally(Signal *, double);
 
-
+// For AvMTL
+//void addPoint(Signal* M, Sample newSample, double, double &);
+Signal * plateauMaxAux(Signal *, double);
+Signal * plateauMinAux(Signal *, double);
 

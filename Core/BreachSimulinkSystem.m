@@ -25,10 +25,10 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
             
             if isaSys(this.Sys)
-                this.P = CreateParamSet(this.Sys);
-                this.P.epsi(:,:) = 0;
                 this.ParamRanges = [this.Sys.p(this.Sys.DimX+1:end) this.Sys.p(this.Sys.DimX+1:end)];
                 this.SignalRanges = [];
+                this.ResetParamSet();                        
+
                 % NOT TESTED: Backward compatibility: if input options were given using input_opt
                 if isfield(this.Sys, 'InputOpt')
                     opt = this.Sys.InputOpt;

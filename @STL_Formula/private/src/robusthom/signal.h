@@ -42,12 +42,19 @@ public:
 
 	Sample() { }
 	Sample(double t, double v, double d) : Point(t,v), derivative(d) { }	
+    Sample constant() const;
 
 	double valueAt(const double &) const;
 	double timeIntersect(const Sample &) const;
+	double area(const double &) const;
 
 	friend std::ostream & operator<<(std::ostream &, const Sample &);
 };
+
+inline
+Sample Sample::constant() const {
+  return Sample(time, value, 0);
+}
 
 inline
 double Sample::valueAt(const double & t) const {
@@ -77,16 +84,26 @@ public:
 	double endTime;
 
 	Signal() { }	
-	
-	Signal(double, double, int); 
+	Signal(Sequence);        
+    Signal(double, double, int); 
 	Signal(double *, double *, int); //create continuous signal from array of sampling points (time, value) with linear interpolation
 
 	void simplify(); //remove sampling points where (y,dy) is continuous.
 	void resize(double, double, double); //restricts/extends the signal to [s,t) with default value v where not defined
 	void shift(double); //shifts the signal of delta_t time units
- 
+    Signal* reverse();
+    
 	friend std::ostream & operator<<(std::ostream &, const Signal &);
 
 };
+
+inline
+double Sample::area(const double & t) const {
+  if (t > time) {
+    return (value + valueAt(t)) * (t - time) / 2;
+  }else{
+    return 0;
+  }
+}
 
 #endif

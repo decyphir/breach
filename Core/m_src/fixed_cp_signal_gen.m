@@ -34,7 +34,7 @@ classdef fixed_cp_signal_gen < signal_gen
                 pts_x = pts_x(this.cp(i_cp)+1:end);
                 t_cp = linspace(time(1), time(end), this.cp(i_cp)+1)';
                 if numel(t_cp)==2
-                    x = cp_values(1)*ones(numel(tspan),1);
+                    x = cp_values(1)*ones(numel(time),1);
                 else
                     x = interp1(t_cp(1:end-1), cp_values, time', meth, 'extrap');
                 end

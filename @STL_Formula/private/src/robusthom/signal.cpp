@@ -32,6 +32,31 @@ Signal::Signal(double * T, double * V, int n) {
   }
 }
 
+Signal::Signal(Sequence S) {
+  double p_t, p_v; //previous times and value
+  double d; // derivative
+  
+  if(S.size() == 0) {
+    beginTime=0;
+    endTime=0;
+    Signal();
+  }else{
+    beginTime=S.front().time;
+    p_t = S.front().time;
+    p_v = S.front().value;
+    S.pop_front();
+    while(S.size() > 0){
+      d = (S.front().value - p_v) / (S.front().time - p_t);
+      push_back(Sample(p_t, p_v, d));
+      p_t = S.front().time;
+      p_v = S.front().value;
+      S.pop_front();
+    }
+    push_back(Sample(p_t, p_v, 0.));
+    endTime=p_t;
+  }
+}
+
 //remove linear interpolations
 void Signal::simplify() {
 #ifdef DEBUG__
@@ -95,6 +120,27 @@ void Signal::shift(double a) {
   for(i = begin(); i != end(); i++) {
     i->time=i->time + a; 
   }
+}
+
+
+Signal* Signal::reverse(){
+  Signal::iterator i;
+  Signal *z = new Signal();
+  double prev_d = 0;
+  Sample s;
+  
+  i = begin();
+  z->beginTime = -endTime;
+  z->endTime = -beginTime;
+
+  while(i != end()){
+    s = *i;
+    z->push_front(Sample(-s.time, s.value, -prev_d));
+    prev_d = s.derivative;
+    i++;
+  }
+  
+  return z;
 }
 
 

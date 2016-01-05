@@ -41,8 +41,8 @@ classdef BreachSystem < BreachSet
                 % OK for Simulink, less so for ODEs...
                 this.ParamRanges = [this.Sys.p(this.Sys.DimX+1:end) this.Sys.p(this.Sys.DimX+1:end)];
                 this.SignalRanges = [];
-            end
-            
+                this.ResetParamSet();                        
+            end            
         end
         
         %% Parameters
