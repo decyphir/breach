@@ -3,6 +3,7 @@ classdef BreachOpenSystem < BreachSystem
     % TODO Documentation
        
     properties
+        InputMap       % Maps input signals to idx in the input generator
         InputGenerator % BreachObject responsible for generating inputs
     end
     
@@ -11,7 +12,6 @@ classdef BreachOpenSystem < BreachSystem
         
         % we merge parameters of the input generator with those of the
         % system, but keep both BreachObjects 
-        % TODO: check consistency of number of signals
         function SetInputGen(this, IG)
 
             % First remove parameters from previous input generator
@@ -26,6 +26,16 @@ classdef BreachOpenSystem < BreachSystem
                 this.Sys = Sys;
             end
             
+            % Check Consistency - IG must construct signals for all signals in this.InputList            
+            for input = this.InputMap.keys
+                idx= FindParam(IG.Sys,input);
+                if idx<=IG.Sys.DimX
+                    this.InputMap(input{1}) = idx;
+                else
+                    error(['Input ' input{1} ' is not provided by input generator.']);
+                end
+            end
+            
             this.InputGenerator = IG;
             
             % Adds parameters for new input generator
@@ -37,6 +47,7 @@ classdef BreachOpenSystem < BreachSystem
             this.ParamRanges = [this.Sys.p this.Sys.p];
             this.SignalRanges = [];
             this.P = CreateParamSet(this.Sys);
+            this.P.epsi(:,:) = 0;
             
             % Sets the new input function for ComputeTraj
             % FIXME?: tilde? 
@@ -62,8 +73,13 @@ classdef BreachOpenSystem < BreachSystem
             this.InputGenerator.P = SetParam(this.InputGenerator.P,ig_params,pts(idx_u));
             this.InputGenerator.Sim(tspan);
             U.t = this.InputGenerator.P.traj.time';
-            U.u = this.InputGenerator.P.traj.X';
-        
+            U.u = zeros(numel(U.t), this.InputGenerator.Sys.DimX);
+            idx_mdl = 0;
+            for input= this.Sys.InputList % Sys.InputList is in the same order as the model 
+                idx_mdl = idx_mdl+1;
+                idx = this.InputMap(input{1});
+                U.u(:,idx_mdl) = this.InputGenerator.P.traj.X(idx,:)';
+            end
         end     
         
     end

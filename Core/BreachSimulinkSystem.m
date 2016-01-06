@@ -24,12 +24,20 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                     this.Sys = CreateSimulinkSystem(varargin{:});
             end
             
-            if isaSys(this.Sys)
+            if isaSys(this.Sys) % Basically if interface was successfully created
                 this.ParamRanges = [this.Sys.p(this.Sys.DimX+1:end) this.Sys.p(this.Sys.DimX+1:end)];
                 this.SignalRanges = [];
                 this.ResetParamSet();                        
 
-                % NOT TESTED: Backward compatibility: if input options were given using input_opt
+                % Initializes InputMap
+                this.InputMap = containers.Map();
+                idx =0;
+                for input = this.Sys.InputList
+                    idx = idx+1;
+                    this.InputMap(input{1})=idx;
+                end
+                
+                % Backward compatibility: if input options were given using input_opt
                 if isfield(this.Sys, 'InputOpt')
                     opt = this.Sys.InputOpt;
                     inputs = this.Sys.InputList; 
@@ -45,7 +53,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                             this.SetInputGen(IG);    
                     end
                 end
-            
+                
             end
             
         end

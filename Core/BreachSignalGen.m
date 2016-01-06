@@ -20,7 +20,11 @@ classdef BreachSignalGen < BreachSystem
             for isg = 1:numel(signalGenerators)
                 signals = {signals{:}, signalGenerators{isg}.signals{:}};
                 params = {params{:}, signalGenerators{isg}.params{:}}; 
-                p0 = [p0; signalGenerators{isg}.p0 ];
+                p0sg = signalGenerators{isg}.p0;
+                if size(p0sg,2) >1
+                    p0sg = p0sg';
+                end
+                p0 = [p0; p0sg ];
             end
             p0 = [zeros(numel(signals),1) ; p0 ];
             this.Sys = CreateExternSystem('BreachSignalGen', signals, params, p0, @(Sys, tspan, p)breachSimWrapper(this, Sys, tspan, p));
