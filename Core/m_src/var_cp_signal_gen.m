@@ -1,6 +1,6 @@
 classdef var_cp_signal_gen < signal_gen
     
-    % Pulse signal generation 
+    % Control points, variable step signal generation  
     properties 
         cp       % number of control points for each signal
         method   % interpolation method for each signal
@@ -18,7 +18,8 @@ classdef var_cp_signal_gen < signal_gen
                    this.params= {this.params{:} [signals{ku} '_dt' num2str(k-1)] [signals{ku} '_u' num2str(k-1)]};
                end
            end
-           this.p0= zeros(2*numel(signals),1);
+           this.p0= zeros(2*sum(cp)*numel(signals),1);
+           this.p0(1:2:end) = 1;
         end
         
         function X = computeSignals(this,p, time) % compute the signals

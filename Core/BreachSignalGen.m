@@ -30,7 +30,8 @@ classdef BreachSignalGen < BreachSystem
             this.Sys = CreateExternSystem('BreachSignalGen', signals, params, p0, @(Sys, tspan, p)breachSimWrapper(this, Sys, tspan, p));
             this.Sys.tspan =0:.01:10;
             this.P = CreateParamSet(this.Sys);
-        
+            this.P.epsi(:,:)=0 ;
+            
             if isaSys(this.Sys) % Note: we ignore initial conditions for now in ParamRanges
                                 % OK for Simulink, less so for ODEs...
                 this.ParamRanges = [this.Sys.p(this.Sys.DimX+1:end) this.Sys.p(this.Sys.DimX+1:end)];
