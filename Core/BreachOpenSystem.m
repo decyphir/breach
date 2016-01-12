@@ -9,7 +9,32 @@ classdef BreachOpenSystem < BreachSystem
     
     methods
         
-        
+        function Sim(this,tspan,U)
+            
+            if ~exist('tspan','var')
+                tspan = this.Sys.tspan;
+            end
+            Sys = this.Sys;
+            if exist('U','var')
+                if isnumeric(U)
+                    DimU = this.InputMap.Count();
+                    if size(U, 2)~=DimU+1;
+                        err_msg= fprintf('Input must be an array with %d columns, first one being time.',DimU);
+                        error(err_msg);
+                    end
+                    Us.t = U(:,1);
+                    Us.u = U(:,2:end);
+                else
+                    Us = U;
+                end
+                Sys = this.Sys;
+                Sys.init_u = @(~, pts, tspan) (Us);
+            end
+            
+            this.P = ComputeTraj(Sys, this.P, tspan);
+            
+        end
+           
         % we merge parameters of the input generator with those of the
         % system, but keep both BreachObjects
         function SetInputGen(this, IG)
@@ -32,7 +57,7 @@ classdef BreachOpenSystem < BreachSystem
             
             DimU = this.InputMap.Count;
             if (isstruct(IG))
-            inputs = this.Sys.InputList;
+                inputs = this.Sys.InputList;
                 if ~isfield(IG,'type')
                     error('Input generator must be a struct with fields ''type'', ''cp'' at least')
                 end
@@ -57,8 +82,6 @@ classdef BreachOpenSystem < BreachSystem
                     end
                 end
                 
-                
-                
                 switch(IG.type)
                     case 'UniStep'
                         sg = fixed_cp_signal_gen(inputs, IG.cp, IG.method);
@@ -78,8 +101,6 @@ classdef BreachOpenSystem < BreachSystem
                 end
                 
             end
-            %
-            
             
             % Check Consistency - IG must construct signals for all signals in this.InputList
             for input = this.InputMap.keys
@@ -132,7 +153,7 @@ classdef BreachOpenSystem < BreachSystem
             idx_mdl = 0;
             for input= this.Sys.InputList % Sys.InputList is in the same order as the model
                 idx_mdl = idx_mdl+1;
-                idx = this.InputMap(input{1});
+                idx =  FindParam(this.InputGenerator.P, input{1});
                 U.u(:,idx_mdl) = this.InputGenerator.P.traj.X(idx,:)';
             end
         end

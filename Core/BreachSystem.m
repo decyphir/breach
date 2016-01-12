@@ -117,7 +117,10 @@ classdef BreachSystem < BreachSet
         
         % Plot signals
         function h = PlotSignals(this, varargin)
-            Sim(this);
+            if (~isfield(this.P,'traj'))
+                error('no signal to plot. Use Sim command first.')
+            end
+      
             figure;
             h = SplotVar(this.P, varargin{:});
         end
@@ -208,20 +211,6 @@ classdef BreachSystem < BreachSet
             % See Falsify
             this.P = Falsify(this.Sys, phi, falsif_opt, param_prop);
             
-        end
-        
-        %% Sensitivity analysis
-        % FIXME interface not complete
-        function SensiSpec(this,phi)
-            this.ResetParamSet();
-            opt.tspan = 0:0.1:50;
-            opt.params = this.P.dim;
-            opt.lbound = this.ParamRanges(this.P.dim-this.P.DimX,1)';
-            opt.ubound = this.ParamRanges(this.P.dim-this.P.DimX,2)';
-            opt.plot = 2;
-            
-            [mu, mustar, sigma, Pr]= SPropSensi(this.Sys, this.P, phi, opt);
-            this.P=Pr;
         end
         
         %% Mining
@@ -325,21 +314,36 @@ classdef BreachSystem < BreachSet
             xopt = problem.solve();
             
         end
+  
+                %% Sensitivity analysis
+        % FIXME interface not complete
+        function SensiSpec(this,phi)
+            this.ResetParamSet();
+            opt.tspan = 0:0.1:50;
+            opt.params = this.P.dim;
+            opt.lbound = this.ParamRanges(this.P.dim-this.P.DimX,1)';
+            opt.ubound = this.ParamRanges(this.P.dim-this.P.DimX,2)';
+            opt.plot = 2;
+            
+            [mu, mustar, sigma, Pr]= SPropSensi(this.Sys, this.P, phi, opt);
+            this.P=Pr;
+        end
         
+
         %% Printing
         function PrintSignals(this)
             if isempty(this.SignalRanges)
                 disp( 'Signals:')
                 disp( '-------')
-                for isig = 1:this.Sys.DimX
-                    fprintf('%s\n', this.Sys.ParamList{isig});
+                for isig = 1:this.P.DimX
+                    fprintf('%s\n', this.P.ParamList{isig});
                 end
             else
                 
                 fprintf('Signals (in range estimated over %d simulations):\n', numel(this.P.traj))
                 disp('-------')
-                for isig = 1:this.Sys.DimX
-                    fprintf('%s in  [%g, %g]\n', this.Sys.ParamList{isig}, this.SignalRanges(isig,1),this.SignalRanges(isig,2));
+                for isig = 1:this.P.DimX
+                    fprintf('%s in  [%g, %g]\n', this.P.ParamList{isig}, this.SignalRanges(isig,1),this.SignalRanges(isig,2));
                 end
             end
             disp(' ')
@@ -391,10 +395,6 @@ classdef BreachSystem < BreachSet
         
         %% GUI
         function RunGUI(this)
-            %assignin('base','P__', this.P);
-            %assignin('base','Sys__', this.Sys);
-            
-            %evalin('base', 'Breach(Sys__,''P__'');');
             P.P = this.P;
             phis=  this.Specs.keys;
             
