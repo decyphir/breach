@@ -1,6 +1,9 @@
 classdef BreachSet < handle
     properties
         P % legacy Breach structure, contains data and trajectories, etc
+        ParamRanges
+        SignalRanges
+        AppendWhenSample=false 
     end
     
     methods
@@ -13,16 +16,33 @@ classdef BreachSet < handle
             this.P = P;
         end
         
-               % Get and Set parameters for simulation
+        % Get and Set parameters
         function SetParam(this, params, values)
             this.P = SetParam(this.P,params, values);
             this.UpdateParamRanges();
         end
-        function values = GetParam(this, params)
+        
+        function values = GetParam(this, params, ip)
             values = GetParam(this.P,params);
+            if exist('ip', 'var')
+                values = values(:, ip);
+            end
         end
         
-        % Set param ranges
+        % ResetParamSet Reset parameter set based on ParamRanges
+        function ResetParamSet(this)
+            ipr = find(diff(this.ParamRanges'));
+            ranges =this.ParamRanges(ipr,:);
+            if (isempty(ipr))
+                this.P = CreateParamSet(this.P);
+                this.P.epsi(:,:)=0;
+            else
+                this.P = CreateParamSet(this.P, this.P.ParamList(ipr+this.P.DimX),ranges);
+            end
+        end
+
+        
+        %% Get and Set param ranges
         function SetParamRanges(this, params, ranges)
             i_params = FindParam(this.P, params);
             % if we have trajectories and only set a range on property parameters, then
@@ -49,6 +69,7 @@ classdef BreachSet < handle
                 this.P.Xf = Xf;
             end
         end
+        
         function ranges = GetParamRanges(this, params)
             i_params = FindParam(this.P, params);
             ranges= zeros(numel(params),2);
@@ -59,6 +80,12 @@ classdef BreachSet < handle
                     ranges(ip,:) = this.ParamRanges(i_params(ip)-this.P.DimX, :);
                 end
             end
+        end
+        
+        % Set Param ranges around individual parameter vectors to zero        
+        function ResetEpsi(this)
+            this.P.epsi(:,:) = 0;
+            this.UpdateParamRanges();
         end
         
         % Update ranges for variables from P
@@ -80,23 +107,41 @@ classdef BreachSet < handle
             
         end
         
-        % Grid Sample - reset P (?)
-        function GridSample(this, delta)
-%           this.ResetParamSet();
-            this.P = Refine(this.P,delta);
+        % Get computed trajectories
+        function traces = GetTraces(this)
+            traces= [];
+            if isfield(this.P,'traj')
+                traces = this.P.traj;
+            end
         end
         
-        % Quasi-Random Sample - reset P
+        % Grid Sample
+        function GridSample(this, delta)
+            this.P = Refine(this.P,delta);           
+        end
+
+        % Get corners of parameter domain
+        function CornerSample(this)
+            this.P.epsi = 2*this.P.epsi;
+            this.P = Refine(this.P,2);
+            this.P.epsi = this.P.epsi/2; 
+        end
+    
+        % Quasi-Random Sample
         function QuasiRandomSample(this, delta)
 %           this.ResetParamSet();
             this.P = QuasiRefine(this.P,delta);
         end
     
         % Get the number of param vectors
-        function nb_pts=  GetNbParams(this)
+        function nb_pts = GetNbParams(this)
             nb_pts= size(this.P.pts,2);
         end
         
+        % Concatenation - needs some additional compatibility checks...
+        function Concat(this, other)
+           this.P = SConcat(this.P, other.P); 
+        end
         
         % Plot parameters
         function PlotParams(this, varargin)

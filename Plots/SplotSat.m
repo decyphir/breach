@@ -30,7 +30,7 @@ if(~exist('tau','var')||isempty(tau)) % also manage empty cell
 end
 
 if ~exist('depth','var')
-    depth = 0;
+    depth = inf;
 end
 
 if ischar(phis)
@@ -61,11 +61,7 @@ if ~isfield(P,'traj_ref')
     P.traj_ref = 1:numel(P.traj);
 end
 
-
-% do things
-
-%%% setup plots if needed
-
+%% setup plots if needed
 nb_phis = numel(phis);
 if isfield(Sys,'time_mult')
     time_mult = Sys.time_mult;

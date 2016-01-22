@@ -64,7 +64,7 @@ if(size(ParamValues,1) == 1 && numel(ParamList)~=1)
 end
 
 if(numel(ParamList) ~= size(ParamValues,1))
-    warning('SetParam:wrongElementNumber','The number of line of ParamValues is not the same than the number of ParamList');
+    warning('SetParam:wrongElementNumber','The number of line of ParamValues is not the same as the number of ParamList');
 end
 
 if isfield(P,'pts')        % if P is a parameter set

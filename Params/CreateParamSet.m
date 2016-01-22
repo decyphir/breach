@@ -49,7 +49,7 @@ else
     if nargin == 1
         return;
     else
-        pts= Sys.pts;
+        pts= Sys.pts(:,1);
     end
 end
 

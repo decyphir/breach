@@ -7,9 +7,6 @@ classdef BreachSystem < BreachSet
     properties
         Sys       % Legacy Breach system structure
         Specs     % A set (map) of STL formulas
-        ParamRanges
-        SignalRanges
-        Problem
     end
     
     methods
@@ -45,20 +42,7 @@ classdef BreachSystem < BreachSet
             end            
         end
         
-        %% Parameters
-        % ResetParamSet Reset parameter set based on ParamRanges
-        function ResetParamSet(this)
-            ipr = find(diff(this.ParamRanges'));
-            ranges =this.ParamRanges(ipr,:);
-            if (isempty(ipr))
-                this.P = CreateParamSet(this.Sys);
-                this.P.epsi(:,:)=0;
-            else
-                this.P = CreateParamSet(this.Sys, this.P.ParamList(ipr+this.Sys.DimX),ranges);
-            end
-            
-        end
-        
+        %% Parameters      
         % Get and set default parameter values (defined in Sys)
         function values = GetDefaultParam(this, params)
             values = GetParam(this.Sys,params);
@@ -160,9 +144,8 @@ classdef BreachSystem < BreachSet
                 else
                     spec = this.AddSpec(spec);
                 end
-                
-                [this.P, val] = SEvalProp(this.Sys,this.P,spec);
             end
+            [this.P, val] = SEvalProp(this.Sys,this.P,spec);
         end
         
         % Monitor spec on reference traj
@@ -195,127 +178,49 @@ classdef BreachSystem < BreachSet
         % Return a function of the form robfn: p -> rob such that p is a
         % vector of values for parameters and robfn(p) is the
         % corresponding robust satisfaction
-        function robfn = GetRobustSatFn(this, phi, params)
+        function [robfn, BrSys] = GetRobustSatFn(this, phi, params)
+            
+            BrSys = this.copy();
+            %BrSys.ResetParamSet();
             
             if ischar(phi)
                 this__phi__ = STL_Formula('this__phi__', phi);
-                robfn = @(values) GetRobustSat(this, this__phi__, params, values);
+                robfn = @(values) GetRobustSat(BrSys, this__phi__, params, values);
             else
-                robfn = @(values) GetRobustSat(this, phi, params, values);
+                
+                robfn = @(values) GetRobustSat(BrSys, phi, params, values);
             end
             
         end
         
-        %% Falsification of properties
-        function FalsifySpec(this, phi,falsif_opt, param_prop)
-            % See Falsify
-            this.P = Falsify(this.Sys, phi, falsif_opt, param_prop);
+                
+        % Plots satisfaction signal
+        function PlotRobustSat(this, phi,depth, tau,ipts)
+            % check arguments
+            if(~exist('ipts','var')||isempty(ipts))
+                ipts = 1:size(this.P.pts,2);
+            end
             
+            if(~exist('tau','var')||isempty(tau)) % also manage empty cell
+                tau = [];
+            end
+            
+            if ~exist('depth','var')
+                depth = inf;
+            end
+            
+            figure;
+            SplotSat(this.Sys,this.P, phi, depth, tau, ipts )
         end
         
+
         %% Mining
         function [p, rob] = MineSpec(this, phi, falsif_opt, prop_opt, iter_max)
             [p, rob, Pr] = ReqMining(this.Sys, phi, falsif_opt, prop_opt, iter_max);
             this.P = Pr;
         end
-        
-        function [res]  = MaxSatSpec(this, phi, params, problem)
-            
-            if ~exist('params','var')
-                params = this.P.ParamList(this.P.dim);
-            end
-            
-            if ischar(params)
-                params = {params};
-            end
-            
-            % Robust satisfaction function to maximize
-            robust_fn = this.GetRobustSatFn(phi, params);
-            
-            % Paramter ranges
-            ranges = this.GetParamRanges(params);
-            lb = ranges(:,1);
-            ub = ranges(:,2);
-            
-            % if range is singular, assumes unconstrained
-            issame  = find(ub-lb==0);
-            lb(issame) = -inf;
-            ub(issame) = inf;
-            
-            % Initial value
-            x0 = this.GetParam(params)';
-            if isempty(x0)
-                default_params = get_params(phi);
-                for ip = 1:numel(params)
-                    x0(ip) = default_params.(params{ip});
-                end
-            end
-            
-            % Problem structure
-            if ~exist('problem','var')
-                problem = BreachProblem(robust_fn, x0, 'max');
-            else
-                problem.robust_fn = robust_fn;
-                problem.objective = @(x) (problem.max_robust_fn(x));
-                problem.x0 = x0;
-            end
-            
-            problem.lb = lb;
-            problem.ub = ub;
-            res = problem.solve();
-            this.Problem = problem;
-        end
-        
-        % Generic param synthesis function
-        function [xopt] = MineParam(this, phi, params, problem)
-            % Syntax BrObj.MineParam(phi,phi, params, options)
-            
-            if ~exist('params','var')
-                params = this.P.ParamList(this.P.dim)
-            end
-            
-            if ischar(params)
-                params = {params};
-            end
-            
-            % Robust satisfaction function to maximize
-            robust_fn = this.GetRobustSatFn(phi, params);
-            
-            % Paramter ranges
-            ranges = this.GetParamRanges(params);
-            lb = ranges(:,1);
-            ub = ranges(:,2);
-            
-            % if range is singular, assumes unconstrained
-            issame  = find(ub-lb==0);
-            lb(issame) = -inf;
-            ub(issame) = inf;
-            
-            % Initial value
-            x0 = this.GetParam(params)';
-            if isempty(x0)
-                default_params = get_params(phi);
-                for ip = 1:numel(params)
-                    x0(ip) = default_params.(params{ip});
-                end
-            end
-            
-            % Problem structure
-            if ~exist('problem','var')
-                problem = BreachProblem(robust_fn, x0, 'tight');
-            else
-                problem.robust_fn = robust_fn;
-                problem.objective = @(x) (problem.tight_robust_fn(x));
-                problem.x0 = x0;
-            end
-            
-            problem.lb = lb;
-            problem.ub = ub;
-            xopt = problem.solve();
-            
-        end
-  
-                %% Sensitivity analysis
+          
+        %% Sensitivity analysis
         % FIXME interface not complete
         function SensiSpec(this,phi)
             this.ResetParamSet();
