@@ -5,7 +5,7 @@ function out = STL_Break(phi, n)
 %
 %  Input :
 %    - phi  The formula to break.
-%    - n    The deep of breaking. If not provided, the formula is breaking
+%    - n    The depth of breaking. If not provided, the formula is broken
 %             as deep as possible. If n is lower or equal to zero, an empty
 %             array is returned. If n is equal to one, phi itself is
 %             answered.
@@ -53,5 +53,15 @@ switch (phi.type)
         
     case {'and', 'or', '=>', 'until'}
         out = [STL_Break(phi.phi1, n-1) STL_Break(phi.phi2, n-1) phi];
+end
+
+% parameters 
+params= get_params(phi);
+for iphi = 1:numel(out)
+   out(iphi) = set_params(out(iphi), params);
+end
+
+
+
 end
 

@@ -195,7 +195,7 @@ classdef BreachSystem < BreachSet
         
                 
         % Plots satisfaction signal
-        function PlotRobustSat(this, phi,depth, tau,ipts)
+        function PlotRobustSat(this, phi, depth, tau, ipts)
             % check arguments
             if(~exist('ipts','var')||isempty(ipts))
                 ipts = 1:size(this.P.pts,2);
@@ -295,7 +295,7 @@ classdef BreachSystem < BreachSet
         end
         
         function disp(this)
-            disp(['BreachObject interfacing model ' this.Sys.name '.']);
+            disp(['BreachSystem with name ' this.Sys.name '.']);
         end
         
         %% GUI
