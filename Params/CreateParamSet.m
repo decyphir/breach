@@ -47,7 +47,10 @@ if isaSys(Sys)
     pts = Sys.p;
 else
     if nargin == 1
-        return;
+        if isaP(Sys)
+            P = Sys;
+            return;
+        end
     else
         pts= Sys.pts(:,1);
     end

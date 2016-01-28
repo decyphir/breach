@@ -115,6 +115,52 @@ classdef BreachSet < handle
             end
         end
         
+        % Update ranges for variables from trajectories in P
+        function val = UpdateSignalRanges(this)
+            
+            if isfield(this.P, 'traj')
+                if isempty(this.SignalRanges)
+                    this.SignalRanges = ones(this.Sys.DimX,2);
+                    minX = +inf*ones(this.Sys.DimX,1);
+                    maxX = -inf*ones(this.Sys.DimX,1);
+                else
+                    minX = this.SignalRanges(:,1);
+                    maxX = this.SignalRanges(:,2);
+                end
+                val=inf;
+                for itraj = 1:numel(this.P.traj)
+                    traj = this.P.traj(itraj);
+                    traj_maxX = max(traj.X,[], 2);
+                    traj_minX = min(traj.X,[], 2);
+                    dist_maxX = min(maxX-traj_maxX);
+                    dist_minX = min(traj_minX-minX);
+                    val= min( [val dist_maxX dist_minX] );
+                    minX = min([traj_minX minX],[],2);
+                    maxX = max([traj_maxX maxX],[],2);
+                end
+                this.SignalRanges = [minX, maxX];
+                this.P.SignalRanges = this.SignalRanges; % duplicate - never good I guess
+            end
+            
+        end
+
+        % Get signal names
+        function SigNames = GetSignalNames(this)
+            SigNames = this.P.ParamList(1:this.P.DimX);
+        end
+        
+        % Plot signals
+        function h = PlotSignals(this, varargin)
+            if (~isfield(this.P,'traj'))
+                error('no signal to plot. Use Sim command first.')
+            end
+      
+            figure;
+            h = SplotVar(this.P, varargin{:});
+        end
+
+        
+        
         % Grid Sample
         function GridSample(this, delta)
             this.P = Refine(this.P,delta);           

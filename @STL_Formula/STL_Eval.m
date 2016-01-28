@@ -61,7 +61,12 @@ if isfield(phi.params,'default_params')
     for ip = 1:numel(pnames)
         % if P doesn't define the parameter, use default
         if FindParam(P,pnames{ip})> size(P.pts,1)
-            P = SetParam(P,pnames{ip}, phi.params.default_params.(pnames{ip}));
+            pval = phi.params.default_params.(pnames{ip});
+            if isscalar(pval)
+                P = SetParam(P,pnames{ip},pval );
+            else
+                P.(pnames{ip}) = pval;
+            end
         end
     end
 end

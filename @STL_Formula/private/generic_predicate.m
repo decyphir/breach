@@ -30,6 +30,7 @@ eval(BreachGlobOpt.GlobVarsDeclare);
 
 dt__ = traj.time(2)-traj.time(1);
 Sys = params.Sys;
+P =params.P;
 
 if isfield(params, 'pre_pred') % if the predicate has been optimized
     pre_pred = params.pre_pred;
