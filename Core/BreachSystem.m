@@ -1,8 +1,26 @@
 classdef BreachSystem < BreachSet
-    %BreachSystem    Defines a simplified API for Breach functionalities.
-    %                It combines a system structure (Sys) and parameter set (P)
-    %                into one object so that basic operations can be done in one
-    %                command instead of several and with fewer arguments.
+    %BreachSystem    A simplified class API for Breach.
+    %
+    % It combines a system structure (Sys) with a parameter set (P)
+    % into one object so that basic operations can be done in one
+    % command instead of several and with fewer arguments. BreachSystem
+    % class is derivated from BreachSet. Type help BreachSet to view
+    % properties and methods of the parent class.
+    %
+    % BreachSystem Properties
+    %   Specs  - a set of Signal Temporal Logic (STL) formulas. 
+    %  
+    %
+    % BreachSystem methods 
+    %   Sim           - Simulate the system for some time using every parameter vectors.          
+    %   SetTime       - Set a default time for simulation (array or end time)       
+    %   GetTime       - Get default time for simulation
+    %   AddSpec       - Add a specification to the system
+    %   CheckSpec     - Checks (return robust satisfcation of) a given specification or all added specs   
+    %   PlotRobustSat - Plots robust satisfaction of a given STL formula against time 
+    %   RunGUI        - Open Breach legacy GUI, allowing for interactively exploring parameters, traces and specifications
+    %
+    %See also BreachSet.
     
     properties
         Sys       % Legacy Breach system structure
@@ -38,11 +56,11 @@ classdef BreachSystem < BreachSet
                 % OK for Simulink, less so for ODEs...
                 this.ParamRanges = [this.Sys.p(this.Sys.DimX+1:end) this.Sys.p(this.Sys.DimX+1:end)];
                 this.SignalRanges = [];
-                this.ResetParamSet();                        
-            end            
+                this.ResetParamSet();
+            end
         end
         
-        %% Parameters      
+        %% Parameters
         % Get and set default parameter values (defined in Sys)
         function values = GetDefaultParam(this, params)
             values = GetParam(this.Sys,params);
@@ -50,15 +68,15 @@ classdef BreachSystem < BreachSet
         function SetDefaultParam(this, params, values)
             this.Sys = SetParam(this.Sys,params, values);
         end
-               
-        %% Signals plots and stuff        
+        
+        %% Signals plots and stuff
         function SetTime(this,tspan)
-           this.Sys.tspan = tspan; 
+            this.Sys.tspan = tspan;
         end
         function time = GetTime(this,tspan)
-           time = this.Sys.tspan;
+            time = this.Sys.tspan;
         end
-         
+        
         % Performs a simulation from the parameter vector(s) defined in P
         function Sim(this,tspan)
             if nargin==1
@@ -66,7 +84,6 @@ classdef BreachSystem < BreachSet
             end
             this.P = ComputeTraj(this.Sys, this.P, tspan);
         end
-        
         
         
         %% Specs
@@ -141,7 +158,6 @@ classdef BreachSystem < BreachSet
         function [robfn, BrSys] = GetRobustSatFn(this, phi, params)
             
             BrSys = this.copy();
-            %BrSys.ResetParamSet();
             
             if ischar(phi)
                 this__phi__ = STL_Formula('this__phi__', phi);
@@ -153,7 +169,7 @@ classdef BreachSystem < BreachSet
             
         end
         
-                
+        
         % Plots satisfaction signal
         function PlotRobustSat(this, phi, depth, tau, ipts)
             % check arguments
@@ -173,13 +189,13 @@ classdef BreachSystem < BreachSet
             SplotSat(this.Sys,this.P, phi, depth, tau, ipts )
         end
         
-
+        
         %% Mining
         function [p, rob] = MineSpec(this, phi, falsif_opt, prop_opt, iter_max)
             [p, rob, Pr] = ReqMining(this.Sys, phi, falsif_opt, prop_opt, iter_max);
             this.P = Pr;
         end
-          
+        
         %% Sensitivity analysis
         % FIXME interface not complete
         function SensiSpec(this,phi)
@@ -192,56 +208,6 @@ classdef BreachSystem < BreachSet
             
             [mu, mustar, sigma, Pr]= SPropSensi(this.Sys, this.P, phi, opt);
             this.P=Pr;
-        end
-        
-
-        %% Printing
-        function PrintSignals(this)
-            if isempty(this.SignalRanges)
-                disp( 'Signals:')
-                disp( '-------')
-                for isig = 1:this.P.DimX
-                    fprintf('%s\n', this.P.ParamList{isig});
-                end
-            else
-                
-                fprintf('Signals (in range estimated over %d simulations):\n', numel(this.P.traj))
-                disp('-------')
-                for isig = 1:this.P.DimX
-                    fprintf('%s in  [%g, %g]\n', this.P.ParamList{isig}, this.SignalRanges(isig,1),this.SignalRanges(isig,2));
-                end
-            end
-            disp(' ')
-        end
-        
-        function PrintParams(this)
-            nb_pts= this.GetNbParams();
-            if (nb_pts==1)
-                disp('Parameters:')
-                disp('----------')
-                for ip = this.Sys.DimX+1:numel(this.P.ParamList)
-                    fprintf('%s=%g',this.P.ParamList{ip},this.P.pts(ip,1));
-                    rg = this.ParamRanges(ip-this.Sys.DimX,2)-this.ParamRanges(ip-this.Sys.DimX,1);
-                    if rg>0
-                        fprintf(', can vary in [%g, %g]',this.ParamRanges(ip-this.Sys.DimX,1),this.ParamRanges(ip-this.Sys.DimX,2));
-                    end
-                    fprintf('\n');
-                end
-            else
-                fprintf('Parameters (%d values):\n',nb_pts);
-                disp('-------------------------');
-                for ip = this.Sys.DimX+1:numel(this.P.ParamList)
-                    rg = this.ParamRanges(ip-this.Sys.DimX,2)-this.ParamRanges(ip-this.Sys.DimX,1);
-                    if rg>0
-                        fprintf('%s',this.P.ParamList{ip});
-                        fprintf(' varying in [%g, %g]\n',this.ParamRanges(ip-this.Sys.DimX,1),this.ParamRanges(ip-this.Sys.DimX,2));
-                    else
-                        fprintf('%s=%g\n',this.P.ParamList{ip},this.P.pts(ip,1));
-                    end
-                end
-            end
-            
-            disp(' ')
         end
         
         function PrintSpecs(this)

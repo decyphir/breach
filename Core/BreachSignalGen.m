@@ -1,6 +1,22 @@
 classdef BreachSignalGen < BreachSystem
-    
-    % Class to generate signals of different types 
+ % BreachSignalGen A class to generate signals of different types. 
+ %   This class is derivated from BreachSystem, and thus inherits from all properties and methods.  
+ %   It aggregates several instances of a simpler signal_gen class. The
+ %   main use-case of this class is to as input generators for a
+ %   BreachOpenSystem. It can also be used to interface an external
+ %   simulator. 
+ % 
+ % BreachSignalGen Properties
+ %   signalGenerators - cell array of signalgen object.
+ %   dt_default=1e-3  - default fixed time step for signal generation.
+ % 
+ % BreachSignalGen Methods
+ %       BreachSignalGen - constructor, takes a cell array of signal_gen
+ %                         objects as only argument
+ %
+ %  
+ % See also BreachOpenSystem, signal_gen
+ 
     properties
         signalGenerators
         dt_default=1e-3 % in case no time step is provided
@@ -64,5 +80,4 @@ classdef BreachSignalGen < BreachSystem
         
          
     end
-    
 end

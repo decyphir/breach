@@ -1,24 +1,72 @@
 classdef BreachSet < handle
-    properties
-        P % legacy Breach structure, contains data and trajectories, etc
-        ParamRanges
-        SignalRanges
-        AppendWhenSample=false 
+    % BreachSet Defines an API to manipulate parameters and traces. 
+    %    This is the base class for BreachSystem objects. BreachSet 
+    %    instances are usually also BreachSystem or some derived class 
+    %    instances, so the purpose of this class is mainly to separate
+    %    methods for defining and manipulate parameters and traces data.   
+    % 
+    % BreachSet Properties
+    %   ParamRanges              - ranges of possible values for each parameter - determines the parameter sampling domain  
+    %   SignalRanges             - ranges of values taken by each signal variable  
+    %   AppendWhenSample=false   - when true, sampling appends new param vectors, otherwise replace.
+    % 
+    % BreachSet Methods
+    %   GetParam            - get values for parameters, given their names 
+    %   SetParam            - set values for parameters, given their names 
+    %   GetParamRanges      - get ranges for parameters, given their names and ranges
+    %   SetParamRanges      - set ranges for parameters, given their names and ranges
+    %   GridSample          - creates parameter vectors in ParamRanges on a regularly spaced grid 
+    %   CornerSample        - creates parameter vectors from the corners of ParamRanges 
+    %   QuasiRandomSample   - uniformly samples n parameter vectors in ParamRanges 
+    %   Concat              - concatenates parameter vectors and traces of another compatible BreachSet 
+    %   PrintParams         - display the number of parameter vectors, parameter names and ranges
+    %   PrintSignals        - display the number of traces, names of signal variables and ranges
+    %   PlotParams          - plots parameter vectors
+    %   PlotSignals         - plots signals 
+        
+    properties 
+        P 
+        ParamRanges  % ranges of possible values for each parameter - determines the parameter sampling domain  
+        SignalRanges % ranges of values taken by each signal variable  
+        AppendWhenSample=false % when true, sampling appends new param vectors, otherwise replace.
+    end
+    
+ %   properties (Hidden=true)
+ %       P  % legacy Breach parameter set structure, contains parameter names, data and trajectories plus some uncertainty information         
+ %   end
+    
+    methods (Hidden=true)
+        function P = GetP(this)
+            % Get the legacy parameter set structure
+            P = this.P;
+        end
+        
+        function SetP(this, P) 
+            % Get the legacy parameter set structure
+            this.P = P;
+        end    
     end
     
     methods
-        
-        % Get and Set of the parameter set structure
-        function P = GetP(this)
-            P = this.P;
+        function this = BreachSet(Sys, params, ranges)
+        % BreachSet constructor from a legacy P or Sys, parameter names and ranges
+            
+            switch nargin
+                case 0
+                    return;
+                case 1
+                    this.P = CreateParamSet(Sys);
+                case 2
+                    this.P = CreateParamSet(Sys, params);
+                case 3
+                    this.P = CreateParamSet(Sys, params, ranges);
+            end
+            
+            this.UpdateParamRanges();
         end
-        function SetP(this, P)
-            this.P = P;
-        end
-        
-        % Get and Set parameters
+    
         function SetParam(this, params, values)
-            this.P = SetParam(this.P,params, values);
+            this.P = SetParam(this.P, params, values);
             this.UpdateParamRanges();
         end
         
@@ -107,6 +155,9 @@ classdef BreachSet < handle
             
         end
         
+        
+        
+        
         % Get computed trajectories
         function traces = GetTraces(this)
             traces= [];
@@ -160,7 +211,6 @@ classdef BreachSet < handle
         end
 
         
-        
         % Grid Sample
         function GridSample(this, delta)
             this.P = Refine(this.P,delta);           
@@ -175,12 +225,11 @@ classdef BreachSet < handle
     
         % Quasi-Random Sample
         function QuasiRandomSample(this, delta)
-%           this.ResetParamSet();
             this.P = QuasiRefine(this.P,delta);
         end
     
         % Get the number of param vectors
-        function nb_pts = GetNbParams(this)
+        function nb_pts = GetNbParamVectors(this)
             nb_pts= size(this.P.pts,2);
         end
         
@@ -195,5 +244,55 @@ classdef BreachSet < handle
             SplotPts(this.P, varargin{:});
         end
  
+        %% Printing
+        function PrintSignals(this)
+            if isempty(this.SignalRanges)
+                disp( 'Signals:')
+                disp( '-------')
+                for isig = 1:this.P.DimX
+                    fprintf('%s\n', this.P.ParamList{isig});
+                end
+            else
+                
+                fprintf('Signals (in range estimated over %d simulations):\n', numel(this.P.traj))
+                disp('-------')
+                for isig = 1:this.P.DimX
+                    fprintf('%s in  [%g, %g]\n', this.P.ParamList{isig}, this.SignalRanges(isig,1),this.SignalRanges(isig,2));
+                end
+            end
+            disp(' ')
+        end
+
+        function PrintParams(this)
+            nb_pts= this.GetNbParamVectors();
+            if (nb_pts==1)
+                disp('Parameters:')
+                disp('----------')
+                for ip = this.P.DimX+1:numel(this.P.ParamList)
+                    fprintf('%s=%g',this.P.ParamList{ip},this.P.pts(ip,1));
+                    rg = this.ParamRanges(ip-this.P.DimX,2)-this.ParamRanges(ip-this.P.DimX,1);
+                    if rg>0
+                        fprintf(', can vary in [%g, %g]',this.ParamRanges(ip-this.P.DimX,1),this.ParamRanges(ip-this.Sys.DimX,2));
+                    end
+                    fprintf('\n');
+                end
+            else
+                fprintf('Parameters (%d values):\n',nb_pts);
+                disp('-------------------------');
+                for ip = this.P.DimX+1:numel(this.P.ParamList)
+                    rg = this.ParamRanges(ip-this.P.DimX,2)-this.ParamRanges(ip-this.P.DimX,1);
+                    if rg>0
+                        fprintf('%s',this.P.ParamList{ip});
+                        fprintf(' varying in [%g, %g]\n',this.ParamRanges(ip-this.P.DimX,1),this.ParamRanges(ip-this.P.DimX,2));
+                    else
+                        fprintf('%s=%g\n',this.P.ParamList{ip},this.P.pts(ip,1));
+                    end
+                end
+            end
+            
+            disp(' ')
+        end
+        
+        
     end
 end

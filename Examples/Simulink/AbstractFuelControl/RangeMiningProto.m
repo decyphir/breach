@@ -13,7 +13,7 @@ prob = FalsificationProblem(BrAFC, phi_in_range, params, param_ranges );
 
 prob.solver_options.nb_samples = 50;
 prob.solve();
-fval =   prob.obj_best;
+fval = prob.obj_best;
 
 
 while fval<0

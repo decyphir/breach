@@ -1,12 +1,12 @@
 classdef BreachSimulinkSystem < BreachOpenSystem
-    %BreachSimulinkSystem specializes BreachObject to Simulink systems
+    %BreachSimulinkSystem specializes BreachSystem to Simulink systems
     
     methods
         
-        % See CreateSimulinkSystem for arguments help
+        
         function this = BreachSimulinkSystem(varargin)
-            
-            
+        % See CreateSimulinkSystem for arguments help
+        
             switch nargin
                 case 0 % do nothing
                 case 1 % Should be a Sys structure - check that type is right

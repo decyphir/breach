@@ -1,10 +1,14 @@
-classdef step_signal_gen
-    
-    % Class to single step multidimensional signals 
-    properties 
-        signals  % names of the signals it generates
-        params % parameters such as number of control points, etc
-    end
+classdef step_signal_gen < signal_gen
+    % step_signal_gen   A class derived from signal_gen to generate simple step signals.
+    %  
+    % step_signal_gen Methods
+    %   step_signal_gen -  constructor, takes signal names, and an optional p0.
+    %                       Each signal 'x' gets a 'x_base_value', 'x_step_time',
+    %                       and 'x_step_amp' parameter, with default value
+    %                       to 0, 1, and 1 respectively. 
+    %                         
+    %  See also signal_gen.  
+ 
     
     methods 
         
@@ -15,8 +19,16 @@ classdef step_signal_gen
                this.params = { this.params{:} [this.signals{i_s} '_base_value'] ...
                               [this.signals{i_s} '_step_time']... 
                               [this.signals{i_s} '_step_amp']};
-            end     
+               this.p0(3*(i_s-1)+1:3*i_s,1) = [0 1 1];
+
+           end     
+           
+           if nargin == 2
+               this.p0 = p0;
+           end
+           
         end
+        
                 
         function params = getParamNames(this) % get parameterization names, e.g., signal1_u0, signal2_u0, etc                                             
             params = this.params;

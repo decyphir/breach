@@ -1,35 +1,58 @@
 function [phi, phistruct] = STL_Formula(varargin)
-%QSTL_FORMULA STL formula constructor
+%STL_Formula Class representing Signal Temporal Logic Formulas
 %
-%     STL_Formula(id) creates a new formula named id
+%   STL_Formula(id, phi_exp) returns a formula named id from a string 
+%   phi_exp constructed with the (simplified) grammar below. The id is 
+%   used to maintain a global database of defined formulas that can be 
+%   reused as sub-formulas. Note that it can be distinct from the variable  
+%   name used by Matlab, though it can be confusing. Hence the
+%   recommended use is, e.g., 
+%   
+%   phi = STL_Formula('phi',  'not ev (x[t] > 0)')  
+%   
+%   Formulas can have parameters, such as     
+%  
+%   phi = STL_Formula('phi',  'not ev (a*x[t] + b > c)')
 %
-%     | STL_Formula(id,'phi_expression') where phi obeys the following grammar
+%   In that case, default value is assigned to the parameters (0). To change 
+%   these values, use the get_params and set_params methods, e.g.:
 %
-%      phi_expression := predicate_expression | unary_op phi_expression | '('phi_expression')' binary_op '('phi_expression')'
+%   phi = set_params(phi, {'a', 'b', 'c'}, [2, 1 0.5]);
+%   get_params(phi, {'a', 'b', 'c'})
+%    
+%   When equality comparator (==) is used, special parameters are defined for the 
+%   formula: alpha__ (default 1), zero_threshold__ (default 1e-13) and true_value__ (default inf). 
+%   They determine the threshold to decide when two quantities are equal and the quantitative 
+%   value to assign when this is the case. When equality doesn't hold, the quantitative satisfaction is 
+%   is alpha__ times the (negative) difference.         
+%    
+%STL_Formula Grammar     
 %
-%      predicate_expression :=   matlab_expression = matlab_expression '|' threshold = num_value, max_true_value = num_value
-%                              | matlab_expression comp matlab_expression
+%   phi_exp         := atom_predicate | unary_op phi_exp | phi_exp binary_op
 %
-%      comp := > | >= | < | <=
+%   unary_op        := not | unary_op_temp | unary_op_temp_[scalar_exp,scalar_exp]
 %
-%      unary_op := not | unary_op_temp | unary_op_temp_[ti,tf]
+%   unary_op_temp   := ev | alw | eventually | always
 %
-%      unary_op_temp :=  ev | alw | eventually | always
+%   binary_op       := or | and | until | until_[scalar_exp, scalar_exp]
 %
-%      binary_op  := or | and | until | until_[matlab_expession, matlab_expression]
+%   atom_predicate  := signal_exp comp signal_exp
 %
+%   comp            :=  > | >= | < | <= | ==
 %
-%     | STL_Formula(id,'unary_op',phi) where 'unary_op' is one of 'not',
-%                'eventually' or 'always' (abreviations 'ev' or 'alw')
+%   signal_exp      := any expression involving parameters and signal values that matlab can interpret to return an array
 %
-%     | STL_Formula(id,'unary_op',phi, interval) where 'unary_op' is
-%                either 'eventually' or 'always'(abreviations 'ev' or 'alw')
+%   signal_value    := signal_id '[' time_exp ']' 
 %
-%     | STL_Formula(id,'binary_op',phi1, phi2) where 'binary_op' is
-%                either 'or','and' or 'until'
+%   time_exp        := any expression involving the keyword 't' and parameters that matlab can interpret to return an array     
+%  
+%   scalar_exp      := any expression involving parameters that matlab can interpret to return a scalar
+%   
+    
+    
+%See also STL_ReadFile
 %
-%     | STL_Formula(id,'until',phi1,interval, phi2)
-%
+    
 evalin('base','InitBreach');
 
 global BreachGlobOpt
@@ -290,21 +313,24 @@ switch(numel(varargin))
             return
         end
         
-        % should probably discontinue this - or review its implementation
-        tokens = regexp(st, '(.+)\s*=\s*(.+)', 'tokens');
-        if ~isempty(tokens)
+        [success, st1, st2] = parenthesisly_balanced_split(st, '==');
+        if success
             phi.type = 'predicate';
             phi.st = st;
-            if ~isfield(phi.params,'threshold')
-                phi.params.threshold = 1e-14;
+            if ~isfield(phi.params, 'default_params')
+                phi.params.default_params = struct;
             end
-            if ~isfield(phi.params,'max_true_value')
-                phi.params.max_true_value = 1;
+            
+            if ~isfield(phi.params.default_params,'zero_threshold__')
+                phi.params.default_params.zero_threshold__ = 1e-13;
             end
-            if ~isfield(phi.params,'alpha')
-                phi.params.alpha = 1;
+            if ~isfield(phi.params.default_params,'true_value__')
+                phi.params.default_params.true_value__ = inf;
             end
-            phi.params.fn = [ 'fun__zero(abs(' tokens{1}{1} '-(' tokens{1}{2} ')),threshold,max_true_value,alpha)'];
+            if ~isfield(phi.params.default_params,'alpha__')
+                phi.params.default_params.alpha__ = 1;
+            end
+            phi.params.fn = [ 'fun__zero(abs(' st2 '-(' st1 ')),zero_threshold__,true_value__,alpha__)'];
             phi.evalfn = @(mode,traj,t,params) feval('generic_predicate',mode,traj,t,params);
             return
         end
@@ -428,7 +454,7 @@ for i = 1:numel(start_idx)
     
     [success, diag, st1, st2] = checks_parenthesis_balance(st1,st2);
     if success==-1
-        error(['STL_Parse: expression ' st ':' diag]);
+        error(['STL_Parse: exppression ' st ':' diag]);
     elseif success==1
         if nargout == 4
             interval= ['[' tokens{i}{1} ']'];

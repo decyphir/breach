@@ -1,15 +1,29 @@
 classdef constant_signal_gen < signal_gen
-    
-    % Class to generate multidimensional constant signals 
+    % constant_signal_gen a class to generate simple multidimensional constant signals
+    %
+    % constant_signal_gen Methods
+    %    constant_signal_gen - constructor takes a cell array of signal
+    %    names and optional values. Parameters have same names as signals with '_u0' suffix.
+    %
+    % See also signal_gen.
     
     methods         
-        function this = constant_signal_gen(signals)
-           this.signals = signals; 
-           this.params = {};
-           this.p0 = 0;
-            for i_s = 1:numel(this.signals)
+        function this = constant_signal_gen(signals, p0)
+            nb_signals = numel(this.signals);
+            this.signals = signals;
+            
+            this.params = {};
+            for i_s = 1:nb_signals
                 this.params = { this.params{:} [this.signals{i_s} '_u0']};
-            end     
+            end
+            
+            if nargin == 2
+                this.p0 = p0;
+            else
+                this.p0 = zeros(nb_signals,1);
+            end
+            
+            
         end
             
         function X = computeSignals(this,p, time) % compute the signals

@@ -1,33 +1,48 @@
 classdef fixed_cp_signal_gen < signal_gen
-    
-    % Control points, uni/fixed step signal generation 
-    properties 
+    % fixed_cp_signal_gen  A class derived from signal_gen to generate signals from regularly spaced control points using different interpolation methods.
+    %  
+    % fixed_cp_signal_gen Properties
+    %   cp     - number of control points 
+    %   method - interpolation method for each signal, accepts all methods provided by interp1
+    %
+    % fixed_cp_signal_gen Methods
+    %   fixed_cp_signal_gen -  constructor, takes signal names, number of
+    %                          control points, interpolation methods and a
+    %                          p0. 
+    %    
+    %  See also signal_gen.  
+ 
+    properties
         cp       % number of control points for each signal
         method   % interpolation method for each signal
     end
     
-    methods 
+    methods
         
-        function this = fixed_cp_signal_gen(signals, cp, method)
-           this.signals = signals;
-           this.cp = cp;
-           this.params = {};
-           this.method = method;
-           for ku = 1:numel(signals)
-               for k = 1:cp(ku)
-                   this.params= {this.params{:} [signals{ku} '_u' num2str(k-1)]};
-               end
-           end
-           this.p0= zeros(numel(signals)*sum(cp),1);           
+        function this = fixed_cp_signal_gen(signals, cp, method,p0)
+            this.signals = signals;
+            this.cp = cp;
+            this.params = {};
+            this.method = method;
+            for ku = 1:numel(signals)
+                for k = 1:cp(ku)
+                    this.params= {this.params{:} [signals{ku} '_u' num2str(k-1)]};
+                end
+            end
+            if nargin==4
+                this.p0 = p0;
+            else
+                this.p0= zeros(numel(signals)*sum(cp),1);
+            end
         end
-            
+        
         function X = computeSignals(this,p, time) % compute the signals
             if size(p,1) ==1
                 p = p';
             end
-
+            
             X = zeros(numel(this.cp),numel(time));
-            pts_x = p; 
+            pts_x = p;
             for i_cp = 1:numel(this.cp)
                 cp_values = pts_x(1:this.cp(i_cp));
                 meth = this.method{i_cp};
@@ -39,11 +54,11 @@ classdef fixed_cp_signal_gen < signal_gen
                     x = interp1(t_cp(1:end-1), cp_values, time', meth, 'extrap');
                 end
                 X(i_cp,:) = x';
-            end        
+            end
         end
         
         function type = getType(this)
             type = 'unistep';
         end
-    end    
+    end
 end

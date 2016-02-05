@@ -1,5 +1,5 @@
 function y = fun__zero(x,threshold,max_true_value,alpha)
-%FUN__ZERO does
+%FUN__ZERO 
 % 
 % Synopsis: y = fun__zero(x,threshold,max_true_value,alpha)
 % 

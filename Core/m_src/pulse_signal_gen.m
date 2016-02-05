@@ -1,11 +1,16 @@
 classdef pulse_signal_gen < signal_gen
-    
-    % Pulse signal generation 
-    
-    methods 
-        % default pulse has base value 0, period 1, duty width 0.5 and amp
-        % 1.
-        function this = pulse_signal_gen(signals)
+    % pulse_signal_gen   A class derived from signal_gen to generate periodic pulse signals.
+    %  
+    % pulse_signal_gen Methods
+    %   pulse_signal_gen -  constructor, takes signal names, and an optional p0.
+    %                       Each signal 'x' gets a 'x_base_value', 'x_pulse_period',
+    %                       'x_pulse_width' and 'x_pulse_amp' parameter, with default
+    %                       to 0, 1, 0.5 and 1 respectively. 
+    %                         
+    %  See also signal_gen.  
+
+    methods
+        function this = pulse_signal_gen(signals, p0)
            this.signals = signals; 
            this.params = {};
            this.p0 = zeros( 4*numel(signals), 1 );
@@ -15,7 +20,12 @@ classdef pulse_signal_gen < signal_gen
                               [this.signals{i_s} '_pulse_width']...
                               [this.signals{i_s} '_pulse_amp']};
                this.p0(4*(i_s-1)+1:4*i_s,1) = [0 1 0.5 1];          
-           end     
+           end 
+           
+           if nargin==2
+               this.p0 =p0;
+           end
+           
         end
                             
         function X = computeSignals(this,p, time) % compute the signals

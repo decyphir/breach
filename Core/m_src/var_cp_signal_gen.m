@@ -1,6 +1,18 @@
 classdef var_cp_signal_gen < signal_gen
+    % var_cp_signal_gen  A class derived from signal_gen to generate signals from control points 
+    %                    with variable time steps, using different interpolation methods.
+    %  
+    % var_cp_signal_gen Properties
+    %   cp     - number of control points 
+    %   method - interpolation method for each signal, accepts all methods provided by interp1
+    %
+    % var_cp_signal_gen Methods
+    %   var_cp_signal_gen -  constructor, takes signal names, number of
+    %                        control points, interpolation methods and a
+    %                        p0. 
+    %  See also signal_gen.  
+
     
-    % Control points, variable step signal generation  
     properties 
         cp       % number of control points for each signal
         method   % interpolation method for each signal
