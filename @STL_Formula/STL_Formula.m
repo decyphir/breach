@@ -28,7 +28,7 @@ function [phi, phistruct] = STL_Formula(varargin)
 %    
 %STL_Formula Grammar     
 %
-%   phi_exp         := atom_predicate | unary_op phi_exp | phi_exp binary_op
+%   phi_exp         := atom_predicate | unary_op phi_exp | phi_exp binary_op phi_exp
 %
 %   unary_op        := not | unary_op_temp | unary_op_temp_[scalar_exp,scalar_exp]
 %

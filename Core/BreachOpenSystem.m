@@ -1,10 +1,22 @@
 classdef BreachOpenSystem < BreachSystem
-    % BreachOpenSystem is a BreachObject with an input generator
-    % TODO Documentation
+    % BreachOpenSystem  a BreachSystem derivated class with an input generator. 
+    % 
+    %   BreachOpenSystem Properties
+    %        InputGenerator - BreachSystem generating inputs. 
+    %
+    %   BreachOpenSystem Methods
+    %        SetInputGen - takes a BreachSystem as argument and makes it the input generator. 
+    %                      Can be seen as serial composition of two BreachSystems.    
+    %        Sim         - the Sim method for BreachOpenSystems accepts  
+    %                      input as a third argument, when given, it bypasses 
+    %                      the input generator. The input format is an array
+    %                      where the first column is time. 
+    %
+    %See also signal_gen
     
     properties
         InputMap       % Maps input signals to idx in the input generator
-        InputGenerator % BreachObject responsible for generating inputs
+        InputGenerator % BreachSystem responsible for generating inputs
     end
     
     methods
@@ -51,10 +63,7 @@ classdef BreachOpenSystem < BreachSystem
                 this.Sys = Sys;
             end
             
-            % IG can be a struct, a signal generator, or a BreachSystem
-            
-            %
-            
+            % IG can be a struct, a signal generator, or a BreachSystem         
             DimU = this.InputMap.Count;
             if (isstruct(IG))
                 inputs = this.Sys.InputList;

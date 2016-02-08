@@ -9,7 +9,7 @@ classdef constant_signal_gen < signal_gen
     
     methods         
         function this = constant_signal_gen(signals, p0)
-            nb_signals = numel(this.signals);
+            nb_signals = numel(signals);
             this.signals = signals;
             
             this.params = {};

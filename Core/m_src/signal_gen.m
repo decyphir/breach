@@ -7,7 +7,7 @@ classdef signal_gen
     %    p0      - default values for paramters, array with same dimension as params  
     %
     % signal_gen Methods
-    %   computeSignals (Abstract) - Take parameter values 
+    %   computeSignals (Abstract) - Takes parameter values and time and returns a signal 
     %
     % See also constant_signal_gen, fixed_cp_signal_gen,
     % var_cp_signal_gen, pulse_signal_gen, step_signal_gen
