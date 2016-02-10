@@ -33,7 +33,7 @@ function [P, val] = SEvalProp(Sys, P, phis, taus, ipts, break_level, method, VER
 %  - method      : (Optional, default or empty='thom') string indicating
 %                  the method which must be used to evaluate the formulas.
 %                  It must be 'classic' or 'thom'.
-%  - VERBOSE     : (Optional, default=true) boolean indicating if progress
+%  - VERBOSE     : (Optional, default=false) boolean indicating if progress
 %                  bar is shown.
 % 
 % Outputs:
@@ -63,12 +63,12 @@ function [P, val] = SEvalProp(Sys, P, phis, taus, ipts, break_level, method, VER
 
 % check arguments
 if ~exist('VERBOSE','var')
-    if numel(P.traj)==1
-        VERBOSE = 0;
-    else
-        VERBOSE= 1;
-    end
-    
+    VERBOSE=0;   
+%     if numel(P.traj)==1
+%         VERBOSE = 0;
+%     else
+%         VERBOSE= 1;
+%     end
 end
 
 if(~exist('method','var')||isempty(method))

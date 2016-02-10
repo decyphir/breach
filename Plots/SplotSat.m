@@ -86,8 +86,8 @@ for np = npb+1:nb_phis+npb
     title(disp(phi), 'Interpreter', 'none');
     
     phi = STL_OptimizePredicates(Sys, phi);
-    fprintf(['Checking ' phi_name  '\n[             25%%           50%%            75%%               ]\n ']);
-    iprog = 0;
+%   fprintf(['Checking ' phi_name  '\n[             25%%           50%%            75%%               ]\n ']);
+%   iprog = 0;
     
     for ii = ipts
         traj = P.traj(P.traj_ref(ii));
@@ -101,10 +101,10 @@ for np = npb+1:nb_phis+npb
             val(np-npb,ii) = P.props_values(iphi,ii).val(1);
         end
         
-        while(floor(60*ii/numel(ipts))>iprog)
-            fprintf('^');
-            iprog = iprog+1;
-        end
+%        while(floor(60*ii/numel(ipts))>iprog)
+%           fprintf('^');
+%            iprog = iprog+1;
+%        end
         
         % plot property values
         phi_tspan = P.props_values(iphi,ii).tau;
@@ -117,7 +117,7 @@ for np = npb+1:nb_phis+npb
         
     end
     
-    fprintf('\n');
+%    fprintf('\n');
 end
 xlabel('time');
 

@@ -186,7 +186,7 @@ classdef BreachSystem < BreachSet
             end
             
             figure;
-            SplotSat(this.Sys,this.P, phi, depth, tau, ipts )
+            SplotSat(this.Sys,this.P, phi, depth, tau, ipts);
         end
         
         
@@ -238,7 +238,7 @@ classdef BreachSystem < BreachSet
         end
         
         %% Misc
-        % FIXME Resets the system to nominal parameters
+        % Resets the system to nominal parameters
         function Reset(this)
             this.P = CreateParamSet(this.Sys);
         end

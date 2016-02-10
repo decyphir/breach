@@ -277,7 +277,7 @@ classdef BreachSet < handle
                     fprintf('\n');
                 end
             else
-                fprintf('Parameters (%d values):\n',nb_pts);
+                fprintf('Parameters (%d vectors):\n',nb_pts);
                 disp('-------------------------');
                 for ip = this.P.DimX+1:numel(this.P.ParamList)
                     rg = this.ParamRanges(ip-this.P.DimX,2)-this.ParamRanges(ip-this.P.DimX,1);
