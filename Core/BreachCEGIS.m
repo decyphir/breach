@@ -1,10 +1,9 @@
-function [BrSynth, SynthProb, FalsifProb] = CEGIS(SynthProb, FalsifProb, options_in)
+function [BrSynth, SynthProb, FalsifProb] = BreachCEGIS(SynthProb, FalsifProb, options_in)
 %CEGIS Implements a Counter-Example Guided Inductive Synthesis strategy
 %
 
 
 %% processing options
-
 % if zero argument, returns an option structure with defaults
 if nargin==0
     BrSynth= struct('iter_max', 10);
@@ -17,7 +16,7 @@ if nargin == 2
 end
 
 % option provided, make sure all fields are initialized 
-options = CEGIS();
+options = BreachCEGIS();
 opt_in_fields = fieldnames(options_in);
 for  ifld=1:numel(opt_in_fields)
     options.(opt_in_fields{ifld}) = options_in.(opt_in_fields{ifld});
@@ -36,7 +35,7 @@ while (cont)
     fprintf('Synthesis step\n');
     fprintf('--------------\n');
     SynthProb.solve();
-    BrSynth = SynthProb.GetBrSet_Synth();
+    BrSynth = SynthProb.GetBrSet_Best();
     
     %% Falsification step
     fprintf('Counter-Example step\n');
@@ -52,6 +51,7 @@ while (cont)
     %% Update parameter synthesis problem
     SynthProb.BrSet.Concat(BrFalse);
     SynthProb.ResetObjective();
+    SynthProb.BrSys.Sys.Verbose=0;
     
     iter = iter+1;
     cont = iter<iter_max;

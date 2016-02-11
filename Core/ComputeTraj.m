@@ -1,9 +1,9 @@
 function Pf = ComputeTraj(Sys, P0, tspan, u)
 %COMPUTETRAJ computes trajectories for a system given initial conditions
 % and parameters
-% 
+%
 % Synopsis:   Pf = ComputeTraj(Sys,P0,[tspan ,u])
-% 
+%
 % Inputs:
 % -  Sys   : System (needs to be compiled)
 % -  P0    : Initial conditions and params given in a parameter set or in
@@ -18,34 +18,39 @@ function Pf = ComputeTraj(Sys, P0, tspan, u)
 %                 dependant
 %             - tin : times when the input changes
 %             - values : values of the parameters
-% 
+%
 % Output:
 %  -  Pf   Parameter set augmented with the field traj containing
 %          computed trajectories if the input is a param set. The field
 %          traj_ref is filled. If the P0 is an  array of parameter values,
 %          then Pf is an array of trajectories.
-% 
+%
 % Examples (Lorentz84):
 %   CreateSystem;
 %   P = CreateParamSet(Sys,'a',[1,2]);
-%   
+%
 %   P1 = Refine(P,2);
 %   P1 = ComputeTraj(Sys,P1,0:0.1:10);
 %   P1 = ComputeTraj(Sys,P1,0:0.1:10); % Here, nothing shows because nothing happens
-%   
+%
 %   P2 = SetParam(P,'paramProp',2);
 %   P2 = SAddUncertainParam(P2,'paramProp');
 %   P2 = Refine(P2,2);
 %   P2 = ComputeTraj(Sys,P2,0:0.1:10);
 %   P2.traj_ref  % should be [1 2 1 2]
-% 
+%
 %See also CreateParamSet Sselect SConcat SPurge
 %
+
+if isfield(Sys,'Verbose')
+    Verbose = Sys.Verbose;
+else
+    Verbose=1;
+end
 
 if nargin==2
     tspan=Sys.tspan;
 end
-
 
 % checks if we have a parameter set or an array of parameter values
 
@@ -58,7 +63,7 @@ if ~isstruct(P0)
             P0 = P0';
         else
             error('ComputTraj:S0DimensionError',...
-                        'Second argument must be a parameter set or be of dimension Sys.DimP x nb_traj.')
+                'Second argument must be a parameter set or be of dimension Sys.DimP x nb_traj.')
         end
     end
     output_trajs = 1;
@@ -130,15 +135,17 @@ end
 % From now, we only got unique system-parameter vectors
 
 switch Sys.type
-
+    
     case 'Extern'
         model = Sys.name;
         Pf = P0;
         ipts = 1:size(P0.pts,2);
-        if(numel(ipts)>1)
-            fprintf(['Computing ' num2str(numel(ipts)) ' trajectories of model ' model '\n'...
-                     '[             25%%           50%%            75%%               ]\n ']);
-            iprog = 0;
+        if Verbose==1
+            if(numel(ipts)>1)
+                fprintf(['Computing ' num2str(numel(ipts)) ' trajectories of model ' model '\n'...
+                    '[             25%%           50%%            75%%               ]\n ']);
+                iprog = 0;
+            end
         end
         
         for ii = ipts
@@ -153,29 +160,34 @@ switch Sys.type
             Pf.traj(ii) = traj;
             Pf.Xf(:,ii) = traj.X(:,end);
             
-            if(numel(ipts)>1)
-                while(floor(60*ii/numel(ipts))>iprog)
-                    fprintf('^');
-                    iprog = iprog+1;
+            if Verbose==1
+                if(numel(ipts)>1)
+                    while(floor(60*ii/numel(ipts))>iprog)
+                        fprintf('^');
+                        iprog = iprog+1;
+                    end
                 end
             end
         end
-        
-        if(numel(ipts)>1)
-            fprintf('\n');
+        if Verbose==1
+            if(numel(ipts)>1)
+                fprintf('\n');
+            end
         end
         
         Pf.traj_to_compute = [];
         Pf.traj_ref = 1:numel(Pf.traj); % fill field traj_ref (one to one mapping)
-  
+        
     case 'Simulink'
         model = Sys.mdl;
         Pf = P0;
         ipts = 1:size(P0.pts,2);
-        if(numel(ipts)>1)
-            fprintf(['Computing ' num2str(numel(ipts)) ' trajectories of model ' model '\n'...
-                     '[             25%%           50%%            75%%               ]\n ']);
-            iprog = 0;
+        if Verbose==1
+            if(numel(ipts)>1)
+                fprintf(['Computing ' num2str(numel(ipts)) ' trajectories of model ' model '\n'...
+                    '[             25%%           50%%            75%%               ]\n ']);
+                iprog = 0;
+            end
         end
         
         for ii = ipts
@@ -189,19 +201,20 @@ switch Sys.type
             traj.param = P0.pts(1:P0.DimP,ii)';
             Pf.traj(ii) = traj;
             Pf.Xf(:,ii) = traj.X(:,end);
-            
-            if(numel(ipts)>1)
-                while(floor(60*ii/numel(ipts))>iprog)
-                    fprintf('^');
-                    iprog = iprog+1;
+            if Verbose ==1
+                if(numel(ipts)>1)
+                    while(floor(60*ii/numel(ipts))>iprog)
+                        fprintf('^');
+                        iprog = iprog+1;
+                    end
                 end
             end
         end
-        
-        if(numel(ipts)>1)
-            fprintf('\n');
+        if Verbose==1
+            if(numel(ipts)>1)
+                fprintf('\n');
+            end
         end
-        
         Pf.traj_to_compute = [];
         Pf.traj_ref = 1:numel(Pf.traj); % fill field traj_ref (one to one mapping)
         
@@ -212,7 +225,7 @@ switch Sys.type
         if iscell(tspan)
             if(numel(tspan)==2)
                 T = [tspan{1} tspan{2} tspan{2}];  % not really nice.. should be
-                                                   % changed some day
+                % changed some day
             else
                 T = cell2mat(tspan);
             end
@@ -250,7 +263,7 @@ switch Sys.type
         if(output_trajs)
             Pf = Pf.traj;
         end
-                
+        
 end
 
 if(isfield(Sys,'time_mult') && ~isfield(Pf,'time_mult'))
