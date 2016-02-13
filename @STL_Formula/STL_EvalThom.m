@@ -63,10 +63,10 @@ for ii=1:numTrajs % we loop on every traj in case we check more than one
         Pii = P;
     else
         Pii = Sselect(P, ii);
-        eval(eval_str); % needed, as parameters can change from one Pii to another        
+        eval(eval_str); % needed, as parameters can change from one Pii to another
     end
     
-    % Ensures that traj.X and traj.time are double precision 
+    % Ensures that traj.X and traj.time are double precision
     trajs(ii).time = double(trajs(ii).time);
     trajs(ii).X = double(trajs(ii).X);
     
@@ -98,16 +98,16 @@ for ii=1:numTrajs % we loop on every traj in case we check more than one
     else
         interval = [0 trajs(ii).time(end)];
         [val__ii, time_values__ii] = GetValues(Sys, phi, Pii, trajs(ii), interval);
-          
-        val__{ii} = val__ii(time_values__ii<=trajs(ii).time(end)); 
-        time_values__{ii} = time_values__ii(time_values__ii<=trajs(ii).time(end)); 
+        
+        val__{ii} = val__ii(time_values__ii<=trajs(ii).time(end));
+        time_values__{ii} = time_values__ii(time_values__ii<=trajs(ii).time(end));
         
         if (time_values__{ii}(end) < trajs(ii).time(end))
             vend__ = interp1(time_values__ii, val__ii,trajs(ii).time(end));
             time_values__{ii}(end+1) = trajs(ii).time(end);
             val__{ii}(end+1)= vend__;
         end
-    
+        
     end
 end
 
@@ -124,7 +124,6 @@ end
 %%
 
 function [valarray, time_values] = GetValues(Sys, phi, P, traj, interval)
-
 global BreachGlobOpt;
 eval(BreachGlobOpt.GlobVarsDeclare);
 
@@ -141,7 +140,7 @@ switch(phi.type)
             valarray = evalfn(time_values);
         catch %#ok<CTCH>
             valarray = arrayfun(evalfn, time_values);
-        end 
+        end
         
     case 'not'
         [valarray, time_values] = GetValues(Sys, phi.phi, P, traj, interval);
@@ -172,7 +171,7 @@ switch(phi.type)
         valarray1 = -valarray1;
         [time_values, valarray] = RobustOr(time_values1, valarray1, time_values2, valarray2);
         
-     case 'always'
+    case 'always'
         I___ = eval(phi.interval);
         I___ = max([I___; 0 0]);
         I___(1) = min(I___(1), I___(2));
@@ -184,8 +183,8 @@ switch(phi.type)
         end
         [time_values, valarray] = RobustEv(time_values, -valarray, I___);
         valarray = -valarray;
- 
-    case 'av_eventually'    
+        
+    case 'av_eventually'
         I___ = eval(phi.interval);
         I___ = max([I___; 0 0]);
         I___(1) = min(I___(1), I___(2));
@@ -196,7 +195,7 @@ switch(phi.type)
             valarray1 = [valarray1 valarray1(end)];
         end
         [time_values, valarray] = RobustAvEvRight(time_values1, valarray1, I___);
- 
+        
     case 'eventually'
         I___ = eval(phi.interval);
         I___ = max([I___; 0 0]);
@@ -251,10 +250,10 @@ end
 function time_values = GetTimeValues(traj,interval)
 %GETTIMEVALUES provides time points belonging to traj.time strictly
 % included in interval plus the bounds of interval.
-% 
+%
 % Note: for now it does not deal correctly with operations on time, e.g.
 % x[t-a] of x[ g(t) ] where g is some function
-% 
+%
 % Also if we wanted to deal correctly with open or closed intervals that
 % would be the place to look into. For now, the interpretation is rather
 % that of closed intervals.
@@ -267,6 +266,10 @@ end
 
 % first time instant
 ind_ti = find(traj.time>=interval(1),1);
+if isempty(ind_ti) 
+    time_values = [traj.time(end) traj.time(end)+1];
+    return
+end
 
 if(traj.time(ind_ti)==interval(1))
     time_values = traj.time(ind_ti);
@@ -277,7 +280,11 @@ end
 
 % Last time instant
 if(interval(end)==inf)
-    time_values = [time_values traj.time(ind_ti:end)];
+    if isempty(ind_ti)
+        time_values = [time_values time_values(end)+1];
+    else
+        time_values = [time_values traj.time(ind_ti:end)];
+    end
 else
     ind_tf = find(traj.time >= interval(end),1);
     if isempty(ind_tf)

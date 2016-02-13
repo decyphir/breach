@@ -46,7 +46,6 @@ function [val XI YI ZI] = SplotProp(Pf, prop, tau, opt)
       xlabel(Pf.ParamList{Pf.dim},'Interpreter','none');  
       ylabel(disp(prop, -1),'Interpreter','none');
      
-     
      case 2
       val = cat(1, Pf.props_values(iprop,:).val);
       if isfield(opt,'plot_pts')

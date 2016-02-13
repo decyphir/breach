@@ -30,11 +30,7 @@ classdef BreachSet < handle
         SignalRanges % ranges of values taken by each signal variable  
         AppendWhenSample=false % when true, sampling appends new param vectors, otherwise replace.
     end
-    
- %   properties (Hidden=true)
- %       P  % legacy Breach parameter set structure, contains parameter names, data and trajectories plus some uncertainty information         
- %   end
-    
+        
     methods (Hidden=true)
         function P = GetP(this)
             % Get the legacy parameter set structure

@@ -41,7 +41,6 @@ classdef BreachTraceSystem < BreachSystem
             
         end
         
-        
         % counts number of traces
         function  nb_traces= CountTraces(this)
             if isfield(this.P,'traj')
