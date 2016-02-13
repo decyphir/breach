@@ -1,5 +1,5 @@
 classdef BreachSystem < BreachSet
-    %BreachSystem    A simplified class API for Breach.
+    %BreachSystem  A simplified API class for Breach.
     %
     % It combines a system structure (Sys) with a parameter set (P)
     % into one object so that basic operations can be done in one
@@ -209,8 +209,10 @@ classdef BreachSystem < BreachSet
         this.P = Refine(this.P, delta);
         this.Sim();
         this.CheckSpec(phi);
+        
+        options.use_contour;
         figure;
-        SplotProp(this.P, phi);
+        SplotProp(this.P, phi, options);
                     
         end
         
@@ -223,7 +225,7 @@ classdef BreachSystem < BreachSet
         
         %% Sensitivity analysis
         % FIXME interface not complete
-        function SensiSpec(this,phi)
+        function SensiSpec(this, phi)
             this.ResetParamSet();
             opt.tspan = 0:0.1:50;
             opt.params = this.P.dim;
