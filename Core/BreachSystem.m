@@ -18,7 +18,7 @@ classdef BreachSystem < BreachSet
     %   AddSpec       - Add a specification to the system
     %   CheckSpec     - Checks (return robust satisfcation of) a given specification or all added specs   
     %   PlotRobustSat - Plots robust satisfaction of a given STL formula against time 
-    %   PlotSatVsP    - Plots (1d or 2d) robust satisfaction against parameter values 
+    %   PlotRobustMap - Plots (1d or 2d) robust satisfaction against parameter values 
     %   RunGUI        - Open Breach legacy GUI, allowing for interactively exploring parameters, traces and specifications
     %
     %See also BreachSet.
@@ -190,10 +190,28 @@ classdef BreachSystem < BreachSet
             SplotSat(this.Sys,this.P, phi, depth, tau, ipts);
         end
         
-        % Plot satisfaction vs param       
-        function PlotRobustSatMap(this, phi)
-            this.CheckSpec(phi);
-            SplotProp(this.P, phi); 
+               
+        function PlotRobustMap(this, phi, params, ranges, delta)        
+        % Plot robust satisfaction vs 1 or 2 parameters.
+        switch(nargin)
+            case 2
+                this.CheckSpec(phi);
+                figure;
+                SplotProp(this.P, phi);
+                return;
+            case 4
+                delta = 10;
+            case 5
+                delta = delta+eps;
+        end
+        
+        this.P = CreateParamSet(this.Sys, params, ranges);
+        this.P = Refine(this.P, delta);
+        this.Sim();
+        this.CheckSpec(phi);
+        figure;
+        SplotProp(this.P, phi);
+                    
         end
         
         

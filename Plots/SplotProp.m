@@ -51,10 +51,11 @@ function [val XI YI ZI] = SplotProp(Pf, prop, tau, opt)
       if isfield(opt,'plot_pts')
         plot3(Pf.pts(Pf.dim(1),:), Pf.pts(Pf.dim(2),:), val+.01*abs(val), 'MarkerSize', 14);
       else
-        Z = val(:,1);
+          
         
-      
-        [XI YI ZI] = QuickMeshSf(Pf,Z);     
+        Z = val(:,1);        
+        [XI, YI, ZI] = QuickMeshSf(Pf,Z);
+        
         if use_contour 
           clf;
           contourf(XI,YI,ZI, 256, 'EdgeColor', 'None'); 
@@ -63,21 +64,24 @@ function [val XI YI ZI] = SplotProp(Pf, prop, tau, opt)
             contour(XI,YI,ZI, [0 0], 'LineWidth', 4, 'EdgeColor', 'b', 'LineStyle', '--');
             legend('sat/unsat', 'boundary') ;
           end
+                    
         end
           
         xlabel(Pf.ParamList{Pf.dim(1)},'Interpreter','none');  
         ylabel(Pf.ParamList{Pf.dim(2)},'Interpreter','none');
         zlabel('Quantitative Satisfaction');
         title(disp(prop, -1),'Interpreter','none');                        
+
+        
+        % 0 level-set contour
+        hold on;
+        [c h] = contour(XI,YI,ZI,  [0 0], 'LineWidth',2,'LineColor','k');
+        clabel(c,h);
+        
+        % Redraw for colormap
         prop_cmap(val);
+        caxis([min(val) max(val)]);
         colorbar;
-        
-        try 
-          hold on;
-          [c h] = contour(XI,YI,ZI,  [0 0], 'LineWidth',2,'LineColor','k');
-          clabel(c,h);
-        end
-        
       end      
       
      otherwise 

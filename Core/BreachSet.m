@@ -23,7 +23,7 @@ classdef BreachSet < handle
     %   PrintSignals        - display the number of traces, names of signal variables and ranges
     %   PlotParams          - plots parameter vectors
     %   PlotSignals         - plots signals 
-        
+       
     properties 
         P 
         ParamRanges  % ranges of possible values for each parameter - determines the parameter sampling domain  
