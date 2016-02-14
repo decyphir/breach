@@ -191,31 +191,49 @@ classdef BreachSystem < BreachSet
         end
         
                
-        function PlotRobustMap(this, phi, params, ranges, delta)        
+        function [out] = PlotRobustMap(this, phi, params, ranges, delta, options_in)        
         % Plot robust satisfaction vs 1 or 2 parameters.
+
+        % if zero argument, returns an option structure with defaults
+        if nargin==1
+            out= struct('contour', 1, 'style',[]);
+            return
+        end
+        
+        out = figure;
+        
+        % no option, use defaults
+        if ~exist('options_in','var')
+            options_in = struct();
+        end
+        
+        % option provided, make sure all fields are initialized
+        options = this.PlotRobustMap();
+        opt_in_fields = fieldnames(options_in);
+        for  ifld=1:numel(opt_in_fields)
+            options.(opt_in_fields{ifld}) = options_in.(opt_in_fields{ifld});
+        end
+                
+        
         switch(nargin)
             case 2
                 this.CheckSpec(phi);
                 figure;
-                SplotProp(this.P, phi);
+                SplotProp(this.P, phi, options);
                 return;
             case 4
-                delta = 10;
-            case 5
-                delta = delta+eps;
+                delta = 10;                
         end
         
         this.P = CreateParamSet(this.Sys, params, ranges);
         this.P = Refine(this.P, delta);
         this.Sim();
         this.CheckSpec(phi);
-        
-        options.use_contour;
-        figure;
+            
         SplotProp(this.P, phi, options);
                     
         end
-        
+      
         
         %% Mining
         function [p, rob] = MineSpec(this, phi, falsif_opt, prop_opt, iter_max)
@@ -224,19 +242,21 @@ classdef BreachSystem < BreachSet
         end
         
         %% Sensitivity analysis
-        % FIXME interface not complete
-        function SensiSpec(this, phi)
+        function [mu, mustar, sigma] = SensiSpec(this, phi, params, ranges, opt)
+        % SensiSpec Sensitivity analysis of a formula to a set of parameters
             this.ResetParamSet();
-            opt.tspan = 0:0.1:50;
-            opt.params = this.P.dim;
-            opt.lbound = this.ParamRanges(this.P.dim-this.P.DimX,1)';
-            opt.ubound = this.ParamRanges(this.P.dim-this.P.DimX,2)';
+            opt.tspan = this.Sys.tspan;
+            opt.params = FindParam(this.Sys,params);
+            opt.lbound = ranges(:,1)';
+            opt.ubound = ranges(:,2)';
             opt.plot = 2;
             
             [mu, mustar, sigma, Pr]= SPropSensi(this.Sys, this.P, phi, opt);
             this.P=Pr;
         end
         
+        
+        %% Printing 
         function PrintSpecs(this)
             disp('Specifications:')
             disp('--------------')

@@ -1,8 +1,8 @@
-function [val XI YI ZI] = SplotProp(Pf, prop, tau, opt)
+function [val, XI, YI, ZI] = SplotProp(Pf, prop, opt)
 % SPLOTPROP  Plots the satisfaction of a prop wrt param values in a
 % param set. Works for one (1d function) or two  (2d surface) varying  parameters. 
 %  
-%  Synopsys:  [val XI YI ZI] = SplotProp(Pf, prop, opt)  
+%  Synopsys:  [val, XI, YI, ZI] = SplotProp(Pf, prop, opt)  
 %
 %  Prerequisite: prop was evaluated before
 %   
@@ -17,6 +17,9 @@ function [val XI YI ZI] = SplotProp(Pf, prop, tau, opt)
   
   if isfield(opt, 'style')
     style = opt.style;
+    if isempty(style)
+       style =  {'-b'};
+    end
   else
     style = {'-b'};   
   end
@@ -61,7 +64,7 @@ function [val XI YI ZI] = SplotProp(Pf, prop, tau, opt)
           contourf(XI,YI,ZI, 256, 'EdgeColor', 'None'); 
           hold on;
           if (max(val)*min(val)<0)
-            contour(XI,YI,ZI, [0 0], 'LineWidth', 4, 'EdgeColor', 'b', 'LineStyle', '--');
+            contour(XI,YI,ZI, [0 0], 'LineWidth', 2, 'EdgeColor', 'k');
             legend('sat/unsat', 'boundary') ;
           end
                     
