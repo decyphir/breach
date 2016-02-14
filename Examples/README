@@ -1,17 +1,11 @@
 This folder contains examples of systems used with Breach. It is organized as follows:
 
-- Benchs/    contains models used to evaluate Breach performances
-- Bio/       contains examples related to systems biology. Those are relatively old work, so might have
-             some slightly obsolescence issues.
-- ODEs/      contains examples of ODE models 
-- Simulink/  contains examples of Simulink models. Your best bet at finding up-to-date and working examples.
-- Misc/      contains various models more or less experimental; explore at your own risk.
-
-Note that your best bet at finding up-to-date and working examples is currently by exploring the
-Simuling models. 
+- DemoAFC/   Demo scripts illustrating various features of Breach on a semi-complex Simulink model of AbstractFuelControl
+- Simulink/  examples of Simulink models. 
+- Legacy/    various models more or less experimental and obsolete, using mostly the legacy (old)
+             interface of Breach, no guarantee of working properly
 
 Alexandre Donze
 donze@berkeley.edu
-June 2015
-
+Feb 2016
 
