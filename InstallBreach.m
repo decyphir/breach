@@ -7,7 +7,7 @@ dr = which('InstallBreach');
 
 % setup directories of interest
 
-breach_dir = dr(1:end-9);
+breach_dir = dr(1:end-16);
 breach_src_dir = [breach_dir filesep 'Core' filesep 'src']; 
 qmitl_src_dir  = [breach_dir filesep '@STL_Formula' filesep 'private' filesep 'src'];
 
