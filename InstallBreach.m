@@ -3,7 +3,7 @@ function InstallBreach
 % be called once after an update of Breach
 
 cdr = pwd;
-dr = which('Breach');
+dr = which('InstallBreach');
 
 % setup directories of interest
 
