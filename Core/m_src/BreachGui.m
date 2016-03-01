@@ -67,8 +67,14 @@ handles.Sys=Sys;
 
 handles.system_name_file = [ SysName '.mat' ];
 if (isfield(Sys,'tspan'))
-    handles.last_tspan = ['0:' dbl2str(Sys.tspan(2)-Sys.tspan(1)) ':' dbl2str(Sys.tspan(end))];
-else
+    if isscalar(Sys.tspan)
+        handles.last_tspan = ['[0 ' dbl2str(Sys.tspan) ']'];
+    elseif numel(Sys.tspan)==2
+        handles.last_tspan = ['[' dbl2str(Sys.tspan(1)) ' ' dbl2str(Sys.tspan(2)) ']'];        
+    else
+        handles.last_tspan = ['0:' dbl2str(Sys.tspan(2)-Sys.tspan(1)) ':' dbl2str(Sys.tspan(end))];
+    end
+    else
     handles.last_tspan = '';
 end
 

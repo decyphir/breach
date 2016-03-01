@@ -1,3 +1,4 @@
+Init_BrAFC;
 AFCp = BrAFC.copy();
 AFCp.SetParamRanges({'Pedal_Angle_pulse_period','Pedal_Angle_pulse_amp'},  [10 20; 5 60]);
 AFCp.QuasiRandomSample(10);
