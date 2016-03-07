@@ -239,7 +239,7 @@ end
 
 ibof = isnan(valarray)|isnan(time_values)|isinf(valarray)|isinf(time_values);
 if ~isempty(find(ibof, 1))
-    warning('STL_Eval_To_Inf_or_Nan', 'Some values are NaN or inf for property %s (use warning(''off'', ''STL_Eval_To_Inf_or_Nan'') to disable warning)', disp(phi));
+    warning('STL_Eval:Inf_or_Nan', 'Some values are NaN or inf for property %s (use warning(''off'', ''STL_Eval:Inf_or_Nan'') to disable warning)', disp(phi));
     valarray = valarray(~ibof);
     time_values = time_values(~ibof);
 end
