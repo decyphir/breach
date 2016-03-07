@@ -25,13 +25,14 @@ classdef var_cp_signal_gen < signal_gen
            this.cp = cp;
            this.params = {};
            this.method = method;
+           this.p0= zeros(2*sum(cp)-numel(signals),1);
            for ku = 1:numel(signals)
-               for k = 1:cp(ku)
-                   this.params= {this.params{:} [signals{ku} '_dt' num2str(k-1)] [signals{ku} '_u' num2str(k-1)]};
+               for k = 1:cp(ku)-1
+                   this.params= [this.params { [signals{ku} '_u' num2str(k-1)] [signals{ku} '_dt' num2str(k-1)] }];
+                   this.p0(numel(this.params))=1;
                end
+               this.params = [this.params [signals{ku} '_u' num2str(k)]]; 
            end
-           this.p0= zeros(2*sum(cp)*numel(signals),1);
-           this.p0(1:2:end) = 1;
         end
         
         function X = computeSignals(this,p, time) % compute the signals
@@ -44,13 +45,13 @@ classdef var_cp_signal_gen < signal_gen
             X = zeros(numel(this.cp),numel(time));
             pts_x = p;
             for i_cp = 1:numel(this.cp)
-                cp_values = pts_x(1:2*this.cp(i_cp));
+                cp_values = pts_x(1:2*this.cp(i_cp)-1);
                 meth = this.method{i_cp};
-                pts_x = pts_x(2*this.cp(i_cp)+1:end);
+                pts_x = pts_x(2*this.cp(i_cp):end);
                 
-                dt_cp = cp_values(1:2:end);
+                dt_cp = cp_values(2:2:end-1);
                 t_cp = unique( [0; cumsum(dt_cp)]);
-                x_values = cp_values(2:2:end);
+                x_values = cp_values(1:2:end);
                 x_values = x_values(1:min([numel(t_cp) numel(x_values)]));
                 t_cp = t_cp(1:min([numel(t_cp) numel(x_values)]));
                 if numel(t_cp)==1
