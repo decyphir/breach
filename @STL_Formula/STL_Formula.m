@@ -21,7 +21,7 @@ function [phi, phistruct] = STL_Formula(varargin)
 %   get_params(phi, {'a', 'b', 'c'})
 %    
 %   When equality comparator (==) is used, special parameters are defined for the 
-%   formula: alpha__ (default 1), zero_threshold__ (default 1e-13) and true_value__ (default inf). 
+%   formula: alpha__ (default 1), zero_threshold__ (default 1e-13) and true_value__ (default 1). 
 %   They determine the threshold to decide when two quantities are equal and the quantitative 
 %   value to assign when this is the case. When equality doesn't hold, the quantitative satisfaction is 
 %   is alpha__ times the (negative) difference.         
@@ -325,7 +325,7 @@ switch(numel(varargin))
                 phi.params.default_params.zero_threshold__ = 1e-13;
             end
             if ~isfield(phi.params.default_params,'true_value__')
-                phi.params.default_params.true_value__ = inf;
+                phi.params.default_params.true_value__ = 1;
             end
             if ~isfield(phi.params.default_params,'alpha__')
                 phi.params.default_params.alpha__ = 1;
