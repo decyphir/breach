@@ -1,17 +1,17 @@
 classdef fixed_cp_signal_gen < signal_gen
     % fixed_cp_signal_gen  A class derived from signal_gen to generate signals from regularly spaced control points using different interpolation methods.
-    %  
+    %
     % fixed_cp_signal_gen Properties
-    %   cp     - number of control points 
+    %   cp     - number of control points
     %   method - interpolation method for each signal, accepts all methods provided by interp1
     %
     % fixed_cp_signal_gen Methods
     %   fixed_cp_signal_gen -  constructor, takes signal names, number of
     %                          control points, interpolation methods and a
-    %                          p0. 
-    %    
-    %  See also signal_gen.  
- 
+    %                          p0.
+    %
+    %  See also signal_gen.
+    
     properties
         cp       % number of control points for each signal
         method   % interpolation method for each signal
@@ -36,7 +36,7 @@ classdef fixed_cp_signal_gen < signal_gen
             end
         end
         
-        function X = computeSignals(this,p, time) % compute the signals
+        function X = computeSignals(this,p,time) % compute the signals
             if size(p,1) ==1
                 p = p';
             end
@@ -45,18 +45,30 @@ classdef fixed_cp_signal_gen < signal_gen
             pts_x = p;
             for i_cp = 1:numel(this.cp)
                 cp_values = pts_x(1:this.cp(i_cp));
-                meth = this.method{i_cp};
                 pts_x = pts_x(this.cp(i_cp)+1:end);
-                t_cp = linspace(time(1), time(end), this.cp(i_cp)+1)';
-                if numel(t_cp)==2
-                    x = cp_values(1)*ones(numel(time),1);
-                else
-                    x = interp1(t_cp(1:end-1), cp_values, time', meth, 'extrap');
+                meth = this.method{i_cp};
+                
+                switch meth
+                    case 'previous'
+                        t_cp = linspace(time(1), time(end), this.cp(i_cp)+1)';
+                        if numel(t_cp)==2
+                            x = cp_values(1)*ones(numel(time),1);
+                        else
+                            x = interp1(t_cp(1:end-1), cp_values, time', meth, 'extrap');
+                        end
+                        X(i_cp,:) = x';
+                        
+                    otherwise
+                        t_cp = linspace(time(1), time(end), this.cp(i_cp))';
+                        if numel(t_cp)==2
+                            x = cp_values(1)*ones(numel(time),1);
+                        else
+                            x = interp1(t_cp, cp_values, time', meth, 'extrap');
+                        end
+                        X(i_cp,:) = x';
                 end
-                X(i_cp,:) = x';
             end
         end
-        
         function type = getType(this)
             type = 'unistep';
         end
