@@ -193,8 +193,11 @@ classdef BreachOpenSystem < BreachSystem
 
             % InputGenerator field is a handle object, needs a copy of its
             % own
-            new.InputGenerator = this.InputGenerator.copy();
-            new.Sys.init_u = @(~,pts,tspan)(InitU(new,pts,tspan));
+            if ~isempty(this.InputGenerator)
+                
+                new.InputGenerator = this.InputGenerator.copy();
+                new.Sys.init_u = @(~,pts,tspan)(InitU(new,pts,tspan));
+            end
         end
         
         

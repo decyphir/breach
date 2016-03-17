@@ -375,11 +375,11 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             for i = 1:length(p)
                 new.(p{i}) = this.(p{i});
             end
-            
-            new.InputGenerator = this.InputGenerator.copy();
-            new.Sys.init_u = @(~,pts,tspan)(InitU(new,pts,tspan));
+            if ~isempty(this.InputGenerator)
+                new.InputGenerator = this.InputGenerator.copy();
+                new.Sys.init_u = @(~,pts,tspan)(InitU(new,pts,tspan));
+            end
             new.Sys.sim = @(Sys,pts,tspan)new.sim_breach(Sys,pts,tspan);
-            
         end
         
         
