@@ -234,9 +234,10 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 this.InputMap(input{1})=idx;
             end
             
-            InputGen = BreachSignalGen({const_input});
-            this.SetInputGen(InputGen);
-                    
+            if (~isempty(sig_in))
+                InputGen = BreachSignalGen({const_input});
+                this.SetInputGen(InputGen);
+            end     
         end
         
         function [tout, X] = sim_breach(this, Sys, tspan, pts)
