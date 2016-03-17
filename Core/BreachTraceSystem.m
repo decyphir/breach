@@ -1,5 +1,7 @@
 classdef BreachTraceSystem < BreachSystem
-    
+    % BreachTraceSystem  a BreachSystem class to handle traces with no
+    % simulator
+       
     methods
         % constructor - takes signal names and an optional trace
         function this = BreachTraceSystem(signals, trace)
@@ -16,11 +18,16 @@ classdef BreachTraceSystem < BreachSystem
                             % signals is a CSV files
                             fid = fopen(signals,'r');
                             if(fid==-1)
-                                error(['Couldn''t open file ' signal_names]);
+                                error(['Couldn''t open file ' signals]);
                             end
                             tline = strtrim(fgetl(fid));
                             signal_names = strsplit(tline,',');
                             signal_names= signal_names(2:end);
+                            for i_sig = 1:numel(signal_names)
+                               sig =strtrim(signal_names{i_sig});
+                               signal_names{i_sig} = regexprep(sig,'\W','_');
+                            end
+                            
                             fclose(fid);
                             trace = csvread(signals,1);
                     end

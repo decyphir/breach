@@ -141,6 +141,7 @@ while ischar(tline)
             current_id = tokens{1}{1};
             try
                 assignin('base', current_id, 0);
+                assignin('caller', current_id,0);
             catch
                 error('STL_ReadFile:IdError',[current_id ' on line ' int2str(num_line) ' is not a valid id.']);
             end

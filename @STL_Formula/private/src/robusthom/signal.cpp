@@ -26,7 +26,12 @@ Signal::Signal(double * T, double * V, int n) {
     push_back(Sample(T[0], V[0], 0.));
   else {
     for(int i=0; i < n-1; i++) {
-      push_back(Sample(T[i], V[i], (V[i+1]-V[i]) / (T[i+1] - T[i])));
+
+#ifdef NO_LINEAR_INTERPOL
+        push_back(Sample(T[i], V[i], 0.));
+#else
+        push_back(Sample(T[i], V[i], (V[i+1]-V[i]) / (T[i+1] - T[i])));
+#endif
     }
     push_back(Sample(T[n-1], V[n-1], 0.));
   }

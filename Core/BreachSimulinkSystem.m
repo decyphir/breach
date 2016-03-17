@@ -31,7 +31,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
   
     methods
         
-        function this = BreachSimulinkSystem(mdl_name, params, p0)
+        function this = BreachSimulinkSystem(mdl_name, params, p0, inputfn)
 
             if nargin==0
                 return;
@@ -49,6 +49,9 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                     this.CreateInterface(mdl_name,params);
                 case 3,
                     this.CreateInterface(mdl_name, params, p0);
+                case 4, 
+                    this.CreateInterface(mdl_name, params, p0);
+                    this.SetInputGen(inputfn);
             end
                     
             if isaSys(this.Sys) % Basically if interface was successfully created
@@ -62,7 +65,6 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         
         
         function CreateInterface(this, mdl, params, p0)
-            
             
             %% Copy the model into model_breach
             
@@ -362,6 +364,22 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
         end
        
+        
+        function new = copy(this)
+            % Instantiate new object of the same class.
+            new = feval(class(this));
+            
+            % Copy all non-hidden properties.
+            p = fieldnames(this);
+            for i = 1:length(p)
+                new.(p{i}) = this.(p{i});
+            end
+            
+            new.InputGenerator = this.InputGenerator.copy();
+            new.Sys.init_u = @(~,pts,tspan)(InitU(new,pts,tspan));
+            new.Sys.sim = @(Sys,pts,tspan)new.sim_breach(Sys,pts,tspan);
+            
+        end
         
         
     end

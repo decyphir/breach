@@ -16,36 +16,32 @@ qmitl_src_dir  = [breach_dir filesep '@STL_Formula' filesep 'private' filesep 's
 MEX = 'mex ';
 FLAGS = ' ';
 
-try 
-    cd(qmitl_src_dir);
+cd(qmitl_src_dir);
+
+fprintf([MEX FLAGS '-outdir .. lemire_engine.c\n']);
+mex -outdir .. lemire_engine.c
+fprintf([MEX FLAGS '-outdir .. lemire_nd_engine.c\n']);
+mex -outdir .. lemire_nd_engine.c
+fprintf([MEX FLAGS '-outdir .. lemire_nd_maxengine.c\n']);
+mex -outdir .. lemire_nd_maxengine.c
+fprintf([MEX FLAGS '-outdir .. lemire_nd_minengine.c\n']);
+mex -outdir .. lemire_nd_minengine.c
+fprintf([MEX FLAGS '-outdir .. until_inf.c\n']);
+mex -outdir .. until_inf.c
+fprintf([MEX FLAGS '-outdir .. lim_inf.c\n']);
+mex -outdir .. lim_inf.c
+fprintf([MEX FLAGS '-outdir .. lim_inf_inv.c\n']);
+mex -outdir .. lim_inf_inv.c
+fprintf([MEX FLAGS '-outdir .. lim_inf_indx.c\n']);
+mex -outdir .. lim_inf_indx.c
+fprintf([MEX FLAGS '-outdir ../../../Core/m_src ltr.c\n']);
+mex -outdir ../../../Core/m_src/ ltr.c
+fprintf([MEX FLAGS '-outdir ../../../Core/m_src rtr.c\n']);
+mex -outdir ../../../Core/m_src/ rtr.c
+
+cd robusthom;
+CompileRobusthom;
     
-    fprintf([MEX FLAGS '-outdir .. lemire_engine.c\n']);
-    mex -outdir .. lemire_engine.c
-    fprintf([MEX FLAGS '-outdir .. lemire_nd_engine.c\n']);
-    mex -outdir .. lemire_nd_engine.c
-    fprintf([MEX FLAGS '-outdir .. lemire_nd_maxengine.c\n']);
-    mex -outdir .. lemire_nd_maxengine.c
-    fprintf([MEX FLAGS '-outdir .. lemire_nd_minengine.c\n']);
-    mex -outdir .. lemire_nd_minengine.c
-    fprintf([MEX FLAGS '-outdir .. until_inf.c\n']);
-    mex -outdir .. until_inf.c
-    fprintf([MEX FLAGS '-outdir .. lim_inf.c\n']);
-    mex -outdir .. lim_inf.c
-    fprintf([MEX FLAGS '-outdir .. lim_inf_inv.c\n']);
-    mex -outdir .. lim_inf_inv.c
-    fprintf([MEX FLAGS '-outdir .. lim_inf_indx.c\n']);
-    mex -outdir .. lim_inf_indx.c
-    fprintf([MEX FLAGS '-outdir ../../../Core/m_src ltr.c\n']);
-    mex -outdir ../../../Core/m_src/ ltr.c
-    fprintf([MEX FLAGS '-outdir ../../../Core/m_src rtr.c\n']);
-    mex -outdir ../../../Core/m_src/ rtr.c
-    
-    cd robusthom;
-    CompileRobusthom;
-    
-catch
-   error('InstallBreach:compilingSTLError','Problem compiling STL monitoring stuff.'); 
-end
 
 % compiles cvodes common stuff
 

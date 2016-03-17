@@ -289,6 +289,30 @@ classdef BreachSet < handle
             disp(' ')
         end
         
+        %% Misc
+        % Resets the system to nominal parameters
+        function Reset(this)
+            this.P = CreateParamSet(this.Sys);
+        end
+        
+        % Removes computed trajectories
+        function ResetSimulations(this)
+            this.P = SPurge(this.P);
+        end
+        
+        % Make a copy of a handle object - works because no property is
+        % itself a handle object.
+        function new = copy(this)
+            % Instantiate new object of the same class.
+            new = feval(class(this));
+            
+            % Copy all non-hidden properties.
+            p = fieldnames(this);
+            for i = 1:length(p)
+                new.(p{i}) = this.(p{i});
+            end
+        end
+
         
     end
 end

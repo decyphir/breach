@@ -34,9 +34,8 @@ if ~exist('depth','var')
 end
 
 if ischar(phis)
-    STL_Formula('phi_tmp__', phis );
+    phi_tmp__ = STL_Formula('phi_tmp__', phis );
     [P,val] = SplotSat(Sys,P, phi_tmp__ , depth, tau, ipts);
-    evalin('base', 'clear phi_tmp__');
     return;
 end
 

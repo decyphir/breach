@@ -1,5 +1,5 @@
 # default parameters 
-param vmax=150, t1=1, rpm_min=4000
+param vmax=150, t1=1, rpm_min=4000, rpm_max = 5000
 
 # predicates
 
@@ -27,7 +27,7 @@ param vmax=150, t1=1, rpm_min=4000
 
   phi_100 := not ( (ev_[0, t1] (speed[t]>100)) and (alw (RPM[t]< rpm_min)) )  
 
-  #phi_stay2  := alw ( shift2 => (alw_[0.04, t1+.04] (gear2) ))	
+# phi_stay2  := alw ( shift2 => (alw_[0.04, t1+.04] (gear2) ))	
   phi_stay2  := alw ( shift2 => ev_[0,0.04] (alw_[0, t1] gear2 ))	
 
   phi_return3 := alw ( shiftn3 => (alw_[0.1, t1+.1] (not gear3) ))

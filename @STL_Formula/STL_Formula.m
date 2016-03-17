@@ -338,10 +338,8 @@ switch(numel(varargin))
         % Last possibility, the formula already exists - note: in that case
         % we ignore id and use the id of existing formula
         try
-            %          id = phi.id;
             st = regexprep(st,'[()\s]','');
             phi = struct(BreachGlobOpt.STLDB(st));
-            %          phi.id = id;
         catch
             error('STL_Parse',['Unknown predicate or malformed formula: ' st]);
         end

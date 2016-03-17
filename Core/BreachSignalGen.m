@@ -24,8 +24,11 @@ classdef BreachSignalGen < BreachSystem
     
     methods
         %% Constructor
-        % SignalGen(type, name, varargin)
         function this = BreachSignalGen(signalGenerators)
+    
+            if nargin==0
+               return; 
+            end
             
             this.signalGenerators= signalGenerators;
             % we need to declare parameters, signals, p0, and simfn

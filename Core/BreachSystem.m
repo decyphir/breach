@@ -240,6 +240,107 @@ classdef BreachSystem < BreachSet
             [p, rob, Pr] = ReqMining(this.Sys, phi, falsif_opt, prop_opt, iter_max);
             this.P = Pr;
         end
+      
+        function report = Analysis(this) 
+        
+            STL_ReadFile('stlib.stl');
+        
+            %% Simple analysis
+            % Checks zero signals
+            req_zero = STL_Formula('phi', 'req_zero');
+            report.res_zero = STL_EvalTemplate(this.Sys, req_zero, this.P, this.P.traj, {'x_'});
+            sigs_left = [report.res_zero.some report.res_zero.none]; 
+          
+            if ~isempty(report.res_zero.all)
+                fprintf('---------------------------------------------\n' )
+                fprintf('The following signals were found to be zero: \n' )
+                fprintf('---------------------------------------------\n' )
+                disp(report.res_zero.all);
+            end
+            
+            % Checks constant signals
+            req_stable = STL_Formula('phi', 'req_stable');
+            report.res_stable = STL_EvalTemplate(this.Sys, req_stable, this.P, this.P.traj, {'x_'}, sigs_left);           
+            if ~isempty(report.res_stable.all)
+                fprintf('------------------------------------------------\n' )
+                fprintf('The following signals were found to be constant: \n' )
+                fprintf('------------------------------------------------\n' )
+                disp(report.res_stable.all');
+            end
+            sigs_left = [report.res_stable.some report.res_stable.none]; 
+
+            % Checks non-decreasing signals
+            req_inc = STL_Formula('phi', 'req_inc');
+            report.res_inc = STL_EvalTemplate(this.Sys, req_inc, this.P, this.P.traj, {'x_'}, sigs_left);           
+            if ~isempty(report.res_inc.all)
+                fprintf('-----------------------------------------------------\n' )
+                fprintf('The following signals were found to be non-decreasing: \n' )
+                fprintf('-----------------------------------------------------\n' )
+                disp(report.res_inc.all');
+            end
+
+            % Checks non-increasing signals
+            req_dec = STL_Formula('phi', 'req_dec');
+            report.res_dec = STL_EvalTemplate(this.Sys, req_dec, this.P, this.P.traj, {'x_'}, sigs_left);           
+            if ~isempty(report.res_dec.all)
+                fprintf('-----------------------------------------------------\n' )
+                fprintf('The following signals were found to be non-increasing: \n' )
+                fprintf('-----------------------------------------------------\n' )
+                disp(report.res_dec.all');
+            end
+
+            % Checks non-increasing signals
+            req_dec = STL_Formula('phi', 'req_pwc');
+            report.res_dec = STL_EvalTemplate(this.Sys, req_dec, this.P, this.P.traj, {'x_'}, sigs_left);           
+            if ~isempty(report.res_dec.all)
+                fprintf('-------------------------------------------------------\n' )
+                fprintf('The following signals were found to be piecewise stable: \n' )
+                fprintf('-------------------------------------------------------\n' )
+                disp(report.res_dec.all');
+            end
+
+            % Search for steps 
+            req_step = STL_Formula('phi', 'req_step');
+            report.res_step = STL_EvalTemplate(this.Sys, req_step, this.P, this.P.traj, {'x_step_'}, sigs_left);           
+            if ~isempty(report.res_step.all)
+                fprintf('---------------------------------------------\n' )
+                fprintf('The following signals appear to feature steps: \n' )
+                fprintf('---------------------------------------------\n' )
+                disp(report.res_step.all');
+                sigs_steps = report.res_step.all;
+            end
+            
+            % Search for spikes 
+            req_spike = STL_Formula('phi', 'req_spike');
+            report.res_spike = STL_EvalTemplate(this.Sys, req_spike, this.P, this.P.traj, {'x_'}, sigs_left);           
+            if ~isempty(report.res_spike.all)
+                fprintf('---------------------------------------------------------\n' )
+                fprintf('The following signals appear to feature spikes or valleys: \n' )
+                fprintf('---------------------------------------------------------\n' )
+                disp(report.res_spike.all');
+                sigs_spikes = report.res_spike.all;
+            end
+            
+            
+            %% Dual analysis
+            % Correlation between steps and spikes
+            
+            req_steps_and_spikes = STL_Formula('phi', 'req_steps_and_spikes');
+            report.res_steps_and_spikes = STL_EvalTemplate(this.Sys, req_steps_and_spikes, this.P, this.P.traj, {'x_step_','x_'}, {sigs_steps,sigs_spikes});           
+            if ~isempty(report.res_steps_and_spikes.all)
+                fprintf('---------------------------------------------------------------------\n' )
+                fprintf('The following pairs of signals appear to be correlated (step => spike): \n' )
+                fprintf('---------------------------------------------------------------------\n' )
+                for i_res= 1:numel(report.res_steps_and_spikes.all)
+                    sigs = report.res_steps_and_spikes.all{i_res};
+                    disp([ sigs{1} ',' sigs{2}]);
+                end
+            end
+            
+                    
+        end
+        
+        
         
         %% Sensitivity analysis
         function [mu, mustar, sigma] = SensiSpec(this, phi, params, ranges, opt)
@@ -267,6 +368,12 @@ classdef BreachSystem < BreachSet
             disp(' ');
         end
         
+        function PrintAll(this)
+           this.PrintParams();
+           this.PrintSignals();
+           this.PrintSpecs();
+        end
+        
         function disp(this)
             disp(['BreachSystem with name ' this.Sys.name '.']);
         end
@@ -284,29 +391,6 @@ classdef BreachSystem < BreachSet
             Breach(this.Sys);
         end
         
-        %% Misc
-        % Resets the system to nominal parameters
-        function Reset(this)
-            this.P = CreateParamSet(this.Sys);
-        end
-        
-        % Removes computed trajectories
-        function ResetSimulations(this)
-            this.P = SPurge(this.P);
-        end
-        
-        % Make a copy of a handle object - works because no property is
-        % itself a handle object.
-        function new = copy(this)
-            % Instantiate new object of the same class.
-            new = feval(class(this));
-            
-            % Copy all non-hidden properties.
-            p = fieldnames(this);
-            for i = 1:length(p)
-                new.(p{i}) = this.(p{i});
-            end
-        end
         
     end
 end

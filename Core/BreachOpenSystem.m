@@ -50,6 +50,7 @@ classdef BreachOpenSystem < BreachSystem
         % we merge parameters of the input generator with those of the
         % system, but keep both BreachObjects
         function SetInputGen(this, IG)
+            inputs = this.Sys.InputList;
             
             % First remove parameters from previous input generator
             Sys = this.Sys;
@@ -63,10 +64,23 @@ classdef BreachOpenSystem < BreachSystem
                 this.Sys = Sys;
             end
             
+            if ischar(IG)
+                pref = 'UniStep';
+                if regexp(IG, [pref '[0-9]+'])
+                    cp = str2num(IG(numel(pref)+1:end));
+                    IG = struct('type','UniStep','cp', cp*ones(1, numel(inputs)));
+                else
+                    pref = 'VarStep';
+                    if regexp(IG, [pref '[0-9]+'])
+                        cp = str2num(IG(numel(pref)+1:end));
+                        IG = struct('type','VarStep','cp', cp*ones(1, numel(inputs)));
+                    end
+                end
+            end            
+            
             % IG can be a struct, a signal generator, or a BreachSystem         
             DimU = this.InputMap.Count;
             if (isstruct(IG))
-                inputs = this.Sys.InputList;
                 if ~isfield(IG,'type')
                     error('Input generator must be a struct with fields ''type'', ''cp'' at least')
                 end
@@ -166,6 +180,23 @@ classdef BreachOpenSystem < BreachSystem
                 U.u(:,idx_mdl) = this.InputGenerator.P.traj.X(idx,:)';
             end
         end
+      
+        function new = copy(this)
+            % Instantiate new object of the same class.
+            new = feval(class(this));
+            
+            % Copy all non-hidden properties.
+            p = fieldnames(this);
+            for i = 1:length(p)
+                new.(p{i}) = this.(p{i});
+            end
+
+            % InputGenerator field is a handle object, needs a copy of its
+            % own
+            new.InputGenerator = this.InputGenerator.copy();
+            new.Sys.init_u = @(~,pts,tspan)(InitU(new,pts,tspan));
+        end
+        
         
     end
     
