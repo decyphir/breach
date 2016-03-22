@@ -1,4 +1,17 @@
-AFC_Breach_Interface
+InitBreach;
+fuel_inj_tol = 1.0; 
+MAF_sensor_tol = 1.0;
+AF_sensor_tol = 1.0; 
+pump_tol = 1.;
+kappa_tol=1; 
+tau_ww_tol=1;
+fault_time=50;
+kp = 0.04;
+ki = 0.14;
+
+mdl = 'AbstractFuelControl_M1';
+BrAFC = BreachSimulinkSystem(mdl)
+
 Br0 = BrAFC.copy();
 pedal_angle_gen = pulse_signal_gen({'Pedal_Angle'}); % Generate a pulse signal for pedal angle
 engine_gen      = fixed_cp_signal_gen({'Engine_Speed'}, ... % signal name

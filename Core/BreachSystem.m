@@ -356,6 +356,17 @@ classdef BreachSystem < BreachSet
             this.P=Pr;
         end
         
+        function [monotonicity, Pr, EE] = ChecksMonotony(this, phi, params, ranges, opt)
+        % ChecksMonotony performs a quick check to infer monotonicity of a formula wrt parameters
+            opt.tspan = this.Sys.tspan;
+            opt.params = FindParam(this.Sys,params);
+            opt.lbound = ranges(:,1)';
+            opt.ubound = ranges(:,2)';
+            opt.plot = 0;
+            
+            [~, ~, ~, Pr, EE]= SPropSensi(this.Sys, this.P, phi, opt);
+            monotonicity = all(EE'>=0)-all(EE'<=0); % 1 if all positive, -1 if all negative, 0 otherwise            
+        end
         
         %% Printing 
         function PrintSpecs(this)

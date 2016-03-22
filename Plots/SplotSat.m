@@ -108,6 +108,8 @@ for np = npb+1:nb_phis+npb
         % plot property values
         phi_tspan = P.props_values(iphi,ii).tau;
         phi_val = P.props_values(iphi,ii).val;
+        
+        % TODO: use plotyy
         plot(phi_tspan*time_mult, phi_val);
         stairs(phi_tspan*time_mult, (phi_val>0)*max(abs(phi_val))/2,'-r');
         

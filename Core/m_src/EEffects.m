@@ -29,8 +29,8 @@ function [mu, mustar, sigma, sigmastar, EE] = EEffects(Y, D, p)
 %
 
 k = size(D,1); % number of parameters
-%delta = p/(2*(p-1));
-delta = 1; % delta used for the grid, but do we really need it here? 
+delta = p/(2*(p-1));
+%delta = 1; % delta used for the grid, but do we really need it here? 
 
 % computes diff
 dY = diff(Y);

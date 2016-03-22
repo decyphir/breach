@@ -99,7 +99,7 @@ if any(valb<0)
     p = pb;
     rob = max(valb);
     if opt.verbose
-        fprintf(['Error: Interval contains only unsat params, result not tight. Try larger parameter ' ...
+        fprintf(['Warning: Interval contains only unsat params, result not tight. Try larger parameter ' ...
             'region. \n']);
     end
     return;
@@ -125,7 +125,7 @@ end
     
 for ip = 1:num_params
     if opt.verbose
-        fprintf('Optimizing %s ', params{ip});
+        fprintf('Finding tight %s           ', params{ip});
     end
     while ((abs(pmax(ip)-pmin(ip))>p_tol(ip))&& rel_err(ip)>rel_tol)
         res = bisect(ip);
@@ -144,7 +144,6 @@ for ip = 1:num_params
     end
     
 end
-
 
     function res =  bisect(ip)
         p_i = (pmax(ip)+pmin(ip))/2;

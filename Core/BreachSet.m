@@ -23,7 +23,8 @@ classdef BreachSet < handle
     %   PrintSignals        - display the number of traces, names of signal variables and ranges
     %   PlotParams          - plots parameter vectors
     %   PlotSignals         - plots signals 
-       
+    %   PlotSigPortrait     - plots signals portrait
+    
     properties 
         P 
         ParamRanges  % ranges of possible values for each parameter - determines the parameter sampling domain  
@@ -199,13 +200,22 @@ classdef BreachSet < handle
         % Plot signals
         function h = PlotSignals(this, varargin)
             if (~isfield(this.P,'traj'))
-                error('no signal to plot. Use Sim command first.')
+                error('No signal to plot. Use Sim command first.')
             end
       
             figure;
             h = SplotVar(this.P, varargin{:});
         end
 
+        % Plot signals
+        function h = PlotSigPortrait(this, varargin)
+            if (~isfield(this.P,'traj'))
+                error('No signal to plot. Use Sim command first.')
+            end
+      
+            figure;
+            SplotTraj(this.P, varargin{:});
+        end
         
         % Grid Sample
         function GridSample(this, delta)

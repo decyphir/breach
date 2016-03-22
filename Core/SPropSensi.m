@@ -1,4 +1,4 @@
-function [mu, mustar, sigma, Pr] = SPropSensi(Sys, P, phi, opt)
+function [mu, mustar, sigma, Pr, EE] = SPropSensi(Sys, P, phi, opt)
 %SPROPSENSI estimates the global sensitivity of a property wrt some
 % parameters (Morris method). This function is adapted from the strategy
 % described in "Global Sensitivity Analysis, A Primer", Saltelli et al,
@@ -116,7 +116,7 @@ end
 
 Pr = ComputeTraj(Sys, Pr, tspan);
 [Pr, Y] = SEvalProp(Sys, Pr, phi, tau);
-[mu, mustar, sigma, sigmastar] = EEffects(Y, Pr.D, opt.p);
+[mu, mustar, sigma, sigmastar, EE] = EEffects(Y, Pr.D, opt.p);
 
 
 if opt.plot==1

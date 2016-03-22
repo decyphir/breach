@@ -1,61 +1,62 @@
-function [BrSynth, SynthProb, FalsifProb] = BreachCEGIS(SynthProb, FalsifProb, options_in)
-%CEGIS Implements a Counter-Example Guided Inductive Synthesis strategy
-%
-
-
-%% processing options
-% if zero argument, returns an option structure with defaults
-if nargin==0
-    BrSynth= struct('iter_max', 10);
-    return
-end
-
-% no option, use defaults
-if nargin == 2
-    options_in = struct();
-end
-
-% option provided, make sure all fields are initialized 
-options = BreachCEGIS();
-opt_in_fields = fieldnames(options_in);
-for  ifld=1:numel(opt_in_fields)
-    options.(opt_in_fields{ifld}) = options_in.(opt_in_fields{ifld});
-end
-
-% assigning option parameters
-iter_max = options.iter_max;
-
-%% Main loop
-iter = 1;
-cont = true;
-while (cont)
-    clc;
-    %% Synthesis step
-    fprintf('Iter %d/%d\n', iter,iter_max)
-    fprintf('Synthesis step\n');
-    fprintf('--------------\n');
-    SynthProb.solve();
-    BrSynth = SynthProb.GetBrSet_Best();
+classdef BreachCEGIS < handle
     
-    %% Falsification step
-    fprintf('Counter-Example step\n');
-    fprintf('------------------------\n');
-    FalsifProb.BrSet = BrSynth;
-    FalsifProb.ResetObjective();
-    FalsifProb.solve();
-    BrFalse = FalsifProb.BrSet_False;
-    if isempty(BrFalse)
-        return
+    properties
+        synth_pb
+        falsif_pb
+        iter = 0
+        iter_max = 10
+        verbose = 1
     end
     
-    %% Update parameter synthesis problem
-    SynthProb.BrSet.Concat(BrFalse);
-    SynthProb.ResetObjective();
-    SynthProb.BrSys.Sys.Verbose=0;
     
-    iter = iter+1;
-    cont = iter<iter_max;
-end
+    methods
+        function this = BreachCEGIS(SynthPb, FalsifPb)
+            %BreachCEGIS class implements a Counter-Example Guided Inductive Synthesis strategy
+            if nargin==0
+                return;
+            end
+            this.synth_pb = SynthPb;
+            this.falsif_pb = FalsifPb;
+        end
+        
+        
+        function solve(this)
+            %% Main loop
+            cont = true;
+            while (cont)
+                clc;
+                %% Synthesis step
+                fprintf('Iter %d/%d\n', this.iter,this.iter_max)
+                fprintf('Synthesis step\n');
+                fprintf('--------------\n');
+                this.synth_pb.solve();
+                BrSynth = this.synth_pb.GetBrSet_Best();
 
-
+                %% Falsification step
+                fprintf('Counter-Example step\n');
+                fprintf('--------------------\n');
+                this.falsif_pb.BrSet = BrSynth;
+                this.falsif_pb.ResetObjective();
+                this.falsif_pb.solve();
+                BrFalse = this.falsif_pb .BrSet_False;
+                if isempty(BrFalse)
+                    return
+                end
+                
+                %% Update parameter synthesis problem
+                this.synth_pb.BrSet.Concat(BrFalse);
+                this.synth_pb.ResetObjective();
+                this.synth_pb.BrSys.Sys.Verbose=0;
+                
+                this.iter = this.iter+1;
+                cont = this.iter<this.iter_max;
+            end
+        end
+        
+        function ResetIter()
+           this.iter=0; 
+        end
+        
+    end
+    
 end
