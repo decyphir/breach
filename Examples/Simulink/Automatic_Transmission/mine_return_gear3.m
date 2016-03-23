@@ -34,7 +34,5 @@ input_params.ranges = [ 0 20   ;  ...
                        ];
  
 mine_phi_return3 = ReqMiningProblem(Br, phi_template, input_params, prop_params);
-
-%mine_phi_return3.synth_pb.solver_options.monotony= -1;
-
+mine_phi_return3.synth_pb.solver_options.monotony= -1;
 mine_phi_return3.solve();

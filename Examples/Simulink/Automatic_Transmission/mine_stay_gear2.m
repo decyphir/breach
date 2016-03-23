@@ -34,12 +34,6 @@ input_params.ranges = [ 0 20   ;  ...
                       0 325 ;
                        ];
  
-%falsif_opt.nb_init =  1000;
-%falsif_opt.nb_iter = 1000;  
-%falsif_opt.nb_max_call = 10000;
-
 mine_phi_stay2 = ReqMiningProblem(Br, phi_template, input_params, prop_params);
-
 mine_phi_stay2.synth_pb.solver_options.monotony= -1;
-
 mine_phi_stay2.solve();
