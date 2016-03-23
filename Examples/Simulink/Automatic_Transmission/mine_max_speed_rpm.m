@@ -24,7 +24,7 @@ prop_params.ranges = [0 200   ;...  % for vmax
                       0 6000 ];     % for rmp_max
 
                              
-mine_phi1 = ReqMiningProblem(Br, input_params, phi_template, prop_params);
+mine_phi1 = ReqMiningProblem(Br, phi_template, input_params, prop_params);
 
 %% Solve it
-mine_phi1.Iter();
+mine_phi1.solve();

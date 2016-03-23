@@ -11,10 +11,11 @@ classdef ReqMiningProblem < BreachCEGIS
                case 4
                    % syntax: ReqMiningProblem(BrSet, phi,input_params, prop_params)
                    Br = varargin{1};
+                   Br.Sim();
                    phi = varargin{2};
                    input_params= varargin{3};
                    prop_params= varargin{4};
-                   
+                    
                    this.falsif_pb = FalsificationProblem(Br, phi, input_params.names, input_params.ranges);
                    this.synth_pb = ParamSynthProblem(Br, phi, prop_params.names, prop_params.ranges);
                    this.synth_pb.setup_solver('binsearch');

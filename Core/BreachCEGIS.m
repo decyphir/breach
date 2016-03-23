@@ -53,7 +53,7 @@ classdef BreachCEGIS < handle
             end
         end
         
-        function ResetIter()
+        function ResetIter(this)
            this.iter=0; 
         end
         

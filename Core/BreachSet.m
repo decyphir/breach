@@ -219,7 +219,7 @@ classdef BreachSet < handle
         
         % Grid Sample
         function GridSample(this, delta)
-            this.P = Refine(this.P,delta);           
+            this.P = Refine(this.P,delta, 1);           
         end
 
         % Get corners of parameter domain

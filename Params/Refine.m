@@ -1,4 +1,4 @@
-function P = Refine(P0, delta)
+function P = Refine(P0, delta, sample_bndary)
 %REFINE generates a grid points in a N-dimensional parameter set.
 % 
 % Synopsis: P = Refine(P0, delta)
@@ -55,6 +55,9 @@ function P = Refine(P0, delta)
 %SAddUncertainParam SetEpsi
 %
 
+if ~exist('sample_bndary','var')
+    sample_bndary= 0;
+end
 
 % check delta
 if(all(delta==1) || any(delta<=0))
@@ -101,8 +104,13 @@ for ii = 1:size(P0.pts,2)
             if(deltai(jj)>1)
                 d1 = xlim(jj,1);
                 d2 = xlim(jj,2);
-                dx = (d2-d1)./(deltai(jj));
-                X(P0.dim(jj),:) = l(jj,:)*dx+d1-dx/2;
+                if sample_bndary
+                    dx = (d2-d1)./(deltai(jj)-1);
+                    X(P0.dim(jj),:) = (l(jj,:)-1)*dx+d1;           
+                else
+                    dx = (d2-d1)./(deltai(jj));
+                    X(P0.dim(jj),:) = l(jj,:)*dx+d1-dx/2;
+                end
             end
         end
     else % if no new param vector, only keep the initial one

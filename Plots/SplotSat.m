@@ -109,10 +109,11 @@ for np = npb+1:nb_phis+npb
         phi_tspan = P.props_values(iphi,ii).tau;
         phi_val = P.props_values(iphi,ii).val;
         
-        % TODO: use plotyy
-        plot(phi_tspan*time_mult, phi_val);
-        stairs(phi_tspan*time_mult, (phi_val>0)*max(abs(phi_val))/2,'-r');
-        
+        %plot(phi_tspan*time_mult, phi_val);
+        %stairs(phi_tspan*time_mult, (phi_val>0)*max(abs(phi_val))/2,'-r');
+        tsc = phi_tspan*time_mult;
+        ax = plotyy(tsc, phi_val, tsc, phi_val>0, 'plot', 'stairs' );
+        set(ax(2), 'YLim', [-0.1 1.1], 'YTick', [0 1], 'YTickLabel', {'false', 'true'});
         legend('Quant. sat', 'Bool. sat');
         grid on;
         

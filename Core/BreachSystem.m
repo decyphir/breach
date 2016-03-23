@@ -127,7 +127,11 @@ classdef BreachSystem < BreachSet
         end
         
         % Monitor spec on reference traj
-        function [rob, tau] = GetRobustSat(this, phi, params, values)
+        function [rob, tau] = GetRobustSat(this, phi, params, values, tau)
+            
+            if nargin < 5
+                tau = 0;
+            end
             if nargin==1
                 phi = this.spec;
                 params = {};
@@ -225,8 +229,8 @@ classdef BreachSystem < BreachSet
                 delta = 10;                
         end
         
-        this.P = CreateParamSet(this.Sys, params, ranges);
-        this.P = Refine(this.P, delta);
+        this.P = CreateParamSet(this.P, params, ranges);
+        this.P = Refine(this.P, delta,1);
         this.Sim();
         this.CheckSpec(phi);
             
@@ -236,10 +240,10 @@ classdef BreachSystem < BreachSet
       
         
         %% Mining
-        function [p, rob] = MineSpec(this, phi, falsif_opt, prop_opt, iter_max)
-            [p, rob, Pr] = ReqMining(this.Sys, phi, falsif_opt, prop_opt, iter_max);
-            this.P = Pr;
-        end
+        %function [p, rob] = MineSpec(this, phi, falsif_opt, prop_opt, iter_max)
+        %    [p, rob, Pr] = ReqMining(this.Sys, phi, falsif_opt, prop_opt, iter_max);
+        %    this.P = Pr;
+        %end
       
         function report = Analysis(this) 
         
@@ -324,6 +328,8 @@ classdef BreachSystem < BreachSet
             
             %% Dual analysis
             % Correlation between steps and spikes
+
+            if ~isempty(report.res_spike.all)
             
             req_steps_and_spikes = STL_Formula('phi', 'req_steps_and_spikes');
             report.res_steps_and_spikes = STL_EvalTemplate(this.Sys, req_steps_and_spikes, this.P, this.P.traj, {'x_step_','x_'}, {sigs_steps,sigs_spikes});           
@@ -336,7 +342,7 @@ classdef BreachSystem < BreachSet
                     disp([ sigs{1} ',' sigs{2}]);
                 end
             end
-            
+            end
                     
         end
         

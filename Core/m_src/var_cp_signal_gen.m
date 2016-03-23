@@ -52,13 +52,13 @@ classdef var_cp_signal_gen < signal_gen
                 dt_cp = cp_values(2:2:end-1);
                 t_cp = unique( [0; cumsum(dt_cp)]);
                 x_values = cp_values(1:2:end);
-                x_values = x_values(1:min([numel(t_cp) numel(x_values)]));
-                t_cp = t_cp(1:min([numel(t_cp) numel(x_values)]));
                 if numel(t_cp)==1
-                    x = x_values(1)*ones(numel(time),1);
+                    x = x_values(end)*ones(numel(time),1);
                 else
+                    x_values = x_values(1:min([numel(t_cp) numel(x_values)]));
+                    t_cp = t_cp(1:min([numel(t_cp) numel(x_values)]));
                     x = interp1(t_cp, x_values, time', meth, 'extrap');
-                end      
+                end
                X(i_cp,:) = x';
             end
         end

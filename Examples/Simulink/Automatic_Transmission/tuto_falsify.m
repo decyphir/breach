@@ -2,28 +2,22 @@ InitBreach;
 
 % Model
 mdl = 'Autotrans_shift';
-Sys = CreateSimulinkSystem(mdl, {}, {}, [], 'UniStep1');
-Sys.tspan = 0:.01:50;
+Br = BreachSimulinkSystem(mdl); 
 
 % define the formula
 phi1 = STL_Formula('phi1', '(alw (speed[t]<vmax)) and (alw (RPM[t]<rpm_max))');
-
-% set values for property parameters
-params_prop.params = {'vmax', 'rpm_max'};
-params_prop.values = [160 4500];
+phi1 = set_params(phi1,{'vmax', 'rpm_max'}, [160 4500]);
 
 % define the input parameters and ranges 
-falsif_opt.params = {'throttle_u0'};
-falsif_opt.ranges = [0 100];
-  
-% number of initial random trials and max number of Nelder Mead iterations 
-falsif_opt.nb_init = 10;
-falsif_opt.nb_iter = 100;
+input_params.names = {'throttle_u0'};
+input_params.ranges = [0 100];
+ 
+% defines the falsification problem and solve it
+falsif_pb = FalsificationProblem(Br, phi1, input_params.names, input_params.ranges);
 
-Pf = Falsify(Sys, phi1, falsif_opt, params_prop);
+% solves using the default solver
+falsif_pb.solve();
 
-figure;
-SplotVar(Pf);
-
-figure;
-SplotSat(Sys, Pf, phi1,3); 
+% collect the falsifying trace 
+BrFalse = falsif_pb.GetBrSet_False() 
+BrFalse.PlotRobustSat(phi1)
