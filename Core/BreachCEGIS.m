@@ -8,7 +8,6 @@ classdef BreachCEGIS < handle
         verbose = 1
     end
     
-    
     methods
         function this = BreachCEGIS(SynthPb, FalsifPb)
             %BreachCEGIS class implements a Counter-Example Guided Inductive Synthesis strategy

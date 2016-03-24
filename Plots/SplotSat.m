@@ -112,9 +112,11 @@ for np = npb+1:nb_phis+npb
         %plot(phi_tspan*time_mult, phi_val);
         %stairs(phi_tspan*time_mult, (phi_val>0)*max(abs(phi_val))/2,'-r');
         tsc = phi_tspan*time_mult;
-        ax = plotyy(tsc, phi_val, tsc, phi_val>0, 'plot', 'stairs' );
+        ax = plotyy(tsc, phi_val, tsc, phi_val>0, 'stairs', 'stairs' );
         set(ax(2), 'YLim', [-0.1 1.1], 'YTick', [0 1], 'YTickLabel', {'false', 'true'});
-        legend('Quant. sat', 'Bool. sat');
+        if np-npb == 1
+            legend('Quant. sat', 'Bool. sat');
+        end
         grid on;
         
     end

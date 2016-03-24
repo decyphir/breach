@@ -6,15 +6,14 @@ classdef BreachSimulinkSystem < BreachOpenSystem
     %   Creates a BreachSystem interface to a Simulink model. 
     %
     %   Arguments: 
-    %   mdl_name  -  must a string naming a Simulink model. Optional argument 
-    %   params    -  (optional) must be a cell array of strings naming parameters 
-    %                of the model that are tunable from the workspace. 
-    %   p0        -  (optional) gives default values for parameters
+    %   mdl_name  -  a string naming a Simulink model.  
+    %   params    -  cell array of strings | 'all'   
+    %   p0        -  (optional) default values for parameters
     %
-    %   If params is not given, the constructor will try to discover automatically 
-    %   the tunable parameters in the model. if params is empty, then the
-    %   only parameters for the model will be input parameters (i.e.,
-    %   parameters used to generate input signals).
+    %   If params is not given or equal to 'all', the constructor will try 
+    %   to discover automatically the tunable parameters in the model.
+    %   If params is empty, then the only parameters for the model will be 
+    %   input parameters (i.e., parameters used to generate input signals).
     %
     %   The constructor interfaces inputs, outputs and logged signals.
     %   Note that a BreachSimulinkSystem is a BreachOpenSystem, i.e., a 
@@ -177,17 +176,11 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
             
             %% define parameters
-            if exist('params','var')
-                if (isempty(params))
-                    exclude = {'tspan','u__','t__'};
-                    assignin('base','tspan', 0:1);
-                    [params, p0] = filter_vars(mdl_breach, exclude);
-                end
-            else
-                exclude = {'tspan','u__','t__'};
-                assignin('base','tspan', 0:1);
+            exclude = {'tspan','u__','t__'};
+            assignin('base','tspan', 0:1);
+            if ~exist('params','var')||(strcmp('params', 'all'))          
                 [params, p0] = filter_vars(mdl_breach, exclude);
-            end
+            end 
             
             if ~exist('p0', 'var')||isempty(p0)
                 p0 = zeros(1,numel(params));
