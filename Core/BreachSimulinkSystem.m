@@ -107,8 +107,8 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             
             cs.set_param('StartTime', '0.0');   % Start time
             cs.set_param('StopTime', 'tspan(end)');   % Stop time
-            cs.set_param('TimeSaveName', 'tout');   % Time
             cs.set_param('SaveTime', 'on');   % Time
+            cs.set_param('TimeSaveName', 'tout');   % Time
             
             %% Data Import/Export pane
             cs.set_param('ExternalInput', '[t__, u__]');   % Input

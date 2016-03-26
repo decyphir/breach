@@ -30,7 +30,13 @@ classdef BreachCEGIS < handle
                 fprintf('--------------\n');
                 this.synth_pb.solve();
                 BrSynth = this.synth_pb.GetBrSet_Best();
-
+                
+                if isempty(this.synth_pb.obj_best<0)
+                    fprintf('Couldn''t synthesize parameters.\n');
+                    return
+                end
+                
+                
                 %% Falsification step
                 fprintf('Counter-Example step\n');
                 fprintf('--------------------\n');

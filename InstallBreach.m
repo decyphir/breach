@@ -42,7 +42,6 @@ mex -outdir ../../../Core/m_src/ rtr.c
 cd robusthom;
 CompileRobusthom;
     
-
 % compiles cvodes common stuff
 
 sundials_dir = [breach_dir filesep 'Toolboxes' filesep 'sundials'];
@@ -93,22 +92,15 @@ out_dir = qwrap([breach_src_dir  filesep 'cv_obj']);
 compile_cvodes = [MEX FLAGS '-c -outdir ' out_dir ' ' sundials_inc_flags ' ' sundials_src_files ];
 fprintf(regexprep(compile_cvodes,'\','\\\\'));
 fprintf('\n');
-try 
-    eval(compile_cvodes);
-catch
-    error('InstallBreach:compilingCVOdesError','Problem compiling CVodes');
-end
+eval(compile_cvodes);
+
 % Compile blitz library
 
 blitz_dir = [breach_dir filesep 'Toolboxes' filesep 'blitz'];
 cd(blitz_dir);
-try 
-    CompileBlitzLib;
-catch
-   error('InstallBreach:compilingBlitzError','Compilation problem with Blitz++.'); 
-end
-% Compile mydiff
+CompileBlitzLib;
 
+% Compile mydiff
 cd([breach_dir filesep 'Toolboxes' filesep 'mydiff']);
 fprintf([MEX FLAGS '-lginac mydiff_mex.cpp\n']);
 try

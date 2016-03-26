@@ -1,52 +1,52 @@
 classdef BreachSet < handle
-    % BreachSet Defines an API to manipulate parameters and traces. 
-    %    This is the base class for BreachSystem objects. BreachSet 
-    %    instances are usually also BreachSystem or some derived class 
+    % BreachSet Defines an API to manipulate parameters and traces.
+    %    This is the base class for BreachSystem objects. BreachSet
+    %    instances are usually also BreachSystem or some derived class
     %    instances, so the purpose of this class is mainly to separate
-    %    methods for defining and manipulate parameters and traces data.   
-    % 
+    %    methods for defining and manipulate parameters and traces data.
+    %
     % BreachSet Properties
-    %   ParamRanges              - ranges of possible values for each parameter - determines the parameter sampling domain  
-    %   SignalRanges             - ranges of values taken by each signal variable  
+    %   ParamRanges              - ranges of possible values for each parameter - determines the parameter sampling domain
+    %   SignalRanges             - ranges of values taken by each signal variable
     %   AppendWhenSample=false   - when true, sampling appends new param vectors, otherwise replace.
-    % 
+    %
     % BreachSet Methods
-    %   GetParam            - get values for parameters, given their names 
-    %   SetParam            - set values for parameters, given their names 
+    %   GetParam            - get values for parameters, given their names
+    %   SetParam            - set values for parameters, given their names
     %   GetParamRanges      - get ranges for parameters, given their names and ranges
     %   SetParamRanges      - set ranges for parameters, given their names and ranges
-    %   GridSample          - creates parameter vectors in ParamRanges on a regularly spaced grid 
-    %   CornerSample        - creates parameter vectors from the corners of ParamRanges 
-    %   QuasiRandomSample   - uniformly samples n parameter vectors in ParamRanges 
-    %   Concat              - concatenates parameter vectors and traces of another compatible BreachSet 
+    %   GridSample          - creates parameter vectors in ParamRanges on a regularly spaced grid
+    %   CornerSample        - creates parameter vectors from the corners of ParamRanges
+    %   QuasiRandomSample   - uniformly samples n parameter vectors in ParamRanges
+    %   Concat              - concatenates parameter vectors and traces of another compatible BreachSet
     %   PrintParams         - display the number of parameter vectors, parameter names and ranges
     %   PrintSignals        - display the number of traces, names of signal variables and ranges
     %   PlotParams          - plots parameter vectors
-    %   PlotSignals         - plots signals 
+    %   PlotSignals         - plots signals vs time
     %   PlotSigPortrait     - plots signals portrait
     
-    properties 
-        P 
-        ParamRanges  % ranges of possible values for each parameter - determines the parameter sampling domain  
-        SignalRanges % ranges of values taken by each signal variable  
+    properties
+        P
+        ParamRanges  % ranges of possible values for each parameter - determines the parameter sampling domain
+        SignalRanges % ranges of values taken by each signal variable
         AppendWhenSample=false % when true, sampling appends new param vectors, otherwise replace.
     end
-        
+    
     methods (Hidden=true)
         function P = GetP(this)
             % Get the legacy parameter set structure
             P = this.P;
         end
         
-        function SetP(this, P) 
+        function SetP(this, P)
             % Get the legacy parameter set structure
             this.P = P;
-        end    
+        end
     end
     
     methods
         function this = BreachSet(Sys, params, ranges)
-        % BreachSet constructor from a legacy P or Sys, parameter names and ranges
+            % BreachSet constructor from a legacy P or Sys, parameter names and ranges
             
             switch nargin
                 case 0
@@ -61,10 +61,21 @@ classdef BreachSet < handle
             
             this.UpdateParamRanges();
         end
-    
-        function SetParam(this, params, values)
-            this.P = SetParam(this.P, params, values);
-            this.UpdateParamRanges();
+        
+        function SetParam(this, params, values, type_p)
+            if nargin==3 ||((nargin==4)&&(strcmp(type_p,'new')||strcmp(type_p,'add')||strcmp(type_p,'spec')))
+                this.P = SetParam(this.P, params, values);
+                this.UpdateParamRanges();
+            else
+                nb_params = numel(this.P.ParamList);
+                ip = FindParam(this.P, params);
+                if any(ip>nb_params)
+                   warning('SetParam:param_not_in_list',['A parameter name was set but did not exist for this system.' ...
+                                                         'If this is intended, consider using the syntax ' ...
+                                                         'SetParam(params, values, ''new'').']);  
+                end
+                this.P = SetParam(this.P, params, values);
+            end
         end
         
         function values = GetParam(this, params, ip)
@@ -85,7 +96,7 @@ classdef BreachSet < handle
                 this.P = CreateParamSet(this.P, this.P.ParamList(ipr+this.P.DimX),ranges);
             end
         end
-
+        
         
         %% Get and Set param ranges
         function SetParamRanges(this, params, ranges)
@@ -127,7 +138,7 @@ classdef BreachSet < handle
             end
         end
         
-        % Set Param ranges around individual parameter vectors to zero        
+        % Set Param ranges around individual parameter vectors to zero
         function ResetEpsi(this)
             this.P.epsi(:,:) = 0;
             this.UpdateParamRanges();
@@ -143,7 +154,7 @@ classdef BreachSet < handle
                 this.ParamRanges(mpr+1:mpr+dd,1) = inf;
                 this.ParamRanges(mpr+1:mpr+dd,2) = -inf;
             end
-                        
+            
             epsis = 0*this.P.pts;
             epsis(this.P.dim,:) = this.P.epsi;
             minP = min(this.P.pts-epsis, [], 2);
@@ -191,7 +202,7 @@ classdef BreachSet < handle
             end
             
         end
-
+        
         % Get signal names
         function SigNames = GetSignalNames(this)
             SigNames = this.P.ParamList(1:this.P.DimX);
@@ -202,38 +213,41 @@ classdef BreachSet < handle
             if (~isfield(this.P,'traj'))
                 error('No signal to plot. Use Sim command first.')
             end
-      
+            
             figure;
             h = SplotVar(this.P, varargin{:});
         end
-
+        
         % Plot signals
         function h = PlotSigPortrait(this, varargin)
             if (~isfield(this.P,'traj'))
                 error('No signal to plot. Use Sim command first.')
             end
-      
+            
             figure;
             SplotTraj(this.P, varargin{:});
         end
         
         % Grid Sample
         function GridSample(this, delta)
-            this.P = Refine(this.P,delta, 1);           
+            this.P = Refine(this.P,delta, 1);
         end
-
+        
         % Get corners of parameter domain
         function CornerSample(this)
             this.P.epsi = 2*this.P.epsi;
             this.P = Refine(this.P,2);
-            this.P.epsi = this.P.epsi/2; 
+            this.P.epsi = this.P.epsi/2;
         end
-    
+        
         % Quasi-Random Sample
-        function QuasiRandomSample(this, delta)
-            this.P = QuasiRefine(this.P,delta);
+        function QuasiRandomSample(this, delta, step)
+            if nargin==3
+                this.P = QuasiRefine(this.P,delta, step);
+            else
+                this.P = QuasiRefine(this.P, delta);
+            end
         end
-    
         % Get the number of param vectors
         function nb_pts = GetNbParamVectors(this)
             nb_pts= size(this.P.pts,2);
@@ -241,7 +255,7 @@ classdef BreachSet < handle
         
         % Concatenation - needs some additional compatibility checks...
         function Concat(this, other)
-           this.P = SConcat(this.P, other.P); 
+            this.P = SConcat(this.P, other.P);
         end
         
         % Plot parameters
@@ -249,7 +263,7 @@ classdef BreachSet < handle
             figure;
             SplotPts(this.P, varargin{:});
         end
- 
+        
         %% Printing
         function PrintSignals(this)
             if isempty(this.SignalRanges)
@@ -268,7 +282,7 @@ classdef BreachSet < handle
             end
             disp(' ')
         end
-
+        
         function PrintParams(this)
             nb_pts= this.GetNbParamVectors();
             if (nb_pts==1)
@@ -322,7 +336,7 @@ classdef BreachSet < handle
                 new.(p{i}) = this.(p{i});
             end
         end
-
+        
         
     end
 end

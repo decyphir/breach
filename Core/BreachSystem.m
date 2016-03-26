@@ -238,13 +238,7 @@ classdef BreachSystem < BreachSet
                     
         end
       
-        
-        %% Mining
-        %function [p, rob] = MineSpec(this, phi, falsif_opt, prop_opt, iter_max)
-        %    [p, rob, Pr] = ReqMining(this.Sys, phi, falsif_opt, prop_opt, iter_max);
-        %    this.P = Pr;
-        %end
-      
+        %% Experimental
         function report = Analysis(this) 
         
             STL_ReadFile('stlib.stl');

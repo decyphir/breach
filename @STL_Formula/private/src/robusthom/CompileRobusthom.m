@@ -1,6 +1,8 @@
 function CompileRobusthom()
 %COMPILEROBUSTNESS compiles the C++ functions for robusthom engine
 
+global BreachGlobOpt
+
 ext = mexext;
 switch(ext)
     case {'mexw64', 'mexw32'}
@@ -26,6 +28,12 @@ obj_files = ['robustness' obj_ext ...
 MEX = 'mex ';
 FLAGS = ' ';
 
+if isfield(BreachGlobOpt, 'disable_robust_linear_interpol')
+    if BreachGlobOpt.disable_robust_linear_interpol==1  
+        FLAGS = '-DNO_LINEAR_INTERPOL ';  
+    end
+end
+    
 % compiles src files
 compile_cmd = [MEX FLAGS '-c  ' src_files  ];
 fprintf([regexprep(compile_cmd,'\','\\\\') '\n' ]);
