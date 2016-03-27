@@ -69,7 +69,7 @@ falsif_params.ranges = [9 11; ...
 
 %% 
 % We prepare a falsification problem.
-falsif_pb = FalsificationProblem(Br, phi_tight, falsif_params.names, falsif_params.ranges)
+falsif_pb = FalsificationProblem(Br, phi_tight, falsif_params.names, falsif_params.ranges);
 falsif_pb.solve();
 
 %%

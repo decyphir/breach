@@ -200,7 +200,7 @@ classdef BreachSystem < BreachSet
 
         % if zero argument, returns an option structure with defaults
         if nargin==1
-            out= struct('contour', 1, 'style',[]);
+            out = struct('contour', 1, 'style',[]);
             return
         end
         
