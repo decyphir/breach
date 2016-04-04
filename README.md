@@ -6,7 +6,8 @@ Breach is a Matlab toolbox for simulation-based design of dynamical systems.
 - Setup a C/C++ compiler using mex -setup
 - Run InstallBreach
 - Stop worrying about GiNaC
-- Run InitBreach
+- Add/save path to Breach folder 
+- Run InitBreach 
 
 ## Try demos
 
