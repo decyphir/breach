@@ -19,6 +19,7 @@ classdef ReqMiningProblem < BreachCEGIS
                    this.falsif_pb = FalsificationProblem(Br, phi, input_params.names, input_params.ranges);
                    this.synth_pb = ParamSynthProblem(Br, phi, prop_params.names, prop_params.ranges);
                    this.synth_pb.setup_solver('binsearch');
+  
            end
                    
        end
@@ -28,7 +29,6 @@ classdef ReqMiningProblem < BreachCEGIS
           p_mined =  this.synth_pb.x_best;
           phi = set_params(phi, this.synth_pb.params, p_mined);
        end
-       
-       
+        
    end
 end

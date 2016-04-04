@@ -14,8 +14,8 @@ cd into Examples/DemoAFC and run DemoAFC\_1\_Interface, DemoAFC\_2\_Simulation, 
 
 Or, run Init\_BrAFC and any DemoAFC\_xxx script.
 
-Read https://bitbucket.org/donze/breach/raw/0c315d360ba14953ec4645c59a284c43a2ab101f/Tutorial_DemoAFC.pdf
-for some explanations.
+These demos were used to generate a tutorial accessible at this address: https://bitbucket.org/donze/breach/src/f1b4700a07362ac2e5044656cb62a9bbf6e3b72d/Tutorial_DemoAFC.pdf?at=default
+
 
 ## Contact/Support
 
