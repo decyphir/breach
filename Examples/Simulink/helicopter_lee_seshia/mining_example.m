@@ -1,5 +1,4 @@
 %% Analysis of a simple Simulink example (Example 2.5 from Lee and Seshia, Chapter 2)
-%
 % 
 
 %% Interfacing and computing a nominal trajectory
@@ -16,6 +15,7 @@ InitBreach;
 % called Br representing this interface. Note that Breach also creates 
 % its own copy of the Simulink model. 
 init_helicopter;
+Br.PrintAll;
 
 %%
 % We extract the nominal parameter set and simulate the system using Breach
@@ -79,7 +79,7 @@ BrFalse.PlotRobustSat(phi_tight)
 
 
 %% Mining  
-% Next, we use the ReqMining problemroutine to combine parameter synthesis and
+% Next, we use the ReqMiningProblem routine to combine parameter synthesis and
 % falsification until finding an STL formula that the falsifier cannot
 % violate. 
 mining_phi = ReqMiningProblem(Br,phi, falsif_params, prop_params);
@@ -89,10 +89,8 @@ mining_phi.solve();
 %% Validation 
 % The model analysed in this example is quite trivial, and we know that the
 % longest time to converge toward the input is obtained by the smallest
-% value for K. Hence we check that the value found before is conservative,
-% i.e., is larger than the one obtained with the smallest value of K.
-
-
+% value for K. This is what the solver found in the first iteration: K=9.
+% Note that in the second iteration, the solver didn't retry K=9. 
 
 
 

@@ -26,3 +26,7 @@ Br.SetTime(0:.01:4);
 %%
 % We set the default value for the (constant) input signal: 
 Br.SetParam('psi_u0', 10);
+
+%%
+% Print signals and parameters of the resulting interface:
+Br.PrintAll();
