@@ -18,8 +18,7 @@ init_helicopter;
 Br.PrintAll;
 
 %%
-% We extract the nominal parameter set and simulate the system using Breach
-% command line interface.
+% We extract the nominal parameter set and simulate the system.
 Br.Sim();
 
 %% 
@@ -32,13 +31,24 @@ Br.PlotSignals();
 % formula. 
 
 %% 
-% The following loads the PSTL property phi in the workspace:
+% The following loads the PSTL property phi in the workspace.
 STL_ReadFile('specs.stl');
+
+%%
+% It's defined as: 
+% param tau = 1 
+% phi :=  ev_[0,tau] ( abs(theta_dot[t]-psi[t]) < 0.01 ) 
+%
+% We can check if it is satisfied and plot the satisfaction functions,
+% Boolean and quantitative 
+Br.CheckSpec(phi) 
+Br.PlotRobustSat(phi)
+
 
 %% 
 % We define the options for the parameter synthesis algorithm. The algorithm 
 % works by performing a binary search over the possible values of the
-% parameters.
+% parameter until finding the smallest value for which phi is satisfied.
 prop_params.names = {'tau'};
 prop_params.ranges = [0 10];  
 
@@ -47,11 +57,11 @@ synth_pb.solve();
 
 %%
 % The value computed by solving the synthesis problem is store in x_best:
-tau = synth_pb.x_best;
+tau_tight = synth_pb.x_best;
 
 %% 
 % We update the formula and plot its satisfaction:
-phi_tight = set_params(phi, 'tau', tau);
+phi_tight = set_params(phi, 'tau', tau_tight);
 Br.PlotRobustSat(phi_tight)
 
 %% Falsification 
@@ -59,11 +69,10 @@ Br.PlotRobustSat(phi_tight)
 % previous specification, satisfied by the nominal trajectory.
 
 %% 
-% We defines the system parameter name(s) and range(s).  
+% We defines the system parameter name(s) and range(s).  Here, we consider
+% that the parameter K can vary between 9 and 11.
 falsif_params.names = {'K' ... ,
                       };
-%% 
-% The parameter K can vary between 9 and 11
 falsif_params.ranges = [9 11; ...
 ];
 

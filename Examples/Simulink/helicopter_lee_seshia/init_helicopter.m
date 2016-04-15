@@ -1,4 +1,4 @@
-%% Creating an interface with Breach using CreateSimulinkSystem 
+%% Creating an interface with Breach using BreachSimulinkSystem 
 
 %%
 % Name of the Simulink model:
