@@ -41,7 +41,7 @@ classdef BreachTraceSystem < BreachSystem
             end
             
             % assumes now that we have signal names
-            this.Sys = CreateExternSystem('TraceObject', signal_names, {'no_trace'},1);
+            this.Sys = CreateExternSystem('TraceObject', signal_names, {'trace_id'},1);
             if exist('trace', 'var')
                 this.AddTrace(trace);
             end

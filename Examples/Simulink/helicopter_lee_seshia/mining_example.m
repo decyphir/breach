@@ -36,7 +36,7 @@ STL_ReadFile('specs.stl');
 
 %%
 % It's defined as: 
-% param tau = 1 
+% param tau = 5 
 % phi :=  ev_[0,tau] ( abs(theta_dot[t]-psi[t]) < 0.01 ) 
 %
 % We can check if it is satisfied and plot the satisfaction functions,
@@ -71,9 +71,9 @@ Br.PlotRobustSat(phi_tight)
 %% 
 % We defines the system parameter name(s) and range(s).  Here, we consider
 % that the parameter K can vary between 9 and 11.
-falsif_params.names = {'K' ... ,
+falsif_params.names = {'a' ... ,
                       };
-falsif_params.ranges = [9 11; ...
+falsif_params.ranges = [0.9 1.1; ...
 ];
 
 %% 

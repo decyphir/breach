@@ -22,12 +22,13 @@ classdef BreachOpenSystem < BreachSystem
     methods
         
         function Sim(this,tspan,U)
-            
             if ~exist('tspan','var')
                 tspan = this.Sys.tspan;
             end
             Sys = this.Sys;
-            if exist('U','var')
+            if exist('U','var') % in this case, the InputGenerator becomes a trace object 
+            % TODO: handles multiple input signals
+
                 if isnumeric(U)
                     DimU = this.InputMap.Count();
                     if size(U, 2)~=DimU+1;
@@ -39,6 +40,8 @@ classdef BreachOpenSystem < BreachSystem
                 else
                     Us = U;
                 end
+                InputGen = BreachTraceSystem(this.InputMap.keys,U);
+                this.SetInputGen(InputGen);
                 Sys = this.Sys;
                 Sys.init_u = @(~, pts, tspan) (Us);
             end
@@ -179,8 +182,29 @@ classdef BreachOpenSystem < BreachSystem
                 idx =  FindParam(this.InputGenerator.P, input{1});
                 U.u(:,idx_mdl) = this.InputGenerator.P.traj.X(idx,:)';
             end
+            
         end
       
+        function this = Concat(this,other)
+            
+            if isa(this.InputGenerator, 'BreachTraceSystem')
+                % TODO Concat other with more than one trace...  
+                trace = [other.InputGenerator.P.traj(1).time' other.InputGenerator.P.traj(1).X'];
+                this.InputGenerator.AddTrace(trace);
+                % Using SetParam here erases the trajectory... 
+                i_trace_id = FindParam(other.P, 'trace_id');
+                other.P.pts(i_trace_id,1) = numel(this.P.traj)+1;
+                other.P.traj(1).param(i_trace_id) = numel(this.P.traj)+1;
+            
+                this.P = SConcat(this.P, other.P);
+            else
+                this.InpuGenerator.P= SConcat(this.InputGenerator.P, other.InputGenerator.P);
+                this.P = SConcat(this.P,other.P);
+            end
+            
+        end
+        
+        
         function new = copy(this)
             % Instantiate new object of the same class.
             new = feval(class(this));

@@ -134,6 +134,8 @@ if isfield(P,'traj') % Some check, in case of ...
         P.traj_ref = 1:numel(P.traj);
     end
 end
+
+
 if isfield(P2,'traj')
     if(size(P2.traj,1) > 1)
         P2.traj = P2.traj';
