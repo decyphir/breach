@@ -1,4 +1,3 @@
-
 InitBreach;
 %% load formula
 formulas = STL_ReadFile('spec.stl');

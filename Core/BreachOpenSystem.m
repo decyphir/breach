@@ -198,7 +198,7 @@ classdef BreachOpenSystem < BreachSystem
             
                 this.P = SConcat(this.P, other.P);
             else
-                this.InpuGenerator.P= SConcat(this.InputGenerator.P, other.InputGenerator.P);
+                this.InputGenerator.P= SConcat(this.InputGenerator.P, other.InputGenerator.P);
                 this.P = SConcat(this.P,other.P);
             end
             

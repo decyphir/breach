@@ -26,11 +26,11 @@ Br.PlotRobustSat(phi1)
 Br.PlotRobustMap(phi1, ...
                  {'throttle_dt0'},... % input parameter to vary
                  [0 10], ...          % input range 
-                 50);                %  number of input values tested 
+                 50);                 % number of input values tested 
 
 % plot 2d maps
 Br.PlotRobustMap(phi1, ...
                  {'throttle_u0', 'throttle_dt0'},... % input parameter to vary
                  [0 100; 0 10], ...                  % input range 
-                 [15 15]);                           % 15x15 grid 
+                 [10 10]);                           % 15x15 grid 
             
