@@ -135,7 +135,6 @@ Signal * computeBoundedEventually(Signal * x, double a) {
   delete z1;
   delete z2;
 
-  z=new Signal();
   z=computeOr(x, z3);
     
   delete z3;
@@ -158,7 +157,6 @@ Signal * computeBoundedGlobally(Signal * x, double a) {
   delete z1;
   delete z2;
 
-  //z=new Signal();
   z=computeAnd(x, z3);
   delete z3;
 		
@@ -171,8 +169,7 @@ Signal * computeBoundedGlobally(Signal * x, double a) {
 Signal * computeTimedUntil(Signal * x, Signal * y, double a, double b) {
   Signal *z, *z1, *z2, *z3, *z4;
 
-  // z=new Signal();
-  if (a>0)
+ if (a>0)
     z1=computeBoundedGlobally(x,a);
 	
   z2=computeBoundedEventually(y,b-a);
@@ -187,9 +184,9 @@ Signal * computeTimedUntil(Signal * x, Signal * y, double a, double b) {
   else
     z=computeAnd(x,z4);
 
-  delete z2;  // This is necessary to avoid memory leak. 2016-05-09 Isaac
-  delete z3;  // This is necessary to avoid memory leak. 2016-05-09 Isaac
-  delete z4;  // This is necessary to avoid memory leak. 2016-05-09 Isaac
+  delete z2; 
+  delete z3; 
+  delete z4; 
 
   return z;
 }
