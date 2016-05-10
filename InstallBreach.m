@@ -11,7 +11,7 @@ breach_dir = dr(1:end-16);
 breach_src_dir = [breach_dir filesep 'Core' filesep 'src']; 
 qmitl_src_dir  = [breach_dir filesep '@STL_Formula' filesep 'private' filesep 'src'];
 
-% compile qmitl C functions
+% compile STL mex functions
 
 MEX = 'mex ';
 FLAGS = ' ';
@@ -43,7 +43,6 @@ cd robusthom;
 CompileRobusthom;
     
 % compiles cvodes common stuff
-
 sundials_dir = [breach_dir filesep 'Toolboxes' filesep 'sundials'];
 sundials_inc_dir = [sundials_dir filesep 'include'];
 sundials_src_dir = [sundials_dir filesep 'src' filesep 'sundials'];
@@ -95,12 +94,12 @@ fprintf('\n');
 eval(compile_cvodes);
 
 % Compile blitz library
-
 blitz_dir = [breach_dir filesep 'Toolboxes' filesep 'blitz'];
 cd(blitz_dir);
 CompileBlitzLib;
 
 % Compile mydiff
+if (0) % TODO move this into a dedicated script 
 cd([breach_dir filesep 'Toolboxes' filesep 'mydiff']);
 fprintf([MEX FLAGS '-lginac mydiff_mex.cpp\n']);
 try
@@ -111,20 +110,19 @@ catch %#ok<CTCH>
             'Some functionnalities will not be available.']);
     fprintf('\n'); % for a nice printing
 end
+end
+
+addpath(breach_dir);
+savepath;
 
 % cd back and clean variable
 cd(cdr);
+InitBreach;
+
 disp('-------------------------------------------------------------------');
 disp('- Install successful.                                            --')
-disp('- Yeah, I know: unless you really know what you''re doing, you   --');
-disp('- got that "fatal error: ginac not found". This issue can be     --');
-disp('- resolved under Debian-based Linux distros by installing the    --');
-disp('- following packages: ginac, ginac-devel and ginac-utils.        --');
-disp('- However, GinaC is used only by a few functions, so that for    --');
-disp('- most users, it is still fair to say already:                   --');
 disp('-------------------------------------------------------------------');
-disp('- Install successful.                                            --');
-disp('-------------------------------------------------------------------');
+
 
 end
     
