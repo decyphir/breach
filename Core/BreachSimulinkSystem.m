@@ -7,7 +7,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
     %
     %   Arguments: 
     %   mdl_name  -  a string naming a Simulink model.  
-    %   params    -  cell array of strings | 'all'   
+    %   params    -  cell array of strings | 'all'
     %   p0        -  (optional) default values for parameters
     %
     %   If params is not given or equal to 'all', the constructor will try 
@@ -198,6 +198,15 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             assignin('base','tspan',tspan);
             [~,~, signals] = simout2X(this,simout);
             
+            %% Reorder sig_in
+            pos_sig_in = zeros(1, numel(sig_in));
+            for i_sig = 1:numel(sig_in)
+                sig = sig_in{i_sig}; 
+                pos_sig_in(i_sig) = find(strcmp(sig, signals));          
+            end
+            [~, order]= sort(pos_sig_in); 
+            sig_in = sig_in(order);
+            
             %% Create the Breach structure
             p0 = [zeros(1,numel(signals)) p0 pu];
             Sys = CreateSystem(signals, params, p0'); % define signals and parameters
@@ -221,7 +230,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             
             % Initializes InputMap and input generator
             this.InputMap = containers.Map();
-            idx =0;
+            idx=0;
             for input = this.Sys.InputList
                 idx = idx+1;
                 this.InputMap(input{1})=idx;
