@@ -27,7 +27,6 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         lookfor_scopes = false 
     end
    
-  
     methods
         
         function this = BreachSimulinkSystem(mdl_name, params, p0, inputfn)
@@ -39,7 +38,6 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             if ~exist(mdl_name)==4  %  create Simulink system with default options
                 error('BreachSimulinkSystem first argument must be the name of a Simulink model.');
             end
-            
             
             switch nargin
                 case 1,
@@ -199,13 +197,13 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             [~,~, signals] = simout2X(this,simout);
             
             %% Reorder sig_in
-            pos_sig_in = zeros(1, numel(sig_in));
-            for i_sig = 1:numel(sig_in)
-                sig = sig_in{i_sig}; 
-                pos_sig_in(i_sig) = find(strcmp(sig, signals));          
-            end
-            [~, order]= sort(pos_sig_in); 
-            sig_in = sig_in(order);
+            %pos_sig_in = zeros(1, numel(sig_in));
+            %for i_sig = 1:numel(sig_in)
+            %    sig = sig_in{i_sig}; 
+            %    pos_sig_in(i_sig) = find(strcmp(sig, signals));          
+            %end
+            %[~, order]= sort(pos_sig_in); 
+            %sig_in = sig_in(order);
             
             %% Create the Breach structure
             p0 = [zeros(1,numel(signals)) p0 pu];
@@ -216,7 +214,6 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             Sys.InputOpt = [];
             
             Sys.type= 'Simulink';
-            %            eval(['Sys.sim = @' simfn ';']);
             Sys.sim = @(Sys, pts, tspan) this.sim_breach(Sys,pts, tspan);
             Sys.mdl= [mdl '_breach'];
             Sys.Dir= pwd;

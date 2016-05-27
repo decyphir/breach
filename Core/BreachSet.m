@@ -248,9 +248,14 @@ classdef BreachSet < handle
                 this.P = QuasiRefine(this.P, delta);
             end
         end
-        % Get the number of param vectors
+        
+        % Get the number of param vectors - -1 means P is empty
         function nb_pts = GetNbParamVectors(this)
-            nb_pts= size(this.P.pts,2);
+            if isempty(this.P)
+                nb_pts = -1;
+            else 
+                nb_pts= size(this.P.pts,2);
+            end
         end
         
         % Concatenation - needs some additional compatibility checks...
@@ -314,6 +319,14 @@ classdef BreachSet < handle
         end
         
         %% Misc
+        
+        % Warning handler
+        function WarningResetP(this, fname)
+           if this.GetNbParamVectors()>1
+               warning('BreachSet:warning_will_reset_pts',['This set contains more than one parameter vector or traces - the function ' fname ' will likely erase them.'])
+           end   
+        end
+         
         % Resets the system to nominal parameters
         function Reset(this)
             this.P = CreateParamSet(this.Sys);

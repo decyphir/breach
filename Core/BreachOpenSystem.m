@@ -53,6 +53,18 @@ classdef BreachOpenSystem < BreachSystem
         % we merge parameters of the input generator with those of the
         % system, but keep both BreachObjects
         function SetInputGen(this, IG)
+        % SetInputGen Attach a BreachSystem as input generator. 
+            
+            % Warnings about current P 
+            this.WarningResetP('SetInputGen'); 
+            
+            % look for property parameters and save them 
+            PropParams={};
+            if ~isempty(this.P)
+                PropParams = this.P.ParamList(this.P.DimP+1:end);
+                PropParamsValues = GetParam(this.P, PropParams);
+            end
+            
             inputs = this.Sys.InputList;
             
             % First remove parameters from previous input generator
@@ -151,6 +163,10 @@ classdef BreachOpenSystem < BreachSystem
             this.P = CreateParamSet(this.Sys);
             this.P.epsi(:,:) = 0;
             
+            % Restore property parameter
+            if ~isempty(PropParams)
+                this.P = SetParam(this.P, PropParams, PropParamsValues);
+            end
             % Sets the new input function for ComputeTraj
             % FIXME?: tilde?
             this.Sys.init_u = @(~, pts, tspan) (InitU(this,pts,tspan));
