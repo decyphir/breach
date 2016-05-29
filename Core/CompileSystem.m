@@ -23,7 +23,7 @@ try
     end
     
     dr = which('Breach');
-    breach_dir = dr(1:end-9);
+    breach_dir = dr(1:end-14);
     
     breach_src_dir = [breach_dir filesep 'Core' filesep 'src'];
     
