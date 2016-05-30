@@ -128,6 +128,16 @@ classdef BreachOpenSystem < BreachSystem
                         sg = var_cp_signal_gen(inputs, IG.cp, IG.method);
                         IG = BreachSignalGen({sg});
                 end
+            elseif iscell(IG)    
+                mm = methods(IG{1});
+                if any(strcmp(mm,'computeSignals'))
+                    IG = BreachSignalGen(IG);
+                else
+                    if ~any(strcmp(mm, 'Sim'))
+                        error('Input generator should be a struct, a signal_gen, a cell array of signal_gen, or a BreachSignalGen object');
+                    end
+                end
+               
             else
                 mm = methods(IG);
                 if any(strcmp(mm,'computeSignals'))
