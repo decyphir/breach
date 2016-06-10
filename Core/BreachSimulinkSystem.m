@@ -328,7 +328,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                                     signamei = [signame '_' num2str(idim)  '_'];
                                     [lia, loc]= ismember(signamei, signals);
                                     if lia
-                                        xx = interp1(Y.time, double(Y.signals(iS).values),tout, 'linear','extrap') ;
+                                        xx = interp1(Y.time, double(Y.signals(iS).values(:,idim)),tout, 'linear','extrap') ;
                                         X(loc,:) = xx;
                                     end
                                 end
@@ -360,7 +360,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                             signamei = [signame '_' num2str(idim)  '_'];
                             [lia, loc]= ismember(signamei, signals);
                             if lia
-                                xx = interp1(Y.time, double(Y.signals(iS).values),tout, 'linear','extrap') ;
+                                xx = interp1(Y.time, double(Y.signals(iS).values(:,idim)),tout, 'linear','extrap') ;
                                 X(loc,:) = xx;
                             end
                         end
