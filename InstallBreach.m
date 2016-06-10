@@ -2,6 +2,8 @@ function InstallBreach
 %INSTALLBREACH compiles C/C++ mex functions used by Breach. Needs only to
 % be called once after an update of Breach
 
+InitBreach
+
 cdr = pwd;
 dr = which('InstallBreach');
 
@@ -9,14 +11,14 @@ dr = which('InstallBreach');
 
 breach_dir = dr(1:end-16);
 breach_src_dir = [breach_dir filesep 'Core' filesep 'src']; 
-qmitl_src_dir  = [breach_dir filesep '@STL_Formula' filesep 'private' filesep 'src'];
+stl_src_dir  = [breach_dir filesep '@STL_Formula' filesep 'private' filesep 'src'];
 
 % compile STL mex functions
 
 MEX = 'mex ';
 FLAGS = ' ';
 
-cd(qmitl_src_dir);
+cd(stl_src_dir);
 
 fprintf([MEX FLAGS '-outdir .. lemire_engine.c\n']);
 mex -outdir .. lemire_engine.c

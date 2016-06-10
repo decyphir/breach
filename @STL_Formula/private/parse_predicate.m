@@ -19,6 +19,7 @@ function mu = parse_predicate(S, mu)
 
 fn_ = mu.params.fn;
 
+% replaces * and
 fn_ = regexprep(fn_,'([^\.])/', '$1\./');
 fn_ = regexprep(fn_,'([^\.])\*', '$1\.*');
 fn_ = regexprep(fn_,'([^\.])\^', '$1\.^');

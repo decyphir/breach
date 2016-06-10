@@ -8,15 +8,6 @@ if exist('BreachGlobOpt','var')
 end
 
 disp('Initializing Breach...'); 
-%disp('%-------------------------------------------------------------------%')
-%disp('% Important!                                                        %')
-%disp('% The prefix ''QMITL'' has (finally) been replaced by ''STL''.      %');
-%disp('% Please update your code accordingly if needed:                    %'); 
-%disp('%  - Run InstallBreach                                              %');
-%disp('%  - Find/replace QMITL with STL in all your m-files                %');
-%disp('%  - Use RecoverFormula to convert previously saved QMITL_Formula   %')
-%disp('%    Object into STL_Formula.                                       %')
-%disp('%-------------------------------------------------------------------%')
 
 id = 'MATLAB:dispatcher:nameConflict';
 warning('off',id);
@@ -39,6 +30,8 @@ addpath( [dr_ filesep 'Plots' filesep 'm_src']);
 addpath( [dr_ filesep 'Toolboxes' filesep 'optimize']);
 addpath( [dr_ filesep 'Toolboxes' filesep 'sundials' filesep 'sundialsTB' ]);
 addpath( [dr_ filesep 'Toolboxes' filesep 'sundials' filesep 'sundialsTB' filesep 'cvodes']);
+addpath( [dr_ filesep 'Toolboxes' filesep 'stl_formula++' filesep 'm_src']);
+addpath( [dr_ filesep 'Toolboxes' filesep 'stl_formula++' filesep 'bin']);
 addpath( [dr_ filesep 'Core' filesep 'STLib']);
 
 %% Init BreachGlobOpt options and fourre-tout global variable

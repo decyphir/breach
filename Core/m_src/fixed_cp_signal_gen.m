@@ -23,6 +23,11 @@ classdef fixed_cp_signal_gen < signal_gen
             this.signals = signals;
             this.cp = cp;
             this.params = {};
+            
+            if nargin<=2 
+                method = 'previous';
+            end
+        
             this.method = method;
             for ku = 1:numel(signals)
                 for k = 1:cp(ku)
@@ -46,8 +51,11 @@ classdef fixed_cp_signal_gen < signal_gen
             for i_cp = 1:numel(this.cp)
                 cp_values = pts_x(1:this.cp(i_cp));
                 pts_x = pts_x(this.cp(i_cp)+1:end);
-                meth = this.method{i_cp};
-                
+                if ischar(this.method)
+                    meth = this.method;
+                else
+                    meth = this.method{i_cp};
+                end
                 switch meth
                     case 'previous'
                         t_cp = linspace(time(1), time(end), this.cp(i_cp)+1)';

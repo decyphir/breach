@@ -1,7 +1,7 @@
 classdef BreachSimulinkSystem < BreachOpenSystem
     % BreachSimulinkSystem Main class to interface Breach with Simulink systems
     %
-    %   BrSys = BreachSimulinkSystem(mdl_name [,params, p0])
+    %   BrSys = BreachSimulinkSystem(mdl_name [,params, p0, signals, inputfn])
     %         
     %   Creates a BreachSystem interface to a Simulink model. 
     %
@@ -9,6 +9,8 @@ classdef BreachSimulinkSystem < BreachOpenSystem
     %   mdl_name  -  a string naming a Simulink model.  
     %   params    -  cell array of strings | 'all'
     %   p0        -  (optional) default values for parameters
+    %   signals   -  specifies signals to interface
+    %   inputfn   -  specifies an input generator 
     %
     %   If params is not given or equal to 'all', the constructor will try 
     %   to discover automatically the tunable parameters in the model.
@@ -21,15 +23,20 @@ classdef BreachSimulinkSystem < BreachOpenSystem
     %   generation. By default, a constant input generator is created for 
     %   each input of the model. Use SetInputGen method to set a different input. 
     %
+    %   Ex.: mdl =  
+    %
+    %
+
     %See also BreachOpenSystem, signal_gen
     
     properties
         lookfor_scopes = false 
+        sim_args = {}
     end
    
     methods
         
-        function this = BreachSimulinkSystem(mdl_name, params, p0, inputfn)
+        function this = BreachSimulinkSystem(mdl_name, params, p0, signals, inputfn)
 
             if nargin==0
                 return;
@@ -47,6 +54,8 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 case 3,
                     this.CreateInterface(mdl_name, params, p0);
                 case 4, 
+                    this.CreateInterface(mdl_name, params, p0, signals);
+                case 5, 
                     this.CreateInterface(mdl_name, params, p0);
                     this.SetInputGen(inputfn);
             end
@@ -61,10 +70,9 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         end
         
         
-        function CreateInterface(this, mdl, params, p0)
-            
-            %% Copy the model into model_breach
-            
+        function CreateInterface(this, mdl, params, p0, signals)
+                        
+            %% Copy the model 
             % Give it a name
             mdl_breach = [mdl '_breach'];
             load_system(mdl);
@@ -126,9 +134,10 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             %% Find and Log input signals
             
             in_blks = find_system(mdl_breach,'SearchDepth',1, 'BlockType', 'Inport');
-            sig_in = {};
+            nb_inputs= numel(in_blks);
+            sig_in = cell(1, nb_inputs);
             
-            for iblk = 1:numel(in_blks)
+            for iblk = 1:nb_inputs
                 
                 in_name = get_param(in_blks(iblk),'Name');
                 in_name = regexprep(in_name,'\W','_');
@@ -138,9 +147,14 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 lh=lh{1}.Outport;
                 set(lh, 'Name', in_name{1});
                 
+                %Get port number, makes sure sig_in is in the right order
+                st_port_nb = get_param(in_blks(iblk),'Port');
+                port_nb = str2num(st_port_nb{1});
+                
                 %Logs input
                 set(lh,'DataLoggingName', 'Use signal name', 'DataLogging',1 ,'Name', in_name{1});
-                sig_in = [sig_in {in_name{1}}];
+                sig_in{port_nb} = in_name{1};
+            
             end
             
             if isempty(sig_in)
@@ -152,6 +166,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 U.params = const_input.params;
                 pu = const_input.p0';
             end
+            this.Sys.InputList= sig_in; % used by FindLoggedSignals 
             
             %% Find outputs
             o = find_system(mdl_breach,'SearchDepth',1, 'BlockType', 'Outport');
@@ -176,8 +191,11 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             %% define parameters
             exclude = {'tspan','u__','t__'};
             assignin('base','tspan', 0:1);
-            if ~exist('params','var')||(strcmp('params', 'all'))          
+        
+            if ~exist('params','var')          
                 [params, p0] = filter_vars(mdl_breach, exclude);
+            elseif strcmp(params, 'all')
+                [params, p0] = filter_vars(mdl_breach, exclude);               
             end 
             
             if ~exist('p0', 'var')||isempty(p0)
@@ -186,24 +204,23 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             
             params = [params U.params];
             
-            %% Run the model for time 0 to check proper initialization and collect signal names
-            tspan = evalin('base', 'tspan;');
-            assignin('base','tspan',[0 0]);
-            assignin('base','t__',0);
-            assignin('base','u__',zeros(1, numel(sig_in)));
+            %% find logged signals (including inputs and outputs)          
+            this.Sys.mdl= mdl_breach;
+            if ~exist('signals', 'var')
+                signals = FindLoggedSignals(this);
+                % Ensure inputs are at the end of signals:
+                signals= setdiff(signals, sig_in);
+                signals = [signals sig_in];
+            else
+                sig_log = FindLoggedSignals(this);
+                found = ismember(signals, sig_log);
+                
+                if ~all(found)
+                    not_found = find(~all(found));
+                    warning('BreachSimulinkSystem:signal_not_found',['Signal ' signals{not_found} ' not found in model.']);  
+                end
+            end
             
-            simout = sim(mdl_breach);
-            assignin('base','tspan',tspan);
-            [~,~, signals] = simout2X(this,simout);
-            
-            %% Reorder sig_in
-            %pos_sig_in = zeros(1, numel(sig_in));
-            %for i_sig = 1:numel(sig_in)
-            %    sig = sig_in{i_sig}; 
-            %    pos_sig_in(i_sig) = find(strcmp(sig, signals));          
-            %end
-            %[~, order]= sort(pos_sig_in); 
-            %sig_in = sig_in(order);
             
             %% Create the Breach structure
             p0 = [zeros(1,numel(signals)) p0 pu];
@@ -274,9 +291,84 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 return;
             end
             
-            [tout, X] = simout2X(this, simout);
+            [tout, X] = GetXFrom_simout(this, simout);
             
         end
+        
+        function [tout, X] = GetXFrom_simout(this, simout)
+            %
+            % converts a simulink output to a data structure Breach can handle
+            %
+            
+            signals= this.Sys.ParamList(1:this.Sys.DimX);           
+            tout = simout.get('tout')';
+            X=zeros(numel(signals), numel(tout));
+            
+            %% Outputs and scopes - go over logged signals and collect those we need
+            Vars = simout.who;
+            lenVars = numel(Vars);
+            
+            for iV = 1:lenVars
+                Y = get(simout,Vars{iV});
+                if ~isempty(Y)
+                    
+                    if ~strcmp(Vars{iV}, 'tout')&&~strcmp(Vars{iV},'logsout')&&(isstruct(Y))
+                        for iS=1:numel(Y.signals)
+                            
+                            nbdim = size(double(Y.signals(iS).values),2);
+                            signame = Y.signals(iS).label;
+                            if (nbdim==1)
+                                [lia, loc]= ismember(signame, signals);
+                                if lia
+                                    xx = interp1(Y.time, double(Y.signals(iS).values),tout, 'linear','extrap') ;
+                                    X(loc,:) = xx;
+                                end
+                            else
+                                for idim = 1:nbdim
+                                    signamei = [signame '_' num2str(idim)  '_'];
+                                    [lia, loc]= ismember(signamei, signals);
+                                    if lia
+                                        xx = interp1(Y.time, double(Y.signals(iS).values),tout, 'linear','extrap') ;
+                                        X(loc,:) = xx;
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            
+            %% logs - go over logged signals and collect those we need
+            logs = simout.get('logsout');
+            if ~isempty(logs)
+                logs_names = logs.getElementNames();
+                
+                for ilg = 1:numel(logs_names)
+                   
+                    signame = logs_names{ilg};
+                    sig = logs.getElement(signame);
+                    nbdim = size(sig.Values.Data,2);
+
+                    if (nbdim==1)
+                        [lia, loc]= ismember(signame, signals);
+                        if lia
+                            xx = interp1(sig.Values.Time',double(sig.Values.Data(:,1)),tout, 'linear','extrap');
+                            X(loc,:) = xx;
+                        end
+                    else
+                        for idim = 1:nbdim
+                            signamei = [signame '_' num2str(idim)  '_'];
+                            [lia, loc]= ismember(signamei, signals);
+                            if lia
+                                xx = interp1(Y.time, double(Y.signals(iS).values),tout, 'linear','extrap') ;
+                                X(loc,:) = xx;
+                            end
+                        end
+                    end
+                end
+            end
+        end
+       
         
         function [tout, X, signals] = simout2X(this, simout)
             %
@@ -340,15 +432,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                             
                             sig = logs.getElement(signame);
                             nbdim = size(sig.Values.Data,2);
-                            
-                            % getting signal data
-                            for idim =1:nbdim
-                                try
-                                    xdata = interp1(sig.Values.Time',double(sig.Values.Data(:,idim)),tout, 'linear','extrap');
-                                    X = [X ; xdata(1,:)];
-                                end
-                            end
-                            
+
                             % naming multidimensional signal= name_signal_i_
                             if nbdim==1
                                 signals = {signals{:} signame};
@@ -358,12 +442,97 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                                     signals = {signals{:} signamei};
                                 end
                             end
+
+                            
+                            % getting signal data
+                            for idim =1:nbdim
+                                try
+                                    xdata = interp1(sig.Values.Time',double(sig.Values.Data(:,idim)),tout, 'linear','extrap');
+                                    X = [X ; xdata(1,:)];
+                                end
+                            end
+                            
                         end
                     end
                 end
             end
         end
        
+        
+        function sig_log = FindLoggedSignals(this)
+            %
+            % converts a simulink output to a data structure Breach can handle
+            %
+            
+            %Run the model for time 0 to check proper initialization and collect signal names
+            tspan = evalin('base', 'tspan;');
+            assignin('base','tspan',[0 eps]);
+            assignin('base','t__',0);
+            assignin('base','u__',zeros(1, numel(this.Sys.InputList)));
+            
+            simout = sim(this.Sys.mdl);
+            assignin('base','tspan',tspan);
+            
+            %% Outputs and scopes
+            Vars = simout.who;
+            lenVars = numel(Vars);
+            sig_log = {};
+            
+            for iV = 1:lenVars
+                Y = get(simout,Vars{iV});
+                if ~isempty(Y)
+                    
+                    if ~strcmp(Vars{iV}, 'tout')&&~strcmp(Vars{iV},'logsout')&&(isstruct(Y))
+                        for iS=1:numel(Y.signals)
+                            signame = Y.signals(iS).label;
+                            if ~ismember(signame,sig_log)
+                                
+                                nbdim = size(double(Y.signals(iS).values),2);
+                                if (nbdim==1)
+                                    sig_log = {sig_log{:} signame };
+                                else
+                                    for idim = 1:nbdim
+                                        signamei = [signame '_' num2str(idim)  '_'];
+                                        sig_log = {sig_log{:} signamei};
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            
+            logs = simout.get('logsout');
+            
+            if ~isempty(logs)
+                logs_names = logs.getElementNames();
+                
+                %% logs
+                for ilg = 1:numel(logs_names)
+                    if ~(ismember(logs_names{ilg}, sig_log))
+                        signame = logs_names{ilg};
+                        if ~ismember(signame,sig_log)
+                            
+                            sig = logs.getElement(signame);
+                            nbdim = size(sig.Values.Data,2);
+                            
+                            % naming multidimensional signal= name_signal_i_
+                            if nbdim==1
+                                sig_log = {sig_log{:} signame};
+                            else
+                                for idim =1:nbdim
+                                    signamei = [signame '_' num2str(idim)  '_'];
+                                    sig_log = {sig_log{:} signamei};
+                                end
+                            end
+                                                       
+                        end
+                    end
+                end
+            end
+        end
+        
+        
         
         function new = copy(this)
             % Instantiate new object of the same class.

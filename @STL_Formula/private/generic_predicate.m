@@ -59,7 +59,7 @@ end
 fn_ = params.fn;
 
 % don't like that... But not so trivial to remove
-traj.time = [-1e99 traj.time 1e99];          % NM: when fixing that, don't forgot to change
+traj.time = [-1e99 traj.time 1e99];          % NM: when fixing that, don't forget to change
 traj.X = [traj.X(:,1) traj.X traj.X(:,end)]; % GetTrajSensi. 
  
 if isfield(traj,'XS')
@@ -76,12 +76,14 @@ fn_ = regexprep(fn_,'([^\.])\^', '$1\.^');
 [~,~,~,~,tokens] = regexp(fn_, ['^(\w+)\[.+?\]|'  ... 
                                 '\W(\w+)\[.+?\]|' ...
                                 'ddt\{\s*(\w+)\s*\}\[.+?\]|' ...
-                                'd\{\s*(\w+)\s*\}{.+?}\[.+?\]']);
+                                'd\{\s*(\w+)\s*\}{.+?}\[.+?\]'...
+                                '\{(.+?)\}[.+?]']);
 
 SigList = unique(cat(2,tokens{:}));
 for ii_var = 1:numel(SigList)
     pcurr = SigList{ii_var};
     i_var = FindParam(Sys, pcurr);
+    
     
     % test if current variable is found at the beginning of the predicate
     [start_idx, end_idx, ~, matches, tokens] = regexp(fn_, ['^' pcurr '\[(.+?)\]']);
@@ -95,10 +97,24 @@ for ii_var = 1:numel(SigList)
         fn_ = [fn_(1:start_idx-1) newpcurr fn_(end_idx+1:end)];
     end
     
+    
+    % current variable inside curly brackets
+    [start_idx, end_idx, ~, matches, tokens] = regexp(fn_, ['\{' pcurr '\}' '\[(.+?)\]']);
+    
+    if numel(matches)
+        pcurr = regexprep(tokens{1}{1}, '\W', '__');
+        time = eval(tokens{1}{:});
+        newpcurr = sprintf('%s__LB__0_RB_',pcurr); %NM: Nota: index 1 may be used later, so we use 0 !
+        X = interp1(traj.time, traj.X(i_var,:), time, 'linear', traj.X(i_var,end)); %#ok<NASGU>
+        eval(sprintf('%s = X;',newpcurr)); % faster than call interp1 in eval
+        fn_ = [fn_(1:start_idx-2) newpcurr fn_(end_idx+2:end)];
+    end
+    
+    
     % test if current variable is found inside the predicate
     [start_idx, end_idx, ~, matches, tokens] = regexp(fn_, ['\W' pcurr '\[(.+?)\]']); % \W makes sure we find its complete name (not just suffix)
     
-    start_idx = start_idx+1; % to skip the \W
+    start_idx = start_idx+1; % skips \W
     for jj = 1:numel(matches)
         time = eval(tokens{jj}{:});
         newpcurr = sprintf('%s__LB__%d_RB_',pcurr,jj);
@@ -107,7 +123,7 @@ for ii_var = 1:numel(SigList)
         fn_ = [fn_(1:start_idx(jj)-1) newpcurr fn_(end_idx(jj)+1:end)]; % replace xx[tt] by xx__LB__jj_RB_
         lj = end_idx(jj)-start_idx(jj);
         start_idx = start_idx-lj-1+length(newpcurr); % update start_idx and end_idx so they
-        end_idx = end_idx-lj-1+length(newpcurr);  % still correspond to begin and end of matches
+        end_idx = end_idx-lj-1+length(newpcurr);     % still correspond to begin and end of matches
     end
     
     % time derivative
@@ -120,7 +136,7 @@ for ii_var = 1:numel(SigList)
         X(isnan(X)) = traj.X(isnan(X),end); % replace NaN by the last value of the traj
         Pts = traj.param';    % Pts has size Sys.DimP x 1
         Pts(1:Sys.DimX,:) = X;
-        Fval = GetF(Sys, time, Pts); % ask for derivatives Ã  time instant "time"
+        Fval = GetF(Sys, time, Pts); % ask for derivatives at time instant "time"
         X = Fval(i_var,:); %#ok<NASGU>
         eval(sprintf('%s = X;',newpcurr));
         fn_ = [fn_(1:start_idx(jj)-1) newpcurr fn_(end_idx(jj)+1:end)];

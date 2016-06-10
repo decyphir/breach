@@ -64,11 +64,6 @@ function [P, val] = SEvalProp(Sys, P, phis, taus, ipts, break_level, method, VER
 % check arguments
 if ~exist('VERBOSE','var')
     VERBOSE=0;   
-%     if numel(P.traj)==1
-%         VERBOSE = 0;
-%     else
-%         VERBOSE= 1;
-%     end
 end
 
 if(~exist('method','var')||isempty(method))
@@ -78,6 +73,7 @@ end
 if ~exist('break_level','var')
     break_level = 0;
 end
+
 if(break_level>0)
     phis_tmp = [];
     for ii = 1:numel(phis)
