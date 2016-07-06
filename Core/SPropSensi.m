@@ -104,8 +104,10 @@ end
 Sys.p = P.pts(:,1);
 Sys.ParamList = P.ParamList;
 Pr = CreateParamSet(Sys, opt.params, [opt.lbound' opt.ubound']);
-
 Pr = pRefine(Pr, opt.p, opt.r);
+if isfield(P, 'traj')
+    Pr = Pcopy_traj(Pr,P);
+end
 
 %NM : it is better to compute the truth value of phi at time=tprop
 if tau < tspan(1)

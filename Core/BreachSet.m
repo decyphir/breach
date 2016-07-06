@@ -70,9 +70,9 @@ classdef BreachSet < handle
                 nb_params = numel(this.P.ParamList);
                 ip = FindParam(this.P, params);
                 if any(ip>nb_params)
-                   warning('SetParam:param_not_in_list',['A parameter name was set but did not exist for this system.' ...
-                                                         'If this is intended, consider using the syntax ' ...
-                                                         'SetParam(params, values, ''new'').']);  
+                    warning('SetParam:param_not_in_list',['A parameter name was set but did not exist for this system.' ...
+                        'If this is intended, consider using the syntax ' ...
+                        'SetParam(params, values, ''new'').']);
                 end
                 this.P = SetParam(this.P, params, values);
             end
@@ -208,6 +208,29 @@ classdef BreachSet < handle
             SigNames = this.P.ParamList(1:this.P.DimX);
         end
         
+        % Get signal values
+        function Y = GetSignalValues(this, iX, t)
+            if (~isfield(this.P,'traj'))
+                error('GetTrajValues:NoTrajField','Compute trajectories first')
+            end
+            
+            if ischar(iX) || iscell(iX)
+                iX = FindParam(this.P, iX);
+            end
+            
+            X = cat(1, this.P.traj.X); % concatenate all trajectories
+            
+            X = X(iX:this.P.DimX:end,:); % keep only the evolution of iX over time
+            
+            if (exist('t','var'))
+                Y=X;
+            else
+                Y = interp1(this.P.traj(1).time, X',t)';
+            end
+            
+        end
+        
+        
         % Plot signals
         function h = PlotSignals(this, varargin)
             if (~isfield(this.P,'traj'))
@@ -253,7 +276,7 @@ classdef BreachSet < handle
         function nb_pts = GetNbParamVectors(this)
             if isempty(this.P)
                 nb_pts = -1;
-            else 
+            else
                 nb_pts= size(this.P.pts,2);
             end
         end
@@ -322,11 +345,11 @@ classdef BreachSet < handle
         
         % Warning handler
         function WarningResetP(this, fname)
-           if this.GetNbParamVectors()>1
-               warning('BreachSet:warning_will_reset_pts',['This set contains more than one parameter vector or traces - the function ' fname ' will likely erase them.'])
-           end   
+            if this.GetNbParamVectors()>1
+                warning('BreachSet:warning_will_reset_pts',['This set contains more than one parameter vector or traces - the function ' fname ' will likely erase them.'])
+            end
         end
-         
+        
         % Resets the system to nominal parameters
         function Reset(this)
             this.P = CreateParamSet(this.Sys);

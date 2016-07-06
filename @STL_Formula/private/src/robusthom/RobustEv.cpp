@@ -38,7 +38,9 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	// signal
 	Signal *y;
 	y = new Signal(mxGetPr(prhs[0]), mxGetPr(prhs[1]), mxGetN(prhs[0]));
-	// std::cout << "y created" << endl;
+    //std::cout << "y created" << endl;
+    //std::cout << *y << endl;
+
 	// interval
 	double *I = mxGetPr(prhs[2]);
 	double a = I[0];
@@ -74,7 +76,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 			}
 		}
 	}
-	// std::cout << "yev:" << *yev << " size:" << yev->size() << std::endl;
+	//std::cout << "yev:" << *yev << " size:" << yev->size() << std::endl;
 
 	int N = yev->size();
 	plhs[0] = mxCreateDoubleMatrix(1, N+1, mxREAL);

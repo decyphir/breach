@@ -1,4 +1,4 @@
-function P = pRefine(P, p, r)
+function P = pRefine(P0, p, r)
 % PREFINE refines the parameter set P by picking r initial points for the
 % Morris global sensitivity measure. These points are randomly chosen in
 % the grid with p levels (See Saltelli's Books, chapter 3 or 4). We use the
@@ -35,7 +35,10 @@ function P = pRefine(P, p, r)
 
 % define the admissible grid and pick points
 
-k = numel(P.dim);           % dimension
+P=SPurge(P0);
+
+k = numel(P0.dim);           % dimension
+
 delta = p/(2*(p-1));
 ngrid = floor(p*(1-delta));
 
@@ -65,14 +68,19 @@ for ii=1:r
 end
 
 % Normalize to P ranges
-P.pts = repmat(P.pts(:,1), [1 size(S2.pts,2)]);
-P.epsi = repmat(P.epsi(:,1), [1 size(S2.pts,2)]);
+P.dim = P0.dim;
+P.pts = repmat(P0.pts(:,1), [1 size(S2.pts,2)]);
+P.epsi = repmat(P0.epsi(:,1), [1 size(S2.pts,2)]);
 P.pts(P.dim,:) = P.pts(P.dim,:) + (2*S2.pts-1).*P.epsi;
 P.epsi = P.epsi*delta;   % <-- NOT SURE OF THAT
 P.D = S2.D;
 
+if isfield(P0, 'traj')
+    P = Pcopy_traj(P, P0);
+end
+
 % Purge trajectories and properties
-P = SPurge_props(P);
-P = SPurge(P);
+%P = SPurge_props(P);
+%P = SPurge(P);
 
 end

@@ -28,9 +28,9 @@ obj_files = ['robustness' obj_ext ...
 MEX = 'mex ';
 FLAGS = ' ';
 
-if isfield(BreachGlobOpt, 'disable_robust_linear_interpol')
-    if BreachGlobOpt.disable_robust_linear_interpol==1  
-        FLAGS = '-DNO_LINEAR_INTERPOL ';  
+if isfield(BreachGlobOpt, 'disable_robust_linear_interpolation')
+    if BreachGlobOpt.disable_robust_linear_interpolation==1  
+        FLAGS = '-DNO_LINEAR_INTERPOL ';
     end
 end
     

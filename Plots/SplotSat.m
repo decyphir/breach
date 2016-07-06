@@ -20,6 +20,9 @@ function [P, val] =  SplotSat(Sys, P, phis, depth, tau, ipts)
 %  - val : quantitative satisfaction of properties
 %
 
+global BreachGlobOpt
+
+
 % check arguments
 if(~exist('ipts','var')||isempty(ipts))
     ipts = 1:size(P.pts,2);
@@ -112,7 +115,15 @@ for np = npb+1:nb_phis+npb
         %plot(phi_tspan*time_mult, phi_val);
         %stairs(phi_tspan*time_mult, (phi_val>0)*max(abs(phi_val))/2,'-r');
         tsc = phi_tspan*time_mult;
-        ax = plotyy(tsc, phi_val, tsc, phi_val>0, 'stairs', 'stairs' );
+        plot_style = 'plot';
+        
+        if isfield(BreachGlobOpt, 'disable_robust_linear_interpolation')
+            if BreachGlobOpt.disable_robust_linear_interpolation==1
+                plot_style = 'stairs';
+            end
+        end
+        
+        ax = plotyy(tsc, phi_val, tsc, phi_val>0, plot_style, 'stairs' );
         set(ax(2), 'YLim', [-0.1 1.1], 'YTick', [0 1], 'YTickLabel', {'false', 'true'});
         if np-npb == 1
             legend('Quant. sat', 'Bool. sat');
