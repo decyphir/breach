@@ -1,16 +1,16 @@
 classdef BreachOpenSystem < BreachSystem
-    % BreachOpenSystem  a BreachSystem derivated class with an input generator. 
-    % 
+    % BreachOpenSystem  a BreachSystem derivated class with an input generator.
+    %
     %   BreachOpenSystem Properties
-    %        InputGenerator - BreachSystem generating inputs. 
+    %        InputGenerator - BreachSystem generating inputs.
     %
     %   BreachOpenSystem Methods
-    %        SetInputGen - takes a BreachSystem as argument and makes it the input generator. 
-    %                      Can be seen as serial composition of two BreachSystems.    
-    %        Sim         - the Sim method for BreachOpenSystems accepts  
-    %                      input as a third argument, when given, it bypasses 
+    %        SetInputGen - takes a BreachSystem as argument and makes it the input generator.
+    %                      Can be seen as serial composition of two BreachSystems.
+    %        Sim         - the Sim method for BreachOpenSystems accepts
+    %                      input as a third argument, when given, it bypasses
     %                      the input generator. The input format is an array
-    %                      where the first column is time. 
+    %                      where the first column is time.
     %
     %See also signal_gen
     
@@ -26,9 +26,9 @@ classdef BreachOpenSystem < BreachSystem
                 tspan = this.Sys.tspan;
             end
             Sys = this.Sys;
-            if exist('U','var') % in this case, the InputGenerator becomes a trace object 
-            % TODO: handles multiple input signals
-
+            if exist('U','var') % in this case, the InputGenerator becomes a trace object
+                % TODO: handles multiple input signals
+                
                 if isnumeric(U)
                     DimU = this.InputMap.Count();
                     if size(U, 2)~=DimU+1;
@@ -49,16 +49,16 @@ classdef BreachOpenSystem < BreachSystem
             this.P = ComputeTraj(Sys, this.P, tspan);
             
         end
-           
+        
         % we merge parameters of the input generator with those of the
         % system, but keep both BreachObjects
         function SetInputGen(this, IG)
-        % SetInputGen Attach a BreachSystem as input generator. 
+            % SetInputGen Attach a BreachSystem as input generator.
             
-            % Warnings about current P 
-            this.WarningResetP('SetInputGen'); 
+            % Warnings about current P
+            this.WarningResetP('SetInputGen');
             
-            % look for property parameters and save them 
+            % look for property parameters and save them
             PropParams={};
             if ~isempty(this.P)
                 PropParams = this.P.ParamList(this.P.DimP+1:end);
@@ -91,9 +91,9 @@ classdef BreachOpenSystem < BreachSystem
                         IG = struct('type','VarStep','cp', cp*ones(1, numel(inputs)));
                     end
                 end
-            end            
+            end
             
-            % IG can be a struct, a signal generator, or a BreachSystem         
+            % IG can be a struct, a signal generator, or a BreachSystem
             DimU = this.InputMap.Count;
             if (isstruct(IG))
                 if ~isfield(IG,'type')
@@ -128,7 +128,7 @@ classdef BreachOpenSystem < BreachSystem
                         sg = var_cp_signal_gen(inputs, IG.cp, IG.method);
                         IG = BreachSignalGen({sg});
                 end
-            elseif iscell(IG)    
+            elseif iscell(IG)
                 mm = methods(IG{1});
                 if any(strcmp(mm,'computeSignals'))
                     IG = BreachSignalGen(IG);
@@ -137,8 +137,9 @@ classdef BreachOpenSystem < BreachSystem
                         error('Input generator should be a struct, a signal_gen, a cell array of signal_gen, or a BreachSignalGen object');
                     end
                 end
-               
+                              
             else
+                
                 mm = methods(IG);
                 if any(strcmp(mm,'computeSignals'))
                     IG = BreachSignalGen({IG});
@@ -210,18 +211,18 @@ classdef BreachOpenSystem < BreachSystem
             end
             
         end
-      
+        
         function this = Concat(this,other)
             
             if isa(this.InputGenerator, 'BreachTraceSystem')
-                % TODO Concat other with more than one trace...  
+                % TODO Concat other with more than one trace...
                 trace = [other.InputGenerator.P.traj(1).time' other.InputGenerator.P.traj(1).X'];
                 this.InputGenerator.AddTrace(trace);
-                % Using SetParam here erases the trajectory... 
+                % Using SetParam here erases the trajectory...
                 i_trace_id = FindParam(other.P, 'trace_id');
                 other.P.pts(i_trace_id,1) = numel(this.P.traj)+1;
                 other.P.traj(1).param(i_trace_id) = numel(this.P.traj)+1;
-            
+                
                 this.P = SConcat(this.P, other.P);
             else
                 this.InputGenerator.P= SConcat(this.InputGenerator.P, other.InputGenerator.P);
@@ -240,7 +241,7 @@ classdef BreachOpenSystem < BreachSystem
             for i = 1:length(p)
                 new.(p{i}) = this.(p{i});
             end
-
+            
             % InputGenerator field is a handle object, needs a copy of its
             % own
             if ~isempty(this.InputGenerator)

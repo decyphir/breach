@@ -22,7 +22,7 @@ function varargout = BreachGui(varargin)
 
 % Edit the above text to modify the response to help BreachGui
 
-% Last Modified by GUIDE v2.5 26-Apr-2013 17:08:07
+% Last Modified by GUIDE v2.5 18-Jul-2016 15:53:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -52,6 +52,8 @@ function BreachGui_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to BreachGui (see VARARGIN)
 
+
+
 handles = info(handles, 'Starting Breach.... (Memory tip: his first name is Millard)');
 crd = pwd;
 set(hObject, 'Name', ['Breach (' crd  ')']);
@@ -64,17 +66,22 @@ handles.check_prop_options =[];
 Sys = varargin{2};
 SysName = varargin{3};
 handles.Sys=Sys;
+if nargin>= 4
+    handles.BrSys = varargin{4};
+else
+    handles.BrSys = BreachSystem(Sys);
+end
 
 handles.system_name_file = [ SysName '.mat' ];
 if (isfield(Sys,'tspan'))
     if isscalar(Sys.tspan)
         handles.last_tspan = ['[0 ' dbl2str(Sys.tspan) ']'];
     elseif numel(Sys.tspan)==2
-        handles.last_tspan = ['[' dbl2str(Sys.tspan(1)) ' ' dbl2str(Sys.tspan(2)) ']'];        
+        handles.last_tspan = ['[' dbl2str(Sys.tspan(1)) ' ' dbl2str(Sys.tspan(2)) ']'];
     else
         handles.last_tspan = ['0:' dbl2str(Sys.tspan(2)-Sys.tspan(1)) ':' dbl2str(Sys.tspan(end))];
     end
-    else
+else
     handles.last_tspan = '';
 end
 
@@ -144,11 +151,10 @@ handles.current_plot{3} =[];
 handles.current_marked = [];
 
 handles = update_modif_panel(handles);
-
 handles = info(handles, 'Ready.');
 
 % Choose default command line output for BreachGui
-handles.output = hObject;
+handles.output = handles;
 
 % Update handles structure
 guidata(hObject, handles);
@@ -179,7 +185,7 @@ handles.selected_param = val;
 if (val<= handles.Sys.DimX)
     if isfield(handles.Sys, 'type')
         if (strcmp(handles.Sys.type, 'Simulink')||(strcmp(handles.Sys.type, 'Extern')))
-            whatisit = 'a signal.';   
+            whatisit = 'a signal.';
         else
             whatisit = 'an initial condition.';
         end
@@ -459,7 +465,7 @@ function edit_default_param_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 val = eval(get(hObject,'String'));
-param = get(handles.edit30,'String');
+param = get(handles.edit_param_name,'String');
 ii = FindParam(handles.working_sets.(handles.current_set), param);
 
 if ~any(handles.working_sets.(handles.current_set).dim==ii)
@@ -605,7 +611,7 @@ function edit_value_pts_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-try 
+try
     val = eval(get(hObject,'String'));
     ipts = handles.working_sets.(handles.current_set).dim(handles.selected_varying_param);
     handles.working_sets.(handles.current_set).pts(ipts,handles.current_pts) = val;
@@ -1065,10 +1071,10 @@ fnames = fieldnames(def_par);
 
 ndf = numel(fnames);
 if ndf>0
-   info_msg = [info_msg '   |  default params:']; 
+    info_msg = [info_msg '   |  default params:'];
 end
 for idf =1:ndf
-    info_msg = [info_msg ' ' fnames{idf} '=' num2str(def_par.(fnames{idf}))];    
+    info_msg = [info_msg ' ' fnames{idf} '=' num2str(def_par.(fnames{idf}))];
 end
 
 set(handles.text_info, 'String', info_msg);
@@ -1209,60 +1215,62 @@ guidata(hObject, handles);
 
 function handles = update_working_sets_panel(handles)
 
-try
-    k = strfind(handles.working_sets_file_name,filesep);
-    if ~isempty(k)
-        str_name = handles.working_sets_file_name(k(end)+1:end);
-    else
-        str_name = handles.working_sets_file_name;
-    end
-    str_name = sprintf('Param. Set (%s)', str_name(1:end-4)); % remove the ".mat"
-    if(numel(str_name)>35)
-        str_name = [str_name(1:26) '...' str_name(end-5:end)];
-    end
-    set(handles.working_sets_panel,'Title',str_name );
-    fn = fieldnames(handles.working_sets);
-    
-    for ii=1:numel(fn)
-        % check if field is indeed a param set
-        if ~isfield(handles.working_sets.(fn{ii}),'pts')
-            handles.working_sets = rmfield(handles.working_sets, fn{ii});
-        end
-    end
-    
-    fn = fieldnames(handles.working_sets);
-    
-    for ii=1:numel(fn)
-        pref = '';
-        if(handles.working_sets.(fn{ii}).DimP ~= handles.Sys.DimP)
-            pref = '!';
-        end
-        
-        if isfield(handles.working_sets.(fn{ii}),'traj_ref')
-            if all(handles.working_sets.(fn{ii}).traj_ref~=0)
-                pref = [pref,'*']; %#ok<AGROW>
-            elseif any(handles.working_sets.(fn{ii}).traj_ref~=0)
-                pref = [pref,'+']; %#ok<AGROW>
-            end
-        elseif isfield(handles.working_sets.(fn{ii}),'traj');
-            pref = [pref, '*']; %#ok<AGROW>
-        end
-        
-        fn{ii} = [pref, fn{ii}];
-        
-    end
-    
-    set(handles.working_sets_listbox,'String', fn);
-    set(handles.edit_rename,'String',handles.current_set);
-    if get(handles.autosave_checkbox, 'Value')
-        handles = info(handles, 'Autosaving parameter sets...');
-        ws = handles.working_sets; %#ok<NASGU>
-        save(handles.working_sets_file_name, '-struct', 'ws');
-        handles = info(handles, '');
-    end
-catch
-    return;
+%try
+k = strfind(handles.working_sets_file_name,filesep);
+if ~isempty(k)
+    str_name = handles.working_sets_file_name(k(end)+1:end);
+else
+    str_name = handles.working_sets_file_name;
 end
+str_name = sprintf('Param. Set (%s)', str_name(1:end-4)); % remove the ".mat"
+if(numel(str_name)>35)
+    str_name = [str_name(1:26) '...' str_name(end-5:end)];
+end
+set(handles.working_sets_panel,'Title',str_name );
+fn = fieldnames(handles.working_sets);
+
+for ii=1:numel(fn)
+    % check if field is indeed a param set
+    if ~isfield(handles.working_sets.(fn{ii}),'pts')
+        handles.working_sets = rmfield(handles.working_sets, fn{ii});
+    end
+end
+
+fn = fieldnames(handles.working_sets);
+
+for ii=1:numel(fn)
+    pref = '';
+    if(handles.working_sets.(fn{ii}).DimP ~= handles.Sys.DimP)
+        pref = '!';
+    end
+    
+    if isfield(handles.working_sets.(fn{ii}),'traj_ref')
+        if all(handles.working_sets.(fn{ii}).traj_ref~=0)
+            pref = [pref,'*']; %#ok<AGROW>
+        elseif any(handles.working_sets.(fn{ii}).traj_ref~=0)
+            pref = [pref,'+']; %#ok<AGROW>
+        end
+    elseif isfield(handles.working_sets.(fn{ii}),'traj');
+        pref = [pref, '*']; %#ok<AGROW>
+    end
+    
+    fn{ii} = [pref, fn{ii}];
+    
+end
+
+set(handles.working_sets_listbox,'String', fn);
+set(handles.edit_rename,'String',handles.current_set);
+if get(handles.autosave_checkbox, 'Value')
+    handles = info(handles, 'Autosaving parameter sets...');
+    ws = handles.working_sets; %#ok<NASGU>
+    save(handles.working_sets_file_name, '-struct', 'ws');
+    handles = info(handles, '');
+end
+%catch
+%    handles= info(handles, lasterr);
+%    guidata(hObject, handles);
+%    return;
+%end
 
 function handles = update_properties_panel(handles)
 
@@ -1279,9 +1287,9 @@ fnames = fieldnames(handles.properties);
 content={};
 
 for i = 1:numel(fnames)
-    try 
+    try
         st = disp(handles.properties.(fnames{i}),-1);
-    catch % a common issue is backward incompatibility - trying using RecoverFormula 
+    catch % a common issue is backward incompatibility - trying using RecoverFormula
         warning('Likely a backward compatibility issue, trying to recover formula.');
         handles.properties.(fnames{i})= RecoverFormula(handles.properties.(fnames{i}));
         st = disp(handles.properties.(fnames{i}),-1);
@@ -1324,10 +1332,10 @@ for i=1:DimX
     st = ParamList{i};
     if isfield(handles.Sys, 'type')
         switch handles.Sys.type
-         case {'Simulink'}
-             st = strcat(st, ':','--');
-         case {'Breach', 'Extern'}
-          st = strcat(st, '[0]:',' ',dbl2str(handles.working_sets.(handles.current_set).pts(i,k)));
+            case {'Simulink'}
+                st = strcat(st, ':','--');
+            case {'Breach', 'Extern'}
+                st = strcat(st, '[0]:',' ',dbl2str(handles.working_sets.(handles.current_set).pts(i,k)));
         end
     else
         st = strcat(st, '[0]:',' ',dbl2str(handles.working_sets.(handles.current_set).pts(i,k)));
@@ -1348,7 +1356,7 @@ set(handles.listbox_default_parameters,'String',content);
 set(handles.listbox_default_parameters,'Value',handles.selected_param);
 
 set(handles.edit_default_param, 'String', dbl2str(handles.working_sets.(handles.current_set).pts(handles.selected_param,k)));
-set(handles.edit30, 'String', handles.working_sets.(handles.current_set).ParamList(handles.selected_param));
+set(handles.edit_param_name, 'String', handles.working_sets.(handles.current_set).ParamList(handles.selected_param));
 
 %% Varying parameters listbox
 content = {};
@@ -1393,29 +1401,29 @@ if(DimP ~= handles.Sys.DimP)||(DimX ~= handles.Sys.DimX)
 end
 % menu for param pts plot
 
-    set(handles.popup_pts1,'String',ParamList);
-    handles.current_plot_pts{1} = ParamList(dim(1));
-    set(handles.popup_pts1,'Value', dim(1));
-    set(handles.popup_pts2,'String',{'', ParamList{:}});
+set(handles.popup_pts1,'String',ParamList);
+handles.current_plot_pts{1} = ParamList(dim(1));
+set(handles.popup_pts1,'Value', dim(1));
+set(handles.popup_pts2,'String',{'', ParamList{:}});
 
-    if(numel(dim)>=2)
-        handles.current_plot_pts{2} = ParamList(dim(2));
-        set(handles.popup_pts2,'Value', dim(2)+1);
-    else
-        handles.current_plot_pts{2} = '';
-        set(handles.popup_pts2,'Value', 1);
-    end
+if(numel(dim)>=2)
+    handles.current_plot_pts{2} = ParamList(dim(2));
+    set(handles.popup_pts2,'Value', dim(2)+1);
+else
+    handles.current_plot_pts{2} = '';
+    set(handles.popup_pts2,'Value', 1);
+end
 
-    set(handles.popup_pts3,'String',{'', ParamList{:}});
-    if(numel(dim)>=3)
-        handles.current_plot_pts{3} = ParamList(dim(3));
-        set(handles.popup_pts3,'Value', dim(3)+1);
-    else
-        handles.current_plot_pts{3} = '';
-        set(handles.popup_pts3,'Value', 1);
-    end
-    handles =  plot_pts(handles);
-%end 
+set(handles.popup_pts3,'String',{'', ParamList{:}});
+if(numel(dim)>=3)
+    handles.current_plot_pts{3} = ParamList(dim(3));
+    set(handles.popup_pts3,'Value', dim(3)+1);
+else
+    handles.current_plot_pts{3} = '';
+    set(handles.popup_pts3,'Value', 1);
+end
+handles =  plot_pts(handles);
+%end
 
 function handles = update_system_panel(handles)
 
@@ -1498,11 +1506,11 @@ P = handles.working_sets.(handles.current_set);
 i0=0;
 if ~isfield(P, 'props_values')
     SplotPts(P, param_to_plot);
-
+    
     if ~isempty(ipts(2:end))
         SplotBoxPts(P, param_to_plot,ipts(2:end),'+b','y',.1);
     end
-
+    
     SplotPts(P, param_to_plot,handles.current_pts,{'ok', 'MarkerSize',14});
     SplotBoxPts(P, param_to_plot,handles.current_pts,{'xk', 'MarkerSize',14} ,'k',.1);
     S = DiscrimPropValues(P);
@@ -1561,11 +1569,11 @@ else
         SplotBoxPts(P, param_to_plot,handles.current_pts,{'xk', 'MarkerSize',14} ,'k',.1);
     else
         SplotPts(P, param_to_plot);
-
+        
         if ~isempty(ipts(2:end))
             SplotBoxPts(P, param_to_plot,ipts(2:end),'+b','y',.1);
         end
-
+        
         SplotPts(P, param_to_plot,handles.current_pts,{'ok', 'MarkerSize',14});
         SplotBoxPts(P, param_to_plot,handles.current_pts,{'xk', 'MarkerSize',14} ,'k',.1);
         S = DiscrimPropValues(P);
@@ -1675,7 +1683,7 @@ try
         end
     end
     
-    %  options dialog box    
+    %  options dialog box
     info = 'Refine boundary between regions satisfying different properties';
     answers = { handles.current_prop,'','0','3'};
     ins = inputdlg({'Enter array of properties (e.g. [phi1, phi2])', 'Enter tspan for trajectories (empty: tspan of computed trajs)','Enter time for property checking', 'Number of iterations'}, info,1, answers );
@@ -1742,47 +1750,61 @@ catch
 end
 
 % --------------------------------------------------------------------
-function menu_minimize_robustness_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_minimize_robustness (see GCBO)
+function menu_falsify_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_falsify (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-try
-    kn = find(handles.working_sets.(handles.current_set).selected);
-    if isempty(kn)
-        kn = handles.current_pts;
-    end
-    Psel = Sselect( handles.working_sets.(handles.current_set), kn);
-    prop_name = handles.current_prop;
-    prop = handles.properties.(prop_name);
-    
-    options.Display = [];
-    options.MaxFunEvals = [];
-    options.MaxIter = [];
-    options.TolFun = [];
-    options.TolX = [];
-    
-    options = structdlg(options);
-    if isempty(options)
-        return;
-    end
-    
-    options = optimset('Display',options.Display, 'MaxFunEvals', ...
-        options.MaxFunEvals,'MaxIter',options.MaxIter, 'TolFun',options.TolFun, 'TolX',options.TolX);
-    
-    Popt = SOptimPropBoundary(handles.Sys,Psel, prop, Psel.traj(1).time,options);
-    handles.working_sets.(handles.current_set) = ...
-        SReplace(handles.working_sets.(handles.current_set), Popt,kn);
-    handles = update_modif_panel(handles);
-    guidata(hObject,handles);
-    
-catch
-    s = lasterror;
-    warndlg(['Problem minimizing: ' s.message] );
-    error(s);
-    return
-    
+
+kn = find(handles.working_sets.(handles.current_set).selected);
+if isempty(kn)
+    kn = handles.current_pts;
+end
+Psel = Sselect( handles.working_sets.(handles.current_set), kn);
+prop_name = handles.current_prop;
+prop = handles.properties.(prop_name);
+
+BrSys = handles.BrSys.copy();
+BrSys.SetP(Psel);
+
+if isfield(handles, 'falsif_pb')
+    options = handles.falsif_pb.solver_options;
+    handles.falsif_pb = FalsificationProblem(BrSys, prop);
+else
+    handles.falsif_pb = FalsificationProblem(BrSys, prop);
+    options = handles.falsif_pb.solver_options;
 end
 
+options = structdlg(options);
+if isempty(options)
+    return;
+end
+handles.falsif_pb.solver_options = options;
+handles.falsif_pb.log_traces=1;
+
+handles = info(handles, 'Optimizing...');
+
+handles.falsif_pb.solve();
+
+BrFalse = handles.falsif_pb.GetBrSet_False();
+BrLogged = handles.falsif_pb.GetBrSet_Logged();
+
+if isempty(BrFalse)
+    handles = info(handles, 'No falsifying input found');
+else
+    handles = info(handles, 'Done.');
+    PFalse = BrFalse.P;
+    PFalse.epsi = 0*PFalse.epsi;
+    new_name = ['PFalse_' get_id(prop)];
+    handles.working_sets = setfield(handles.working_sets, new_name, PFalse);
+end
+PLog =  BrLogged.P;
+PLog.epsi = 0*PLog.epsi;
+new_name2 = ['PLog_' get_id(prop)];
+handles.working_sets = setfield(handles.working_sets, new_name2, PLog);
+
+handles = update_working_sets_panel(handles);
+handles = update_modif_panel(handles);
+guidata(hObject,handles);
 
 
 % --------------------------------------------------------------------
@@ -2005,35 +2027,40 @@ prop = handles.properties.(handles.current_prop);
 evalin('base', ['load(''' handles.properties_file_name ''')']);
 load(handles.properties_file_name);
 
+BrSys = handles.BrSys;
+PHI_= BrSys.AddSpecGUI();
 
-prompt = {'Enter id', 'Edit formula expression:'};
-name = 'New/Copy Formula';
-numlines = 1;
-defaultanswer = {genvarname(get_id(prop), fieldnames(handles.properties)), disp(prop,-1)};
-opts.Resize = 'on';
-opts.WindowStyle = 'normal';
-str = inputdlg(prompt,name,numlines,defaultanswer, opts);
-
-if isempty(str)
-    return;
+% prompt = {'Enter id', 'Edit formula expression:'};
+% name = 'New/Copy Formula';
+% numlines = 1;
+% defaultanswer = {genvarname(get_id(prop), fieldnames(handles.properties)), disp(prop,-1)};
+% opts.Resize = 'on';
+% opts.WindowStyle = 'normal';
+% str = inputdlg(prompt,name,numlines,defaultanswer, opts);
+%
+% if isempty(str)
+%     return;
+% end
+%
+% try
+%     id = str{1};
+%     phi_st = str{2};
+%     PHI = eval(['STL_Formula(''' id ''',''' phi_st ''')']);
+%     eval([get_id(PHI) '=PHI']);
+% catch
+%     s = lasterror;
+%     warndlg(['Invalid formula: ' s.message] );
+%     error(s);
+%     return
+% end
+if isa(PHI_,'STL_Formula')
+    eval([get_id(PHI_) '=PHI_']);
+    save(handles.properties_file_name, '-append', get_id(PHI_));
+    handles = update_properties_panel(handles);
+    guidata(hObject, handles);
+else
+    info(handles,'No new formula was defined.');
 end
-
-try
-    id = str{1};
-    phi_st = str{2};
-    PHI = eval(['STL_Formula(''' id ''',''' phi_st ''')']);
-    eval([get_id(PHI) '=PHI']);
-catch
-    s = lasterror;
-    warndlg(['Invalid formula: ' s.message] );
-    error(s);
-    return
-end
-
-save(handles.properties_file_name, '-append', get_id(PHI));
-
-handles = update_properties_panel(handles);
-guidata(hObject, handles);
 
 function i = find_prop(st, P)
 i=0;
@@ -2262,7 +2289,7 @@ try
     
     guidata(hObject,handles);
     h = BreachTrajGui('varargin', handles);
-
+    
 catch
     s = lasterror;
     warndlg(['Problem importing trajectory: ' s.message] );
@@ -2354,7 +2381,6 @@ function menu_plot_local_sensi_histo_Callback(hObject, eventdata, handles)
 try
     P = handles.working_sets.(handles.current_set);
     [M, handles.last_options] = SplotSensiBar(handles.Sys, P, [],[]);
-    
 catch
     s = lasterror;
     warndlg(['Problem refining: ' s.message] );
@@ -2705,7 +2731,6 @@ function button_plot_selected_Callback(hObject, eventdata, handles)
 try
     
     % getting parameters
-    
     if isfield(handles.Sys, 'time_mult')
         handles.working_sets.(handles.current_set).time_mult = handles.Sys.time_mult;
     end
@@ -2809,7 +2834,7 @@ function menu_select_satisfied_Callback(hObject, eventdata, handles)
 try
     
     iprop = find_prop(handles.current_prop,handles.working_sets.(handles.current_set));
-    val_threshold = 0;    
+    val_threshold = 0;
     if iprop
         val = cat(1,handles.working_sets.(handles.current_set).props_values(iprop,:).val);
         val = val(:,1);
@@ -2826,15 +2851,15 @@ catch
     return
 end
 
-function edit30_Callback(hObject, eventdata, handles)
-% hObject    handle to edit30 (see GCBO)
+function edit_param_name_Callback(hObject, eventdata, handles)
+% hObject    handle to edit_param_name (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 
 % --- Executes during object creation, after setting all properties.
-function edit30_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit30 (see GCBO)
+function edit_param_name_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_param_name (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -2856,3 +2881,152 @@ function autosave_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of autosave_checkbox
+
+
+% --- Executes during object creation, after setting all properties.
+function system_panel_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to system_panel (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --------------------------------------------------------------------
+function create_input_parameter_set_Callback(hObject, eventdata, handles)
+% hObject    handle to create_input_parameter_set (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+idx = handles.BrSys.GetParamsInputIdx();
+Pnew = CreateParamSet(handles.Sys, idx);
+names = fieldnames(handles.working_sets);
+new_name = genvarname('Pin',names);
+handles.working_sets = setfield(handles.working_sets, new_name, Pnew);
+%set(handles.working_sets_listbox,'Value', numel(names)+1);
+handles = update_working_sets_panel(handles);
+guidata(hObject,handles);
+
+% --------------------------------------------------------------------
+function create_prop_param_set_Callback(hObject, eventdata, handles)
+% hObject    handle to create_prop_param_set (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+prop = handles.properties.(handles.current_prop);
+param_prop = fieldnames(get_params(prop))';
+Pnew = CreateParamSet(handles.Sys, param_prop);
+names = fieldnames(handles.working_sets);
+new_name = genvarname(['P_' get_id(prop)],names);
+handles.working_sets = setfield(handles.working_sets, new_name, Pnew);
+%set(handles.working_sets_listbox,'Value', numel(names)+1);
+handles = update_working_sets_panel(handles);
+guidata(hObject,handles);
+
+
+% --------------------------------------------------------------------
+function menu_param_synth_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_param_synth (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+kn = find(handles.working_sets.(handles.current_set).selected);
+if isempty(kn)
+    kn = handles.current_pts;
+end
+Psel = Sselect( handles.working_sets.(handles.current_set), kn);
+prop_name = handles.current_prop;
+prop = handles.properties.(prop_name);
+
+BrSys = handles.BrSys.copy();
+BrSys.SetP(Psel);
+
+handles.param_synth_pb = ParamSynthProblem(BrSys, prop);
+
+handles = info(handles, 'Optimizing...');
+
+handles.param_synth_pb.solve();
+
+BrSynth = handles.param_synth_pb.GetBrSet_Best();
+BrLogged = handles.param_synth_pb.GetBrSet_Logged();
+
+% TODO what if no synth param exist?
+names = fieldnames(handles.working_sets);
+handles = info(handles, 'Done.');
+PSynth = BrSynth.P;
+PSynth.epsi = 0*PSynth.epsi;
+new_name = genvarname(['PSynth_' get_id(prop)],names);
+handles.working_sets = setfield(handles.working_sets, new_name, PSynth);
+
+PLog =  BrLogged.P;
+PLog.epsi = 0*PLog.epsi;
+new_name2 = genvarname(['PLog_' get_id(prop)],names);
+handles.working_sets = setfield(handles.working_sets, new_name2, PLog);
+
+handles = update_working_sets_panel(handles);
+handles = update_modif_panel(handles);
+guidata(hObject,handles);
+
+
+
+% --------------------------------------------------------------------
+function menu_reset_param_files_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_reset_param_files (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+filename = [handles.Sys.name '_param_sets.mat'];
+backup = ['.' handles.Sys.name '_param_sets.mat.bck'];
+title = ['Reset param set file'];
+answ = questdlg('Are you sure?', title);
+
+if strcmp(answ,'Yes')
+    movefile(filename, backup);
+    handles.BrSys.RunGUI;
+end
+
+
+% --------------------------------------------------------------------
+function menu_reset_prop_file_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_reset_prop_file (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+filename = [handles.Sys.name '_properties.mat'];
+backup = ['.' handles.Sys.name '_properties.mat.bck'];
+title = ['Reset prop file'];
+answ = questdlg('Are you sure?', title);
+
+if strcmp(answ,'Yes')
+    movefile(filename, backup);
+    handles.BrSys.RunGUI;
+end
+
+
+% --------------------------------------------------------------------
+function menu_set_input_gen_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_set_input_gen (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+input_gen.type = 'VarStep';
+input_gen.cp = 2;
+input_gen.method = 'previous';
+
+input_gen = structdlg(input_gen, 'Set input generator');
+if isempty(input_gen)
+    return;
+else
+    answ = questdlg('Are you sure?', 'Reset parameter sets');
+    
+    if strcmp(answ,'Yes')
+        filename = [handles.Sys.name '_param_sets.mat'];
+        backup = ['.' handles.Sys.name '_param_sets.mat.bck']; 
+        movefile(filename, backup);
+        handles.BrSys.SetInputGen(input_gen);
+        handles.BrSys.RunGUI;   
+    end 
+end
+
+
+

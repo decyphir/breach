@@ -1,4 +1,4 @@
-function Breach(Sys, P, spec)
+function gui = Breach(Sys, P, spec)
 % BREACH  Launches Breach main GUI.
 %
 %   Usage: Breach([Sys, P, spec_file]) or Breach([spec_file, P])
@@ -17,11 +17,21 @@ catch
     evalin('base', 'InitBreach');
 end
 
-% Checks if a system is present in the current directory
+if nargin==1
+    if (isa(Sys, 'BreachSystem'))
+        BrSys = Sys;
+        Sys = BrSys.Sys;
+        P = BrSys.P;
+    end
+end
 
+% Checks if a system is present in the current directory
 dr = pwd;
 indst = strfind(dr, filesep);
 SysName = dr(indst(end)+1:end);
+
+% if no BreachSystem is given, create one.
+
 
 if (exist('Sys'))
     
@@ -51,7 +61,7 @@ if (exist('Sys'))
     end
     Sys.Dir= pwd;
     
-    %% Extra arguments
+    % Extra arguments
     if nargin>=2 % a parameter set is given as input, load it
         if ~(isempty(P))
             Psave(Sys, P);
@@ -59,47 +69,51 @@ if (exist('Sys'))
     end
     
     if nargin>=3
-        if ischar(spec) % 
+        if ischar(spec) %
             Propsave(Sys, spec);
         else % should be a cell
-            Propsave(Sys, spec{:});        
+            Propsave(Sys, spec{:});
         end
     end
     
-    h = BreachGui('varargin',Sys,SysName);
-    return
-    
-end
-
-% either SysName.mat does not exist or not valid, now try CreateSystem
-if (exist([pwd '/CreateSystem.m'])~=2)
-    fprintf('No system found in the current directory.\nYou can set up one using the function NewSystem\nor CreateExternSystem if using another simulator\nor CreateSimulinkSystem for Simulink models \n');
-    return;
 else
-    CreateSystem;
-end
-
-Sys.Dir = pwd;
-save([SysName '.mat'],'Sys');
-
-%% Extra arguments
-if nargin>=2 % a parameter set is given as input, load it
-    if ~(isempty(P))
-        try
-            Psave(Sys, P);
-        catch
-            warning(['Problem loading parameter set' P]);
+   
+    % either SysName.mat does not exist or not valid, now try CreateSystem
+    if (exist([pwd '/CreateSystem.m'])~=2)
+        error('No system found as argument or in the current directory.');
+    else
+        CreateSystem; % old stuff 
+    end
+    
+    Sys.Dir = pwd;
+    save([SysName '.mat'],'Sys');
+    
+    % Extra arguments
+    if nargin>=2 % a parameter set is given as input, load it
+        if ~(isempty(P))
+            try
+                Psave(Sys, P);
+            catch
+                warning(['Problem loading parameter set' P]);
+            end
         end
     end
-end
-
-if nargin>=3
-    try
-        prop_names = STL_ReadFile(spec);
-        Propsave(Sys, prop_names{:});
-    catch
-        warning(['Problem loading properties from file ' spec]);
+    
+    if nargin>=3
+        try
+            prop_names = STL_ReadFile(spec);
+            Propsave(Sys, prop_names{:});
+        catch
+            warning(['Problem loading properties from file ' spec]);
+        end
     end
+    
 end
 
-BreachGui('varargin',Sys,SysName);
+
+if ~exist('BrSys', 'var')
+    BrSys = BreachSystem(Sys);
+end
+    
+
+gui = BreachGui('varargin',Sys,SysName, BrSys);

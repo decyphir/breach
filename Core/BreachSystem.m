@@ -8,17 +8,17 @@ classdef BreachSystem < BreachSet
     % properties and methods of the parent class.
     %
     % BreachSystem Properties
-    %   Specs  - a set of Signal Temporal Logic (STL) formulas. 
-    %  
+    %   Specs  - a set of Signal Temporal Logic (STL) formulas.
     %
-    % BreachSystem methods 
-    %   Sim           - Simulate the system for some time using every parameter vectors.          
-    %   SetTime       - Set a default time for simulation (array or end time)       
+    %
+    % BreachSystem methods
+    %   Sim           - Simulate the system for some time using every parameter vectors.
+    %   SetTime       - Set a default time for simulation (array or end time)
     %   GetTime       - Get default time for simulation
     %   AddSpec       - Add a specification to the system
-    %   CheckSpec     - Checks (return robust satisfcation of) a given specification or all added specs   
-    %   PlotRobustSat - Plots robust satisfaction of a given STL formula against time 
-    %   PlotRobustMap - Plots (1d or 2d) robust satisfaction against parameter values 
+    %   CheckSpec     - Checks (return robust satisfcation of) a given specification or all added specs
+    %   PlotRobustSat - Plots robust satisfaction of a given STL formula against time
+    %   PlotRobustMap - Plots (1d or 2d) robust satisfaction against parameter values
     %   RunGUI        - Open Breach legacy GUI, allowing for interactively exploring parameters, traces and specifications
     %
     %See also BreachSet.
@@ -69,6 +69,16 @@ classdef BreachSystem < BreachSet
         function SetDefaultParam(this, params, values)
             this.Sys = SetParam(this.Sys,params, values);
         end
+        function SetP(this,P)
+            
+            if isaP(P)
+                this.P =P;
+                this.UpdateParamRanges();
+            else
+                error('Argument should a Breach parameter structure.');
+            end
+            
+        end
         
         %% Signals plots and stuff
         function SetTime(this,tspan)
@@ -88,7 +98,7 @@ classdef BreachSystem < BreachSet
         
         
         %% Specs
-        % Add (a) specs
+        % Add (a) specs % TODO double check
         function phi = AddSpec(this, varargin)
             global BreachGlobOpt
             if nargin==2
@@ -96,8 +106,10 @@ classdef BreachSystem < BreachSet
                     phi = varargin{1};
                 elseif ischar(varargin{1})
                     phi_id = MakeUniqueID([this.Sys.name '_spec'],  BreachGlobOpt.STLDB.keys);
-                    phi = STL_Formula(phi_id, varargin{:});
+                    phi = STL_Formula(phi_id, varargin{2});   % Can't be right ...
                 end
+            else
+                return;
             end
             
             % checks signal compatibility
@@ -194,61 +206,61 @@ classdef BreachSystem < BreachSet
             SplotSat(this.Sys,this.P, phi, depth, tau, ipts);
         end
         
-               
-        function [out] = PlotRobustMap(this, phi, params, ranges, delta, options_in)        
-        % Plot robust satisfaction vs 1 or 2 parameters.
-
-        % if zero argument, returns an option structure with defaults
-        if nargin==1
-            out = struct('contour', 1, 'style',[]);
-            return
-        end
         
-        out = figure;
-        
-        % no option, use defaults
-        if ~exist('options_in','var')
-            options_in = struct();
-        end
-        
-        % option provided, make sure all fields are initialized
-        options = this.PlotRobustMap();
-        opt_in_fields = fieldnames(options_in);
-        for  ifld=1:numel(opt_in_fields)
-            options.(opt_in_fields{ifld}) = options_in.(opt_in_fields{ifld});
-        end
-                
-        
-        switch(nargin)
-            case 2
-                this.CheckSpec(phi);
-                figure;
-                SplotProp(this.P, phi, options);
-                return;
-            case 4
-                delta = 10;                
-        end
-        
-        this.P = CreateParamSet(this.P, params, ranges);
-        this.P = Refine(this.P, delta,1);
-        this.Sim();
-        this.CheckSpec(phi);
+        function [out] = PlotRobustMap(this, phi, params, ranges, delta, options_in)
+            % Plot robust satisfaction vs 1 or 2 parameters.
             
-        SplotProp(this.P, phi, options);
-                    
+            % if zero argument, returns an option structure with defaults
+            if nargin==1
+                out = struct('contour', 1, 'style',[]);
+                return
+            end
+            
+            out = figure;
+            
+            % no option, use defaults
+            if ~exist('options_in','var')
+                options_in = struct();
+            end
+            
+            % option provided, make sure all fields are initialized
+            options = this.PlotRobustMap();
+            opt_in_fields = fieldnames(options_in);
+            for  ifld=1:numel(opt_in_fields)
+                options.(opt_in_fields{ifld}) = options_in.(opt_in_fields{ifld});
+            end
+            
+            
+            switch(nargin)
+                case 2
+                    this.CheckSpec(phi);
+                    figure;
+                    SplotProp(this.P, phi, options);
+                    return;
+                case 4
+                    delta = 10;
+            end
+            
+            this.P = CreateParamSet(this.P, params, ranges);
+            this.P = Refine(this.P, delta,1);
+            this.Sim();
+            this.CheckSpec(phi);
+            
+            SplotProp(this.P, phi, options);
+            
         end
-      
+        
         %% Experimental
-        function report = Analysis(this) 
-        
+        function report = Analysis(this)
+            
             STL_ReadFile('stlib.stl');
-        
-            %% Simple analysis
+            
+            % Simple analysis
             % Checks zero signals
             req_zero = STL_Formula('phi', 'req_zero');
             report.res_zero = STL_EvalTemplate(this.Sys, req_zero, this.P, this.P.traj, {'x_'});
-            sigs_left = [report.res_zero.some report.res_zero.none]; 
-          
+            sigs_left = [report.res_zero.some report.res_zero.none];
+            
             if ~isempty(report.res_zero.all)
                 fprintf('---------------------------------------------\n' )
                 fprintf('The following signals were found to be zero: \n' )
@@ -258,48 +270,48 @@ classdef BreachSystem < BreachSet
             
             % Checks constant signals
             req_stable = STL_Formula('phi', 'req_stable');
-            report.res_stable = STL_EvalTemplate(this.Sys, req_stable, this.P, this.P.traj, {'x_'}, sigs_left);           
+            report.res_stable = STL_EvalTemplate(this.Sys, req_stable, this.P, this.P.traj, {'x_'}, sigs_left);
             if ~isempty(report.res_stable.all)
                 fprintf('------------------------------------------------\n' )
                 fprintf('The following signals were found to be constant: \n' )
                 fprintf('------------------------------------------------\n' )
                 disp(report.res_stable.all');
             end
-            sigs_left = [report.res_stable.some report.res_stable.none]; 
-
+            sigs_left = [report.res_stable.some report.res_stable.none];
+            
             % Checks non-decreasing signals
             req_inc = STL_Formula('phi', 'req_inc');
-            report.res_inc = STL_EvalTemplate(this.Sys, req_inc, this.P, this.P.traj, {'x_'}, sigs_left);           
+            report.res_inc = STL_EvalTemplate(this.Sys, req_inc, this.P, this.P.traj, {'x_'}, sigs_left);
             if ~isempty(report.res_inc.all)
                 fprintf('-----------------------------------------------------\n' )
                 fprintf('The following signals were found to be non-decreasing: \n' )
                 fprintf('-----------------------------------------------------\n' )
                 disp(report.res_inc.all');
             end
-
+            
             % Checks non-increasing signals
             req_dec = STL_Formula('phi', 'req_dec');
-            report.res_dec = STL_EvalTemplate(this.Sys, req_dec, this.P, this.P.traj, {'x_'}, sigs_left);           
+            report.res_dec = STL_EvalTemplate(this.Sys, req_dec, this.P, this.P.traj, {'x_'}, sigs_left);
             if ~isempty(report.res_dec.all)
                 fprintf('-----------------------------------------------------\n' )
                 fprintf('The following signals were found to be non-increasing: \n' )
                 fprintf('-----------------------------------------------------\n' )
                 disp(report.res_dec.all');
             end
-
+            
             % Checks non-increasing signals
             req_dec = STL_Formula('phi', 'req_pwc');
-            report.res_dec = STL_EvalTemplate(this.Sys, req_dec, this.P, this.P.traj, {'x_'}, sigs_left);           
+            report.res_dec = STL_EvalTemplate(this.Sys, req_dec, this.P, this.P.traj, {'x_'}, sigs_left);
             if ~isempty(report.res_dec.all)
                 fprintf('-------------------------------------------------------\n' )
                 fprintf('The following signals were found to be piecewise stable: \n' )
                 fprintf('-------------------------------------------------------\n' )
                 disp(report.res_dec.all');
             end
-
-            % Search for steps 
+            
+            % Search for steps
             req_step = STL_Formula('phi', 'req_step');
-            report.res_step = STL_EvalTemplate(this.Sys, req_step, this.P, this.P.traj, {'x_step_'}, sigs_left);           
+            report.res_step = STL_EvalTemplate(this.Sys, req_step, this.P, this.P.traj, {'x_step_'}, sigs_left);
             if ~isempty(report.res_step.all)
                 fprintf('---------------------------------------------\n' )
                 fprintf('The following signals appear to feature steps: \n' )
@@ -308,9 +320,9 @@ classdef BreachSystem < BreachSet
                 sigs_steps = report.res_step.all;
             end
             
-            % Search for spikes 
+            % Search for spikes
             req_spike = STL_Formula('phi', 'req_spike');
-            report.res_spike = STL_EvalTemplate(this.Sys, req_spike, this.P, this.P.traj, {'x_'}, sigs_left);           
+            report.res_spike = STL_EvalTemplate(this.Sys, req_spike, this.P, this.P.traj, {'x_'}, sigs_left);
             if ~isempty(report.res_spike.all)
                 fprintf('---------------------------------------------------------\n' )
                 fprintf('The following signals appear to feature spikes or valleys: \n' )
@@ -320,31 +332,31 @@ classdef BreachSystem < BreachSet
             end
             
             
-            %% Dual analysis
+            % Dual analysis
             % Correlation between steps and spikes
-
-            if ~isempty(report.res_spike.all)
             
-            req_steps_and_spikes = STL_Formula('phi', 'req_steps_and_spikes');
-            report.res_steps_and_spikes = STL_EvalTemplate(this.Sys, req_steps_and_spikes, this.P, this.P.traj, {'x_step_','x_'}, {sigs_steps,sigs_spikes});           
-            if ~isempty(report.res_steps_and_spikes.all)
-                fprintf('---------------------------------------------------------------------\n' )
-                fprintf('The following pairs of signals appear to be correlated (step => spike): \n' )
-                fprintf('---------------------------------------------------------------------\n' )
-                for i_res= 1:numel(report.res_steps_and_spikes.all)
-                    sigs = report.res_steps_and_spikes.all{i_res};
-                    disp([ sigs{1} ',' sigs{2}]);
+            if ~isempty(report.res_spike.all)
+                
+                req_steps_and_spikes = STL_Formula('phi', 'req_steps_and_spikes');
+                report.res_steps_and_spikes = STL_EvalTemplate(this.Sys, req_steps_and_spikes, this.P, this.P.traj, {'x_step_','x_'}, {sigs_steps,sigs_spikes});
+                if ~isempty(report.res_steps_and_spikes.all)
+                    fprintf('---------------------------------------------------------------------\n' )
+                    fprintf('The following pairs of signals appear to be correlated (step => spike): \n' )
+                    fprintf('---------------------------------------------------------------------\n' )
+                    for i_res= 1:numel(report.res_steps_and_spikes.all)
+                        sigs = report.res_steps_and_spikes.all{i_res};
+                        disp([ sigs{1} ',' sigs{2}]);
+                    end
                 end
             end
-            end
-                    
+            
         end
         
         
         
         %% Sensitivity analysis
         function [mu, mustar, sigma] = SensiSpec(this, phi, params, ranges, opt)
-        % SensiSpec Sensitivity analysis of a formula to a set of parameters
+            % SensiSpec Sensitivity analysis of a formula to a set of parameters
             this.ResetParamSet();
             opt.tspan = this.Sys.tspan;
             opt.params = FindParam(this.Sys,params);
@@ -357,7 +369,7 @@ classdef BreachSystem < BreachSet
         end
         
         function [monotonicity, Pr, EE] = ChecksMonotony(this, phi, params, ranges, opt)
-        % ChecksMonotony performs a quick check to infer monotonicity of a formula wrt parameters
+            % ChecksMonotony performs a quick check to infer monotonicity of a formula wrt parameters
             opt.tspan = this.Sys.tspan;
             opt.params = FindParam(this.Sys,params);
             opt.lbound = ranges(:,1)';
@@ -366,10 +378,10 @@ classdef BreachSystem < BreachSet
             P0 = Sselect(this.P,1);
             
             [~, ~, ~, Pr, EE]= SPropSensi(this.Sys, P0, phi, opt);
-            monotonicity = all(EE'>=0)-all(EE'<=0); % 1 if all positive, -1 if all negative, 0 otherwise            
+            monotonicity = all(EE'>=0)-all(EE'<=0); % 1 if all positive, -1 if all negative, 0 otherwise
         end
         
-        %% Printing 
+        %% Printing
         function PrintSpecs(this)
             disp('Specifications:')
             disp('--------------')
@@ -381,9 +393,9 @@ classdef BreachSystem < BreachSet
         end
         
         function PrintAll(this)
-           this.PrintParams();
-           this.PrintSignals();
-           this.PrintSpecs();
+            this.PrintParams();
+            this.PrintSignals();
+            this.PrintSpecs();
         end
         
         function disp(this)
@@ -391,18 +403,33 @@ classdef BreachSystem < BreachSet
         end
         
         %% GUI
-        function RunGUI(this)
+        
+        
+        function new_phi  = AddSpecGUI(this)
+            signals = this.Sys.ParamList(1:this.Sys.DimX);
+            new_phi = STL_TemplateGUI('varargin', signals);
+            if isa(new_phi, 'STL_Formula')
+                this.Specs(get_id(new_phi)) = new_phi;
+            end
+        end
+          
+        
+        function gui = RunGUI(this)
             P.P = this.P;
             phis=  this.Specs.keys;
             
             Psave(this.Sys, 'Pthis', this.P);
-            
             if (~isempty(phis))
                 Propsave(this.Sys, phis{:});
             end
-            Breach(this.Sys);
+            gui = Breach(this);
+            
         end
         
+        function ResetFiles(this)
+             system(['rm -f ' this.Sys.name '_param_sets.mat']); 
+             system(['rm -f ' this.Sys.name '_properties.mat']);
+        end
         
     end
 end

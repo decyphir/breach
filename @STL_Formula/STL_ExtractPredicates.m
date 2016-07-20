@@ -39,8 +39,7 @@ for imu=1:numel(mus)
      [~,~, ~, matches, tokens] = regexp(fn_, '(\<\w+\>)[.+?\]');
      for im=1:numel(matches)
         signals{end+1} = tokens{im}{1};
-     end 
-         
+     end          
 end
 if ~isempty(signals)
    signals = unique(signals); 

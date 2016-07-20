@@ -18,7 +18,7 @@ init_helicopter;
 Br.PrintAll;
 
 %%
-% We extract the nominal parameter set and simulate the system.
+% Simulate the system.
 Br.Sim();
 
 %% 

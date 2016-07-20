@@ -176,7 +176,18 @@ end
 
 function phi = wrap_up(current_id, current_formula, new_params)
 phi = STL_Formula(current_id, current_formula);
-phi = set_params(phi, new_params);
+
+[~, params] = STL_ExtractSignals(phi);
+
+fn = fieldnames(new_params)';
+for np = fn
+   if ~any(strcmp(np{1},params))   
+       new_params = rmfield(new_params, np{1});
+   else
+       phi= set_params(phi, np{1}, new_params.(np{1}));
+   end
+end
+
 assignin('base', current_id,phi);
 end
 

@@ -1,14 +1,37 @@
-function signals = STL_ExtractSignals(phi)
-%STL_EXTRACTSignals extracts names of signals  involved in phi
+function [signals, params] = STL_ExtractSignals(phi)
+%STL_EXTRACTSignals extracts names of signals and parameters involved in phi
 %
 % Synopsis: signals = STL_ExtractSignals(phi)
 %
 % Input:
-%  - phi : the formula from which the signals are extraced
+%  - phi : an STL formula
 %
 % Output:
 %  - signals: list of signals involved in phi (note: currently only detec-
 %    ted from patterns of the form signal_id[t])
+%  - params: list of parameters in the formula
 %
 
-[~, signals] = STL_ExtractPredicates(phi);
+st_phi = disp(phi,0);
+signals = {};
+[~,~, ~, matches, tokens] = regexp(st_phi, '(\<\w+\>)[.+?\]');
+for im=1:numel(matches)
+    signals{end+1} = tokens{im}{1};
+end
+sreserved = {'alw_', 'ev_','until_'};
+signals = setdiff(signals, sreserved);
+
+params = {};
+[~,~, ~, matches, tokens] = regexp(st_phi, '(\<\w+\>)');
+for im=1:numel(matches)
+    %tokens{im}{1}
+    if isvarname(tokens{im}{1})
+       params{end+1} = tokens{im}{1};
+    end
+end
+
+reserved = [ sreserved signals  {'alw', 'ev', 'and', 'or', '=>', 'not', 'until', 't', ...
+                                 'abs', 'sin', 'cos', 'exp','tan'}];
+params = setdiff(params, reserved);
+
+params = unique(params);

@@ -34,7 +34,7 @@ end
 
 options.Resize = 'on';
 options.WindowStyle = 'normal';
-options.Interpreter = 'tex';
+options.Interpreter = 'None';
 
 answer = inputdlg(prompt,title,1,defaultanswer,options);
 if isempty(answer)
@@ -51,7 +51,7 @@ for ii = 1:numel(prompt)
         try
             P.(fnames{ii}) = eval(answer{ii});
         catch %#ok<CTCH>
-            warndlg('Invalid value');
+            P.(fnames{ii}) = answer{ii};
         end
     end
 end

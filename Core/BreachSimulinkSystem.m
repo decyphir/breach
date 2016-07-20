@@ -23,7 +23,6 @@ classdef BreachSimulinkSystem < BreachOpenSystem
     %   generation. By default, a constant input generator is created for 
     %   each input of the model. Use SetInputGen method to set a different input. 
     %
-    %   Ex.: mdl =  
     %
     %
 

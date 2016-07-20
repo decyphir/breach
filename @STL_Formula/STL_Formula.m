@@ -67,8 +67,9 @@ if(nargin==2)
         return;
     elseif ischar(varargin{2}) % here we reference an existing formula 
     st = varargin{2};
-    if isKey(BreachGlobOpt.STLDB,st)
-        phi = BreachGlobOpt.STLDB(st);
+    st_trimmed = regexprep(st,'[()\s]','');
+    if isKey(BreachGlobOpt.STLDB,st_trimmed)
+        phi = BreachGlobOpt.STLDB(st_trimmed);
         return;
     end
     else 
@@ -119,6 +120,12 @@ end
 
 phi=class(phi, 'STL_Formula');
 phi = check_params(phi);
+
+[~, params] = STL_ExtractSignals(phi);
+np = numel(params);
+if np>0
+    phi = set_params(phi,params,zeros(1,np));
+end
 phistruct = struct(phi);
 BreachGlobOpt.STLDB(phi.id) = phi;
 
