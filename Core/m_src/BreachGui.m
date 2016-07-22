@@ -22,7 +22,7 @@ function varargout = BreachGui(varargin)
 
 % Edit the above text to modify the response to help BreachGui
 
-% Last Modified by GUIDE v2.5 18-Jul-2016 15:53:15
+% Last Modified by GUIDE v2.5 20-Jul-2016 16:34:32
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -501,7 +501,9 @@ if ~any(handles.working_sets.(handles.current_set).dim==ii)
             phi = props(ii);
             tau = props_values(ii).tau;
             if isfield(P0,'traj')
+                handles = info(handles, 'Computing satisfaction of formula...');
                 P0 = SEvalProp(handles.Sys, P0, phi, tau);
+                handles = info(handles, 'Computing satisfaction of formula... Done.');
             else
                 PO = SPurge_props(P0);
                 handles = info(handles, 'Parameters changed, recompute trajectories to re-evaluate properties.');
@@ -1123,7 +1125,9 @@ if ~isempty(opt.tspan_traj)
 else
     Pphi=handles.working_sets.(handles.current_set);
 end
+handles = info(handles, 'Computing satisfaction of formula...');
 handles.working_sets.(handles.current_set) = SEvalProp(handles.Sys,Pphi, prop, opt.tspan_prop_eval);
+handles = info(handles, 'Computing satisfaction of formula... Done.');
 handles = update_working_sets_panel(handles);
 handles = update_modif_panel(handles);
 handles = update_properties_panel(handles);
@@ -1215,7 +1219,6 @@ guidata(hObject, handles);
 
 function handles = update_working_sets_panel(handles)
 
-%try
 k = strfind(handles.working_sets_file_name,filesep);
 if ~isempty(k)
     str_name = handles.working_sets_file_name(k(end)+1:end);
@@ -1266,11 +1269,6 @@ if get(handles.autosave_checkbox, 'Value')
     save(handles.working_sets_file_name, '-struct', 'ws');
     handles = info(handles, '');
 end
-%catch
-%    handles= info(handles, lasterr);
-%    guidata(hObject, handles);
-%    return;
-%end
 
 function handles = update_properties_panel(handles)
 
@@ -2695,8 +2693,10 @@ if isempty(opt.tspan_prop_eval)
     opt.tspan_prop_eval = Pphi.traj(Pphi.traj_ref(1)).time;
 end
 
+handles = info(handles, 'Computing satisfaction of formula...');
 Pphi = SEvalProp(handles.Sys, Pphi, prop, opt.tspan_prop_eval, 1, opt.break_lev);
 PplotFormula(handles.Sys, Pphi, prop, 1, opt.break_lev);
+handles = info(handles, 'Computing satisfaction of formula... Done.');
 guidata(hObject,handles);
 
 
@@ -3027,6 +3027,3 @@ else
         handles.BrSys.RunGUI;   
     end 
 end
-
-
-

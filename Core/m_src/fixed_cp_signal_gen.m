@@ -20,14 +20,29 @@ classdef fixed_cp_signal_gen < signal_gen
     methods
         
         function this = fixed_cp_signal_gen(signals, cp, method,p0)
+            
+            if nargin == 1
+                cp = 1;
+                method = 'previous';
+            elseif nargin == 2
+                method = 'previous';
+            end
+            
+            if ~iscell(signals)
+                signals = {signals};
+            end
+            if ~iscell(method)
+                method = {method};
+            end
+            
             this.signals = signals;
             this.cp = cp;
             this.params = {};
             
-            if nargin<=2 
+            if nargin<=2
                 method = 'previous';
             end
-        
+            
             this.method = method;
             for ku = 1:numel(signals)
                 for k = 1:cp(ku)

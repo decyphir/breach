@@ -36,6 +36,9 @@ classdef BreachSignalGen < BreachSystem
             signals ={}; 
             params = {};
             p0=[];
+            if ~iscell(signalGenerators)
+               signalGenerators= {signalGenerators};    
+            end
             for isg = 1:numel(signalGenerators)
                 signals = {signals{:}, signalGenerators{isg}.signals{:}};
                 params = {params{:}, signalGenerators{isg}.params{:}}; 

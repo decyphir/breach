@@ -84,9 +84,13 @@ proj = proj(proj<=size(P(1).pts,1));
 if numel(P)>1
     hold on;
     nb = numel(P);
-    colors = hsv(nb);
+    if nb==2
+        colors = [1 0 0; 0 1 0];
+    else
+       colors = hsv(nb);
+    end
     for ii=1:nb
-        opt.plot_opt = {'o','MarkerSize',6,'Color',colors(ii,:)};
+        opt.plot_opt = {'+','MarkerSize',6,'Color',colors(ii,:)};
         SplotPts(P(ii),proj,[],opt);
     end
     hold off

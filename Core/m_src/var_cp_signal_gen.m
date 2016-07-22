@@ -21,11 +21,27 @@ classdef var_cp_signal_gen < signal_gen
     methods 
         
         function this = var_cp_signal_gen(signals, cp, method)
+           
+            if nargin == 1
+               cp = 1;
+               method = 'previous';
+            elseif nargin == 2
+               method = 'previous';  
+            end
+            
+            if ~iscell(signals)
+              signals = {signals}; 
+           end
+           if ~iscell(method)
+              method = {method}; 
+           end
+           
            this.signals = signals;
            this.cp = cp;
            this.params = {};
            this.method = method;
            this.p0= zeros(2*sum(cp)-numel(signals),1);
+           
            for ku = 1:numel(signals)
                for k = 1:cp(ku)-1
                    this.params= [this.params { [signals{ku} '_u' num2str(k-1)] [signals{ku} '_dt' num2str(k-1)] }];

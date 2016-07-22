@@ -289,7 +289,8 @@ classdef BreachSet < handle
         % Plot parameters
         function PlotParams(this, varargin)
             figure;
-            SplotPts(this.P, varargin{:});
+            P = DiscrimPropValues(this.P);
+            SplotPts(P, varargin{:});  
         end
         
         %% Printing

@@ -17,11 +17,11 @@ classdef ReqMiningProblem < BreachCEGIS
                    prop_params= varargin{4};
                     
                    this.falsif_pb = FalsificationProblem(Br, phi, input_params.names, input_params.ranges);
-                   this.synth_pb = ParamSynthProblem(Br, phi, prop_params.names, prop_params.ranges);
+                   this.synth_pb  = ParamSynthProblem(Br, phi, prop_params.names, prop_params.ranges);
                    this.synth_pb.setup_solver('binsearch');
   
            end
-                   
+           rfprintf_reset();
        end
    
        function phi = GetRequirement(this)
