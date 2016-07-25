@@ -62,21 +62,34 @@ classdef BreachSet < handle
             this.UpdateParamRanges();
         end
         
-        function SetParam(this, params, values, type_p)
-            if nargin==3 ||((nargin==4)&&(strcmp(type_p,'new')||strcmp(type_p,'add')||strcmp(type_p,'spec')))
+        function SetParam(this, params, values, opt)
+            ip = FindParam(this.P, params);
+            i_not_sys = find(ip>this.P.DimP);
+            if ~isempty(i_not_sys)
+                if iscell(params)
+                    nparam = params{i_not_sys(1)};
+                else
+                    nparam = params;
+                end
+                if ~exist('opt','var')     
+                    warning('SetParam:param_not_in_list',['Parameter ' nparam ' was set but is not a system parameter.' ...
+                      ' If this is intended to be a spec. parameter, consider using SetParamSpec instead.']);
+                end
+            end
+            this.P = SetParam(this.P, params, values);
+            this.UpdateParamRanges();
+        end
+        
+        function SetParamSpec(this, params, values)
+            ip = FindParam(this.P, params);
+            if all(ip>this.P.DimP)
                 this.P = SetParam(this.P, params, values);
                 this.UpdateParamRanges();
             else
-                nb_params = numel(this.P.ParamList);
-                ip = FindParam(this.P, params);
-                if any(ip>nb_params)
-                    warning('SetParam:param_not_in_list',['A parameter name was set but did not exist for this system.' ...
-                        'If this is intended, consider using the syntax ' ...
-                        'SetParam(params, values, ''new'').']);
-                end
-                this.P = SetParam(this.P, params, values);
+                error('Attempt to modify a system parameter - use SetParam instead.');
             end
         end
+        
         
         function values = GetParam(this, params, ip)
             values = GetParam(this.P,params);
@@ -162,10 +175,7 @@ classdef BreachSet < handle
             this.ParamRanges(i_params-this.Sys.DimX,:) = [minP(i_params,:), maxP(i_params,:)];
             
         end
-        
-        
-        
-        
+            
         % Get computed trajectories
         function traces = GetTraces(this)
             traces= [];
@@ -290,7 +300,7 @@ classdef BreachSet < handle
         function PlotParams(this, varargin)
             figure;
             P = DiscrimPropValues(this.P);
-            SplotPts(P, varargin{:});  
+            SplotPts(P, varargin{:});
         end
         
         %% Printing

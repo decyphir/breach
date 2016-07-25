@@ -30,6 +30,10 @@ classdef BreachSignalGen < BreachSystem
                return; 
             end
             
+            if ~iscell(signalGenerators)
+               signalGenerators = {signalGenerators}; 
+            end
+            
             this.signalGenerators= signalGenerators;
             % we need to declare parameters, signals, p0, and simfn
             

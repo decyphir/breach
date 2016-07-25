@@ -33,6 +33,7 @@ addpath( [dr_ filesep 'Toolboxes' filesep 'sundials' filesep 'sundialsTB' filese
 addpath( [dr_ filesep 'Toolboxes' filesep 'stl_formula++' filesep 'm_src']);
 addpath( [dr_ filesep 'Toolboxes' filesep 'stl_formula++' filesep 'bin']);
 addpath( [dr_ filesep 'Core' filesep 'STLib']);
+addpath( [dr_ filesep 'Examples' filesep 'Simulink' filesep 'brdemo_models']);
 
 %% Init BreachGlobOpt options and fourre-tout global variable
 
