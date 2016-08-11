@@ -16,12 +16,12 @@ classdef BreachSystem < BreachSet
     %   SetTime       - Set a default time for simulation (array or end time)
     %   GetTime       - Get default time for simulation
     %   AddSpec       - Add a specification to the system
-    %   CheckSpec     - Checks (return robust satisfcation of) a given specification or all added specs
+    %   CheckSpec     - Checks (return robust satisfaction of) a given specification or all added specs
     %   PlotRobustSat - Plots robust satisfaction of a given STL formula against time
     %   PlotRobustMap - Plots (1d or 2d) robust satisfaction against parameter values
     %   RunGUI        - Open Breach legacy GUI, allowing for interactively exploring parameters, traces and specifications
     %
-    %See also BreachSet.
+    % See also BreachSet.
     
     properties
         Sys       % Legacy Breach system structure
@@ -186,7 +186,6 @@ classdef BreachSystem < BreachSet
             
         end
         
-        
         % Plots satisfaction signal
         function PlotRobustSat(this, phi, depth, tau, ipts)
             % check arguments
@@ -229,8 +228,7 @@ classdef BreachSystem < BreachSet
             for  ifld=1:numel(opt_in_fields)
                 options.(opt_in_fields{ifld}) = options_in.(opt_in_fields{ifld});
             end
-            
-            
+                     
             switch(nargin)
                 case 2
                     this.CheckSpec(phi);
@@ -333,8 +331,7 @@ classdef BreachSystem < BreachSet
             
             
             % Dual analysis
-            % Correlation between steps and spikes
-            
+            % Correlation between steps and spikes          
             if ~isempty(report.res_spike.all)
                 
                 req_steps_and_spikes = STL_Formula('phi', 'req_steps_and_spikes');
@@ -350,6 +347,19 @@ classdef BreachSystem < BreachSet
                 end
             end
             
+        end
+        
+        function  [X, t]  = GetExprValues(this, stl_expr, varargin)
+            % gets values for a signal expression
+            
+            if ~iscell(stl_expr)
+                stl_expr = {stl_expr};
+            end
+            
+            for i_exp = 1:numel(stl_expr)
+                expr_tmp_ = STL_Formula('expr_tmp_', [stl_expr{i_exp} '> 0.']);
+                [X, t] = STL_Eval(this.Sys, expr_tmp_, this.P, this.P.traj, this.P.traj(1).time);
+            end
         end
         
         function [h, t, X]  = PlotExpr(this, stl_expr, varargin)
@@ -371,6 +381,7 @@ classdef BreachSystem < BreachSet
                 end
             end
         end
+        
         %% Sensitivity analysis
         function [mu, mustar, sigma] = SensiSpec(this, phi, params, ranges, opt)
             % SensiSpec Sensitivity analysis of a formula to a set of parameters
@@ -408,8 +419,9 @@ classdef BreachSystem < BreachSet
                 fprintf('%s',prop_name);
                 if isfield(this.P, 'props_names')
                    ip = strcmp(this.P.props_names, prop_name);
-                   if ip
-                      val = cat(1, this.P.props_values(ip,:).val);
+                   idx_prop = find(ip);
+                   if idx_prop
+                      val = cat(1, this.P.props_values(idx_prop,:).val);
                        fprintf(': %d/%d satisfied.', numel(find(val>=0)),numel(val));
                    end
                 end
@@ -430,8 +442,7 @@ classdef BreachSystem < BreachSet
         end
         
         %% GUI
-        
-        
+            
         function new_phi  = AddSpecGUI(this)
             signals = this.Sys.ParamList(1:this.Sys.DimX);
             new_phi = STL_TemplateGUI('varargin', signals);
@@ -439,8 +450,7 @@ classdef BreachSystem < BreachSet
                 this.Specs(get_id(new_phi)) = new_phi;
             end
         end
-        
-        
+             
         function gui = RunGUI(this)
             P.P = this.P;
             phis=  this.Specs.keys;

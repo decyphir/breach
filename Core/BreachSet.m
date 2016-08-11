@@ -71,9 +71,9 @@ classdef BreachSet < handle
                 else
                     nparam = params;
                 end
-                if ~exist('opt','var')     
+                if ~exist('opt','var')
                     warning('SetParam:param_not_in_list',['Parameter ' nparam ' was set but is not a system parameter.' ...
-                      ' If this is intended to be a spec. parameter, consider using SetParamSpec instead.']);
+                        ' If this is intended to be a spec. parameter, consider using SetParamSpec instead.']);
                 end
             end
             this.P = SetParam(this.P, params, values);
@@ -175,7 +175,7 @@ classdef BreachSet < handle
             this.ParamRanges(i_params-this.Sys.DimX,:) = [minP(i_params,:), maxP(i_params,:)];
             
         end
-            
+        
         % Get computed trajectories
         function traces = GetTraces(this)
             traces= [];
@@ -218,26 +218,33 @@ classdef BreachSet < handle
             SigNames = this.P.ParamList(1:this.P.DimX);
         end
         
-        % Get signal values
-        function Y = GetSignalValues(this, iX, t)
+        % Get signal values - in case of several trajectories, return cell
+        % array
+        function X = GetSignalValues(this, iX, t)
             if (~isfield(this.P,'traj'))
-                error('GetTrajValues:NoTrajField','Compute trajectories first')
+                error('GetTrajValues:NoTrajField','Compute/import trajectories first.')
             end
             
             if ischar(iX) || iscell(iX)
                 iX = FindParam(this.P, iX);
             end
             
-            X = cat(1, this.P.traj.X); % concatenate all trajectories
-            
-            X = X(iX:this.P.DimX:end,:); % keep only the evolution of iX over time
-            
-            if (exist('t','var'))
-                Y=X;
-            else
-                Y = interp1(this.P.traj(1).time, X',t)';
+            nb_traj = numel(this.P.traj);
+            X = cell(nb_traj,1);
+            for i_traj = 1:nb_traj
+                if (~exist('t','var'))
+                    X{i_traj} = this.P.traj(i_traj).X(iX,:);
+                else
+                    X{i_traj} = interp1(this.P.traj(i_traj).time, this.P.traj(i_traj).X(iX,:)',t)';
+                    if numel(iX)==1
+                        X{i_traj} = X{i_traj}';
+                    end
+                end
+                
             end
-            
+            if nb_traj==1
+                X = X{1};
+            end
         end
         
         

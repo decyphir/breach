@@ -32,23 +32,13 @@ Model {
       BusOutputAsStruct	      "off"
     }
     ParameterArgumentNames  ""
-    ComputedModelVersion    "1.276"
+    ComputedModelVersion    "1.277"
     NumModelReferences	    0
-    NumTestPointedSignals   4
-    TestPointedSignal {
-      SignalName	      "ImprellerTorque"
-      FullBlockPath	      "brdemo_autotrans/Transmission"
-      LogSignal		      1
-      MaxPoints		      5000
-      Decimation	      2
-    }
+    NumTestPointedSignals   3
     TestPointedSignal {
       SignalName	      "OutputTorque"
       FullBlockPath	      "brdemo_autotrans/Transmission"
       PortIndex		      2
-      LogSignal		      1
-      MaxPoints		      5000
-      Decimation	      2
     }
     TestPointedSignal {
       SignalName	      "VehicleSpeed"
@@ -87,7 +77,7 @@ Model {
       $ObjectID		      2
       $ClassName	      "Simulink.WindowInfo"
       IsActive		      [1]
-      Location		      [143.0, 23.0, 1680.0, 1023.0]
+      Location		      [143.0, 23.0, 1280.0, 773.0]
       Object {
 	$PropName		"ModelBrowserInfo"
 	$ObjectID		3
@@ -109,11 +99,11 @@ Model {
 	$ObjectID		5
 	$ClassName		"Simulink.EditorInfo"
 	IsActive		[1]
-	ViewObjType		"SimulinkSubsys"
-	LoadSaveID		"1"
-	Extents			[1646.0, 853.0]
-	ZoomFactor		[4.1444008644841119]
-	Offset			[26.215698393077872, -12.7966480608776]
+	ViewObjType		"SimulinkTopLevel"
+	LoadSaveID		"0"
+	Extents			[1246.0, 603.0]
+	ZoomFactor		[1.75]
+	Offset			[-39.5510204081632, 68.367346938775725]
       }
     }
   }
@@ -123,9 +113,9 @@ Model {
   ModifiedByFormat	  "%<Auto>"
   LastModifiedBy	  "alex"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "Sun Jul 24 10:16:21 2016"
-  RTWModifiedTimeStamp	  391256171
-  ModelVersionFormat	  "1.%<AutoIncrement:276>"
+  LastModifiedDate	  "Mon Jul 25 22:59:59 2016"
+  RTWModifiedTimeStamp	  391388395
+  ModelVersionFormat	  "1.%<AutoIncrement:277>"
   ConfigurationManager	  "none"
   SampleTimeColors	  on
   SampleTimeAnnotations	  off
@@ -1030,8 +1020,8 @@ Model {
   }
   System {
     Name		    "brdemo_autotrans"
-    Location		    [0, 23, 1680, 1046]
-    Open		    off
+    Location		    [143, 23, 1423, 796]
+    Open		    on
     ModelBrowserVisibility  off
     ModelBrowserWidth	    200
     ScreenColor		    "white"
@@ -1042,7 +1032,7 @@ Model {
     TiledPaperMargins	    [0.500000, 0.500000, 0.500000, 0.500000]
     TiledPageScale	    1
     ShowPageBoundaries	    off
-    ZoomFactor		    "196"
+    ZoomFactor		    "175"
     ReportName		    "simulink-default.rpt"
     SIDHighWatermark	    "123"
     Block {
@@ -1084,8 +1074,8 @@ Model {
       }
       System {
 	Name			"Engine"
-	Location		[143, 23, 1823, 1046]
-	Open			on
+	Location		[143, 23, 1423, 796]
+	Open			off
 	ModelBrowserVisibility	off
 	ModelBrowserWidth	200
 	ScreenColor		"white"
@@ -1619,7 +1609,6 @@ Model {
 	PortNumber		1
 	Name			"ImprellerTorque"
 	RTWStorageClass		"Auto"
-	DataLogging		on
 	DataLoggingNameMode	"SignalName"
       }
       Port {
@@ -1627,7 +1616,6 @@ Model {
 	Name			"OutputTorque"
 	TestPoint		on
 	RTWStorageClass		"Auto"
-	DataLogging		on
 	DataLoggingNameMode	"SignalName"
       }
       System {
