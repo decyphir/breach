@@ -1,4 +1,4 @@
-function [p,rob,Pb] = GetPropParamBin(Sys, phi, P, prop_opt, traj)
+function [p,rob,Pb] = GetPropParamBin(Sys, phi, P, prop_opt, traj, t_phi)
 %GETPROPPARAMBIN search values for parameters in a formula phi so that phi
 % is satisfied by a set of traces - assumes monotonicity, to be specified
 % by the user
@@ -32,6 +32,11 @@ if ~exist('traj','var')
 elseif isempty('traj')
     traj = P.traj;
 end
+
+if ~exist('t_phi','var')
+    t_phi=0;
+end
+
 
 if exist('opt','var')
     if ~isfield(prop_opt,'verbose')
@@ -80,8 +85,8 @@ pw = ranges(i_worst);
 
 Pb = SetParam(P, params, pb');
 Pw = SetParam(P, params, pw');
-valb = STL_Eval(Sys, phi, Pb, traj, 0);
-valw = STL_Eval(Sys, phi, Pw, traj, 0);
+valb = STL_Eval(Sys, phi, Pb, traj, t_phi);
+valw = STL_Eval(Sys, phi, Pw, traj, t_phi);
 
 %% Check if everybody is sat
 if all(valw>=0)
@@ -148,7 +153,7 @@ end
     function res =  bisect(ip)
         p_i = (pmax(ip)+pmin(ip))/2;
         Pb = SetParam(Pb, params(ip), p_i');
-        valb = STL_Eval(Sys, phi, Pb, traj, 0);
+        valb = STL_Eval(Sys, phi, Pb, traj, t_phi);
         val = min(valb);
         
         res = num2str(p_i);

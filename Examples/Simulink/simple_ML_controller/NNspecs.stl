@@ -13,5 +13,4 @@ param tau = 2
 reach_ref_in_tau := ev_[0, tau] (stay_close_ref)
 
 # At all times, Output will be close to the reference signal in tau seconds
-param t_end = 25 
-alw_reach_ref_in_tau := alw_[0, t_end-tau] (reach_ref_in_tau)
+alw_reach_ref_in_tau := alw_[0, t_end-tau] ((not close_ref) => reach_ref_in_tau)

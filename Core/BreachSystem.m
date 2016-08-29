@@ -139,10 +139,10 @@ classdef BreachSystem < BreachSet
         end
         
         % Monitor spec on reference traj
-        function [rob, tau] = GetRobustSat(this, phi, params, values, tau)
+        function [rob, tau] = GetRobustSat(this, phi, params, values, t_phi)
             
             if nargin < 5
-                tau = 0;
+                t_phi = 0;
             end
             if nargin==1
                 phi = this.spec;
@@ -166,22 +166,26 @@ classdef BreachSystem < BreachSet
             end
             
             Sim(this);
-            [rob, tau] = STL_Eval(this.Sys, this__phi__, this.P, this.P.traj,0);
+            [rob, tau] = STL_Eval(this.Sys, this__phi__, this.P, this.P.traj,t_phi);
         end
         
         % Return a function of the form robfn: p -> rob such that p is a
         % vector of values for parameters and robfn(p) is the
         % corresponding robust satisfaction
-        function [robfn, BrSys] = GetRobustSatFn(this, phi, params)
+        function [robfn, BrSys] = GetRobustSatFn(this, phi, params, t_phi)
+            
+            if ~exist('t_phi', 'var')
+                t_phi =0;
+            end
             
             BrSys = this.copy();
             
             if ischar(phi)
                 this__phi__ = STL_Formula('this__phi__', phi);
-                robfn = @(values) GetRobustSat(BrSys, this__phi__, params, values);
+                robfn = @(values) GetRobustSat(BrSys, this__phi__, params, values, t_phi);
             else
                 
-                robfn = @(values) GetRobustSat(BrSys, phi, params, values);
+                robfn = @(values) GetRobustSat(BrSys, phi, params, values,t_phi);
             end
             
         end

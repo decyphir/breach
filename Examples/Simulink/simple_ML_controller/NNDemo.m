@@ -1,4 +1,5 @@
 %% Analysis of a simple Neural-Network based controller. 
+InitBreach
 
 %% Model and inputs
 u_ts = 0.001;
@@ -52,6 +53,10 @@ B.PlotExpr('abs(Ref[t]-Pos[t])'); title('abs(Ref[t]-Pos[t])');
 B.CheckSpec(alw_reach_ref_in_tau);
 B.PrintAll()
 
+%% Falsification problem
+B.SetParamRanges({'Ref_u0','Ref_u1','Ref_u2'}, [u_min u_max; u_min u_max; u_min u_max]);
+falsif_pb = FalsificationProblem(B, alw_reach_ref_in_tau); 
+falsif_pb.solve()
 
 %% Design decision
 B.SetInputGen('UniStep2');B.SetParam({'Ref_u0','Ref_u1'}, [3 1]);

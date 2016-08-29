@@ -125,12 +125,13 @@ classdef BreachSet < handle
                 Xf = this.P.Xf;
             end
             
-            this.P = SetParam(this.P,params,zeros(numel(i_params),1)); % adds new parameter name if needs be
+            this.P = SetParam(this.P,params, ranges(:,1) + (ranges(:,2)-ranges(:,1))/2); % adds new parameter name if needs be
             this.ParamRanges(i_params-this.P.DimX, :) = ranges;
             i_new_params = find(diff(this.ParamRanges'))+this.P.DimX;
             new_params = this.P.ParamList(i_new_params);
             new_ranges = this.ParamRanges(i_new_params-this.P.DimX,:);
             this.P = CreateParamSet(this.P, new_params, new_ranges);
+                        
             if (save_traj)
                 this.P.traj = traj;
                 this.P.traj_ref = traj_ref;
