@@ -526,17 +526,17 @@ classdef BreachSet < handle
                 if isequal(this.P.traj, other.P.traj)
                     cmp.addStatus(0, 'Traces are identical.');
                 else
-                    max_diff_p = 0;
+                    max_diff_param = 0;
                     max_diff_time = 0;
                     max_diff_X = 0;
                     for itraj=1:nb_traj_this
                         tr1 = this.P.traj(itraj);
                         tr2 = other.P.traj(itraj);
-                        if (isequal(size(tr1.p), size(tr2.p)) &&  isequal(size(tr1.p), size(tr2.p)) && isequal(size(tr1.p), size(tr2.p)))
-                            diff_p = tr1.p - tr2.p;
+                        if (isequal(size(tr1.param), size(tr2.param)) &&  isequal(size(tr1.time), size(tr2.time)) && isequal(size(tr1.X), size(tr2.X)))
+                            diff_p = tr1.param - tr2.param;
                             diff_time = tr1.time - tr2.time;
                             diff_X = tr1.X - tr2.X;
-                            max_diff_p = max([max_diff_p, norm(diff_p)]);
+                            max_diff_param = max([max_diff_param, norm(diff_p)]);
                             max_diff_time = max([max_diff_time, norm(diff_time)]);
                             max_diff_X = max([max_diff_X, norm(diff_X)]);
                         else
@@ -544,7 +544,7 @@ classdef BreachSet < handle
                             return;
                         end
                     end
-                    cmp.addStatus(1,['Max difference between trajectories: p:' num2str(max_diff_p) ' time:' num2str(max_diff_time) ' X:' num2str(max_diff_X)]);
+                    cmp.addStatus(1,['Max difference between trajectories: p:' num2str(max_diff_param) ' time:' num2str(max_diff_time) ' X:' num2str(max_diff_X)]);
                 end
             end
             
@@ -578,21 +578,21 @@ classdef BreachSet < handle
                                 nb_traj = size(this_props_vals,2); 
                                 nb_phis = size(this_props_vals,1);
                                 for itraj=1:nb_traj
-                                    for iphis = 1:nb_phis
-                                        tr1 = this_props_values(iphis,itraj);
-                                        tr2 = other_props_values(iphis,itraj);
+                                    for iphi = 1:nb_phis
+                                        tr1 = this_props_vals(iphi,itraj);
+                                        tr2 = other_props_vals(iphi,itraj);
                                         if ~isequal(tr1,tr2)
-                                           pre_status =  ['Trace: ' num2str(itraj) ' Property:' this.props_names{iphi}];
+                                           pre_status =  ['Trace: ' num2str(itraj) ' Property:' this.P.props_names{iphi}];
                                            if ~isequal(tr1.tau,tr2.tau)
-                                               cmp.addStatus(1, [pre_status 'evaluations at different times.']);
+                                               cmp.addStatus(1, [pre_status ' -- Evaluations at different times.']);
                                            elseif sign(tr1.val(1)) ~= sign(tr2.val(1)) 
-                                                cmp.addStatus(1, [pre_status 'Boolean satisfactions at origin are different']);
+                                                cmp.addStatus(1, [pre_status '-- Boolean satisfactions at origin are different']);
                                            elseif tr1.val(1) ~= tr2.val(1) 
-                                                cmp.addStatus(1, [pre_status 'Quantitative satisfactions at origin are different']); 
+                                                cmp.addStatus(1, [pre_status '-- Quantitative satisfactions at origin are different']); 
                                            end
                                             diff_val = norm(tr1.val-tr2.val);
                                             if diff_val
-                                                 cmp.addStatus(1, [pre_status 'Overall difference in quantitative satisfactions: ' num2str(diff_val)]); 
+                                                 cmp.addStatus(1, [pre_status '-- Overall difference in quantitative satisfactions: ' num2str(diff_val)]); 
                                             end
                                             
                                         end
