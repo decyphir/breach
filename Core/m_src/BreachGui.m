@@ -1668,8 +1668,6 @@ function menu_refine_prop_bound_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_refine_prop_bound (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-try
     
     restore_traj =0;
     if isfield( handles.Sys, 'type')
@@ -1712,17 +1710,14 @@ try
     S = rmfield(S,'selected');
     Sf = SFindPropBoundary(handles.Sys,S, prop, tspan,tprop, nb_iter);
     
+    % TOFIX: hasty patch
+    Sf = rmfield(Sf,'selected');
+    
+    
     handles.working_sets.(handles.current_set) = Sf;
     handles = update_modif_panel(handles);
     guidata(hObject, handles);
     
-catch
-    s = lasterror;
-    warndlg(['Problem refining: ' s.message] );
-    error(s);
-    return
-end
-
 % --------------------------------------------------------------------
 function menu_plot_property_val_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_plot_property_val (see GCBO)
@@ -2248,8 +2243,6 @@ str = inputdlg({'timespan:','Faces color', 'Edges Color','Opacity'},'Plot Reacha
 if isempty(str)
     return;
 end
-
-try
     
     tspan = eval(str{1});
     facecolor = str{2};
@@ -2258,13 +2251,6 @@ try
     %      maxf = eval(str{5});
     figure;
     SplotReach(handles.Sys, handles.working_sets.(handles.current_set), tspan, facecolor,edgecolor, alph);% maxf );
-    
-catch
-    s = lasterror;
-    warndlg(['Problem plotting reachable set: ' s.message] );
-    error(s);
-    return
-end
 
 
 % --------------------------------------------------------------------

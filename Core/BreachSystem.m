@@ -64,9 +64,11 @@ classdef BreachSystem < BreachSet
         %% Parameters
         % Get and set default parameter values (defined in Sys)
         function values = GetDefaultParam(this, params)
+        % Get default parameter values (defined in Sys)
             values = GetParam(this.Sys,params);
         end
         function SetDefaultParam(this, params, values)
+        % Set default parameter values (defined in Sys)
             this.Sys = SetParam(this.Sys,params, values);
         end
         function SetP(this,P)
@@ -80,11 +82,24 @@ classdef BreachSystem < BreachSet
             
         end
         
+        function ResetParamSet(this)
+            % ResetParamSet Reset parameter set based on ParamRanges
+            ipr = find(diff(this.ParamRanges'));
+            ranges =this.ParamRanges(ipr,:);
+            if (isempty(ipr))
+                this.P = CreateParamSet(this.Sys);
+                this.P.epsi(:,:)=0;
+            else
+                this.P = CreateParamSet(this.P, this.P.ParamList(ipr+this.P.DimX),ranges);
+            end
+        end
+
+        
         %% Signals plots and stuff
         function SetTime(this,tspan)
             this.Sys.tspan = tspan;
         end
-        function time = GetTime(this,tspan)
+        function time = GetTime(this)
             time = this.Sys.tspan;
         end
         
@@ -101,15 +116,11 @@ classdef BreachSystem < BreachSet
         % Add (a) specs % TODO double check
         function phi = AddSpec(this, varargin)
             global BreachGlobOpt
-            if nargin==2
-                if strcmp(class(varargin{1}),'STL_Formula');
-                    phi = varargin{1};
-                elseif ischar(varargin{1})
-                    phi_id = MakeUniqueID([this.Sys.name '_spec'],  BreachGlobOpt.STLDB.keys);
-                    phi = STL_Formula(phi_id, varargin{2});   % Can't be right ...
-                end
-            else
-                return;
+            if isa(varargin{1},'STL_Formula');
+                phi = varargin{1};
+            elseif ischar(varargin{1})
+                phi_id = MakeUniqueID([this.Sys.name '_spec'],  BreachGlobOpt.STLDB.keys);
+                phi = STL_Formula(phi_id, varargin{2});   % Can't be right ...
             end
             
             % checks signal compatibility
@@ -138,8 +149,8 @@ classdef BreachSystem < BreachSet
             [this.P, val] = SEvalProp(this.Sys,this.P,spec);
         end
         
-        % Monitor spec on reference traj
         function [rob, tau] = GetRobustSat(this, phi, params, values, t_phi)
+        % Monitor spec on trajectories - run simulations if not done before
             
             if nargin < 5
                 t_phi = 0;
@@ -169,10 +180,10 @@ classdef BreachSystem < BreachSet
             [rob, tau] = STL_Eval(this.Sys, this__phi__, this.P, this.P.traj,t_phi);
         end
         
+        function [robfn, BrSys] = GetRobustSatFn(this, phi, params, t_phi)
         % Return a function of the form robfn: p -> rob such that p is a
         % vector of values for parameters and robfn(p) is the
         % corresponding robust satisfaction
-        function [robfn, BrSys] = GetRobustSatFn(this, phi, params, t_phi)
             
             if ~exist('t_phi', 'var')
                 t_phi =0;
@@ -183,8 +194,7 @@ classdef BreachSystem < BreachSet
             if ischar(phi)
                 this__phi__ = STL_Formula('this__phi__', phi);
                 robfn = @(values) GetRobustSat(BrSys, this__phi__, params, values, t_phi);
-            else
-                
+            else                
                 robfn = @(values) GetRobustSat(BrSys, phi, params, values,t_phi);
             end
             

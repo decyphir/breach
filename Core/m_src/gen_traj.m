@@ -1,4 +1,4 @@
-function traj = test_traj(n,k)
+function traj = gen_traj(n,k)
 
 traj.time = linspace(0,100,n);
 traj.X = 4*rand([k n])-4*rand();

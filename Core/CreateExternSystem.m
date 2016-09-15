@@ -66,5 +66,5 @@ function Sys = CreateExternSystem(name, vars, params, p0, simfn)
   else
       Sys.type = 'traces';
   end
-  
+  Sys.tspan= 0:.1:1;
   Sys.Dir = pwd;

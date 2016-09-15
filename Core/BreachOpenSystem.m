@@ -232,25 +232,27 @@ classdef BreachOpenSystem < BreachSystem
         end
         
         
-        function new = copy(this)
-            % Instantiate new object of the same class.
-            new = feval(class(this));
-            
-            % Copy all non-hidden properties.
-            p = fieldnames(this);
-            for i = 1:length(p)
-                new.(p{i}) = this.(p{i});
-            end
-            
-            % InputGenerator field is a handle object, needs a copy of its
-            % own
-            if ~isempty(this.InputGenerator)
-                
-                new.InputGenerator = this.InputGenerator.copy();
-                new.Sys.init_u = @(~,pts,tspan)(InitU(new,pts,tspan));
-            end
-        end
-        
+% shouldn't be needed anymore
+%
+%         function new = copy(this)     
+%             % Instantiate new object of the same class.
+%             new = feval(class(this));
+%             
+%             % Copy all non-hidden properties.
+%             p = fieldnames(this);
+%             for i = 1:length(p)
+%                 new.(p{i}) = this.(p{i});
+%             end
+%             
+%             % InputGenerator field is a handle object, needs a copy of its
+%             % own
+%             if ~isempty(this.InputGenerator)
+%                 
+%                 new.InputGenerator = this.InputGenerator.copy();
+%                 new.Sys.init_u = @(~,pts,tspan)(InitU(new,pts,tspan));
+%             end
+%         end
+%         
         
     end
     

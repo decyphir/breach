@@ -536,23 +536,24 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         end
         
         
-        
-        function new = copy(this)
-            % Instantiate new object of the same class.
-            new = feval(class(this));
-            
-            % Copy all non-hidden properties.
-            p = fieldnames(this);
-            for i = 1:length(p)
-                new.(p{i}) = this.(p{i});
-            end
-            if ~isempty(this.InputGenerator)
-                new.InputGenerator = this.InputGenerator.copy();
-                new.Sys.init_u = @(~,pts,tspan)(InitU(new,pts,tspan));
-            end
-            new.Sys.sim = @(Sys,pts,tspan)new.sim_breach(Sys,pts,tspan);
-        end
-        
+% shouldn't need this anymore       
+% 
+%         function new = copy(this)
+%             % Instantiate new object of the same class.
+%             new = feval(class(this));
+%             
+%             % Copy all non-hidden properties.
+%             p = fieldnames(this);
+%             for i = 1:length(p)
+%                 new.(p{i}) = this.(p{i});
+%             end
+%             if ~isempty(this.InputGenerator)
+%                 new.InputGenerator = this.InputGenerator.copy();
+%                 new.Sys.init_u = @(~,pts,tspan)(InitU(new,pts,tspan));
+%             end
+%             new.Sys.sim = @(Sys,pts,tspan)new.sim_breach(Sys,pts,tspan);
+%         end
+%         
         
     end
     

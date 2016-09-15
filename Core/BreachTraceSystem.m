@@ -9,8 +9,14 @@ classdef BreachTraceSystem < BreachSystem
             if (nargin==0)
                 return;
             end
-            
-            if ischar(signals)          
+                   
+            if isscalar(signals) && isnumeric(signals)              
+                ndim =  signals;
+                signal_names = cell(1,ndim);
+                for is = 1:ndim
+                    signal_names{is} = ['x' num2str(is)];
+                end
+            elseif ischar(signals)
                 if exist(signals, 'file')
                     [~, ~, ext] = fileparts(signals);
                     switch (ext)
@@ -32,16 +38,22 @@ classdef BreachTraceSystem < BreachSystem
                             trace = csvread(signals,1);
                     end
                 end
+                
             % simout data
             elseif isa(signals,'Simulink.SimulationOutput')
                 [time, X, signal_names] = simout2X(signals);
                 trace = [time' X'];
+            
+            % default signals should be a cell array of strings
             else
                 signal_names = signals;
             end
             
             % assumes now that we have signal names
             this.Sys = CreateExternSystem('TraceObject', signal_names, {'trace_id'},1);
+            this.P = CreateParamSet(this.Sys);
+            this.UpdateParamRanges();
+            
             if exist('trace', 'var')
                 this.AddTrace(trace);
             end
@@ -72,6 +84,9 @@ classdef BreachTraceSystem < BreachSystem
                 traj.X = trace(:, 2:end)';
                 traj.time = trace(:,1)';
                 traj.param = trace(1,2:end);
+            elseif isstruct(trace)
+                traj = trace;
+                traj.param=traj.param(1:end-1);
             end
             
             Pnew = CreateParamSet(this.Sys);
@@ -97,11 +112,37 @@ classdef BreachTraceSystem < BreachSystem
             this.Sys.tspan = traj.time;
         end
         
+        function AddRandomTraces(this,n_traces, n_samples, amp, end_time)
+     
+            if ~exist('n_traces', 'var')
+                n_traces= 1; 
+            end
+            if ~exist('n_samples', 'var')
+                n_samples = 100; 
+            end
+            if ~exist('amp', 'var')
+                amp = 4; 
+            end
+            if ~exist('end_time', 'var')
+                end_time = 100; 
+            end
+            
+            dimx = this.Sys.DimX;
+            dimp = this.Sys.DimP;
+            for it = 1:n_traces
+                traj.time = linspace(0,end_time,n_samples);
+                traj.X = amp*rand([dimx n_samples])-amp*rand();
+                traj.param = zeros(1,dimp);
+                this.AddTrace(traj);
+            end
+            
+        end
+        
+        
         function disp(this)
             disp(['BreachTraceSystem with ' num2str(this.CountTraces()) ' traces.']);
         end
 
-        
     end
     
 end

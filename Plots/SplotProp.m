@@ -45,7 +45,9 @@ function [val, XI, YI, ZI] = SplotProp(Pf, prop, opt)
      case 1
       val = cat(1, Pf.props_values(iprop,:).val);
       val = val(:,1);
-      plot(Pf.pts(Pf.dim,:),val, style{:});
+      [x, order] = sort(Pf.pts(Pf.dim,:));
+      val = val(order);
+      plot(x,val, style{:});
       xlabel(Pf.ParamList{Pf.dim},'Interpreter','none');  
       ylabel(disp(prop, -1),'Interpreter','none');
      

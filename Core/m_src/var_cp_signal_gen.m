@@ -53,11 +53,14 @@ classdef var_cp_signal_gen < signal_gen
             
             p0 = zeros(2*sum(cp)-numel(signals),1);
             for ku = 1:numel(signals)
-                for k = 1:cp(ku)-1
+                k=0;                 for k = 1:cp(ku)-1
                     this.params= [this.params { [signals{ku} '_u' num2str(k-1)] [signals{ku} '_dt' num2str(k-1)] }];
                     if isempty(this.p0)
                         p0(numel(this.params))=1;
                     end
+                end
+                if isempty(k) % case where there is only one control point 
+                  k=0;
                 end
                 this.params = [this.params [signals{ku} '_u' num2str(k)]];
             end

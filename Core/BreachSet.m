@@ -90,7 +90,6 @@ classdef BreachSet < handle
             end
         end
         
-        
         function values = GetParam(this, params, ip)
             values = GetParam(this.P,params);
             if exist('ip', 'var')
@@ -98,8 +97,8 @@ classdef BreachSet < handle
             end
         end
         
-        % ResetParamSet Reset parameter set based on ParamRanges
         function ResetParamSet(this)
+            % ResetParamSet Reset parameter set based on ParamRanges
             ipr = find(diff(this.ParamRanges'));
             ranges =this.ParamRanges(ipr,:);
             if (isempty(ipr))
@@ -109,7 +108,6 @@ classdef BreachSet < handle
                 this.P = CreateParamSet(this.P, this.P.ParamList(ipr+this.P.DimX),ranges);
             end
         end
-        
         
         %% Get and Set param ranges
         function SetParamRanges(this, params, ranges)
@@ -131,7 +129,7 @@ classdef BreachSet < handle
             new_params = this.P.ParamList(i_new_params);
             new_ranges = this.ParamRanges(i_new_params-this.P.DimX,:);
             this.P = CreateParamSet(this.P, new_params, new_ranges);
-                        
+            
             if (save_traj)
                 this.P.traj = traj;
                 this.P.traj_ref = traj_ref;
@@ -214,10 +212,31 @@ classdef BreachSet < handle
             
         end
         
-        % Get signal names
         function SigNames = GetSignalNames(this)
+            % Get signal names - same as GetSignalList
             SigNames = this.P.ParamList(1:this.P.DimX);
         end
+        
+        function signals = GetSignalList(this)
+            % GetSignalList returns signal names
+            signals = this.P.ParamList(1:this.P.DimX);
+        end
+        
+        function params = GetParamList(this)
+            % GetParamList returns parameter names
+            params = this.P.ParamList(this.P.DimX+1:end);
+        end
+        
+        function sys_params = GetSysParamList(this)
+            % GetSysParamList returns system parameter names
+            sys_params = this.P.ParamList(this.P.DimX+1:this.P.DimP);
+        end
+        
+        function prop_params = GetPropParamList(this)
+            % GetSysParamList returns system parameter names
+            prop_params = this.P.ParamList(this.P.DimP+1:end);
+        end
+        
         
         % Get signal values - in case of several trajectories, return cell
         % array
@@ -332,7 +351,7 @@ classdef BreachSet < handle
         
         function PrintParams(this)
             nb_pts= this.GetNbParamVectors();
-            if (nb_pts==1)
+            if (nb_pts<=1)
                 disp('Parameters:')
                 disp('----------')
                 for ip = this.P.DimX+1:numel(this.P.ParamList)
@@ -382,16 +401,219 @@ classdef BreachSet < handle
         % Make a copy of a handle object - works because no property is
         % itself a handle object.
         function new = copy(this)
-            % Instantiate new object of the same class.
-            new = feval(class(this));
-            
-            % Copy all non-hidden properties.
-            p = fieldnames(this);
-            for i = 1:length(p)
-                new.(p{i}) = this.(p{i});
-            end
+            % R2010b or newer ...
+            objByteArray = getByteStreamFromArray(this);
+            new = getArrayFromByteStream(objByteArray);
         end
         
+        function cmp = compare(this, other)
+            % Compares two BreachSet. Goes through a series of tests, logs
+            % results and returns when an outstanding difference result is
+            % found.
+            % TODO: status number are quite arbitrary. Should evolve with
+            % usage. Current guideline: large number means significant
+            % (structural) difference, 0 means identical, large negative
+            % means potiential bug, other can be anything, though structure ( should be same).  
+            
+            cmp = BreachStatus;
+            
+            % checks if the handles are the same
+            is_same_obj = (this==other);
+            if is_same_obj
+                cmp.addStatus(0, 'The two sets are the same objects in memory.')
+                return;
+            end
+            
+            % checks presence of P
+            if (isempty(this.P))&&((isempty(other.P)))
+                cmp.addStatus(0, 'The two objects have an empty parameter set.')
+                return;
+            elseif (isempty(this.P))
+                cmp.addStatus(10000, 'Parameter set is empty in first object.');
+                return;
+            elseif (isempty(other.P))
+                cmp.addStatus(10000, 'Parameter set is empty in second object.');
+                return;
+            end
+            
+            % Checks signals and parameters
+            thisParamList = this.P.ParamList;
+            otherParamList = other.P.ParamList;
+            
+            diff_pl = ~(isequal(thisParamList,otherParamList));
+            if diff_pl
+                % Checks signals
+                sigthis = this.GetSignalNames();
+                sigother = other.GetSignalNames();
+                diff_signal = ~(isequal(sigthis,sigother));
+                
+                if diff_signal
+                    cmp.addStatus(1, 'The two sets have different signals.')
+                    return;
+                else
+                    thisParamList = this.P.ParamList(1:this.P.DimP);
+                    otherParamList = other.P.ParamList(1:other.P.DimP);
+                    diffParam = ~(isequal(thisParamList,otherParamList));
+                    if diffParam
+                        cmp.addStatus(1000, 'The two sets have different system parameter lists.')
+                        return;
+                    else
+                        cmp.addStatus(10, 'The two sets have different property parameter lists.')
+                    end
+                end
+                
+            end
+            
+            % checks if parameter sets are equal
+            if (isequal(this.P,other.P))
+                cmp.addStatus(0,'The two objects have an equal parameter sets.');
+                return;
+            end
+            
+            % checks pts nb
+            nb_pts_this  = this.GetNbParamVectors();
+            nb_pts_other = other.GetNbParamVectors();
+            
+            if nb_pts_this ~= nb_pts_other
+                cmp.addStatus(10,'The two objects have different number of parameter vectors.');
+                return;
+            end
+            
+            % Checks system parameters
+            rg_sys = this.P.DimX+1:this.P.DimP; % at this point, this is the same as other
+            sys_pts_this = this.P.pts(rg_sys,:);
+            sys_pts_other = other.P.pts(rg_sys,:);
+            
+            diff_sys_pts = norm(sys_pts_this-sys_pts_other);
+            if (diff_sys_pts == 0)
+                cmp.addStatus(0, 'The two objects have the same system parameter vectors.');
+            else
+                cmp.addStatus(1, ['Distance between the two system parameter vectors: ' num2str(diff_sys_pts)])
+            end
+            
+            % Checks spec. parameters
+            rg_pspec = this.P.DimP+1:size(this.P.pts,1); % at this point, this is the same as other
+            if ~isempty(rg_pspec)
+                spec_pts_this = this.P.pts(rg_pspec,:);
+                spec_pts_other = other.P.pts(rg_pspec,:);
+                
+                diff_spec_pts = norm(spec_pts_this-spec_pts_other);
+                if (diff_spec_pts == 0)
+                    cmp.addStatus(0, 'The two objects have the same spec. parameter vectors.');
+                else
+                    cmp.addStatus(1, ['Distance between the two spec. parameter vectors: ' num2str(diff_spec_pts)])
+                end
+            end
+            
+            
+            % Checks trajs field
+            if (isfield(this.P, 'traj'))&&(~isfield(other.P, 'traj'))
+                cmp.addStatus(1000, 'This has computed trajectories or traces but not other');
+                return;
+            elseif  (~isfield(this.P, 'traj'))&&(isfield(other.P, 'traj'))
+                cmp.addStatus(1000, 'This has no computed trajectories or traces while other does have computed trajectories or traces.');
+                return;
+            elseif (isfield(this.P, 'traj'))&&(isfield(other.P, 'traj'))
+                % both have traces, compare them
+                nb_traj_this  = numel(this.P.traj);
+                nb_traj_other = numel(other.P.traj);
+                diff_nb_traj =nb_traj_this - nb_traj_other;
+                if diff_nb_traj ~= 0
+                    cmp.addStatus(100, 'Different numbers of traces.');
+                    return;
+                end
+                
+                if isequal(this.P.traj, other.P.traj)
+                    cmp.addStatus(0, 'Traces are identical.');
+                else
+                    max_diff_p = 0;
+                    max_diff_time = 0;
+                    max_diff_X = 0;
+                    for itraj=1:nb_traj_this
+                        tr1 = this.P.traj(itraj);
+                        tr2 = other.P.traj(itraj);
+                        if (isequal(size(tr1.p), size(tr2.p)) &&  isequal(size(tr1.p), size(tr2.p)) && isequal(size(tr1.p), size(tr2.p)))
+                            diff_p = tr1.p - tr2.p;
+                            diff_time = tr1.time - tr2.time;
+                            diff_X = tr1.X - tr2.X;
+                            max_diff_p = max([max_diff_p, norm(diff_p)]);
+                            max_diff_time = max([max_diff_time, norm(diff_time)]);
+                            max_diff_X = max([max_diff_X, norm(diff_X)]);
+                        else
+                            cmp.addStatus(10, ['Traces ' itraj ' have different dimensions somehow.']);
+                            return;
+                        end
+                    end
+                    cmp.addStatus(1,['Max difference between trajectories: p:' num2str(max_diff_p) ' time:' num2str(max_diff_time) ' X:' num2str(max_diff_X)]);
+                end
+            end
+            
+            % Checks props fields
+            
+            if (isfield(this.P, 'props'))&&(~isfield(other.P, 'props'))
+                cmp.addStatus(100, 'This has properties evaluated but not other');
+                return;
+            elseif  (~isfield(this.P, 'props'))&&(isfield(other.P, 'props'))
+                cmp.addStatus(100, 'This has no properties evaluated while other does.');
+                return;
+            elseif (isfield(this.P, 'props'))&&(isfield(other.P, 'props'))
+                % checks properties are the same
+                if (isfield(this.P, 'props_names'))&&(isfield(other.P, 'props_names'))
+                    if isequal(this.P.props_names,other.P.props_names)
+                        if (isfield(this.P, 'props_values'))&&(isfield(other.P, 'props_values'))
+                                                      
+                            % both have traces, compare them
+
+                            this_props_vals  = this.P.props_values;
+                            other_props_vals = other.P.props_values;
+                            
+                            if ~isequal(size(this_props_vals), size(other_props_vals))  
+                                cmp.addStatus(-100, 'Different numbers of property evaluations.');
+                                return;
+                            end
+                            
+                            if isequal(this_props_vals, other_props_vals)
+                                cmp.addStatus(0, 'Property evaluations are identical.');
+                            else
+                                nb_traj = size(this_props_vals,2); 
+                                nb_phis = size(this_props_vals,1);
+                                for itraj=1:nb_traj
+                                    for iphis = 1:nb_phis
+                                        tr1 = this_props_values(iphis,itraj);
+                                        tr2 = other_props_values(iphis,itraj);
+                                        if ~isequal(tr1,tr2)
+                                           pre_status =  ['Trace: ' num2str(itraj) ' Property:' this.props_names{iphi}];
+                                           if ~isequal(tr1.tau,tr2.tau)
+                                               cmp.addStatus(1, [pre_status 'evaluations at different times.']);
+                                           elseif sign(tr1.val(1)) ~= sign(tr2.val(1)) 
+                                                cmp.addStatus(1, [pre_status 'Boolean satisfactions at origin are different']);
+                                           elseif tr1.val(1) ~= tr2.val(1) 
+                                                cmp.addStatus(1, [pre_status 'Quantitative satisfactions at origin are different']); 
+                                           end
+                                            diff_val = norm(tr1.val-tr2.val);
+                                            if diff_val
+                                                 cmp.addStatus(1, [pre_status 'Overall difference in quantitative satisfactions: ' num2str(diff_val)]); 
+                                            end
+                                            
+                                        end
+                                    end
+                                end
+                            end
+                        else
+                            cmp.addStatus(-100,'BUG: field props is present but not field props_values'); % probably dead code...
+                            
+                        end
+                    else
+                        cmp.addStatus(100,'Property names evaluated in this and other are different.');
+                    end
+                    
+                else
+                    cmp.addStatus(-100,'BUG: field props is present but not field props_names'); % probably dead code...
+                end
+            end
+            
+            
+        end
         
     end
 end

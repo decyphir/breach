@@ -63,7 +63,7 @@ for ii = 1:size(P0.pts,2)
         P.pts = [P.pts X];
         P.epsi = [P.epsi nepsi];
         
-        etraj = zeros(1,nb_new); % initialise etraj
+%        etraj = zeros(1,nb_new); % initialise etraj
         for jj = 1:nb_new
             dx = X(:,jj)-P0.pts(:,ii);
             etraj(jj) = estim_traj(P0.traj(ii), dx(P0.dim));
