@@ -466,7 +466,7 @@ classdef BreachSet < handle
             
             % checks if parameter sets are equal
             if (isequal(this.P,other.P))
-                cmp.addStatus(0,'The two objects have an equal parameter sets.');
+                cmp.addStatus(0,'The two sets parameters and traces are strictly identical.');
                 return;
             end
             
@@ -475,7 +475,7 @@ classdef BreachSet < handle
             nb_pts_other = other.GetNbParamVectors();
             
             if nb_pts_this ~= nb_pts_other
-                cmp.addStatus(10,'The two objects have different number of parameter vectors.');
+                cmp.addStatus(10,'The two sets have different number of parameter vectors.');
                 return;
             end
             
@@ -486,7 +486,7 @@ classdef BreachSet < handle
             
             diff_sys_pts = norm(sys_pts_this-sys_pts_other);
             if (diff_sys_pts == 0)
-                cmp.addStatus(0, 'The two objects have the same system parameter vectors.');
+                cmp.addStatus(0, 'The two sets have the same system parameter vectors.');
             else
                 cmp.addStatus(1, ['Distance between the two system parameter vectors: ' num2str(diff_sys_pts)])
             end
