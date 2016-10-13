@@ -11,4 +11,9 @@ listAFC = {'DemoAFC_1_Interface',...
            'DemoAFC_6_Analysis',...
            };
 
-      
+TestsAFC  = struct;
+
+for nf = 1:numel(listAFC)
+   TestsAFC.(listAFC{nf}) = DocRun(listAFC{nf}); 
+end
+       
