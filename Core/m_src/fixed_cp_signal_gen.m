@@ -52,7 +52,7 @@ classdef fixed_cp_signal_gen < signal_gen
             if nargin==4
                 this.p0 = p0;
             else
-                this.p0= zeros(numel(signals)*sum(cp),1);
+                this.p0= zeros(numel(this.params),1);
             end
         end
         
