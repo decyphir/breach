@@ -20,7 +20,6 @@ classdef BreachCEGIS < handle
         
         
         function solve(this)
-            %% Main loop
             cont = true;
             while (cont)
                 clc;
