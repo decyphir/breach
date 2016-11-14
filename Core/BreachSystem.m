@@ -116,7 +116,7 @@ classdef BreachSystem < BreachSet
         % Add (a) specs % TODO double check
         function phi = AddSpec(this, varargin)
             global BreachGlobOpt
-            if isa(varargin{1},'STL_Formula');
+            if isa(varargin{1},'STL_Formula')
                 phi = varargin{1};
             elseif ischar(varargin{1})
                 phi_id = MakeUniqueID([this.Sys.name '_spec'],  BreachGlobOpt.STLDB.keys);
@@ -475,6 +475,17 @@ classdef BreachSystem < BreachSet
             end
             gui = Breach(this);
             
+        end
+  
+        function TrajGUI(this) 
+            args = struct('working_sets', struct,'working_sets_file_name', '', 'Sys', this.Sys, 'TrajSet', this.P); 
+            specs = this.Specs.keys;
+            
+            for ispec = 1:numel(specs)
+               args.properties.(specs{ispec}) = this.Specs(specs{ispec});
+            end
+            
+            BreachTrajGui('varargin',args);          
         end
         
         function ResetFiles(this)
