@@ -59,7 +59,11 @@ handles.protected_names = fieldnames(handles_main.working_sets);
 handles.working_sets_filename = handles_main.working_sets_file_name;
 handles.Sys= handles_main.Sys;
 handles.properties= handles_main.properties;
-handles.TrajSet= handles_main.working_sets.(handles_main.current_set);
+if isfield(handles_main, 'TrajSet')
+    handles.TrajSet = handles_main.TrajSet;
+else
+    handles.TrajSet= handles_main.working_sets.(handles_main.current_set);
+end
 
 if (isfield(handles.TrajSet, 'traj'))
   if ~isfield(handles.TrajSet, 'traj_ref')
