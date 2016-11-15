@@ -1,42 +1,65 @@
-% This script initializes Breach, in particular adding paths to Breach directories
+function InitBreach(br_dir)
+% InitBreach This script initializes Breach, in particular adding paths to Breach directories
 
-% checks if global configuration variable is defined
-if exist('BreachGlobOpt','var')
-  if isfield(BreachGlobOpt, 'breach_dir') % additional check  
-      return; % OK InitBreach has been run before
-  end
+if ~exist('br_dir', 'var')
+    br_dir = which('InstallBreach');
+    br_dir = fileparts(br_dir);
 end
 
-disp('Initializing Breach...'); 
+% checks if global configuration variable is defined
+global BreachGlobOpt
+if isfield(BreachGlobOpt, 'breach_dir')
+    if isequal(BreachGlobOpt.breach_dir, br_dir)
+        return; % OK InitBreach has been run before
+    end
+end
+
+% remove old path, if any
+if isfield(BreachGlobOpt, 'breach_dir')
+    if isfield(BreachGlobOpt, 'list_path')  % we listed paths from previous version
+        rmpath(BreachGlobOpt.listpath{:});
+    else % in case we're dealing with an older version of Breach (dangerous, let's warn)
+        warning('Breach:RemoveOldPath','Older version of Breach detected. Attempting to clean old path by removing every path with ''breach'' in it.');
+        old_dr = BreachGlobOpt.breach_dir;
+        toks = regexp(old_dr, ['(' old_dr '[\w' filesep '\+_-]*):'],'tokens');
+        for ii = 1:numel(toks)
+            rmpath(toks{ii}{1});
+        end
+    end
+end
+
+disp(['Initializing Breach from folder ' br_dir '...']);
 
 id = 'MATLAB:dispatcher:nameConflict';
 warning('off',id);
 
-cdr_ = pwd;
-dr_ = which('InitBreach');
-dr_ =  dr_(1:end-13);
+cdr = pwd;
+cd(br_dir);
 
-cd(dr_);
+list_path = { ...
+    br_dir, ...
+    [br_dir filesep 'Core'], ...
+    [br_dir filesep 'Core' filesep 'm_src'], ...
+    [br_dir filesep 'Params'], ...
+    [br_dir filesep 'Params' filesep 'm_src'], ...
+    [br_dir filesep 'Params' filesep 'm_src' filesep 'sobolqr'], ...
+    [br_dir filesep 'Params' filesep 'm_src' filesep 'niederreiter2'], ...
+    [br_dir filesep 'Plots'], ...
+    [br_dir filesep 'Plots' filesep 'm_src'], ...
+    [br_dir filesep 'Toolboxes' filesep 'optimize'], ...
+    [br_dir filesep 'Toolboxes' filesep 'sundials' filesep 'sundialsTB' ], ...
+    [br_dir filesep 'Toolboxes' filesep 'sundials' filesep 'sundialsTB' filesep 'cvodes'], ...
+    [br_dir filesep 'Toolboxes' filesep 'stl_formula++' filesep 'm_src'], ...
+    [br_dir filesep 'Toolboxes' filesep 'stl_formula++' filesep 'bin'], ...
+    [br_dir filesep 'Core' filesep 'STLib'], ...
+    [br_dir filesep 'Examples'], ...
+    [br_dir filesep 'Examples' filesep 'Models' filesep 'Simulink'], ...
+    [br_dir filesep 'Examples' filesep 'Specs'], ...
+    };
 
-addpath(dr_);
-addpath( [dr_ filesep 'Core']);
-addpath( [dr_ filesep 'Core' filesep 'm_src']);
-addpath( [dr_ filesep 'Params']);
-addpath( [dr_ filesep 'Params' filesep 'm_src']);
-addpath( [dr_ filesep 'Params' filesep 'm_src' filesep 'sobolqr']);
-addpath( [dr_ filesep 'Params' filesep 'm_src' filesep 'niederreiter2']);
-addpath( [dr_ filesep 'Plots']);
-addpath( [dr_ filesep 'Plots' filesep 'm_src']);
-addpath( [dr_ filesep 'Toolboxes' filesep 'optimize']);
-addpath( [dr_ filesep 'Toolboxes' filesep 'sundials' filesep 'sundialsTB' ]);
-addpath( [dr_ filesep 'Toolboxes' filesep 'sundials' filesep 'sundialsTB' filesep 'cvodes']);
-addpath( [dr_ filesep 'Toolboxes' filesep 'stl_formula++' filesep 'm_src']);
-addpath( [dr_ filesep 'Toolboxes' filesep 'stl_formula++' filesep 'bin']);
-addpath( [dr_ filesep 'Core' filesep 'STLib']);
-addpath( [dr_ filesep 'Examples' filesep 'Simulink' filesep 'brdemo_models']);
+addpath(list_path{:});
 
 %% Init BreachGlobOpt options and fourre-tout global variable
-
 if exist('BreachGlobOpt.mat')
     load BreachGlobOpt;
     
@@ -50,27 +73,29 @@ if exist('BreachGlobOpt.mat')
     
 else
     
-    if ~exist('BreachGlobOpt','var')
-        global BreachGlobOpt;
-        BreachGlobOpt.breach_dir = dr_;
-    end
+    BreachGlobOpt.breach_dir = br_dir;
     
     if ~isfield(BreachGlobOpt,'RobustSemantics')
         BreachGlobOpt.RobustSemantics = 0;
     end
     
 end
-cd(cdr_);
-clear cdr_ dr_;
+cd(cdr);
+
 
 %% Init STL_Formula database
 
-if isfield(BreachGlobOpt, 'STLDB') 
+if isfield(BreachGlobOpt, 'STLDB')
     if ~strcmp(class(BreachGlobOpt.STLDB), 'containers.Map')
         BreachGlobOpt.STLDB = containers.Map();
     end
 else
-        BreachGlobOpt.STLDB = containers.Map();    
+    BreachGlobOpt.STLDB = containers.Map();
 end
 
+%% Store path_list for when we want to remove it
+BreachGlobOpt.list_path = list_path;
+
 warning('on',id);
+
+end
