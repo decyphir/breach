@@ -150,15 +150,14 @@ classdef BreachSet < handle
             end
         end
         
-        % Set Param ranges around individual parameter vectors to zero
         function ResetEpsi(this)
+            % Set Param ranges around individual parameter vectors to zero
             this.P.epsi(:,:) = 0;
             this.UpdateParamRanges();
         end
         
-        % Update ranges for variables from P
         function UpdateParamRanges(this)
-            
+            % Update ranges for variables from P            
             i_params = (this.P.DimX+1):numel(this.P.ParamList);
             if numel(i_params)> size(this.ParamRanges,1)
                 dd = numel(i_params) - size(this.ParamRanges,1);
@@ -177,15 +176,15 @@ classdef BreachSet < handle
         
         % Get computed trajectories
         function traces = GetTraces(this)
+            % Get computed trajectories
             traces= [];
             if isfield(this.P,'traj')
                 traces = this.P.traj;
             end
         end
         
-        % Update ranges for variables from trajectories in P
         function val = UpdateSignalRanges(this)
-            
+        % Update ranges for variables from trajectories in P            
             if isfield(this.P, 'traj')
                 if isempty(this.SignalRanges)
                     this.SignalRanges = ones(this.Sys.DimX,2);
@@ -207,7 +206,7 @@ classdef BreachSet < handle
                     maxX = max([traj_maxX maxX],[],2);
                 end
                 this.SignalRanges = [minX, maxX];
-                this.P.SignalRanges = this.SignalRanges; % duplicate - never good I guess
+                this.P.SignalRanges = this.SignalRanges; % duplicate - never good for sure...
             end
             
         end
@@ -238,9 +237,8 @@ classdef BreachSet < handle
         end
         
         
-        % Get signal values - in case of several trajectories, return cell
-        % array
         function X = GetSignalValues(this, iX, t)
+        % Get signal values - in case of several trajectories, return cell array
             if (~isfield(this.P,'traj'))
                 error('GetTrajValues:NoTrajField','Compute/import trajectories first.')
             end
@@ -268,8 +266,8 @@ classdef BreachSet < handle
         end
         
         
-        % Plot signals
         function h = PlotSignals(this, varargin)
+        % Plot signals
             if (~isfield(this.P,'traj'))
                 error('No signal to plot. Use Sim command first.')
             end
@@ -278,8 +276,8 @@ classdef BreachSet < handle
             h = SplotVar(this.P, varargin{:});
         end
         
-        % Plot signals
         function h = PlotSigPortrait(this, varargin)
+        % Plot signals, phase portrait
             if (~isfield(this.P,'traj'))
                 error('No signal to plot. Use Sim command first.')
             end
@@ -288,8 +286,8 @@ classdef BreachSet < handle
             SplotTraj(this.P, varargin{:});
         end
         
-        % Grid Sample
         function GridSample(this, delta)
+            % Grid Sample
             this.P = Refine(this.P,delta, 1);
         end
         
@@ -323,8 +321,9 @@ classdef BreachSet < handle
             this.P = SConcat(this.P, other.P);
         end
         
-        % Plot parameters
+       
         function PlotParams(this, varargin)
+        % Plot parameters 
             figure;
             P = DiscrimPropValues(this.P);
             SplotPts(P, varargin{:});
@@ -401,7 +400,7 @@ classdef BreachSet < handle
         % Make a copy of a handle object - works because no property is
         % itself a handle object.
         function new = copy(this)
-            % R2010b or newer ...
+            % copy operator for BreachSet, works with R2010b or newer.
             objByteArray = getByteStreamFromArray(this);
             new = getArrayFromByteStream(objByteArray);
         end
