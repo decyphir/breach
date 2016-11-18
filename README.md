@@ -1,22 +1,26 @@
 # README #
 
-Breach is a Matlab toolbox for simulation-based design of dynamical systems.
+Breach is a Matlab toolbox for simulation-based design of dynamical/CPS/Hybrid systems.
 
 ## Install
 - Setup a C/C++ compiler using mex -setup
 - Run InstallBreach
-- Stop worrying about GiNaC (if you got this error)
+- Stop worrying about GiNaC (if you see this error)
 - Add/save path to Breach folder 
 - Run InitBreach 
 
-## Try demos
+## Getting Started
 
-cd into Examples/DemoAFC and run DemoAFC\_1\_Interface, DemoAFC\_2\_Simulation, etc, in the right order.
+Type
 
-Or, run Init\_BrAFC and any DemoAFC\_xxx script.
+>> BrDemo.
 
-These demos were used to generate a tutorial accessible at this address: https://bitbucket.org/donze/breach/src/f1b4700a07362ac2e5044656cb62a9bbf6e3b72d/Tutorial_DemoAFC.pdf?at=default
+and Tab to get a list of available demo scripts. Corresponding documentation can be found in
 
+Doc/pdf
+Doc/html
+
+Also consult Examples/README for some details about available examples (not all working/up-to-date). 
 
 ## Contact/Support
 
