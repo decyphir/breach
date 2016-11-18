@@ -182,39 +182,61 @@ switch Sys.type
         model = Sys.mdl;
         Pf = P0;
         ipts = 1:size(P0.pts,2);
-        if Verbose==1
-            if(numel(ipts)>1)
-                fprintf(['Computing ' num2str(numel(ipts)) ' trajectories of model ' model '\n'...
-                    '[             25%%           50%%            75%%               ]\n ']);
-                iprog = 0;
-            end
+        if numel(ipts) == 1
+            Verbose=0;
         end
         
-        for ii = ipts
-            if isfield(Sys,'init_u')
-                U = Sys.init_u(Sys.InputOpt, P0.pts(1:Sys.DimP,ii), tspan);
-                assignin('base','t__',U.t);
-                assignin('base', 'u__',U.u);
+        if isfield(Sys, 'Parallel')&&Sys.Parallel
+            trajs = repmat(struct(), 1, numel(ipts));
+            parfor ii = ipts
+                if isfield(Sys,'init_u')
+                    U = Sys.init_u(Sys.InputOpt, P0.pts(1:Sys.DimP,ii), tspan);
+                    assignin('base','t__',U.t);
+                    assignin('base', 'u__',U.u);
+                end
+                
+                [trajs(ii).time, trajs(ii).X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
+                trajs(ii).param = P0.pts(1:P0.DimP,ii)';
+            end
+            Pf.traj = trajs;
+            for ii=ipts
+                Pf.Xf(:,ii) = Pf.traj(ii).X(:,end);
             end
             
-            [traj.time, traj.X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
-            traj.param = P0.pts(1:P0.DimP,ii)';
-            Pf.traj(ii) = traj;
-            Pf.Xf(:,ii) = traj.X(:,end);
-            if Verbose ==1
+        else
+            ii=0;
+            if Verbose==1
+                rfprintf_reset();
+                rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
+            end
+            
+            trajs = repmat(struct(), 1, numel(ipts));
+            
+            for ii = ipts
+                if isfield(Sys,'init_u')
+                    U = Sys.init_u(Sys.InputOpt, P0.pts(1:Sys.DimP,ii), tspan);
+                    assignin('base','t__',U.t);
+                    assignin('base', 'u__',U.u);
+                end
+                
+                [trajs(ii).time, trajs(ii).X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
+                trajs(ii).param = P0.pts(1:P0.DimP,ii)';
+                if Verbose ==1
+                    rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
+                end
+            end
+            Pf.traj = trajs;
+            for ii=ipts
+                Pf.Xf(:,ii) = Pf.traj(ii).X(:,end);
+            end
+            if Verbose==1
                 if(numel(ipts)>1)
-                    while(floor(60*ii/numel(ipts))>iprog)
-                        fprintf('^');
-                        iprog = iprog+1;
-                    end
+                    fprintf('\n');
                 end
             end
         end
-        if Verbose==1
-            if(numel(ipts)>1)
-                fprintf('\n');
-            end
-        end
+        
+        
         Pf.traj_to_compute = [];
         Pf.traj_ref = 1:numel(Pf.traj); % fill field traj_ref (one to one mapping)
         

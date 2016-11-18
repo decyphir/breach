@@ -1,5 +1,5 @@
 # Output is never at a distance greater than max_over from the reference signal
-param max_over = 3, t_end=20
+param max_over = 1, t_end=20
 far_ref :=  abs(Pos[t] - Ref[t]) >= max_over
 never_far_ref := alw_[0, t_end] (not (far_ref) ) 
 

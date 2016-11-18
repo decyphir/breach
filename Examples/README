@@ -1,11 +1,13 @@
 This folder contains examples of systems used with Breach. It is organized as follows:
 
+- Models/
 - DemoAFC/   Demo scripts illustrating various features of Breach on a semi-complex Simulink model of AbstractFuelControl
 - Simulink/  examples of Simulink models. 
 - Legacy/    various models more or less experimental and obsolete, using mostly the legacy (old)
              interface of Breach, no guarantee of working properly
+- Tests/     scripts for testing/benchmarking breach 
+- Demos/     Demo scripts illustrating various features of Breach on a semi-complex Simulink model of AbstractFuelControl
 
 Alexandre Donze
-donze@berkeley.edu
-Feb 2016
+alex@decyphir.com
 
