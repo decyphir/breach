@@ -17,7 +17,7 @@ end
 % remove old path, if any
 if isfield(BreachGlobOpt, 'breach_dir')
     if isfield(BreachGlobOpt, 'list_path')  % we listed paths from previous version
-        rmpath(BreachGlobOpt.listpath{:});
+        rmpath(BreachGlobOpt.list_path{:});
     else % in case we're dealing with an older version of Breach (dangerous, let's warn)
         warning('Breach:RemoveOldPath','Older version of Breach detected. Attempting to clean old path by removing every path with ''breach'' in it.');
         old_dr = BreachGlobOpt.breach_dir;

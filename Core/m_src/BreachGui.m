@@ -1725,22 +1725,13 @@ function menu_plot_property_val_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 try
-    if isempty(handles.figp)
-        handles.figp = figure;
-        hold on;
-    else
-        figure(handles.figp);
-        hold on;
-    end
-    
-    SplotProp(handles.working_sets.(handles.current_set), handles.properties.(handles.current_prop));
-    guidata(hObject,handles);
-catch
-    s = lasterror;
-    warndlg(['Problem plotting property values:' s.message])
-    error(s);
-    return;
+    close(handles.figp)
 end
+handles.figp = figure;
+hold on;
+SplotProp(handles.working_sets.(handles.current_set), handles.properties.(handles.current_prop));
+guidata(hObject,handles);
+
 
 % --------------------------------------------------------------------
 function menu_falsify_Callback(hObject, eventdata, handles)
