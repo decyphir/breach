@@ -41,8 +41,8 @@ title('step and linear interpolation')
 %% linear and spline interpolation with var steps 
 
 input_gen = var_cp_signal_gen({'Engine_Speed', 'Pedal_Angle'}, ... % signal names
-                                       [3 6],...                % number of control points
-                                       {'spline', 'linear'}...       % interpolation method
+                                       [3 6],...                   % number of control points
+                                       {'spline', 'linear'}...     % interpolation method
                                      );
 
 InputGen3 = BreachSignalGen({input_gen});

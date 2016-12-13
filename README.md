@@ -5,17 +5,12 @@ Breach is a Matlab toolbox for simulation-based design of dynamical/CPS/Hybrid s
 ## Install
 - Setup a C/C++ compiler using mex -setup
 - Run InstallBreach
-- Stop worrying about GiNaC (if you see this error)
 - Add/save path to Breach folder 
 - Run InitBreach 
 
 ## Getting Started
 
-Type
-
->> BrDemo.
-
-and Tab to get a list of available demo scripts. Corresponding documentation can be found in
+Type 'BrDemo.' and Tab to get a list of available demo scripts. Corresponding documentation can be found in
 
 Doc/pdf
 Doc/html
@@ -24,6 +19,5 @@ Also consult Examples/README for some details about available examples (not all 
 
 ## Contact/Support
 
-See http://www.eecs.berkeley.edu/~donze/breach_page.html for more information
-
-Contact donze@berkeley.edu, for help, complaints, support, etc. 
+Contact alex at decyphir dot com to report bugs, 
+for help, complaints, support, etc. 
