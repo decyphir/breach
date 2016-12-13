@@ -31,6 +31,7 @@ ki = 0.14;
 %
 % Running the following will create a BreachSystem interface with the model:
 mdl = 'AbstractFuelControl';
+warning('off', 'Simulink:LoadSave:EncodingMismatch') %avoid warning encoding conflict windows vs iso
 BrAFC = BreachSimulinkSystem(mdl)
 
 %% 

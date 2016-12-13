@@ -10,6 +10,7 @@ fault_time=50;
 kp = 0.04;
 ki = 0.14;
 
+warning('off', 'Simulink:LoadSave:EncodingMismatch')
 mdl = 'AbstractFuelControl';
 BrAFC = BreachSimulinkSystem(mdl);
 
