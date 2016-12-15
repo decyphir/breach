@@ -1,0 +1,237 @@
+%{ /*** C/C++ Declarations ***/
+#include "stdafx.h"
+#include <iostream>
+#include <transducer.h>
+#include <signal_expr.h>
+#include <interval.h>
+#include <map>
+#include <string>
+#include "stl_scanner.h"
+#include "stl_driver.h"
+
+/* import the parser's token type into a local typedef */
+typedef CPSGrader::Parser::token token;
+typedef CPSGrader::Parser::token_type token_type;
+
+/* By default yylex returns int, we use token_type. Unfortunately yyterminate
+ * by default returns 0, which is not of token_type. */
+#define yyterminate() return token::END
+
+/* This disables inclusion of unistd.h, which is not available under Visual C++
+ * on Win32. The C++ scanner uses STL streams instead. */
+#define YY_NO_UNISTD_H
+
+%} /* End C/C++ declarations */
+
+/*** Flex Declarations and Options ***/
+
+/* enable c++ scanner class generation */
+%option c++
+
+/* change the name of the scanner class. results in "STLFlexLexer" */
+%option prefix="STL"
+
+/* the manual says "somewhat more optimized" */
+%option batch
+
+/* enable scanner to generate debug output. disable this for release
+ * versions. */
+%option debug
+
+/* no support for include files is planned */
+%option yywrap nounput 
+
+/* enables the use of start condition stacks */
+%option stack
+
+/* The following paragraph suffices to track locations accurately. Each time
+ * yylex is invoked, the begin position is moved onto the end position. */
+%{
+#define YY_USER_ACTION  yylloc->columns(yyleng);
+%}
+
+
+%%  /*** Regular Expressions Part ***/
+
+%{
+    // reset location
+    yylloc->step();
+%}
+
+
+
+[ \t\r]+   { 
+    yylloc->step();
+ }
+
+ /* gobble up end-of-lines */
+\n {
+    yylloc->lines(yyleng); yylloc->step();
+    //    return token::EOL;
+}
+
+"<>"      { return token::DIAMOND; }
+"<>_"     { return token::DIAMOND; }
+"[]"      { return token::BOX; }
+"[]_"     { return token::BOX; }
+"["       { return token::LINT; }
+"]"       { return token::RINT; }
+"("       { return token::LPAREN; }
+")"       { return token::RPAREN; }
+"=>"      { return token::IMPLIES;}
+"->"      { return token::IMPLIES;}
+"<"       { return token::LT; }
+">"       { return token::GT; }
+"<="      { return token::LT; }
+">="      { return token::GT; }
+"!"       { return token::NOT; }
+","       { return token::COMMA; }
+"&"       { return token::AND; }
+"|"       { return token::OR; }
+":="      { return token::ASSIGN; }
+"+"       { return token::PLUS; }
+"-"       { return token::MINUS; }
+"*"       { return token::MULT; }
+
+
+[a-zA-Z][A-Za-z0-9_]*     { 
+
+    string st = string(yytext, yyleng); 
+    
+    if (driver.reserved.find(st) != driver.reserved.end()) {
+        return driver.reserved[st];
+    }
+    else{
+        yylval->stringVal = new std::string(yytext, yyleng);
+        if (driver.formula_map.find(st) != driver.formula_map.end()) {
+            return token::PHI_ID;
+        }
+        else        
+        if (driver.param_map.find(st) != driver.param_map.end()) {
+            return token::PARAM_ID;
+        }
+        else 
+        if (driver.signal_map.find(st) != driver.signal_map.end()) {
+            return token::SIGNAL_ID;
+        }
+        else 
+        if (driver.stl_test_map.find(st) != driver.stl_test_map.end()) {
+            return token::STL_TEST_ID;
+        }
+        else 
+            return token::NEW_ID;
+        }   
+}
+
+[-+]?[0-9]*\.[0-9]+     { 
+    yylval->stringVal = new std::string(yytext, yyleng);
+    //cout <<  *yylval->stringVal  << " is a CONSTANT "<< endl; 
+ 
+  return token::CONSTANT;
+}
+
+[-+]?[0-9]*\. {
+    yylval->stringVal = new std::string(yytext, yyleng);
+    //cout <<  *yylval->stringVal  << " is a CONSTANT "<< endl; 
+
+    return token::CONSTANT;
+}
+
+[-+]?[0-9]+             { 
+    yylval->stringVal = new std::string(yytext, yyleng);
+    //cout <<  *yylval->stringVal  << " is a CONSTANT "<< endl; 
+
+    return token::CONSTANT; 
+}
+
+\"(\\.|[^\\"])*\" { // "
+    yylval->stringVal = new std::string(yytext+1, yyleng-2);
+    return token::STRING; 
+}
+
+
+
+"#".*\n { 
+    /* Comments */
+    yylloc->lines(1);
+    yylloc->step();
+}
+
+
+
+
+. {
+    return static_cast<token_type>(*yytext);
+}
+
+
+%%
+
+namespace CPSGrader {
+
+
+Scanner::Scanner(std::istream* in,
+		 std::ostream* out)
+    : STLFlexLexer(in, out)
+{
+    STLDriver::reserved["F"] = token::DIAMOND;
+    STLDriver::reserved["F_"] = token::DIAMOND;
+    STLDriver::reserved["ev"] = token::DIAMOND;
+    STLDriver::reserved["ev_"] = token::DIAMOND;
+    STLDriver::reserved["G"] = token::BOX;
+    STLDriver::reserved["G_"] = token::BOX;
+    STLDriver::reserved["alw"] = token::BOX;
+    STLDriver::reserved["alw_"] = token::BOX;
+    STLDriver::reserved["U"] = token::UNTIL;
+    STLDriver::reserved["U_"] = token::UNTIL;
+    STLDriver::reserved["until"] = token::UNTIL;
+    STLDriver::reserved["until_"] = token::UNTIL;
+        
+    STLDriver::reserved["and"] = token::AND;
+    STLDriver::reserved["or"] = token::OR;
+    STLDriver::reserved["not"] = token::NOT;
+    STLDriver::reserved["true"] = token::BOOL_TRUE;
+    STLDriver::reserved["false"] = token::BOOL_FALSE;
+        
+    STLDriver::reserved["t"] = token::TIME;
+    STLDriver::reserved["abs"] = token::ABS;
+    STLDriver::reserved["param"] = token::PARAM_DECL;
+    STLDriver::reserved["test"] = token::TEST;
+    STLDriver::reserved["signal"] = token::SIGNAL_DECL;
+}
+
+Scanner::~Scanner()
+{
+}
+
+void Scanner::set_debug(bool b)
+{
+    yy_flex_debug = b;
+}
+
+}
+
+/* This implementation of STLFlexLexer::yylex() is required to fill the
+ * vtable of the class STLFlexLexer. We define the scanner's main yylex
+ * function via YY_DECL to reside in the Scanner class instead. */
+
+#ifdef yylex
+#undef yylex
+#endif
+
+int STLFlexLexer::yylex()
+{
+    std::cerr << "in STLFlexLexer::yylex() !" << std::endl;
+    return 0;
+}
+
+/* When the scanner receives an end-of-file indication from YY_INPUT, it then
+ * checks the yywrap() function. If yywrap() returns false (zero), then it is
+ * assumed that the function has gone ahead and set up `yyin' to point to
+ * another input file, and scanning continues. If it returns true (non-zero),
+ * then the scanner terminates, returning 0 to its caller. */
+
+int STLFlexLexer::yywrap()
+{
+    return 1;
+}

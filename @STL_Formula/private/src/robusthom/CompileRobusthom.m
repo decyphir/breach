@@ -26,52 +26,52 @@ obj_files = ['robustness' obj_ext ...
     ];
 
 MEX = 'mex ';
-FLAGS = ' ';
+FLAGS = ' -silent ';
 
 if isfield(BreachGlobOpt, 'disable_robust_linear_interpolation')
     if BreachGlobOpt.disable_robust_linear_interpolation==1  
-        FLAGS = '-DNO_LINEAR_INTERPOL ';
+        FLAGS = [FLAGS '-DNO_LINEAR_INTERPOL ' ];
     end
 end
     
 % compiles src files
 compile_cmd = [MEX FLAGS '-c  ' src_files  ];
-fprintf([regexprep(compile_cmd,'\','\\\\') '\n' ]);
+%fprintf([regexprep(compile_cmd,'\','\\\\') '\n' ]);
 eval(compile_cmd);
 
 % compiles and robustness
 compile_cmd = [MEX FLAGS '-outdir ..' filesep '.. RobustAnd.cpp ' obj_files];
-fprintf([regexprep(compile_cmd,'\','\\\\') '\n' ]);
+%fprintf([regexprep(compile_cmd,'\','\\\\') '\n' ]);
 eval(compile_cmd);
 
 % compiles andn robustness
 compile_cmd = [MEX FLAGS '-outdir ..' filesep '.. RobustAndn.cpp ' obj_files];
-fprintf([regexprep(compile_cmd,'\','\\\\') '\n' ]);
+%fprintf([regexprep(compile_cmd,'\','\\\\') '\n' ]);
 eval(compile_cmd);
 
 % compiles or robustness
 compile_cmd = [MEX FLAGS '-outdir ..' filesep '.. RobustOr.cpp ' obj_files];
-fprintf([regexprep(compile_cmd,'\','\\\\') '\n' ]);
+%fprintf([regexprep(compile_cmd,'\','\\\\') '\n' ]);
 eval(compile_cmd);
 
 % compiles until robustness
 compile_cmd = [MEX FLAGS '-outdir ..' filesep '.. RobustUntil.cpp ' obj_files];
-fprintf([regexprep(compile_cmd,'\','\\\\') '\n' ]);
+%fprintf([regexprep(compile_cmd,'\','\\\\') '\n' ]);
 eval(compile_cmd);
 
 % compiles future robustness
 compile_cmd = [MEX FLAGS '-outdir ..' filesep '.. RobustEv.cpp ' obj_files];
-fprintf([regexprep(compile_cmd,'\','\\\\') '\n' ]);
+%fprintf([regexprep(compile_cmd,'\','\\\\') '\n' ]);
 eval(compile_cmd);
 
 % compiles average right future robustness
 compile_cmd = [MEX FLAGS '-outdir ..' filesep '.. RobustAvEvRight.cpp ' obj_files];
-fprintf([regexprep(compile_cmd,'\','\\\\') '\n' ]);
+%fprintf([regexprep(compile_cmd,'\','\\\\') '\n' ]);
 eval(compile_cmd);
 
 % compiles average left future robustness
 compile_cmd = [MEX FLAGS '-outdir ..' filesep '.. RobustAvEvLeft.cpp ' obj_files];
-fprintf([regexprep(compile_cmd,'\','\\\\') '\n' ]);
+%fprintf([regexprep(compile_cmd,'\','\\\\') '\n' ]);
 eval(compile_cmd);
 
 end

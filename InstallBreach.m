@@ -1,6 +1,16 @@
-function InstallBreach
+function InstallBreach(silent)
 %INSTALLBREACH compiles C/C++ mex functions used by Breach. Needs only to
 % be called once after an update of Breach
+
+if (~exist('silent','var'))
+   silent =1;  
+end
+
+MEX = 'mex ';
+FLAGS = ' '; 
+if silent
+   FLAGS = [FLAGS ' -silent '];
+end
 
 InitBreach
 
@@ -15,33 +25,61 @@ stl_src_dir  = [breach_dir filesep '@STL_Formula' filesep 'private' filesep 'src
 
 % compile STL mex functions
 
-MEX = 'mex ';
-FLAGS = ' ';
+fprintf('\nCompiling legacy STL monitoring functions...\n')
 
 cd(stl_src_dir);
 
-fprintf([MEX FLAGS '-outdir .. lemire_engine.c\n']);
-mex -outdir .. lemire_engine.c
-fprintf([MEX FLAGS '-outdir .. lemire_nd_engine.c\n']);
-mex -outdir .. lemire_nd_engine.c
-fprintf([MEX FLAGS '-outdir .. lemire_nd_maxengine.c\n']);
-mex -outdir .. lemire_nd_maxengine.c
-fprintf([MEX FLAGS '-outdir .. lemire_nd_minengine.c\n']);
-mex -outdir .. lemire_nd_minengine.c
-fprintf([MEX FLAGS '-outdir .. until_inf.c\n']);
-mex -outdir .. until_inf.c
-fprintf([MEX FLAGS '-outdir .. lim_inf.c\n']);
-mex -outdir .. lim_inf.c
-fprintf([MEX FLAGS '-outdir .. lim_inf_inv.c\n']);
-mex -outdir .. lim_inf_inv.c
-fprintf([MEX FLAGS '-outdir .. lim_inf_indx.c\n']);
-mex -outdir .. lim_inf_indx.c
-fprintf([MEX FLAGS '-outdir ../../../Core/m_src ltr.c\n']);
-mex -outdir ../../../Core/m_src/ ltr.c
-fprintf([MEX FLAGS '-outdir ../../../Core/m_src rtr.c\n']);
-mex -outdir ../../../Core/m_src/ rtr.c
+legacy_functions = { ' lemire_engine.c', ... 
+                     ' lemire_nd_engine.c', ...
+                     ' lemire_nd_maxengine.c', ... 
+                     ' lemire_nd_minengine.c', ... 
+                     ' until_inf.c', ...   
+                     ' lim_inf.c', ...          
+                     ' lim_inf_inv.c', ...         
+                     ' lim_inf_indx.c', ...
+                    };
+
+for ilf = 1:numel(legacy_functions)
+  cmd = [MEX FLAGS '-outdir ..' legacy_functions{ilf}];
+  eval(cmd);
+end
+ 
+legacy_functions_time_robustness= {                     
+                     ' ltr.c',...
+                     ' rtr.c',...
+    };
+    
+for ilf = 1:numel(legacy_functions_time_robustness)
+  cmd = [MEX FLAGS '-outdir ../../../Core/m_src ' legacy_functions_time_robustness{ilf}];
+  eval(cmd)
+end
+
+if (0)
+  fprintf([MEX FLAGS '-outdir .. lemire_engine.c\n']);
+  mex -outdir .. lemire_engine.c
+  fprintf([MEX FLAGS '-outdir .. lemire_nd_engine.c\n']);
+  mex -outdir .. lemire_nd_engine.c
+  fprintf([MEX FLAGS '-outdir .. lemire_nd_maxengine.c\n']);
+  mex -outdir .. lemire_nd_maxengine.c
+  fprintf([MEX FLAGS '-outdir .. lemire_nd_minengine.c\n']);
+  mex -outdir .. lemire_nd_minengine.c
+  fprintf([MEX FLAGS '-outdir .. until_inf.c\n']);
+  mex -outdir .. until_inf.c
+  fprintf([MEX FLAGS '-outdir .. lim_inf.c\n']);
+  mex -outdir .. lim_inf.c
+  fprintf([MEX FLAGS '-outdir .. lim_inf_inv.c\n']);
+  mex -outdir .. lim_inf_inv.c
+  fprintf([MEX FLAGS '-outdir .. lim_inf_indx.c\n']);
+  mex -outdir .. lim_inf_indx.c
+  fprintf([MEX FLAGS '-outdir ../../../Core/m_src ltr.c\n']);
+  mex -outdir ../../../Core/m_src/ ltr.c
+  fprintf([MEX FLAGS '-outdir ../../../Core/m_src rtr.c\n']);
+  mex -outdir ../../../Core/m_src/ rtr.c
+end
+
 
 cd robusthom;
+fprintf('Compiling offline STL monitoring functions...\n')
 CompileRobusthom;
     
 % compiles cvodes common stuff
@@ -91,8 +129,8 @@ out_dir = qwrap([breach_src_dir  filesep 'cv_obj']);
 
 % Compose and execute compilation command for CVodes common files.
 compile_cvodes = [MEX FLAGS '-c -outdir ' out_dir ' ' sundials_inc_flags ' ' sundials_src_files ];
-fprintf(regexprep(compile_cvodes,'\','\\\\'));
-fprintf('\n');
+%fprintf(regexprep(compile_cvodes,'\','\\\\'));
+fprintf('Compiling some more legacy functions...\n');
 eval(compile_cvodes);
 
 % Compile blitz library
@@ -101,26 +139,29 @@ cd(blitz_dir);
 CompileBlitzLib;
 
 % Compile mydiff
-if (0) % TODO move this into a dedicated script 
-cd([breach_dir filesep 'Toolboxes' filesep 'mydiff']);
-fprintf([MEX FLAGS '-lginac mydiff_mex.cpp\n']);
-try
-    mex -lginac mydiff_mex.cpp
-catch %#ok<CTCH>
-    warning('InstallBreach:noMydiffCompilation',...
+if (0) % TODO move this into a dedicated script
+    cd([breach_dir filesep 'Toolboxes' filesep 'mydiff']);
+    fprintf([MEX FLAGS '-lginac mydiff_mex.cpp\n']);
+    try
+        mex -lginac mydiff_mex.cpp
+    catch %#ok<CTCH>
+        warning('InstallBreach:noMydiffCompilation',...
             ['An error occurs when compiling mydiff. Maybe GiNaC not available.\n'...
             'Some functionnalities will not be available.']);
-    fprintf('\n'); % for a nice printing
+        fprintf('\n'); % for a nice printing
+    end
 end
-end
+
+fprintf('Compiling online monitoring functions...\n')
+compile_stl_mex
 
 addpath(breach_dir);
 savepath;
 
 % cd back and clean variable
 cd(cdr);
-InitBreach;
 
+fprintf('\n');
 disp('-------------------------------------------------------------------');
 disp('- Install successful.                                            --')
 disp('-------------------------------------------------------------------');
