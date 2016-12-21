@@ -106,8 +106,8 @@ switch numel(varargin)
         if(numel(varargin)==1 && ischar(st))
             st = regexprep(st,'eventually', 'ev');
             st = regexprep(st,'always','alw');
-            st = regexprep(st,'<=', '<');
-            st = regexprep(st,'>=', '>');
+%            st = regexprep(st,'<=', '<');
+%            st = regexprep(st,'>=', '>');
             % deals with true and false
             st = regexprep(st, 'true', 'inf>0');
             st = regexprep(st, 'false', 'inf<0');
@@ -300,17 +300,46 @@ switch(numel(varargin))
         end
         
         % parse operator
-        [success, st1, st2] = parenthesisly_balanced_split(st, '<');
-        
-        %tokens = regexp(st, '(.+)\s*<\s*(.+)','tokens');
+
+        [success, st1, st2] = parenthesisly_balanced_split(st, '<=');
         if success
-            phi.type='predicate';
+            phi.type = 'predicate';
             phi.st = st;
-            phi.params.fn = [ '-(' st1 '- (' st2 '))' ];
+            if ~isfield(phi.params, 'default_params')
+                phi.params.default_params = struct;
+            end
+            if ~isfield(phi.params.default_params,'zero_threshold__')
+                phi.params.default_params.zero_threshold__ = 1e-13;
+            end
+            phi.params.fn = [ '(' st2 ') - (' st1 ')+zero_threshold__' ];
             phi.evalfn = @(mode,traj,t,params) feval('generic_predicate',mode,traj,t,params);
             return
         end
-        
+
+        [success, st1, st2] = parenthesisly_balanced_split(st, '<');
+        if success
+            phi.type='predicate';
+            phi.st = st;
+            phi.params.fn = [ '(' st2 ') - (' st1 ')' ];
+            phi.evalfn = @(mode,traj,t,params) feval('generic_predicate',mode,traj,t,params);
+            return
+        end
+
+        [success, st1, st2] = parenthesisly_balanced_split(st, '>=');
+        if success
+            phi.type = 'predicate';
+            phi.st = st;
+            if ~isfield(phi.params, 'default_params')
+                phi.params.default_params = struct;
+            end
+            if ~isfield(phi.params.default_params,'zero_threshold__')
+                phi.params.default_params.zero_threshold__ = 1e-13;
+            end
+            phi.params.fn = [ '(' st1 ')-(' st2 ')+zero_threshold__' ];
+            phi.evalfn = @(mode,traj,t,params) feval('generic_predicate',mode,traj,t,params);
+            return
+        end
+
         [success, st1, st2] = parenthesisly_balanced_split(st, '>');
         if success
             phi.type = 'predicate';
@@ -320,6 +349,7 @@ switch(numel(varargin))
             return
         end
         
+
         [success, st1, st2] = parenthesisly_balanced_split(st, '==');
         if success
             phi.type = 'predicate';
@@ -327,7 +357,6 @@ switch(numel(varargin))
             if ~isfield(phi.params, 'default_params')
                 phi.params.default_params = struct;
             end
-            
             if ~isfield(phi.params.default_params,'zero_threshold__')
                 phi.params.default_params.zero_threshold__ = 1e-13;
             end

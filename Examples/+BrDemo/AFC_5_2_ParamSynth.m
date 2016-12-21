@@ -20,7 +20,7 @@ STL_ReadFile('AFC_simple_spec.stl');
 %%
 % This can be solved by solving a parameter synthesis problem:
 
-AFC_ParamSynth = BrAFC.copy(); AFC_ParamSynth.Sim;
+AFC_ParamSynth = BrAFC.copy(); AFC_ParamSynth.Sim();
 synth_pb = ParamSynthProblem(AFC_ParamSynth, AF_alw_ok, {'tol'},  [0 0.1]);
 synth_pb.solve();
 

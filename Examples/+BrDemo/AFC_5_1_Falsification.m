@@ -134,11 +134,8 @@ falsif_pb3.solve();
 type MyFalsificationProblem.m
 
 %% Customizing/Interfacing a New Solver (ct'd) 
-
 myfalsif_problem = MyFalsificationProblem(AFC_Falsify, AF_alw_ok);
 myfalsif_problem.solve();
-
-
 
 
 

@@ -1,7 +1,7 @@
 %% Advanced Analysis
 
 %% Initialization
-BrDemo.Init_AFC;
+BrDemo.InitAFC;
 
 %%
 % 

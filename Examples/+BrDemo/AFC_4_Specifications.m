@@ -8,10 +8,10 @@ BrAFC
 
 %% Writing a Simple STL Specification 
 % First we define a predicate stating that AF is above 1% of AFref
-AF_not_ok = STL_Formula('AF_not_ok', 'AF[t]- AFref[t] > 0.01*14.7')
+AF_not_ok = STL_Formula('AF_ok', 'abs(AF[t]- AFref[t]) < 0.01*14.7')
 
 %%
-% The first argument 'AF_not_ok' is an id for the formula needed so that
+% The first argument 'AF_ok' is an id for the formula needed so that
 % it can be referenced as a sub-formula. 
 
 %%
@@ -21,8 +21,8 @@ AF_not_ok = STL_Formula('AF_not_ok', 'AF[t]- AFref[t] > 0.01*14.7')
 % instants. 
 
 %%
-% For example, we define next a formula stating "some time in the future, AF_not_ok is true". 
-AF_ev_not_ok = STL_Formula('AF_ev_not_ok', 'ev (AF_not_ok)')
+% For example, we define next a formula stating "some time in the future, AF_ok is true". 
+AF_ev_ok = STL_Formula('AF_ev_ok', 'ev (AF_ok)')
 
 %%
 % ev is a shorthand for 'eventually'. Other temporal operators are 'alw' or 'always' and 'until'.  
@@ -30,41 +30,41 @@ AF_ev_not_ok = STL_Formula('AF_ev_not_ok', 'ev (AF_not_ok)')
 %% Checking a Simple Specification on a Simulation
 % Temporal operators can specify a time range to operate on. For our
 % system, AF does not need to be checked before 10s, and we simulate until
-% 30s so we modify the formula as:
-AF_ev_not_ok = STL_Formula('AF_ev_not_ok', 'ev_[10,30] (AF_not_ok)')
+% 30s so we check the following formula:
+AF_alw_ok = STL_Formula('AF_alw_ok', 'alw_[10,30] (AF_ok)') % alw shorthand for in 'always'
 
 %%
 % Then we check our formula on a simulation with nominal parameters:
 AFC_w_Specs= BrAFC.copy();
 Time = 0:.05:30;
 AFC_w_Specs.Sim(Time);
-AFC_w_Specs.CheckSpec(AF_ev_not_ok)
+AFC_w_Specs.CheckSpec(AF_alw_ok)
 
 %% 
-% Negative results means the formula is false, i.e., the system does not 
+% A positive results means that the formula is satisfied, i.e., the system does not 
 % overshoot. 
 
 %% Checking a Simple Specification on a Simulation (Plot)
 % We can plot the satisfaction function with 
-AFC_w_Specs.PlotRobustSat(AF_ev_not_ok);
+AFC_w_Specs.PlotRobustSat(AF_alw_ok);
 
 %% Checking Another Formula
 % The reason we are not interested in AF between 0 and 10s is because the 
 % controller is not in a mode where it tries to regulate it at this time.
 % We can implement this explicitly using the controller_mode signal:
-AF_ev_not_ok2 = STL_Formula('AF_ev_not_ok2', 'ev (controller_mode[t]==0 and AF_not_ok)')
+AF_alw_ok2 = STL_Formula('AF_alw_ok2', 'alw (controller_mode[t]==0 => AF_ok)')
 
 %%
 % Then check the new formula on the simulation we performed already:
-AFC_w_Specs.CheckSpec(AF_ev_not_ok2)
+AFC_w_Specs.CheckSpec(AF_alw_ok2)
 
 %% 
-% We should still get a negative result - something might have gone wrong
-% here. 
+% This formula is not satisfied - something might have gone wrong
+% somewhere. 
 
 %% Plotting Satisfaction for Debugging Formula 
-% At time t=0, controller_mode is 0, which causes the issue as shown when plotting:  
-AFC_w_Specs.PlotRobustSat(AF_ev_not_ok2);
+% At time t=0, controller_mode is briefly 0, which causes the negative results, but this is only an initialization glitch.  
+AFC_w_Specs.PlotRobustSat(AF_alw_ok2);
 
 %% Reading a formula from an STL File
 % STL formulas can be defined in a file. This makes it much easier to write
@@ -97,7 +97,6 @@ get_params(AF_alw_ok)
 %
 AF_alw_ok2 = set_params(AF_alw_ok, {'tol'}, [1e-3]) % copy formula with tolerance changed from 1% to 0.1%
 get_params(AF_alw_ok2)
-
 
 %% Formula Parameters with GetParam/SetParam
 % Another way to access and modify formula parameters is by defining them
@@ -158,10 +157,7 @@ BrTrace.PlotSignals();
 
 %% Monitoring a Formula on a Trace (ct'd)
 % Checks (plots) some formula on imported trace:
-BrTrace.PlotRobustSat('alw (x[t] > 0) or alw (y[t]>0)')
-
-
-
+BrTrace.PlotRobustSat('alw (x[t] > 0) or alw (y[t]>0)');
 
 
 

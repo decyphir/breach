@@ -397,8 +397,6 @@ classdef BreachSet < handle
             this.P = SPurge(this.P);
         end
         
-        % Make a copy of a handle object - works because no property is
-        % itself a handle object.
         function new = copy(this)
             % copy operator for BreachSet, works with R2010b or newer.
             objByteArray = getByteStreamFromArray(this);
@@ -409,10 +407,11 @@ classdef BreachSet < handle
             % Compares two BreachSet. Goes through a series of tests, logs
             % results and returns when an outstanding difference result is
             % found.
-            % TODO: status number are quite arbitrary. Should evolve with
+            % CHECKME: status number are quite arbitrary. Should evolve with
             % usage. Current guideline: large number means significant
             % (structural) difference, 0 means identical, large negative
-            % means potiential bug, other can be anything, though structure ( should be same).  
+            % means potiential bug, other can be anything, though structure 
+            % should be the same.  
             
             cmp = BreachStatus;
             

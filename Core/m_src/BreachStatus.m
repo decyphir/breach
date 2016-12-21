@@ -21,11 +21,10 @@ classdef BreachStatus < handle
         end
         
         function setStatus(this, new_status, new_label)
-            % Set active status (reset previously active status
+            % Set active status (reset previously active status)
             this.status = new_status;
             this.statusList = {new_label};
         end
-        
         
         
         function st = getStatus(this)
