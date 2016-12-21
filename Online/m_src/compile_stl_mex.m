@@ -7,7 +7,7 @@ function compile_stl_mex(recomp, debug_level)
 
 global BreachGlobOpt
 
-stlpp_dir = [BreachGlobOpt.breach_dir filesep 'Toolboxes' filesep 'stl_formula++'];
+stlpp_dir = [BreachGlobOpt.breach_dir filesep 'Online'];
 
 if ~exist('recomp', 'var')
     recomp = 0;
@@ -82,8 +82,8 @@ end
 if (compile_obj__)
     for i_src = 1:numel(src_cpp)
         cmd= sprintf('mex -c %s %s %s%s -outdir %s', cxxflags, includes,prefix_cpp, src_cpp{i_src}, obj_dir);
-        fprintf(cmd);
-        fprintf('\n');
+%        fprintf(cmd);
+%       fprintf('\n');
         eval(cmd);
     end
 end
