@@ -3,7 +3,7 @@
 %% Initialization
 % The following script creates a default interface with the
 % AbstractFuelControl model.
-BrDemo.InitAFC;
+BrDemo.InitAFC();
 BrAFC
 
 %% Creating a Falsification Problem

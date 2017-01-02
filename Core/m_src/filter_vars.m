@@ -58,7 +58,7 @@ function [vars vals] =  filter_vars(mdl, exclude)
                 end
             end
         end
-    else
-        fprintf('WARNING: found non numeric parameter %s, ignored\n', vname);
+%    else % Consider making this a proper warning 
+%        fprintf('WARNING: found non numeric parameter %s, ignored\n', vname);
     end
   end

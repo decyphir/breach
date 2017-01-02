@@ -18,6 +18,10 @@ listAFC = {...
     'AFC_6_Analysis',...
     };
 
+% AFC Online
+
+listAFC = [listAFC 'AFC_Online_Monitoring'];
+
 for nf = 1:numel(listAFC)
     Tests.(listAFC{nf}) = DocRun(['BrDemo.' listAFC{nf}]);
 end

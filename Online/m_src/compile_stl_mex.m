@@ -13,18 +13,18 @@ if ~exist('recomp', 'var')
     recomp = 0;
 end
 
-try
-    crd = pwd;
-    cd(stlpp_dir);
-    if recomp == 1
-        system('make clean')
-    end    
-     status = system('make all');
-     if status
-        error('make not a system command.');
-     end
-     cd(crd);
-catch
+%try
+%    crd = pwd;
+%    cd(stlpp_dir);
+%    if recomp == 1
+%        system('make clean')
+%    end    
+%     status = system('make all');
+%     if status
+%        error('make not a system command.');
+%     end
+%     cd(crd);
+%catch
     
 if (~exist('debug_level','var'))
   debug_level = 0; 
