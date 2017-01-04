@@ -59,12 +59,11 @@ elseif ischar(ParamList)
 end
 
 if(size(ParamValues,1) == 1 && numel(ParamList)~=1)
-    % in case when we have one value for many parameters
-    ParamValues = ParamValues'; % we fix the input
+    ParamValues = ParamValues'; 
 end
 
-if(numel(ParamList) ~= size(ParamValues,1))
-    warning('SetParam:wrongElementNumber','The number of line of ParamValues is not the same as the number of ParamList');
+if(numel(ParamList) ~= size(ParamValues,1) && size(ParamValues,1)~=1)
+    error('SetParam:wrongElementNumber','The number of rows of ParamValues is not the same as the number of ParamList');
 end
 
 if isfield(P,'pts')        % if P is a parameter set

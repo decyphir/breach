@@ -111,7 +111,11 @@ classdef BreachSet < handle
         
         %% Get and Set param ranges
         function SetParamRanges(this, params, ranges)
-            i_params = FindParam(this.P, params);
+            if ~isnumeric(params)
+                i_params = FindParam(this.P, params);
+            else
+                i_params=params;
+            end
             % if we have trajectories and only set a range on property parameters, then
             % we must keep the trajectories
             save_traj = 0;
@@ -121,6 +125,10 @@ classdef BreachSet < handle
                 traj_ref = this.P.traj_ref;
                 traj_to_compute = this.P.traj_to_compute;
                 Xf = this.P.Xf;
+            end
+            
+            if (numel(params)>1) && (size(ranges,1)==1)
+                ranges = repmat(ranges, [numel(params) 1]);          
             end
             
             this.P = SetParam(this.P,params, ranges(:,1) + (ranges(:,2)-ranges(:,1))/2); % adds new parameter name if needs be
@@ -387,14 +395,17 @@ classdef BreachSet < handle
             end
         end
         
-        % Resets the system to nominal parameters
+   
         function Reset(this)
+            % Resets the system to nominal parameters
             this.P = CreateParamSet(this.Sys);
         end
         
-        % Removes computed trajectories
+        
         function ResetSimulations(this)
+        % Removes computed trajectories
             this.P = SPurge(this.P);
+            this.SignalRanges = [];
         end
         
         function new = copy(this)
