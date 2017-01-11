@@ -127,7 +127,7 @@ classdef BreachSet < handle
                 Xf = this.P.Xf;
             end
             
-            if (numel(params)>1) && (size(ranges,1)==1)
+            if (numel(i_params)>1) && (size(ranges,1)==1)
                 ranges = repmat(ranges, [numel(params) 1]);          
             end
             

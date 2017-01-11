@@ -73,7 +73,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                         
             %% Copy the model 
             % Give it a name
-            mdl_breach = [mdl '_breach'];
+            mdl_breach = [mdl '_breach']; 
             load_system(mdl);
             close_system(mdl_breach,0);
             save_system(mdl,mdl_breach);
