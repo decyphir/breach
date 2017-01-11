@@ -15,7 +15,6 @@ Br.SetParam( 'brake_dt0', 20);
 Br.SetParam( 'brake_u0', 0);
      
 % Brake for 20s after
-Br.SetParam( 'throttle_dt1', 20);
 Br.SetParam( 'throttle_u1',   0);
 Br.SetParam( 'brake_dt0', 20);
 Br.SetParam( 'brake_u0', 0);
