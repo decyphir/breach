@@ -1,4 +1,4 @@
-classdef BreachSet < handle
+classdef BreachSet < BreachStatus
     % BreachSet Defines an API to manipulate parameters and traces.
     %    This is the base class for BreachSystem objects. BreachSet
     %    instances are usually also BreachSystem or some derived class
@@ -306,12 +306,12 @@ classdef BreachSet < handle
             this.P.epsi = this.P.epsi/2;
         end
         
-        % Quasi-Random Sample
-        function QuasiRandomSample(this, delta, step)
+        function QuasiRandomSample(this, nb_sample, step)
+        % Quasi-Random Sampling
             if nargin==3
-                this.P = QuasiRefine(this.P,delta, step);
+                this.P = QuasiRefine(this.P,nb_sample, step);
             else
-                this.P = QuasiRefine(this.P, delta);
+                this.P = QuasiRefine(this.P, nb_sample);
             end
         end
         

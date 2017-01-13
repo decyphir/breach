@@ -281,19 +281,23 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
             
             try
-                simout= sim(mdl);
+                simout= sim(mdl, this.sim_args{:});
                 [tout, X] = GetXFrom_simout(this, simout);
             catch
                 s= lasterror;
-                warning(['An error was returned from Simulink:' s.message '\n Returning a null trajectory']);
-                
                 if numel(tspan)>1 
                     tout = tspan;
                 else
                     tout = [0 tspan];
                 end
-                X = zeros(Sys.DimX, numel(tout));
-            
+                                
+                if this.statusMap.isKey('input_spec_false')
+                    X = NaN(Sys.DimX, numel(tout));
+                else
+                    warning(['An error was returned from Simulink:' s.message '\n Returning a null trajectory']);
+                
+                 X = zeros(Sys.DimX, numel(tout));
+                end
             end
             
         end

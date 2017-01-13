@@ -68,6 +68,8 @@ classdef fixed_cp_signal_gen < signal_gen
                 pts_x = pts_x(this.cp(i_cp)+1:end);
                 if ischar(this.method)
                     meth = this.method;
+                elseif numel(this.method)==1
+                    meth = this.method{1};
                 else
                     meth = this.method{i_cp};
                 end
@@ -83,8 +85,10 @@ classdef fixed_cp_signal_gen < signal_gen
                         
                     otherwise
                         t_cp = linspace(time(1), time(end), this.cp(i_cp))';
-                        if numel(t_cp)==2
+                        if numel(t_cp) == 1
                             x = cp_values(1)*ones(numel(time),1);
+%                        elseif numel(t_cp)==2
+%                           x = cp_values(1)*ones(numel(time),1);
                         else
                             x = interp1(t_cp, cp_values, time', meth, 'extrap');
                         end

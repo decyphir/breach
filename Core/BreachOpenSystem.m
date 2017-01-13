@@ -18,7 +18,7 @@ classdef BreachOpenSystem < BreachSystem
         InputMap       % Maps input signals to idx in the input generator
         InputGenerator % BreachSystem responsible for generating inputs
     end
-    
+ 
     methods
         
         function Sim(this,tspan,U)
@@ -193,6 +193,15 @@ classdef BreachOpenSystem < BreachSystem
             end
         end
         
+        function AddInputSpec(this, varargin)
+            this.InputGenerator.AddSpec(varargin{:});            
+        end
+        
+        function SetInputSpec(this, varargin)
+            this.InputGenerator.SetSpec(varargin{:});
+            this.InputGenerator.AddSpec(varargin{:});            
+        end
+                
         % calling the Input generator -
         % there might be saving to do if inputs are pre-generated
         function U = InitU(this, pts, tspan)
@@ -201,6 +210,18 @@ classdef BreachOpenSystem < BreachSystem
             ig_params = this.InputGenerator.Sys.DimX+1:this.InputGenerator.Sys.DimP;
             this.InputGenerator.P = SetParam(this.InputGenerator.P,ig_params,pts(idx_u));
             this.InputGenerator.Sim(tspan);
+            
+            % if an inputspec is violated, sabotage U into NaN 
+            if ~isempty(this.InputGenerator.Specs)
+               rob = this.InputGenerator.CheckSpec(); 
+               if rob<0
+                  this.addStatus(1,'input_spec_false', 'A specification on inputs is not satisfied.') 
+                  U.t=NaN;
+                  U.u=NaN;
+                  return;
+               end
+            end
+            
             U.t = this.InputGenerator.P.traj.time';
             U.u = zeros(numel(U.t), this.InputGenerator.Sys.DimX);
             idx_mdl = 0;
@@ -212,6 +233,7 @@ classdef BreachOpenSystem < BreachSystem
             
         end
         
+        % not sure why I need a special Concat operator here. 
         function this = Concat(this,other)
             
             if isa(this.InputGenerator, 'BreachTraceSystem')
@@ -221,8 +243,7 @@ classdef BreachOpenSystem < BreachSystem
                 % Using SetParam here erases the trajectory...
                 i_trace_id = FindParam(other.P, 'trace_id');
                 other.P.pts(i_trace_id,1) = numel(this.P.traj)+1;
-                other.P.traj(1).param(i_trace_id) = numel(this.P.traj)+1;
-                
+                other.P.traj(1).param(i_trace_id) = numel(this.P.traj)+1;               
                 this.P = SConcat(this.P, other.P);
             else
                 this.InputGenerator.P= SConcat(this.InputGenerator.P, other.InputGenerator.P);
@@ -231,29 +252,7 @@ classdef BreachOpenSystem < BreachSystem
             
         end
         
-        
-% shouldn't be needed anymore
-%
-%         function new = copy(this)     
-%             % Instantiate new object of the same class.
-%             new = feval(class(this));
-%             
-%             % Copy all non-hidden properties.
-%             p = fieldnames(this);
-%             for i = 1:length(p)
-%                 new.(p{i}) = this.(p{i});
-%             end
-%             
-%             % InputGenerator field is a handle object, needs a copy of its
-%             % own
-%             if ~isempty(this.InputGenerator)
-%                 
-%                 new.InputGenerator = this.InputGenerator.copy();
-%                 new.Sys.init_u = @(~,pts,tspan)(InitU(new,pts,tspan));
-%             end
-%         end
-%         
-        
+                
     end
     
 end

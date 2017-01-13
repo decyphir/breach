@@ -113,14 +113,14 @@ classdef BreachSystem < BreachSet
         
         
         %% Specs
-        % Add (a) specs % TODO double check
         function phi = AddSpec(this, varargin)
+        % AddSpec Adds a specification
             global BreachGlobOpt
             if isa(varargin{1},'STL_Formula')
                 phi = varargin{1};
             elseif ischar(varargin{1})
                 phi_id = MakeUniqueID([this.Sys.name '_spec'],  BreachGlobOpt.STLDB.keys);
-                phi = STL_Formula(phi_id, varargin{2});   % Can't be right ...
+                phi = STL_Formula(phi_id, varargin{1});   
             end
             
             % checks signal compatibility
@@ -134,9 +134,15 @@ classdef BreachSystem < BreachSet
             this.Specs(get_id(phi)) = phi;
         end
         
+        function SetSpec(this,varargin)
+           this.Specs = containers.Map();
+           this.AddSpec(varargin{:});
+        end
+        
         function val = CheckSpec(this, spec)
             if ~exist('spec','var')
-                spec = this.Specs.values
+                spec = this.Specs.values;
+                spec = spec{1};
             else
                 if iscell(spec)
                     for cur_spec = spec
@@ -480,7 +486,7 @@ classdef BreachSystem < BreachSet
         function TrajGUI(this) 
             args = struct('working_sets', struct,'working_sets_file_name', '', 'Sys', this.Sys, 'TrajSet', this.P); 
             specs = this.Specs.keys;
-            
+            args.properties = struct;
             for ispec = 1:numel(specs)
                args.properties.(specs{ispec}) = this.Specs(specs{ispec});
             end
