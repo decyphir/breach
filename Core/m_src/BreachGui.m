@@ -96,12 +96,12 @@ handles.figp=[];
 
 %% Init working sets panel
 
-handles.working_sets_file_name = [SysName, '_param_sets.mat'];
+handles.working_sets_file_name = [Sys.Dir filesep SysName, '_param_sets.mat'];
 try
     handles.working_sets = load(handles.working_sets_file_name);
 catch
     P0 = CreateParamSet(Sys,min(Sys.DimX+1, Sys.DimP)); %#ok<NASGU>
-    save([SysName, '_param_sets.mat'], 'P0');
+    save([Sys.Dir filesep SysName '_param_sets.mat'], 'P0');
     handles.working_sets = load(handles.working_sets_file_name);
 end
 
@@ -117,12 +117,12 @@ handles = update_working_sets_panel(handles);
 
 %% Init properties panel
 
-handles.properties_file_name = [SysName '_properties.mat'];
+handles.properties_file_name = [Sys.Dir filesep SysName '_properties.mat'];
 try
     handles.properties = load(handles.properties_file_name);
 catch
     phi0 = STL_Formula('phi0',[Sys.ParamList{1} '[t]<=.1']) ; %#ok<NASGU>
-    save([SysName '_properties.mat'], 'phi0');
+    save([Sys.Dir filesep SysName '_properties.mat'], 'phi0');
     handles.properties = load(handles.properties_file_name);
 end
 
@@ -2968,8 +2968,8 @@ function menu_reset_prop_file_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 
-filename = [handles.Sys.name '_properties.mat'];
-backup = ['.' handles.Sys.name '_properties.mat.bck'];
+filename = [handles.Sys.Dir filesep handles.Sys.name '_properties.mat'];
+backup = [handles.Sys.Dir filesep '.' handles.Sys.name '_properties.mat.bck'];
 title = ['Reset prop file'];
 answ = questdlg('Are you sure?', title);
 
@@ -2997,8 +2997,8 @@ else
     answ = questdlg('Are you sure?', 'Reset parameter sets');
     
     if strcmp(answ,'Yes')
-        filename = [handles.Sys.name '_param_sets.mat'];
-        backup = ['.' handles.Sys.name '_param_sets.mat.bck']; 
+        filename = [handles.Sys.Dir filesep handles.Sys.name '_param_sets.mat'];
+        backup = [handles.Sys.Dir filesep '.' handles.Sys.name '_param_sets.mat.bck']; 
         movefile(filename, backup);
         handles.BrSys.SetInputGen(input_gen);
         handles.BrSys.RunGUI;   

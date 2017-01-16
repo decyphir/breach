@@ -59,7 +59,9 @@ if (exist('Sys'))
         SysName = Sys.mdl;
         load_system(Sys.mdl);
     end
-    Sys.Dir= pwd;
+    if ~isfield(Sys,'Dir')
+        Sys.Dir= pwd;
+    end
     
     % Extra arguments
     if nargin>=2 % a parameter set is given as input, load it

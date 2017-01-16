@@ -72,11 +72,19 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         function CreateInterface(this, mdl, params, p0, signals)
                         
             %% Copy the model 
+            %  Get Breach directory
+            global BreachGlobOpt
+            breach_dir = BreachGlobOpt.breach_dir;
+            breach_data_dir = [breach_dir filesep 'Ext' filesep 'ModelsData' ];
+            
             % Give it a name
             mdl_breach = [mdl '_breach']; 
+            
+            % Would be nice to check if mdl changed - could be done with
+            % mdl.Get_CheckSum or sth similar
             load_system(mdl);
             close_system(mdl_breach,0);
-            save_system(mdl,mdl_breach);
+            save_system(mdl,[breach_data_dir filesep mdl_breach]);
             close_system(mdl,0);
             load_system(mdl_breach);
             
@@ -232,7 +240,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             Sys.type= 'Simulink';
             Sys.sim = @(Sys, pts, tspan) this.sim_breach(Sys,pts, tspan);
             Sys.mdl= [mdl '_breach'];
-            Sys.Dir= pwd;
+            Sys.Dir= breach_data_dir;
             Sys.tspan = 0:t_step:t_end;
             Sys.name = Sys.mdl;  % not great..
             
