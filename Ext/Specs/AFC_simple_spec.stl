@@ -1,0 +1,12 @@
+# We declare parameters with default values 
+param tol=0.01, af_ref=14.7 
+
+# Slightly more complex definition of Air-Fuel Ratio being OK
+AF_above_ref := AF[t]- AFref[t] >  tol*af_ref
+AF_below_ref := AF[t]- AFref[t] < -tol*af_ref
+AF_ok := not (AF_above_ref or AF_below_ref) 
+
+# Top formula, using time parameters
+param ti=10, tf=40 
+AF_alw_ok := alw_[ti,tf] (AF_ok)
+
