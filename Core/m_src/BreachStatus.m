@@ -25,13 +25,13 @@ classdef BreachStatus < handle
             this.status = [];
             this.statusMap= containers.Map();
         end
-        
+                
         function setStatus(this, status, key, msg)
             % Set active status (reset previously active status)
             this.status = status;
             this.statusMap(key) = msg;
         end
-        
+           
         function st = getStatus(this)
             if isempty(this.statusMap)
                 st = 'No active status. \n';

@@ -399,6 +399,7 @@ classdef BreachSet < BreachStatus
         function Reset(this)
             % Resets the system to nominal parameters
             this.P = CreateParamSet(this.Sys);
+            this.resetStatus();
         end
         
         

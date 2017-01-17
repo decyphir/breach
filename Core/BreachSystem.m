@@ -139,6 +139,8 @@ classdef BreachSystem < BreachSet
            this.AddSpec(varargin{:});
         end
         
+        
+        
         function val = CheckSpec(this, spec)
             if ~exist('spec','var')
                 spec = this.Specs.values;
@@ -152,7 +154,45 @@ classdef BreachSystem < BreachSet
                     spec = this.AddSpec(spec);
                 end
             end
-            [this.P, val] = SEvalProp(this.Sys,this.P,spec);
+            
+            if isfield(this.P, 'props_names')               
+                iprop = find(strcmp(get_id(spec), this.P.props_names));
+            else
+                iprop = 0;
+            end
+            if iprop
+                val = cat(1, this.P.props_values(iprop,:).val);
+            else
+                [this.P, val] = SEvalProp(this.Sys,this.P,spec);
+                this.addStatus(0, 'spec_evaluated', 'A specification has been evaluated.')
+            end
+        end
+        
+        function [Bpos, Bneg] = FilterSpec(this, phi)
+            % FilterSpec Return parameters and trajectories violating a
+            % specification
+            %
+            
+            if ~exist('phi', 'var')
+                phi = this.Specs.values;
+                phi = phi{1};
+            end
+            
+            sat_values = this.CheckSpec(phi);
+            Bpos = [];
+            Bneg = [];
+            ipos = find(sat_values>=0);
+            ineg = find(sat_values<0);
+            
+            if ~isempty(ipos)
+                Bpos = this.copy();
+                Bpos.P = Sselect(Bpos.P, ipos);
+            end
+            
+            if ~isempty(ineg)
+                Bneg = this.copy();
+                Bneg.P = Sselect(Bneg.P, ineg);
+            end
         end
         
         function [rob, tau] = GetRobustSat(this, phi, params, values, t_phi)
@@ -183,7 +223,15 @@ classdef BreachSystem < BreachSet
             end
             
             Sim(this);
+            % FIXME: this is going to break with multiple trajectories with
+            % some of them containing NaN - 
+            if any(isnan(this.P.traj(1).X))
+                tau = t_phi;
+                rob = t_phi;
+                rob(:) = NaN;
+            else
             [rob, tau] = STL_Eval(this.Sys, this__phi__, this.P, this.P.traj,t_phi);
+            end
         end
         
         function [robfn, BrSys] = GetRobustSatFn(this, phi, params, t_phi)
@@ -267,7 +315,28 @@ classdef BreachSystem < BreachSet
             SplotProp(this.P, phi, options);
             
         end
+
         
+        function [h, t, X]  = PlotExpr(this, stl_expr, varargin)
+            % plots a signal expression
+            
+            if ~iscell(stl_expr)
+                stl_expr = {stl_expr};
+            end
+            
+            for i_exp = 1:numel(stl_expr)
+                expr_tmp_ = STL_Formula('expr_tmp_', [stl_expr{i_exp} '> 0.']);
+                [X, t] = STL_Eval(this.Sys, expr_tmp_, this.P, this.P.traj, this.P.traj(1).time);
+                if iscell(t)
+                    for i_x = 1:numel(t)
+                        h = plot(t{i_x},X{i_x}, varargin{:});
+                    end
+                else
+                    h = plot(t,X, varargin{:});
+                end
+            end
+        end
+
         %% Experimental
         function report = Analysis(this)
             
@@ -382,25 +451,6 @@ classdef BreachSystem < BreachSet
             end
         end
         
-        function [h, t, X]  = PlotExpr(this, stl_expr, varargin)
-            % plots a signal expression
-            
-            if ~iscell(stl_expr)
-                stl_expr = {stl_expr};
-            end
-            
-            for i_exp = 1:numel(stl_expr)
-                expr_tmp_ = STL_Formula('expr_tmp_', [stl_expr{i_exp} '> 0.']);
-                [X, t] = STL_Eval(this.Sys, expr_tmp_, this.P, this.P.traj, this.P.traj(1).time);
-                if iscell(t)
-                    for i_x = 1:numel(t)
-                        h = plot(t{i_x},X{i_x}, varargin{:});
-                    end
-                else
-                    h = plot(t,X, varargin{:});
-                end
-            end
-        end
         
         %% Sensitivity analysis
         function [mu, mustar, sigma] = SensiSpec(this, phi, params, ranges, opt)

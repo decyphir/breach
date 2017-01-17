@@ -141,9 +141,10 @@ AFC_Rand_w_Specs.CheckSpec(AF_alw_ok)
 % To find out which parameter value lead to a positive or negative
 % satisfaction, we can do the following:
 
-sat_values = AFC_Rand_w_Specs.CheckSpec(AF_alw_ok);
-i_pos = find(sat_values<0);
-param_values = AFC_Rand_w_Specs.GetParam({'Pedal_Angle_base_value', 'Pedal_Angle_pulse_period', 'Pedal_Angle_pulse_amp'}, i_pos)
+[Brpos, Brneg] = AFC_Rand_w_Specs.FilterSpec(AF_alw_ok);
+good_param = Brpos.GetParam({'Pedal_Angle_base_value', 'Pedal_Angle_pulse_period', 'Pedal_Angle_pulse_amp'})
+bad_param = Brneg.GetParam({'Pedal_Angle_base_value', 'Pedal_Angle_pulse_period', 'Pedal_Angle_pulse_amp'})
+
 
 %% Monitoring a Formula on a Trace
 % To monitor STL formulas on existing traces, one can use the

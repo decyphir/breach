@@ -215,7 +215,7 @@ classdef BreachOpenSystem < BreachSystem
             if ~isempty(this.InputGenerator.Specs)
                rob = this.InputGenerator.CheckSpec(); 
                if rob<0
-                  this.addStatus(1,'input_spec_false', 'A specification on inputs is not satisfied.') 
+                  this.InputGenerator.addStatus(1,'input_spec_false', 'A specification on inputs is not satisfied.') 
                   U.t=NaN;
                   U.u=NaN;
                   return;
@@ -252,7 +252,37 @@ classdef BreachOpenSystem < BreachSystem
             
         end
         
+        function idx = GetInputSignalsIdx(this)     
+            idx0 = this.Sys.DimX - this.Sys.DimU+1;
+            idx= idx0:this.Sys.DimX;
+        end
+        
+        function PrintSignals(this)
+            if isempty(this.SignalRanges)
+                disp( 'Signals:')
+                disp( '-------')
+                for isig = 1:this.Sys.DimX-this.Sys.DimU
+                    fprintf('%s\n', this.Sys.ParamList{isig});
+                end
                 
+                for isig = this.Sys.DimX-this.Sys.DimU+1:this.Sys.DimX
+                    fprintf('%s (Input)\n', this.Sys.ParamList{isig});
+                end
+    
+            else
+                
+                fprintf('Signals (in range estimated over %d simulations):\n', numel(this.P.traj))
+                disp('-------')
+                for isig = 1:this.Sys.DimX-this.Sys.DimU
+                    fprintf('%s in  [%g, %g]\n', this.Sys.ParamList{isig}, this.SignalRanges(isig,1),this.SignalRanges(isig,2));
+                end
+                for isig =  this.Sys.DimX-this.Sys.DimU+1:this.Sys.DimX
+                    fprintf('%s (Input) in  [%g, %g]\n', this.Sys.ParamList{isig}, this.SignalRanges(isig,1),this.SignalRanges(isig,2));
+                end
+            end
+            disp(' ')
+        end
+
     end
     
 end

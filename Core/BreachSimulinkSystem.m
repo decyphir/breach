@@ -279,7 +279,6 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
             
             assignin('base','tspan',tspan);
-            
             if numel(tspan)>2
                 set_param(mdl, 'OutputTimes', 'tspan',...
                     'OutputOption','SpecifiedOutputTimes');
@@ -288,26 +287,28 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                     'OutputOption','RefineOutput');
             end
             
-            try
-                simout= sim(mdl, this.sim_args{:});
-                [tout, X] = GetXFrom_simout(this, simout);
+            try  
+                if this.InputGenerator.statusMap.isKey('input_spec_false')
+                    tout = this.InputGenerator.P.traj.time;
+                    Xin = this.InputGenerator.P.traj.X;
+                    X = NaN(Sys.DimX, numel(tout));
+                    idx= this.GetInputSignalsIdx();
+                    X(idx,:) = Xin;
+                else
+                    simout= sim(mdl, this.sim_args{:});
+                    [tout, X] = GetXFrom_simout(this, simout);
+                end
             catch
                 s= lasterror;
-                if numel(tspan)>1 
+                if numel(tspan)>1
                     tout = tspan;
                 else
                     tout = [0 tspan];
                 end
-                                
-                if this.statusMap.isKey('input_spec_false')
-                    X = NaN(Sys.DimX, numel(tout));
-                else
-                    warning(['An error was returned from Simulink:' s.message '\n Returning a null trajectory']);
-                
-                 X = zeros(Sys.DimX, numel(tout));
-                end
+                warning(['An error was returned from Simulink:' s.message '\n Returning a null trajectory']);
+                X = zeros(Sys.DimX, numel(tout));
             end
-            
+            this.InputGenerator.Reset()
         end
         
         function [tout, X] = GetXFrom_simout(this, simout)
@@ -547,25 +548,11 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
         end
         
+        function disp(this)
+            disp(['BreachSimulinkSystem intefacing model ' this.Sys.name '.']);
+        end
         
-% shouldn't need this anymore       
-% 
-%         function new = copy(this)
-%             % Instantiate new object of the same class.
-%             new = feval(class(this));
-%             
-%             % Copy all non-hidden properties.
-%             p = fieldnames(this);
-%             for i = 1:length(p)
-%                 new.(p{i}) = this.(p{i});
-%             end
-%             if ~isempty(this.InputGenerator)
-%                 new.InputGenerator = this.InputGenerator.copy();
-%                 new.Sys.init_u = @(~,pts,tspan)(InitU(new,pts,tspan));
-%             end
-%             new.Sys.sim = @(Sys,pts,tspan)new.sim_breach(Sys,pts,tspan);
-%         end
-%         
+        
         
     end
     
