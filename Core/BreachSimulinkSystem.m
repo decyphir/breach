@@ -68,7 +68,13 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             
         end
         
-        
+        function SetupParallel(this)
+           this.use_parallel = 1;
+           gcp;
+           j= parfevalOnAll(@()(eval(['load(' this.Sys.mdl ')'])),0); 
+           wait(j);
+        end    
+
         function CreateInterface(this, mdl, params, p0, signals)
                         
             %% Copy the model 

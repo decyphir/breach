@@ -24,8 +24,9 @@ classdef BreachSystem < BreachSet
     % See also BreachSet.
     
     properties
-        Sys       % Legacy Breach system structure
-        Specs     % A set (map) of STL formulas
+        Sys            % Legacy Breach system structure
+        Specs          % A set (map) of STL formulas
+        use_parallel=0 %  
     end
     
     methods
@@ -61,6 +62,11 @@ classdef BreachSystem < BreachSet
             end
         end
         
+        function SetupParallel(this)
+           this.use_parallel = 1;
+           gcp;
+       end    
+            
         %% Parameters
         % Get and set default parameter values (defined in Sys)
         function values = GetDefaultParam(this, params)
@@ -336,8 +342,121 @@ classdef BreachSystem < BreachSet
                 end
             end
         end
+        
+        function  [X, t]  = GetExprValues(this, stl_expr, varargin)
+            % gets values for a signal expression
+            
+            if ~iscell(stl_expr)
+                stl_expr = {stl_expr};
+            end
+            
+            for i_exp = 1:numel(stl_expr)
+                expr_tmp_ = STL_Formula('expr_tmp_', [stl_expr{i_exp} '> 0.']);
+                [X, t] = STL_Eval(this.Sys, expr_tmp_, this.P, this.P.traj, this.P.traj(1).time);
+            end
+        end
 
-        %% Experimental
+        
+        
+        
+        %% Sensitivity analysis
+        function [mu, mustar, sigma] = SensiSpec(this, phi, params, ranges, opt)
+            % SensiSpec Sensitivity analysis of a formula to a set of parameters
+            this.ResetParamSet();
+            opt.tspan = this.Sys.tspan;
+            opt.params = FindParam(this.Sys,params);
+            opt.lbound = ranges(:,1)';
+            opt.ubound = ranges(:,2)';
+            opt.plot = 2;
+            
+            [mu, mustar, sigma, Pr]= SPropSensi(this.Sys, this.P, phi, opt);
+            this.P=Pr;
+        end
+        
+        function [monotonicity, Pr, EE] = ChecksMonotony(this, phi, params, ranges, opt)
+            % ChecksMonotony performs a quick check to infer monotonicity of a formula wrt parameters
+            opt.tspan = this.Sys.tspan;
+            opt.params = FindParam(this.Sys,params);
+            opt.lbound = ranges(:,1)';
+            opt.ubound = ranges(:,2)';
+            opt.plot = 0;
+            P0 = Sselect(this.P,1);
+            
+            [~, ~, ~, Pr, EE]= SPropSensi(this.Sys, P0, phi, opt);
+            monotonicity = all(EE'>=0)-all(EE'<=0); % 1 if all positive, -1 if all negative, 0 otherwise
+        end
+        
+        %% Printing
+        function PrintSpecs(this)
+            disp('Specifications:')
+            disp('--------------')
+            keys = this.Specs.keys;
+            for is = 1:numel(keys)
+                prop_name = keys{is};
+                fprintf('%s',prop_name);
+                if isfield(this.P, 'props_names')
+                   ip = strcmp(this.P.props_names, prop_name);
+                   idx_prop = find(ip);
+                   if idx_prop
+                      val = cat(1, this.P.props_values(idx_prop,:).val);
+                       fprintf(': %d/%d satisfied.', numel(find(val>=0)),numel(val));
+                   end
+                end
+                fprintf('\n');
+            end
+            disp(' ');
+        end
+        
+        function PrintAll(this)
+            this.UpdateSignalRanges();
+            this.PrintParams();
+            this.PrintSignals();
+            this.PrintSpecs();
+        end
+        
+        function disp(this)
+            disp(['BreachSystem with name ' this.Sys.name '.']);
+        end
+        
+        %% GUI
+            
+        function new_phi  = AddSpecGUI(this)
+            signals = this.Sys.ParamList(1:this.Sys.DimX);
+            new_phi = STL_TemplateGUI('varargin', signals);
+            if isa(new_phi, 'STL_Formula')
+                this.Specs(get_id(new_phi)) = new_phi;
+            end
+        end
+             
+        function gui = RunGUI(this)
+            P.P = this.P;
+            phis=  this.Specs.keys;
+            
+            Psave(this.Sys, 'Pthis', this.P);
+            if (~isempty(phis))
+                Propsave(this.Sys, phis{:});
+            end
+            gui = Breach(this);
+            
+        end
+  
+        function TrajGUI(this) 
+            args = struct('working_sets', struct,'working_sets_file_name', '', 'Sys', this.Sys, 'TrajSet', this.P); 
+            specs = this.Specs.keys;
+            args.properties = struct;
+            for ispec = 1:numel(specs)
+               args.properties.(specs{ispec}) = this.Specs(specs{ispec});
+            end
+            
+            BreachTrajGui('varargin',args);          
+        end
+        
+        function ResetFiles(this)
+            system(['rm -f ' this.Sys.name '_param_sets.mat']);
+            system(['rm -f ' this.Sys.name '_properties.mat']);
+        end
+        
+         %% Experimental
         function report = Analysis(this)
             
             STL_ReadFile('stlib.stl');
@@ -436,117 +555,6 @@ classdef BreachSystem < BreachSet
                 end
             end
             
-        end
-        
-        function  [X, t]  = GetExprValues(this, stl_expr, varargin)
-            % gets values for a signal expression
-            
-            if ~iscell(stl_expr)
-                stl_expr = {stl_expr};
-            end
-            
-            for i_exp = 1:numel(stl_expr)
-                expr_tmp_ = STL_Formula('expr_tmp_', [stl_expr{i_exp} '> 0.']);
-                [X, t] = STL_Eval(this.Sys, expr_tmp_, this.P, this.P.traj, this.P.traj(1).time);
-            end
-        end
-        
-        
-        %% Sensitivity analysis
-        function [mu, mustar, sigma] = SensiSpec(this, phi, params, ranges, opt)
-            % SensiSpec Sensitivity analysis of a formula to a set of parameters
-            this.ResetParamSet();
-            opt.tspan = this.Sys.tspan;
-            opt.params = FindParam(this.Sys,params);
-            opt.lbound = ranges(:,1)';
-            opt.ubound = ranges(:,2)';
-            opt.plot = 2;
-            
-            [mu, mustar, sigma, Pr]= SPropSensi(this.Sys, this.P, phi, opt);
-            this.P=Pr;
-        end
-        
-        function [monotonicity, Pr, EE] = ChecksMonotony(this, phi, params, ranges, opt)
-            % ChecksMonotony performs a quick check to infer monotonicity of a formula wrt parameters
-            opt.tspan = this.Sys.tspan;
-            opt.params = FindParam(this.Sys,params);
-            opt.lbound = ranges(:,1)';
-            opt.ubound = ranges(:,2)';
-            opt.plot = 0;
-            P0 = Sselect(this.P,1);
-            
-            [~, ~, ~, Pr, EE]= SPropSensi(this.Sys, P0, phi, opt);
-            monotonicity = all(EE'>=0)-all(EE'<=0); % 1 if all positive, -1 if all negative, 0 otherwise
-        end
-        
-        %% Printing
-        function PrintSpecs(this)
-            disp('Specifications:')
-            disp('--------------')
-            keys = this.Specs.keys;
-            for is = 1:numel(keys)
-                prop_name = keys{is};
-                fprintf('%s',prop_name);
-                if isfield(this.P, 'props_names')
-                   ip = strcmp(this.P.props_names, prop_name);
-                   idx_prop = find(ip);
-                   if idx_prop
-                      val = cat(1, this.P.props_values(idx_prop,:).val);
-                       fprintf(': %d/%d satisfied.', numel(find(val>=0)),numel(val));
-                   end
-                end
-                fprintf('\n');
-            end
-            disp(' ');
-        end
-        
-        function PrintAll(this)
-            this.UpdateSignalRanges();
-            this.PrintParams();
-            this.PrintSignals();
-            this.PrintSpecs();
-        end
-        
-        function disp(this)
-            disp(['BreachSystem with name ' this.Sys.name '.']);
-        end
-        
-        %% GUI
-            
-        function new_phi  = AddSpecGUI(this)
-            signals = this.Sys.ParamList(1:this.Sys.DimX);
-            new_phi = STL_TemplateGUI('varargin', signals);
-            if isa(new_phi, 'STL_Formula')
-                this.Specs(get_id(new_phi)) = new_phi;
-            end
-        end
-             
-        function gui = RunGUI(this)
-            P.P = this.P;
-            phis=  this.Specs.keys;
-            
-            Psave(this.Sys, 'Pthis', this.P);
-            if (~isempty(phis))
-                Propsave(this.Sys, phis{:});
-            end
-            gui = Breach(this);
-            
-        end
-  
-        function TrajGUI(this) 
-            args = struct('working_sets', struct,'working_sets_file_name', '', 'Sys', this.Sys, 'TrajSet', this.P); 
-            specs = this.Specs.keys;
-            args.properties = struct;
-            for ispec = 1:numel(specs)
-               args.properties.(specs{ispec}) = this.Specs(specs{ispec});
-            end
-            
-            BreachTrajGui('varargin',args);          
-        end
-        
-        function ResetFiles(this)
-            system(['rm -f ' this.Sys.name '_param_sets.mat']);
-            system(['rm -f ' this.Sys.name '_properties.mat']);
         end
         
     end
