@@ -13,7 +13,6 @@ if silent
 end
 
 InitBreach
-
 cdr = pwd;
 dr = which('InstallBreach');
 
@@ -24,9 +23,7 @@ breach_src_dir = [breach_dir filesep 'Core' filesep 'src'];
 stl_src_dir  = [breach_dir filesep '@STL_Formula' filesep 'private' filesep 'src'];
 
 % compile STL mex functions
-
 fprintf('\nCompiling legacy STL monitoring functions...\n')
-
 cd(stl_src_dir);
 
 legacy_functions = { ' lemire_engine.c', ... 
@@ -83,7 +80,7 @@ fprintf('Compiling offline STL monitoring functions...\n')
 CompileRobusthom;
     
 % compiles cvodes common stuff
-sundials_dir = [breach_dir filesep 'Toolboxes' filesep 'sundials'];
+sundials_dir = [breach_dir filesep 'Ext' filesep 'Toolboxes' filesep 'sundials'];
 sundials_inc_dir = [sundials_dir filesep 'include'];
 sundials_src_dir = [sundials_dir filesep 'src' filesep 'sundials'];
 sundials_cvodes_src_dir = [sundials_dir filesep 'src' filesep 'cvodes'];
@@ -134,7 +131,7 @@ fprintf('Compiling some more legacy functions...\n');
 eval(compile_cvodes);
 
 % Compile blitz library
-blitz_dir = [breach_dir filesep 'Toolboxes' filesep 'blitz'];
+blitz_dir = [breach_dir filesep 'Ext' filesep 'Toolboxes' filesep 'blitz'];
 cd(blitz_dir);
 CompileBlitzLib;
 
@@ -148,7 +145,7 @@ if (0) % TODO move this into a dedicated script
         warning('InstallBreach:noMydiffCompilation',...
             ['An error occurs when compiling mydiff. Maybe GiNaC not available.\n'...
             'Some functionnalities will not be available.']);
-        fprintf('\n'); % for a nice printing
+        fprintf('\n'); 
     end
 end
 

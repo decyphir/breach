@@ -23,3 +23,6 @@ Examples/Parallel/slprj/accel/AbstractFuelControl_breach/rtGetNaN.h
 Examples/Parallel/slprj/accel/AbstractFuelControl_breach/rtw_proj.tmw
 Examples/Parallel/slprj/accel/AbstractFuelControl_breach/rtwtypes.h
 Examples/Parallel/slprj/accel/AbstractFuelControl_breach/rtwtypeschksum.mat
+*.mexw64
+*.autosave
+Deliverables/MBD/slprj/

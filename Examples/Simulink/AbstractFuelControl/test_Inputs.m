@@ -68,7 +68,6 @@ title('Interpolation with variable steps')
 
 %% test with system
 BrAFC.SetInputGen(InputGen)
-
 BrAFC.Sim(40);
 BrAFC.PlotSignals({'Pedal_Angle', 'Engine_Speed','cyl_fuel', 'AF'});
 
@@ -80,7 +79,6 @@ MyInputGen = BreachSignalGen({my_input_gen}); % Makes it a Breach system
 BrAFC_MyGen = BrAFC.copy();
 BrAFC_MyGen.SetInputGen(MyInputGen);          % Plug it to the Simulink model
 BrAFC_MyGen.PrintParams();                    % Makes sure the new parameters are visible
-
 
 BrAFC_MyGen.Sim(40);
 BrAFC_MyGen.PlotSignals({'Pedal_Angle', 'Engine_Speed','cyl_fuel', 'AF'});
