@@ -27,3 +27,11 @@ Examples/Parallel/slprj/accel/AbstractFuelControl_breach/rtwtypeschksum.mat
 *.autosave
 Deliverables/MBD/slprj/
 Deliverables/slprj/
+Deliverables/MBD/Parallel/slprj/
+*.asv
+Ext/ModelsData/AbstractFuelControl_breach.slx
+Deliverables/MBD/InputsConstraints/slprj/
+Deliverables/MBD/Misc/slprj/accel/AbstractFuelControl_breach/rt_nonfinite.h
+Deliverables/MBD/Misc/slprj/
+Ext/ModelsData/AbstractFuelControl_breach_param_sets.mat
+Ext/ModelsData/AbstractFuelControl_breach_properties.mat
