@@ -71,8 +71,13 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         function SetupParallel(this)
            this.use_parallel = 1;
            gcp;
-           j= parfevalOnAll(@()(eval(['load(' this.Sys.mdl ')'])),0); 
-           wait(j);
+           this.Sys.Parallel = 1;
+           spmd
+             
+               
+             gcs;   % loads simulink
+             warning('off', 'Simulink:Commands:MdlFileChangedCloseManually'); % FIXME find out where the model is changed and not saved...
+          end
         end    
 
         function CreateInterface(this, mdl, params, p0, signals)

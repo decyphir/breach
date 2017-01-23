@@ -64,6 +64,7 @@ classdef BreachSystem < BreachSet
         
         function SetupParallel(this)
            this.use_parallel = 1;
+           this.Sys.Parallel =1;
            gcp;
        end    
             
