@@ -6,8 +6,9 @@ res =struct('x',x,'fval',fval, 'exitflag', exitflag, 'output', output);
 this.x_best = x;
 this.obj_best = fval;
 
+% TODO provide LogX as Output function for ga, run after each generation
 if this.use_parallel
-    this.LogX(population', scores);
+    this.LogX(population', scores');
 end
 
 this.res=res;

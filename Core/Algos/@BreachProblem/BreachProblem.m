@@ -422,6 +422,7 @@ classdef BreachProblem < BreachStatus
         function SetupParallel(this)
             this.BrSys.SetupParallel();
             this.use_parallel =1;
+            this.log_traces = 0;
             this.objective= @(x) objective_fn(this,x);
         end
         
@@ -512,8 +513,7 @@ classdef BreachProblem < BreachStatus
             if this.log_traces
                 BrOut = this.BrSet_Logged;
             else
-                BrOut = this.BrSet.copy();
-                BrOut.P = CreateParamSet(this.BrSys.Sys, this.params,[this.lb  this.ub]);
+                BrOut = this.BrSys.copy();
                 BrOut.SetParam(this.params, this.X_log);
             end
             BrOut.Sys.Verbose=1;
@@ -523,8 +523,7 @@ classdef BreachProblem < BreachStatus
         function BrBest = GetBrSet_Best(this)
             BrBest = this.BrSet_Best;
             if isempty(BrBest)
-                BrBest = this.BrSet.copy();
-                BrBest.P = CreateParamSet(this.BrSys.P, this.params,[this.lb  this.ub]);
+                BrBest = this.BrSys.copy();
                 BrBest.SetParam(this.params, this.x_best, 'spec');
             end
             BrBest.Sys.Verbose=1;
