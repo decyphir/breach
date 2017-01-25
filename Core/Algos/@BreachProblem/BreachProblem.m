@@ -421,6 +421,7 @@ classdef BreachProblem < BreachStatus
         %% Parallel 
         function SetupParallel(this)
             this.BrSys.SetupParallel();
+            this.BrSys.Sys.Parallel=0;  % not intuitive, uh?
             this.use_parallel =1;
             this.log_traces = 0;
             this.objective= @(x) objective_fn(this,x);

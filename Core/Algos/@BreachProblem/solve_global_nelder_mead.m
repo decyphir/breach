@@ -17,7 +17,7 @@ if (this.solver_options.nb_local_iter>0) && (~this.stopping)
     for i_loc= ibest
         x0 = X0(:,i_loc);
         if ~this.stopping()
-            optimize(this.objective,x0 ,this.lb,this.ub,this.Aineq,this.bineq,this.Aeq,this.beq,[],[],options,'NelderMead');
+            optimize(@(x)this.objective_wrapper(x),x0 ,this.lb,this.ub,this.Aineq,this.bineq,this.Aeq,this.beq,[],[],options,'NelderMead');
         end
     end
 end
