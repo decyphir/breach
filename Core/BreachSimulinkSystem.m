@@ -73,8 +73,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
            gcp;
            this.Sys.Parallel = 1;
            spmd
-             
-               
+             InitBreach;  
              gcs;   % loads simulink
              warning('off', 'Simulink:Commands:MdlFileChangedCloseManually'); % FIXME find out where the model is changed and not saved...
           end

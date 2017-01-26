@@ -547,7 +547,7 @@ classdef BreachProblem < BreachStatus
                     rfprintf_reset();
                 end
                 
-                st__= sprintf('    %5d                       %7.1f                                  %+5.5e             %+5.5e\n', ...
+                st__= sprintf('    %5d                   %7.1f                            %+5.5e             %+5.5e\n', ...
                     this.nb_obj_eval, this.time_spent, this.obj_best, fval);
                 switch this.display
                     case 'on'
