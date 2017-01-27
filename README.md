@@ -8,7 +8,7 @@ Breach is a Matlab toolbox for simulation-based design of dynamical/CPS/Hybrid s
 - Run InstallBreach
 - (Optional) save path 
 
-## For subsequent use:
+## For subsequent use
 - add path to Breach folder (if not previously saved)
 - run InitBreach 
 
