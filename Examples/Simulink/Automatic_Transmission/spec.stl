@@ -1,0 +1,34 @@
+# default parameters 
+param vmax=150, t1=1, rpm_min=4000, rpm_max = 5000
+
+# when shift in gear 2, stay in gear 2 for at least t1 seconds.
+  gear2 :=  gear[t]==2  
+  shift2 := (not gear2) and ev_[0.01,.02](gear2)
+  shiftn2 := (gear2) and ev_[0.01,.02](not gear2)
+  stay_in_2_for_t1 := ev_[0,0.04] (alw_[0, t1] gear2 )
+  phi_stay2  := alw ( shift2 => stay_in_2_for_t1)	
+  
+  
+# Other formulas 
+
+  speed_bnded := speed[t] < vmax  
+  RPM_bnded := RPM[t] < rpm_max
+
+  phi1 := (alw (speed_bnded)) and (alw (RPM_bnded))     
+  phi2 := ev (alw_[0, t1] (gear2))
+  
+  gear3 :=  gear[t]==3
+  shiftn3 := (gear3) and ev_[0.01,.02](not gear3)
+
+  gear4 :=  gear[t]==4
+  shiftn4 := (gear4) and ev_[0.01,.02](not gear4)
+
+  phi_vmaxmin := (alw_[0, 25] (speed[t]<vmax)) and (alw_[25, 50] (speed[t] > vmin))
+
+  phi_brake := (ev_[0, 25] ((speed[t]>100) and (alw (speed[t] > vmin)))) or (alw (speed[t]<100))
+
+  phi_100 := not ( (ev_[0, t1] (speed[t]>100)) and (alw (RPM[t]< rpm_min)) )  
+
+  phi_return2 := alw ( shiftn2 => (alw_[0.1, t1+.1] (not gear2) ))
+  phi_return3 := alw ( shiftn3 => (alw_[0.1, t1+.1] (not gear3) ))
+  phi_return4 := alw ( shiftn4 => (alw_[0.1, t1+.1] (not gear4) ))

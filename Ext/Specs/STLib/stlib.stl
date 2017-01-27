@@ -1,0 +1,75 @@
+# Time parameters
+param ti=0, tf=40, dt=0.1, tau = 3.
+
+# Scale parameters
+param  x_max=100,epsi=1e-10, r=0.02, c=1., c_s = 0.01, d=0.2, a=0.1
+
+# signals
+signal x_, y_, x_step_, x_ref_
+
+# Bounds
+bounded := abs(x_[t]) < x_max
+
+# Constant and monotonic signals
+zero := x_[t]==0.
+x_eq_y:= x_[t]==y_[t]  
+stable := abs(x_[t+dt] - x_[t])/dt < epsi
+inc := (x_[t+dt] - x_[t])/dt > epsi
+dec := (x_[t] - x_[t+dt])/dt > epsi
+
+# Spike 
+rise := x_[t+d]-x_[t] > a
+fall := x_[t]-x_[t+d] > a
+spike := rise and (ev_[0, 2*d] fall)
+valley := fall and (ev_[0, 2*d] rise)
+
+# Ringing 
+ring_once  := rise and (ev_[0, 2*d] fall)
+ring_twice := ring_once and ev_[2*d, 4*d] (ring_once)
+
+# Step
+step_up   := x_step_[t+dt]-x_step_[t]> r
+step_down := x_step_[t]-x_step_[t+dt]> r
+step := step_up or step_down
+
+# Overshoot after a step
+overshoot := x_[t]-x_ref_[t] > c
+
+# Undershoot
+undershoot := x_ref_[t]-x[t] > c
+
+# Reach time
+close_ref := abs(x_[t]-x_ref_[t]) < c
+reach := ev_[0, tau] (close_ref)
+reach_rising  :=  undershoot =>  (inc until_[0, tau] close_ref)
+reach_falling := overshoot  =>  (dec until_[0, tau] close_ref)
+
+# Checks whether a signal is constant, equal to zero
+alw_zero := alw_[ti, tf] (zero)
+
+# Checks whether a signal is bounded
+alw_bounded := alw_[ti,tf] (bounded)
+
+# Checks whether two signal are equal
+alw_x_eq_y := alw_[ti, tf] (x_eq_y)
+alw_stable := alw_[ti, tf] (stable)
+alw_inc    := alw_[ti,tf] (inc)
+alw_dec    := alw_[ti, tf] (dec)
+
+# Piecewise constant
+ev_spike := ev_[ti, tf-2*d] (spike)
+ev_spike_or_valley := ev_[ti, tf-2*d] (spike or valley)
+ev_ring_once  := ev_[ti, tf-4*d] (ring_once) 
+ev_ring_twice := ev_[ti, tf-4*d] (ring_twice)
+ev_step := ev_[ti, tf-4*d] (step)
+ev_settling := ev_[ti,tf-tau] (step and ev_[c_s, c_s+tau] (not close_ref))
+ev_overshoot := ev_[ti,tf-tau] ((step) and ev_[0, tau](overshoot))
+ev_undershoot := ev_[ti,tf-tau] (step and ev_[0, tau](undershoot))
+
+alw_pwc := alw_[ti, tf-12*dt] (not stable => alw_[2*dt, 10*dt] stable)
+alw_steps_and_spikes := alw_[ti, tf-2*tau] (step => ev_[0, tau] (spike or valley))  
+alw_reach := alw_[ti, tf] (reach)
+alw_reach_rising := alw_[ti_tf] (reach_rising)
+alw_reach_falling := alw_[ti_tf] (reach_falling)
+
+

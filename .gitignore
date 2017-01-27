@@ -1,0 +1,23 @@
+*.asv
+*.autosave
+*.mexmaci64
+*.mexw64
+*.o
+*_breach.slx
+*_param_sets.mat
+*_properties.mat
+
+Examples/*.dat
+Examples/variablescmaes.mat
+
+slprj/
+Doc/
+
+# Ignore everything in Ext...
+Ext/*
+# ... except
+!Ext/Classes/
+!Ext/Models/
+!Ext/ModelsData/
+!Ext/Specs/
+!Ext/Toolboxes/

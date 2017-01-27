@@ -1,0 +1,7 @@
+# settling
+param dt=0.1,epsi=1e-2
+
+AF_settled := abs(AF[t+dt]-AF[t])<epsi*dt
+AF_stable := alw_[0, 1] (AF_settled)
+AF_will_be_stable := ev_[0,9] (AF_stable)
+AF_alw_settle := alw_[10, 30] (AF_will_be_stable)

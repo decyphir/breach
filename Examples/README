@@ -1,0 +1,9 @@
+This folder contains examples of systems used with Breach. It is organized as follows:
+
+- BrDemos/   Demo scripts illustrating various features of Breach
+- Simulink/  More examples on Simulink models. 
+- Tests/     scripts for testing/benchmarking breach 
+
+
+
+

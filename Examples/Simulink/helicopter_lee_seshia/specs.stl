@@ -1,0 +1,2 @@
+param tau = 5
+phi :=  ev_[0,tau] ( alw_[0,3] (abs(theta_dot[t]-psi[t]) < 0.01 )) 

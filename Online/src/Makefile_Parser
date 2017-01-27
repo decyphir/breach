@@ -1,0 +1,15 @@
+FLEX      = flex
+YACC      = /usr/local/opt/bison/bin/bison
+#YACC    = bison
+
+parser: stl_scanner.cpp stl_parser.cpp
+
+stl_scanner.cpp: stl_scanner.lpp
+	$(FLEX) -o stl_scanner.cpp stl_scanner.lpp
+
+stl_parser.cpp: stl_parser.ypp 
+	$(YACC) -o stl_parser.cpp --defines=stl_parser.h stl_parser.ypp
+	mv location.hh stack.hh position.hh stl_parser.h ../include
+
+clean: 
+	rm -f stl_parser.cpp stl_scanner.cpp ../include/stl_parser.h ../include/stl_parser.h location.hh stack.hh position.hh stl_parser.h

@@ -1,0 +1,16 @@
+# Output is never at a distance greater than max_over from the reference signal
+param max_over = 1, t_end=20
+far_ref :=  abs(Pos[t] - Ref[t]) >= max_over
+never_far_ref := alw_[0, t_end] (not (far_ref) ) 
+
+# Output is close to the reference signal
+param c_abs=0.01, c_rel=0.1, tau0=1
+close_ref := abs(Pos[t] - Ref[t]) <= c_abs+ c_rel*abs(Ref[t])
+stay_close_ref := alw_[0, tau0] (close_ref)
+
+# Output will be close to the reference signal in tau seconds
+param tau = 2
+reach_ref_in_tau := ev_[0, tau] (stay_close_ref)
+
+# At all times, Output will be close to the reference signal in tau seconds
+alw_reach_ref_in_tau := alw_[0, t_end-tau] ((not close_ref) => reach_ref_in_tau)
