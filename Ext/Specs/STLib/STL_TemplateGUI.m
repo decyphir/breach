@@ -22,7 +22,7 @@ function varargout = STL_TemplateGUI(varargin)
 
 % Edit the above text to modify the response to help STL_TemplateGUI
 
-% Last Modified by GUIDE v2.5 13-Jul-2016 10:57:59
+% Last Modified by GUIDE v2.5 19-Feb-2017 14:05:51
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -53,7 +53,6 @@ function STL_TemplateGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to STL_TemplateGUI (see VARARGIN)
 
 global BreachGlobOpt
-
 handles.custom_phi=0;
 
 % Initialize listbox_stlib
@@ -65,7 +64,7 @@ handles = update_tmp(handles);
 
 % Initialize formula
 handles.STL_Formula = handles.STL_Template; 
-set(handles.display_STL_Formula,'String', disp(handles.STL_Formula));
+set(handles.edit_STL_Formula,'String', disp(handles.STL_Formula));
 handles.phi_id = 'phi_new';
 handles.auto_naming =1;
 handles= update_phi(handles);
@@ -85,31 +84,6 @@ guidata(hObject, handles);
 % UIWAIT makes STL_TemplateGUI wait for user response (see UIRESUME)
 uiwait(handles.main);
 
-function handles = update_tmp(handles)
-global BreachGlobOpt
- 
-content = get(handles.listbox_stlib, 'String'); 
-nbphi =numel(content);
-
-value = get(handles.listbox_stlib, 'Value');
-if value>nbphi
-    value=1;
-end
-
-st_phi_tmp = content{value};
-phi_tmp = BreachGlobOpt.STLDB(st_phi_tmp);
-handles.STL_Template = phi_tmp;
-
-sig_templates = STL_ExtractSignals(phi_tmp);
-handles.sigmap = containers.Map();
-handles.signame_templates = sig_templates;
-
-for sig = sig_templates
-    handles.sigmap(sig{1}) = 1;
-end
-set(handles.popup_signame_template,'String', sig_templates);
-set(handles.display_STL_Template,'String', disp(handles.STL_Template,0));
-
 
 % --- Outputs from this function are returned to the command line.
 function varargout = STL_TemplateGUI_OutputFcn(hObject, eventdata, handles) 
@@ -121,6 +95,7 @@ function varargout = STL_TemplateGUI_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 close(handles.main);
+
 
 % --- Executes on selection change in popup_signame_template.
 function popup_signame_template_Callback(hObject, eventdata, handles)
@@ -174,8 +149,6 @@ handles = update_phi(handles);
 % Update handles structure
 guidata(hObject, handles);
 
-
-
 % --- Executes during object creation, after setting all properties.
 function popup_signame_concrete_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to popup_signame_concrete (see GCBO)
@@ -187,14 +160,6 @@ function popup_signame_concrete_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
-% --- Executes during object creation, after setting all properties.
-function display_STL_Formula_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to display_STL_Formula (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
 
 % --- Executes on button press in button_cancel.
 function button_cancel_Callback(hObject, eventdata, handles)
@@ -230,7 +195,6 @@ function listbox_stlib_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns listbox_stlib contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from listbox_stlib
-
 
 set(handles.popup_signame_template,'Value',1);
 set(handles.popup_signame_concrete,'Value',1);
@@ -279,43 +243,114 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-function display_STL_Template_Callback(hObject, eventdata, handles)
-% hObject    handle to display_STL_Template (see GCBO)
+function edit_STL_Template_Callback(hObject, eventdata, handles)
+% hObject    handle to edit_STL_Template (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of display_STL_Template as text
-%        str2double(get(hObject,'String')) returns contents of display_STL_Template as a double
+% Hints: get(hObject,'String') returns contents of edit_STL_Template as text
+%        str2double(get(hObject,'String')) returns contents of edit_STL_Template as a double
 
 st_phi_tmp = get(hObject,'String');
 handles.STL_Template = STL_Formula('phi_tmp', st_phi_tmp);
 guidata(hObject, handles);
 
 
-function display_STL_Formula_Callback(hObject, eventdata, handles)
-% hObject    handle to display_STL_Formula (see GCBO)
+function edit_STL_Formula_Callback(hObject, eventdata, handles)
+% hObject    handle to edit_STL_Formula (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of display_STL_Formula as text
-%        str2double(get(hObject,'String')) returns contents of display_STL_Formula as a double
+% Hints: get(hObject,'String') returns contents of edit_STL_Formula as text
+%        str2double(get(hObject,'String')) returns contents of edit_STL_Formula as a double
 
 st_phi = get(hObject,'String');
 handles.STL_Formula = STL_Formula(handles.phi_id, st_phi); 
 guidata(hObject, handles);
 
+
+% --- Executes on selection change in popupmenu_parameter_name.
+function popupmenu_parameter_name_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu_parameter_name (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+contents = cellstr(get(hObject,'String'));   % returns popupmenu_parameter_name contents as cell array
+param_name = contents{get(hObject,'Value')}; % returns selected item from popupmenu_parameter_name
+
+params = get_params(handles.STL_Formula);
+param_value = num2str(params.(param_name));
+set(handles.edit_param_value, 'String',param_value); 
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu_parameter_name_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu_parameter_name (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function edit_param_value_Callback(hObject, eventdata, handles)
+% hObject    handle to edit_param_value (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit_param_value as text
+%        str2double(get(hObject,'String')) returns contents of edit_param_value as a double
+
+pnames = get(handles.popupmenu_parameter_name,'String' );
+pname = pnames{get(handles.popupmenu_parameter_name, 'Value')};
+if size(pname,1)>1
+    pname=pname';
+end
+v=str2double(get(hObject,'String'));
+handles.STL_Formula = set_params(handles.STL_Formula, pname, v );
+guidata(hObject, handles);
+
+
+
+% --- Executes during object creation, after setting all properties.
+function edit_param_value_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_param_value (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function edit_STL_Formula_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_STL_Formula (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
 function handles = update_phi(handles)
 
 old_names = get(handles.popup_signame_template,'String' );
-new_names = get(handles.popup_signame_concrete,'String' );
-
 old_name = old_names{get(handles.popup_signame_template, 'Value')}';
 
+new_names = get(handles.popup_signame_concrete,'String' );
+
 handles.sigmap(old_name) = get(handles.popup_signame_concrete, 'Value');
-
 phi = handles.STL_Template;
-% update formula
 
+% update formula
 nb_old = numel(old_names);
 for i_old = 1:nb_old;
     old_name = old_names{i_old};
@@ -332,4 +367,42 @@ if handles.auto_naming == 1
 else
     handles.STL_Formula=set_id(phi, handles.phi_id);
 end
-set(handles.display_STL_Formula,'String', disp(phi,0));
+set(handles.edit_STL_Formula,'String', disp(phi,0));
+
+
+function handles = update_tmp(handles)
+global BreachGlobOpt
+ 
+content = get(handles.listbox_stlib, 'String'); 
+nbphi = numel(content);
+value = get(handles.listbox_stlib, 'Value');
+if value>nbphi
+    value=1;
+end
+
+st_phi_tmp = content{value};
+phi_tmp = BreachGlobOpt.STLDB(st_phi_tmp);
+handles.STL_Template = phi_tmp;
+
+sig_templates = STL_ExtractSignals(phi_tmp);
+handles.sigmap = containers.Map();
+handles.signame_templates = sig_templates;
+
+for sig = sig_templates
+    handles.sigmap(sig{1}) = 1;
+end
+set(handles.popup_signame_template,'String', sig_templates);
+set(handles.edit_STL_Template,'String', disp(handles.STL_Template,0));
+
+% Parameters
+params = get_params(phi_tmp);
+param_names = fieldnames(params);
+set(handles.popupmenu_parameter_name, 'String',param_names); 
+set(handles.popupmenu_parameter_name, 'Value',1); 
+
+param_value = num2str(params.(param_names{1}));
+set(handles.edit_param_value, 'String',param_value); 
+
+
+
+

@@ -26,7 +26,9 @@ classdef BreachSet < BreachStatus
     %   PlotSigPortrait     - plots signals portrait
     
     properties
-        P
+        P % legacy parameter structure - contains points data (in P.pts) and traces (P.traj) and many other fields whose purpose is slowly falling into oblivion
+        ParamDomain = BreachDomain('double', [])
+        % will replace ParamRanges eventually 
         ParamRanges  % ranges of possible values for each parameter - determines the parameter sampling domain
         SignalRanges % ranges of values taken by each signal variable
         AppendWhenSample=false % when true, sampling appends new param vectors, otherwise replace.
@@ -45,6 +47,7 @@ classdef BreachSet < BreachStatus
     end
     
     methods
+        %% Constructor
         function this = BreachSet(Sys, params, ranges)
             % BreachSet constructor from a legacy P or Sys, parameter names and ranges
             
@@ -58,10 +61,56 @@ classdef BreachSet < BreachStatus
                 case 3
                     this.P = CreateParamSet(Sys, params, ranges);
             end
-            
+            this.CheckinDomain();
             this.UpdateParamRanges();
         end
+        %% Domains
+        function SetDomain(this, param, type, domain) 
+        % should be improved to set more than one domain at a time
+            [idx, found] = FindParam(this.P, param);
+               if any(found==0)
+                   error('Parameter or signal not found.');
+               end
+               this.ParamDomain(idx) = BreachDomain(type, domain);
+        end
         
+        function dom = GetDomain(this, param)
+            [idx, found] = FindParam(this.P, param);
+               if any(found==0)
+                   error('Parameter or signal not found.');
+               end
+             dom = this.ParamDomain(idx); 
+        end
+        
+        function CheckinDomain(this)
+            % Enforce pts to be in domains, in particular integer
+            pts = this.P.pts;
+            
+            % If domain not defined, here is the place to do it
+            if numel(this.ParamDomain)<size(pts, 1)
+                diff_size = size(pts,1)-numel(this.ParamDomain);
+                new_domains = repmat(BreachDomain(), 1, diff_size);
+                 this.ParamDomain = [this.ParamDomain new_domains];
+            end
+            
+            % TODO? warning when out of domain 
+            for  i =1:size(pts,1)
+                this.P.pts(i,:) = this.ParamDomain(i).checkin(pts(i,:));
+            end
+        end
+     
+        function SampleAll(this, param) 
+            % returns all values when possible (type == int and bounded
+            % domain
+            idx = FindParam(this.P, param);
+            all = this.ParamDomain(idx).sample_all();
+            if ~isempty(all)
+                this.SetParam(param, all);
+            else
+                warning(['Domain is non empty']) 
+            end
+        end
+        %%  Param
         function SetParam(this, params, values, opt)
             ip = FindParam(this.P, params);
             i_not_sys = find(ip>this.P.DimP);
@@ -165,6 +214,8 @@ classdef BreachSet < BreachStatus
         end
         
         function UpdateParamRanges(this)
+            
+            this.CheckinDomain();
             % Update ranges for variables from P            
             i_params = (this.P.DimX+1):numel(this.P.ParamList);
             if numel(i_params)> size(this.ParamRanges,1)
@@ -293,26 +344,47 @@ classdef BreachSet < BreachStatus
             figure;
             SplotTraj(this.P, varargin{:});
         end
-        
+        %% Sampling
         function GridSample(this, delta)
             % Grid Sample
-            this.P = Refine(this.P,delta, 1);
+            newP = Refine(this.P,delta, 1);
+            if this.AppendWhenSample
+                this.P = SConcat(this.P, newP);
+            else
+                this.P = newP;
+            end
+        
         end
         
         % Get corners of parameter domain
         function CornerSample(this)
-            this.P.epsi = 2*this.P.epsi;
-            this.P = Refine(this.P,2);
-            this.P.epsi = this.P.epsi/2;
+            newP = this.P;
+            newP.epsi = 2*newP.epsi;
+            newP = Refine(newP,2);
+            newP.epsi = newP.epsi/2;
+          if this.AppendWhenSample
+                this.P = SConcat(this.P, newP);
+            else
+                this.P = newP;
+            end
+      
         end
         
         function QuasiRandomSample(this, nb_sample, step)
         % Quasi-Random Sampling
             if nargin==3
-                this.P = QuasiRefine(this.P,nb_sample, step);
+                newP = QuasiRefine(this.P,nb_sample, step);
             else
-                this.P = QuasiRefine(this.P, nb_sample);
+                newP = QuasiRefine(this.P, nb_sample);
             end
+            
+          if this.AppendWhenSample
+                this.P = SConcat(this.P, newP);
+            else
+                this.P = newP;
+            end
+            
+            
         end
         
         % Get the number of param vectors - -1 means P is empty

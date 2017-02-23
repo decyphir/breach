@@ -13,7 +13,7 @@ classdef fixed_cp_signal_gen < signal_gen
     %  See also signal_gen.
     
     properties
-        cp       % number of control points for each signal
+        num_cp       % number of control points for each signal
         method   % interpolation method for each signal
     end
     
@@ -36,7 +36,7 @@ classdef fixed_cp_signal_gen < signal_gen
             end
             
             this.signals = signals;
-            this.cp = cp;
+            this.num_cp = cp;
             this.params = {};
             
             if nargin<=2
@@ -61,11 +61,11 @@ classdef fixed_cp_signal_gen < signal_gen
                 p = p';
             end
             
-            X = zeros(numel(this.cp),numel(time));
+            X = zeros(numel(this.num_cp),numel(time));
             pts_x = p;
-            for i_cp = 1:numel(this.cp)
-                cp_values = pts_x(1:this.cp(i_cp));
-                pts_x = pts_x(this.cp(i_cp)+1:end);
+            for i_cp = 1:numel(this.num_cp)
+                cp_values = pts_x(1:this.num_cp(i_cp));
+                pts_x = pts_x(this.num_cp(i_cp)+1:end);
                 if ischar(this.method)
                     meth = this.method;
                 elseif numel(this.method)==1
@@ -75,7 +75,7 @@ classdef fixed_cp_signal_gen < signal_gen
                 end
                 switch meth
                     case 'previous'
-                        t_cp = linspace(time(1), time(end), this.cp(i_cp)+1)';
+                        t_cp = linspace(time(1), time(end), this.num_cp(i_cp)+1)';
                         if numel(t_cp)==2
                             x = cp_values(1)*ones(numel(time),1);
                         else
@@ -84,7 +84,7 @@ classdef fixed_cp_signal_gen < signal_gen
                         X(i_cp,:) = x';
                         
                     otherwise
-                        t_cp = linspace(time(1), time(end), this.cp(i_cp))';
+                        t_cp = linspace(time(1), time(end), this.num_cp(i_cp))';
                         if numel(t_cp) == 1
                             x = cp_values(1)*ones(numel(time),1);
 %                        elseif numel(t_cp)==2
@@ -99,5 +99,10 @@ classdef fixed_cp_signal_gen < signal_gen
         function type = getType(this)
             type = 'unistep';
         end
+        
+        function args = getSignalGenArgs(this)
+            args = {'num_cp','method'};         
+        end
+        
     end
 end

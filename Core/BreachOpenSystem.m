@@ -1,3 +1,4 @@
+
 classdef BreachOpenSystem < BreachSystem
     % BreachOpenSystem  a BreachSystem derivated class with an input generator.
     %
@@ -184,6 +185,12 @@ classdef BreachOpenSystem < BreachSystem
             
         end
         
+        function [params, idx] = GetParamsSysList(this)
+            idx_inputs = this.GetParamsInputIdx();
+            idx = this.Sys.DimX+1:idx_inputs(1)-1;
+            params = this.Sys.ParamList(idx);
+        end
+        
         function idx = GetParamsInputIdx(this)
             if isempty(this.InputGenerator)
                 [~, idx] = FindParamsInput(this.Sys);
@@ -252,6 +259,11 @@ classdef BreachOpenSystem < BreachSystem
             
         end
         
+        function SetInputGenGUI(this)
+           
+            signal_gen_gui(this);
+        end
+                
         function idx = GetInputSignalsIdx(this)     
             idx0 = this.Sys.DimX - this.Sys.DimU+1;
             idx= idx0:this.Sys.DimX;

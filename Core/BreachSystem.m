@@ -145,9 +145,7 @@ classdef BreachSystem < BreachSet
            this.Specs = containers.Map();
            this.AddSpec(varargin{:});
         end
-        
-        
-        
+  
         function val = CheckSpec(this, spec)
             if ~exist('spec','var')
                 spec = this.Specs.values;
@@ -429,7 +427,7 @@ classdef BreachSystem < BreachSet
             end
         end
              
-        function gui = RunGUI(this)
+        function RunGUI(this)
             P.P = this.P;
             phis=  this.Specs.keys;
             
@@ -437,12 +435,13 @@ classdef BreachSystem < BreachSet
             if (~isempty(phis))
                 Propsave(this.Sys, phis{:});
             end
-            gui = Breach(this);
+            BreachGui(this);
             
         end
   
         function TrajGUI(this) 
-            args = struct('working_sets', struct,'working_sets_file_name', '', 'Sys', this.Sys, 'TrajSet', this.P); 
+            args = struct('working_sets', struct,'working_sets_file_name',...
+                      '', 'Sys', this.Sys, 'TrajSet', this.P); 
             specs = this.Specs.keys;
             args.properties = struct;
             for ispec = 1:numel(specs)

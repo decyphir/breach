@@ -22,7 +22,7 @@ function varargout = BreachGui(varargin)
 
 % Edit the above text to modify the response to help BreachGui
 
-% Last Modified by GUIDE v2.5 20-Jul-2016 16:34:32
+% Last Modified by GUIDE v2.5 22-Feb-2017 23:18:47
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -52,8 +52,6 @@ function BreachGui_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to BreachGui (see VARARGIN)
 
-
-
 handles = info(handles, 'Starting Breach.... (Memory tip: his first name is Millard)');
 crd = pwd;
 set(hObject, 'Name', ['Breach (' crd  ')']);
@@ -63,14 +61,14 @@ handles.last_options =[];
 handles.check_prop_options =[];
 
 %% Init system panel
-Sys = varargin{2};
-SysName = varargin{3};
+Br = varargin{1};
+handles.BrSys = Br;
+assignin('base', 'BrSys_GUI', Br);
+Sys = Br.Sys;
+SysName = Sys.name;
 handles.Sys=Sys;
-if nargin>= 4
-    handles.BrSys = varargin{4};
-else
-    handles.BrSys = BreachSystem(Sys);
-end
+
+set(handles.checkbox_input_only,'Value',handles.BrSys.SimInputsOnly);
 
 handles.system_name_file = [ SysName '.mat' ];
 if (isfield(Sys,'tspan'))
@@ -132,8 +130,7 @@ handles.idx_prop= 1;
 handles = update_properties_panel(handles);
 
 %% Init modif panel
-
-handles.current_pts=1;
+handles.current_pts = 1;
 handles.refine = 1;
 handles.plot_proj = [];
 handles.refine_all = 0;
@@ -144,7 +141,6 @@ handles.selected_param=1;
 handles.selected_varying_param = 1;
 
 % Init param pts plot
-
 handles.current_plot{1} =[];
 handles.current_plot{2} =[];
 handles.current_plot{3} =[];
@@ -154,14 +150,13 @@ handles = update_modif_panel(handles);
 handles = info(handles, 'Ready.');
 
 % Choose default command line output for BreachGui
-handles.output = handles;
+handles.output = handles.BrSys;
 
 % Update handles structure
 guidata(hObject, handles);
 
 % UIWAIT makes BreachGui wait for user response (see UIRESUME)
 % uiwait(handles.breach);
-
 
 % --- Outputs from this function are returned to the command line.
 function varargout = BreachGui_OutputFcn(hObject, eventdata, handles)
@@ -233,7 +228,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 % --- Executes on button press in button_remove_set.
 function button_remove_set_Callback(hObject, eventdata, handles)
 try
@@ -271,6 +265,7 @@ fn = fieldnames(handles.working_sets);
 set_name = fn{get(hObject,'Value')};
 handles.current_set = set_name;
 handles.current_pts = 1;
+handles.BrSys.SetP(handles.working_sets.(set_name));
 
 handles = update_working_sets_panel(handles);
 handles = update_modif_panel(handles);
@@ -289,49 +284,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-% --- Executes on selection change in listbox_system.
-function listbox_system_Callback(hObject, eventdata, handles)
-% hObject    handle to listbox_system (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-ival = get(hObject,'Value');
-if strcmp(handles.Sys.type, 'Simulink')
-    switch(ival)
-        case 3
-            if  strcmp(questdlg(['Open model ' handles.Sys.mdl ' ?'],'Question'), 'Yes');
-                open(handles.Sys.mdl);
-            end
-            return
-    end
-end
-
-switch(ival)
-    case 3
-        set(handles.edit_system_param,'String', dbl2str(handles.Sys.CVodesOptions.RelTol));
-    case 4
-        set(handles.edit_system_param,'String', dbl2str(handles.Sys.CVodesOptions.AbsTol));
-    case 5
-        set(handles.edit_system_param,'String', dbl2str(handles.Sys.CVodesOptions.MinStep));
-    case 9
-        set(handles.edit_system_param,'String', handles.Sys.CVodesSensiOptions.method);
-    case 10
-        set(handles.edit_system_param,'String', dbl2str(handles.Sys.CVodesSensiOptions.FSAoptions.ParamScales'));
-    case 11
-        set(handles.edit_system_param,'String', handles.Sys.CVodesSensiOptions.FSAoptions.SensErrControl);
-end
-
-% --- Executes during object creation, after setting all properties.
-function listbox_system_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to listbox_system (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: listbox controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 % --- Executes on selection change in listbox_varying_parameters.
 function listbox_varying_parameters_Callback(hObject, eventdata, handles)
@@ -355,13 +307,17 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 % --- Executes on button press in button_add_param.
 function button_add_param_Callback(hObject, eventdata, handles)
 % hObject    handle to button_add_param (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+handles = add_param(handles);
+handles = update_modif_panel(handles);
+guidata(hObject, handles);
+
+function handles= add_param(handles)
 ind = handles.selected_param;
 P = handles.working_sets.(handles.current_set);
 
@@ -389,15 +345,12 @@ if isfield(handles.Sys, 'type')
     end
 end
 
-
 P.dim = [P.dim ind];
 P.epsi(end+1,:) = epsi;
 
 handles.selected_varying_param = numel(P.dim);
 handles.working_sets.(handles.current_set) = P;
-handles = update_modif_panel(handles);
 
-guidata(hObject, handles);
 
 % --- Executes on button press in button_compute_traj.
 function button_compute_traj_Callback(hObject, eventdata, handles)
@@ -420,7 +373,10 @@ if (exist([pwd filesep 'cvm'])~=3)
     end
 end
 handles= info(handles,'Computing trajectories...');
-handles.working_sets.(handles.current_set) = ComputeTraj(handles.Sys, handles.working_sets.(handles.current_set), tspan);
+%handles.working_sets.(handles.current_set) = ComputeTraj(handles.Sys, handles.working_sets.(handles.current_set), tspan);
+handles.BrSys.SetP(handles.working_sets.(handles.current_set));
+handles.BrSys.Sim(tspan);
+handles.working_sets.(handles.current_set) = handles.BrSys.P;
 handles= info(handles,'Computing trajectories... Done.');
 
 handles = update_working_sets_panel(handles);
@@ -434,20 +390,22 @@ function button_remove_param_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 st =    get(handles.listbox_varying_parameters,'String');
 if(numel(st)>1)
-    P = handles.working_sets.(handles.current_set);
-    if(size(P.pts,2)>1)
-        return;
-    end
-    ind = handles.selected_varying_param;
-    handles.selected_varying_param = max(1,handles.selected_varying_param-1);
-    set(handles.listbox_varying_parameters, 'Value', handles.selected_varying_param);
-    P.dim = P.dim([1:ind-1 ind+1:end]);
-    P.epsi = P.epsi([1:ind-1 ind+1:end],:);
-    handles.working_sets.(handles.current_set) =P;
+    handles=rm_param(handles);
     handles = update_modif_panel(handles);
-    
     guidata(hObject,handles);
 end
+
+function handles= rm_param(handles)
+P = handles.working_sets.(handles.current_set);
+if(size(P.pts,2)>1)
+    return;
+end
+ind = handles.selected_varying_param;
+handles.selected_varying_param = max(1,handles.selected_varying_param-1);
+set(handles.listbox_varying_parameters, 'Value', handles.selected_varying_param);
+P.dim = P.dim([1:ind-1 ind+1:end]);
+P.epsi = P.epsi([1:ind-1 ind+1:end],:);
+handles.working_sets.(handles.current_set) =P;
 
 % --- Executes during object creation, after setting all properties.
 function edit_tspan_CreateFcn(hObject, eventdata, handles)
@@ -613,18 +571,11 @@ function edit_value_pts_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-try
-    val = eval(get(hObject,'String'));
-    ipts = handles.working_sets.(handles.current_set).dim(handles.selected_varying_param);
-    handles.working_sets.(handles.current_set).pts(ipts,handles.current_pts) = val;
-    handles = update_modif_panel(handles);
-    guidata(hObject,handles);
-catch
-    s = lasterror;
-    warndlg(['Problem edit value: ' s.message] );
-    error(s);
-    return
-end
+val = eval(get(hObject,'String'));
+ipts = handles.working_sets.(handles.current_set).dim(handles.selected_varying_param);
+handles.working_sets.(handles.current_set).pts(ipts,handles.current_pts) = val;
+handles = update_modif_panel(handles);
+guidata(hObject,handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -666,74 +617,6 @@ function menu_file_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
-% --- Executes on button press in compile_button.
-function compile_button_Callback(hObject, eventdata, handles)
-
-CompileSystem(handles.Sys,'all');
-
-% hObject    handle to compile_button (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-function edit_system_param_Callback(hObject, eventdata, handles)
-% hObject    handle to edit_system_param (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-try
-    ival = get(handles.listbox_system,'Value');
-    nval = get(hObject,'String');
-    switch(ival)
-        case 3
-            handles.Sys.CVodesOptions.RelTol = eval(nval);
-        case 4
-            handles.Sys.CVodesOptions.AbsTol = eval(nval);
-        case 5
-            handles.Sys.CVodesOptions.MinStep = eval(nval);
-        case 9
-            handles.Sys.CVodesSensiOptions.method = nval;
-        case 10
-            handles.Sys.CVodesSensiOptions.FSAoptions.ParamScales = eval(nval);
-        case 11
-            handles.Sys.CVodesSensiOptions.FSAoptions.SensErrControl = nval;
-    end
-    Sys = handles.Sys;
-    save(handles.system_name_file, 'Sys');
-    handles = update_system_panel(handles);
-    guidata(hObject,handles);
-    
-catch
-    s = lasterror;
-    warndlg(['Problem edit_system_param: ' s.message] );
-    error(s);
-    return
-end
-
-
-% --- Executes during object creation, after setting all properties.
-function edit_system_param_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit_system_param (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-% --------------------------------------------------------------------
-function compile_Callback(hObject, eventdata, handles)
-% hObject    handle to compile (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-try
-    CompileSystem(handles.Sys);
-catch
-    s = lasterror;
-    warndlg(['Problem during compilation: ' s.message] );
-    error(s);
-    return
-end
-
 % --------------------------------------------------------------------
 function test_memory_Callback(hObject, eventdata, handles)
 % hObject    handle to test_memory (see GCBO)
@@ -769,7 +652,6 @@ catch err
     warndlg(['Problem loading: ' err.message] );
     rethrow(err);
 end
-
 
 
 % --------------------------------------------------------------------
@@ -845,11 +727,6 @@ catch
     return
 end
 
-
-% Hints: get(hObject,'String') returns contents of edit_rename as text
-%        str2double(get(hObject,'String')) returns contents of edit_rename as a double
-
-
 % --- Executes during object creation, after setting all properties.
 function edit_rename_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to edit_rename (see GCBO)
@@ -883,10 +760,6 @@ handles = update_modif_panel(handles);
 guidata(hObject,handles);
 
 
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-
-
 % --- Executes during object creation, after setting all properties.
 function slider_current_pts_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to slider_current_pts (see GCBO)
@@ -909,9 +782,6 @@ strpop = contents{get(hObject,'Value')};
 handles.current_plot_pts{3} = {strpop};
 handles = plot_pts(handles);
 guidata(hObject, handles);
-
-% Hints: contents = get(hObject,'String') returns popup_pts3 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popup_pts3
 
 
 % --- Executes during object creation, after setting all properties.
@@ -968,9 +838,6 @@ handles.current_plot_pts{1} = {strpop};
 handles = plot_pts(handles);
 guidata(hObject, handles);
 
-% Hints: contents = get(hObject,'String') returns popup_pts1 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popup_pts1
-
 
 % --- Executes during object creation, after setting all properties.
 function popup_pts1_CreateFcn(hObject, eventdata, handles)
@@ -992,8 +859,6 @@ function checkbox_quasi_random_Callback(hObject, eventdata, handles)
 handles.halton =  get(hObject,'Value');
 edit_refine_Callback(handles.edit_refine, eventdata, handles)
 guidata(hObject, handles);
-% Hint: get(hObject,'Value') returns toggle state of checkbox_quasi_random
-
 
 % --------------------------------------------------------------------
 function menu_save_Callback(hObject, eventdata, handles)
@@ -1035,7 +900,6 @@ handles.refine_all = get(hObject,'Value');
 edit_refine_Callback(handles.edit_refine, eventdata, handles)
 guidata(hObject, handles)% Hint: get(hObject,'Value') returns toggle state of checkbox_refine_all
 
-
 % --- Executes on button press in button_make_pts_set.
 function button_make_pts_set_Callback(hObject, eventdata, handles)
 % hObject    handle to button_make_pts_set (see GCBO)
@@ -1054,7 +918,6 @@ Ptmp = Sselect(handles.working_sets.(handles.current_set),ipts);
 handles.working_sets = setfield(handles.working_sets, new_name, Ptmp);
 handles = update_working_sets_panel(handles);
 guidata(hObject,handles);
-
 
 % --- Executes on selection change in listbox_prop.
 function listbox_prop_Callback(hObject, eventdata, handles)
@@ -1083,11 +946,6 @@ set(handles.text_info, 'String', info_msg);
 handles = plot_pts(handles);
 guidata(hObject,handles);
 
-
-% Hints: contents = get(hObject,'String') returns listbox_prop contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from listbox_prop
-
-
 % --- Executes during object creation, after setting all properties.
 function listbox_prop_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to listbox_prop (see GCBO)
@@ -1100,11 +958,8 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 % --- Executes on button press in button_check_property.
 function button_check_property_Callback(hObject, eventdata, handles)
-
-%try
 prop = handles.properties.(handles.current_prop);
 title = 'Check property options';
 prompt = {'Enter tspan for trajectory computation (empty = existing traj), ',...
@@ -1133,13 +988,6 @@ handles = update_modif_panel(handles);
 handles = update_properties_panel(handles);
 guidata(hObject,handles);
 
-% catch
-%   s = lasterror;
-%  warndlg(['Problem checking property: ' s.message] );
-%  error(s);
-%  return
-%end
-
 
 % --- Executes on button press in checkbox_selected.
 function checkbox_selected_Callback(hObject, eventdata, handles)
@@ -1156,8 +1004,6 @@ else
 end
 
 guidata(hObject, handles);
-
-% Hint: get(hObject,'Value') returns toggle state of checkbox_selected
 
 
 % --- Executes on button press in button_edit_prop.
@@ -1200,8 +1046,6 @@ save(handles.properties_file_name, '-append', get_id(PHI));
 handles = update_properties_panel(handles);
 guidata(hObject, handles);
 
-
-
 % --- Executes on button press in button_reload.
 function button_reload_Callback(hObject, eventdata, handles)
 % hObject    handle to button_reload (see GCBO)
@@ -1215,7 +1059,6 @@ handles = update_properties_panel(handles);
 handles = update_modif_panel(handles);
 
 guidata(hObject, handles);
-
 
 function handles = update_working_sets_panel(handles)
 
@@ -1302,7 +1145,6 @@ for i = 1:numel(fnames)
 end
 set(handles.listbox_prop,'String', content);
 
-
 function handles = update_modif_panel(handles)
 
 % parameters listbox
@@ -1360,8 +1202,9 @@ set(handles.edit_param_name, 'String', handles.working_sets.(handles.current_set
 content = {};
 
 for i=1:numel(dim)
-    st = get_varying_param_string(handles,i);
+    [st, st_min, st_max] = get_varying_param_string(handles,i);
     content = {content{:} st};
+
 end
 set(handles.listbox_varying_parameters,'String',content);
 
@@ -1377,6 +1220,10 @@ epsi = handles.working_sets.(handles.current_set).epsi(handles.selected_varying_
 
 set(handles.edit_value_pts, 'String', dbl2str(pts));
 set(handles.edit_uncertainty, 'String', dbl2str(epsi));
+st_min = dbl2str(pts-epsi);
+st_max = dbl2str(pts+epsi);
+set(handles.edit_pmin, 'String', st_min);
+set(handles.edit_pmax, 'String', st_max);
 
 % slider
 
@@ -1421,56 +1268,20 @@ else
     set(handles.popup_pts3,'Value', 1);
 end
 handles =  plot_pts(handles);
-%end
 
 function handles = update_system_panel(handles)
 
-Sys = handles.Sys;
-
-stdimx = ['DimX : ' num2str(Sys.DimX) ];
-stdimp = ['DimP : ' num2str(Sys.DimP) ];
-set(handles.text_dimx,'String', stdimx);
-set(handles.text_dimp,'String', stdimp);
-
-if isfield(Sys, 'type')
-    switch Sys.type
-        case 'traces'
-            return
-        case 'Simulink'
-            st_system_listbox = {'Simulink System'; '----------------';...
-                ['Open ' handles.Sys.mdl '_breach'];...
-                };
-            set(handles.listbox_system, 'String', st_system_listbox);
-            return
-        case 'Extern'
-            return
-    end
-end
-
-st_system_listbox = {'Integrator options'; '----------------';...
-    ['RelTol : ' dbl2str(Sys.CVodesOptions.RelTol) ];...
-    ['AbsTol : ' dbl2str(Sys.CVodesOptions.AbsTol) ];...
-    ['MinStep : ' Sys.CVodesOptions.MinStep ]; ...
-    ''; 'Sensitivity options'; '----------------'; ...
-    ['Method : ''' Sys.CVodesSensiOptions.method '''']; ...
-    ['ParamScales : ' dbl2str(Sys.CVodesSensiOptions.FSAoptions.ParamScales')];...
-    ['SensErrControl : ' ...
-    '''' Sys.CVodesSensiOptions.FSAoptions.SensErrControl ...
-    '''']};
-
-set(handles.listbox_system, 'String', st_system_listbox);
-
-
-function st = get_varying_param_string(handles, i)
+function [st, st_min,st_max] = get_varying_param_string(handles, i)
 
 ipts = handles.working_sets.(handles.current_set).dim(i);
 pts = handles.working_sets.(handles.current_set).pts(ipts,handles.current_pts);
 epsi = handles.working_sets.(handles.current_set).epsi(i, handles.current_pts);
 st = handles.working_sets.(handles.current_set).ParamList{ipts};
 
-min = dbl2str(pts-epsi);
-max = dbl2str(pts+epsi);
-st = [st ': ' dbl2str(pts) ' +/- ' dbl2str(epsi) ' i.e ' '[' min ',' max, ']' ];
+st_min = dbl2str(pts-epsi);
+st_max = dbl2str(pts+epsi);
+st = [st ': ' dbl2str(pts) ' +/- ' dbl2str(epsi) ' i.e ' '[' st_min ',' st_max, ']' ];
+
 
 function handles= plot_pts(handles)
 
@@ -1579,8 +1390,6 @@ else
     end
 end
 
-
-
 % --------------------------------------------------------------------
 function menu_traj_and_sensi_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_traj_and_sensi (see GCBO)
@@ -1616,34 +1425,6 @@ set(handles.text_info, 'Simulation done.');
 guidata(hObject, handles);
 
 % --------------------------------------------------------------------
-function menu_compute_sensi_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_compute_traj_sensi (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-try
-    tspan = inputdlg(['Enter tspan (Format: [ti tf] or [t0 t1 t2 ... tn] ' ...
-        'or ti:dt:tf)'],'Compute trajectories with sensitivities', 1, {handles.last_tspan});
-    if isempty(tspan)
-        return;
-    end
-    handles.last_tspan = tspan{1};
-    tspan = eval(tspan{1});
-    
-    if(exist([pwd filesep 'cvm'])~=3)
-        CompileSystem(handles.Sys);
-    end
-    
-    handles.working_sets.(handles.current_set) = ComputeTrajSensi(handles.Sys, handles.working_sets.(handles.current_set), tspan);
-    handles = update_working_sets_panel(handles);
-    guidata(hObject, handles);
-catch
-    s = lasterror;
-    warndlg(['Problem computing traj sensibility: ' s.message] );
-    error(s);
-    return
-end
-
-% --------------------------------------------------------------------
 function menu_purge_traj_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_purge_traj (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -1655,69 +1436,61 @@ handles = update_working_sets_panel(handles);
 handles = update_modif_panel(handles);
 guidata(hObject,handles);
 
-
-% --------------------------------------------------------------------
-function menu_reach_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_reach (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
 % --------------------------------------------------------------------
 function menu_refine_prop_bound_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_refine_prop_bound (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    
-    restore_traj =0;
-    if isfield( handles.Sys, 'type')
-        if strcmp(handles.Sys.type,'traces')
-            if isfield(handles.working_sets.(handles.current_set), 'traj')
-                traj(1) = handles.working_sets.(handles.current_set).traj(1);
-                restore_traj =1;
-            end
+
+restore_traj =0;
+if isfield( handles.Sys, 'type')
+    if strcmp(handles.Sys.type,'traces')
+        if isfield(handles.working_sets.(handles.current_set), 'traj')
+            traj(1) = handles.working_sets.(handles.current_set).traj(1);
+            restore_traj =1;
         end
     end
-    
-    %  options dialog box
-    info = 'Refine boundary between regions satisfying different properties';
-    answers = { handles.current_prop,'','0','3'};
-    ins = inputdlg({'Enter array of properties (e.g. [phi1, phi2])', 'Enter tspan for trajectories (empty: tspan of computed trajs)','Enter time for property checking', 'Number of iterations'}, info,1, answers );
-    
-    S = handles.working_sets.(handles.current_set);
-    if isempty(ins)
-        return;
-    end
-    
-    load(handles.properties_file_name);
-    
-    if isempty(ins{1})
-        prop_name = handles.current_prop;
-        prop = handles.properties.(prop_name);
-    else
-        prop = eval(ins{1});
-    end
-    
-    if isempty(ins{2})
-        tspan = S.traj(1).time;
-    else
-        tspan = eval(ins{2});
-    end
-    
-    tprop = eval(ins{3});
-    nb_iter = eval(ins{4});
-    
-    S = rmfield(S,'selected');
-    Sf = SFindPropBoundary(handles.Sys,S, prop, tspan,tprop, nb_iter);
-    
-    % TOFIX: hasty patch
-    Sf = rmfield(Sf,'selected');
-    
-    
-    handles.working_sets.(handles.current_set) = Sf;
-    handles = update_modif_panel(handles);
-    guidata(hObject, handles);
-    
+end
+
+%  options dialog box
+info = 'Refine boundary between regions satisfying different properties';
+answers = { handles.current_prop,'','0','3'};
+ins = inputdlg({'Enter array of properties (e.g. [phi1, phi2])', 'Enter tspan for trajectories (empty: tspan of computed trajs)','Enter time for property checking', 'Number of iterations'}, info,1, answers );
+
+S = handles.working_sets.(handles.current_set);
+if isempty(ins)
+    return;
+end
+
+load(handles.properties_file_name);
+
+if isempty(ins{1})
+    prop_name = handles.current_prop;
+    prop = handles.properties.(prop_name);
+else
+    prop = eval(ins{1});
+end
+
+if isempty(ins{2})
+    tspan = S.traj(1).time;
+else
+    tspan = eval(ins{2});
+end
+
+tprop = eval(ins{3});
+nb_iter = eval(ins{4});
+
+S = rmfield(S,'selected');
+Sf = SFindPropBoundary(handles.Sys,S, prop, tspan,tprop, nb_iter);
+
+% TOFIX: hasty patch
+Sf = rmfield(Sf,'selected');
+
+
+handles.working_sets.(handles.current_set) = Sf;
+handles = update_modif_panel(handles);
+guidata(hObject, handles);
+
 % --------------------------------------------------------------------
 function menu_plot_property_val_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_plot_property_val (see GCBO)
@@ -1731,7 +1504,6 @@ handles.figp = figure;
 hold on;
 SplotProp(handles.working_sets.(handles.current_set), handles.properties.(handles.current_prop));
 guidata(hObject,handles);
-
 
 % --------------------------------------------------------------------
 function menu_falsify_Callback(hObject, eventdata, handles)
@@ -1790,13 +1562,11 @@ handles = update_working_sets_panel(handles);
 handles = update_modif_panel(handles);
 guidata(hObject,handles);
 
-
 % --------------------------------------------------------------------
 function menu_select_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_select (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
 
 % --------------------------------------------------------------------
 function menu_select_prop_gt_Callback(hObject, eventdata, handles)
@@ -1828,7 +1598,6 @@ catch
     error(s);
     return
 end
-
 
 % --------------------------------------------------------------------
 function menu_select_prop_abs_st_Callback(hObject, eventdata, handles)
@@ -1892,67 +1661,6 @@ catch
     s = lasterror;
     warndlg(['Problem with plot_zero_contour: ' s.message] );
     error(s);
-    return
-end
-
-
-% --------------------------------------------------------------------
-function create_system_Callback(hObject, eventdata, handles)
-% hObject    handle to create_system (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --------------------------------------------------------------------
-function menu_reach_set_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_reach_set (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-try
-    options.tspan = '0:.01:4';
-    options.tol = .01;
-    options.delta = [];
-    options.NbIterErr = 5;
-    
-    options = structdlg(options);
-    if isempty(options)
-        return;
-    end
-    
-    %options.tspan = eval(options.tspan);
-    
-    if ~isempty(options.tspan)
-        handles.working_sets.(handles.current_set) = sreach(handles.Sys, ...
-            handles.working_sets.(handles.current_set), options.tspan,options);
-    end
-    handles = update_modif_panel(handles);
-    guidata(hObject, handles);
-catch
-    s = lasterror;
-    warndlg(['Problem computing reachable set: ' s.message] );
-    error(s);
-    return
-end
-
-
-% --------------------------------------------------------------------
-function menu_execute_command_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_execute_command (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-try
-    load(handles.working_sets_file_name);
-    load(handles.system_name_file);
-    load(handles.properties_file_name);
-    com = inputdlg('Excute command');
-    if isempty(com)
-        return;
-    end
-    eval(com{:});
-    guidata(hObject, handles);
-catch err
-    warndlg(['Problem executing command: ', err.message]);
-    rethrown(err);
     return
 end
 
@@ -2101,7 +1809,6 @@ catch
     return
 end
 
-
 % --------------------------------------------------------------------
 function menu_load_properties_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_load_properties (see GCBO)
@@ -2160,7 +1867,6 @@ catch
     
 end
 
-
 % --------------------------------------------------------------------
 function menu_save_properties_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_save_properties (see GCBO)
@@ -2186,91 +1892,11 @@ catch
     return
 end
 
-
 % --------------------------------------------------------------------
 function menu_param_sets_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_param_sets (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-
-% --------------------------------------------------------------------
-function menu_newset_from_endpts_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_newset_from_endpts (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-try
-    
-    Pnew = SXf2X0(handles.working_sets.(handles.current_set));
-    val = get(handles.working_sets_listbox, 'Value');
-    names = fieldnames(handles.working_sets);
-    set_name = names{val};
-    new_name = genvarname(set_name,names);
-    handles.working_sets = setfield(handles.working_sets, new_name, Pnew);
-    handles = update_working_sets_panel(handles);
-    guidata(hObject,handles);
-    
-catch
-    
-    s = lasterror;
-    warndlg(['Problem creating new set: ' s.message] );
-    error(s);
-    return
-    
-end
-
-
-% --------------------------------------------------------------------
-function menu_plot_reach_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_plot_reach (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-%    str = inputdlg({'timespan:','Faces color', 'Edges Color','Opacity', 'Max number of patches'},'Plot Reachable Set', 1, {'0:.1:1', 'none','k','1', '10000'});
-
-str = inputdlg({'timespan:','Faces color', 'Edges Color','Opacity'},'Plot Reachable Set', 1, {'0:.05:2', 'k','none','.1'});
-
-if isempty(str)
-    return;
-end
-    
-    tspan = eval(str{1});
-    facecolor = str{2};
-    edgecolor = str{3};
-    alph = eval(str{4});
-    %      maxf = eval(str{5});
-    figure;
-    SplotReach(handles.Sys, handles.working_sets.(handles.current_set), tspan, facecolor,edgecolor, alph);% maxf );
-
-
-% --------------------------------------------------------------------
-function menu_import_traj_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_import_traj (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-try
-    
-    traj = load_traj;
-    P = handles.working_sets.(handles.current_set);
-    P.traj = traj;
-    P.traj_ref(:) = 1;
-    
-    handles.working_sets.(handles.current_set)=P;
-    handles = update_working_sets_panel(handles);
-    handles = update_modif_panel(handles);
-    handles = update_system_panel(handles);
-    
-    guidata(hObject,handles);
-    h = BreachTrajGui('varargin', handles);
-    
-catch
-    s = lasterror;
-    warndlg(['Problem importing trajectory: ' s.message] );
-    error(s);
-    return
-end
 
 
 % --------------------------------------------------------------------
@@ -2345,7 +1971,6 @@ catch
     return
 end
 
-
 % --------------------------------------------------------------------
 function menu_plot_local_sensi_histo_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_plot_local_sensi_histo (see GCBO)
@@ -2381,13 +2006,11 @@ catch
 end
 guidata(hObject, handles);
 
-
 % --------------------------------------------------------------------
 function menu_properties_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_properties (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
 
 % --- Executes on button press in button_go_refine.
 function button_go_refine_Callback(hObject, eventdata, handles)
@@ -2483,7 +2106,6 @@ catch
     warndlg(['Problem refining: ' s.message] );
 end
 
-
 % --- Executes on button press in button_explore_traj.
 function button_explore_traj_Callback(hObject, eventdata, handles)
 % hObject    handle to button_explore_traj (see GCBO)
@@ -2492,15 +2114,12 @@ function button_explore_traj_Callback(hObject, eventdata, handles)
 
 h = BreachTrajGui('varargin', handles);
 
-
-
-
 % --------------------------------------------------------------------
 function System_Callback(hObject, eventdata, handles)
 % hObject    handle to System (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-dbs
+
 
 
 % --- Executes on button press in button_save.
@@ -2677,7 +2296,6 @@ handles = info(handles, 'Computing satisfaction of formula... Done.');
 guidata(hObject,handles);
 
 
-
 % --- Executes on button press in button_break_prop.
 function button_break_prop_Callback(hObject, eventdata, handles)
 % hObject    handle to button_break_prop (see GCBO)
@@ -2761,47 +2379,6 @@ function breach_KeyPressFcn(hObject, eventdata, handles)
 function st = dbl2str(x)
 st = num2str(x, '%0.5g');
 
-
-% --------------------------------------------------------------------
-function set_space_semantics_Callback(hObject, eventdata, handles)
-% hObject    handle to set_space_semantics (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-global BreachGlobOpt;
-BreachGlobOpt.RobustSemantics = 0;
-set(handles.text_info, 'String', 'Quantitative semantics set to space');
-guidata(hObject, handles);
-
-
-% --------------------------------------------------------------------
-function set_semantics_Callback(hObject, eventdata, handles)
-% hObject    handle to set_semantics (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --------------------------------------------------------------------
-function set_ltime_semantics_Callback(hObject, eventdata, handles)
-% hObject    handle to set_ltime_semantics (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-global BreachGlobOpt;
-BreachGlobOpt.RobustSemantics = -1;
-set(handles.text_info, 'String', 'Quantitative semantics set to left time');
-guidata(hObject, handles);
-
-
-% --------------------------------------------------------------------
-function set_rtime_semantics_Callback(hObject, eventdata, handles)
-% hObject    handle to set_rtime_semantics (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-global BreachGlobOpt;
-BreachGlobOpt.RobustSemantics = 1;
-set(handles.text_info, 'String', 'Quantitative semantics set to right time');
-guidata(hObject, handles);
-
-
 % --------------------------------------------------------------------
 function menu_select_satisfied_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_select_satisfied (see GCBO)
@@ -2844,12 +2421,10 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 function h = info(h,msg)
 % INFO write the message into the information panel.
 set(h.text_info, 'String', msg);
 drawnow();
-
 
 % --- Executes on button press in autosave_checkbox.
 function autosave_checkbox_Callback(hObject, eventdata, handles)
@@ -2857,15 +2432,12 @@ function autosave_checkbox_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of autosave_checkbox
-
 
 % --- Executes during object creation, after setting all properties.
 function system_panel_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to system_panel (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-
 
 % --------------------------------------------------------------------
 function create_input_parameter_set_Callback(hObject, eventdata, handles)
@@ -2897,7 +2469,6 @@ handles.working_sets = setfield(handles.working_sets, new_name, Pnew);
 %set(handles.working_sets_listbox,'Value', numel(names)+1);
 handles = update_working_sets_panel(handles);
 guidata(hObject,handles);
-
 
 % --------------------------------------------------------------------
 function menu_param_synth_Callback(hObject, eventdata, handles)
@@ -2942,8 +2513,6 @@ handles = update_working_sets_panel(handles);
 handles = update_modif_panel(handles);
 guidata(hObject,handles);
 
-
-
 % --------------------------------------------------------------------
 function menu_reset_param_files_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_reset_param_files (see GCBO)
@@ -2979,28 +2548,153 @@ if strcmp(answ,'Yes')
 end
 
 
-% --------------------------------------------------------------------
-function menu_set_input_gen_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_set_input_gen (see GCBO)
+
+% --- Executes on button press in pushbutton_input_gen.
+function pushbutton_input_gen_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_input_gen (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+filename = [handles.Sys.Dir filesep handles.Sys.name '_param_sets.mat'];
+backup = [handles.Sys.Dir filesep '.' handles.Sys.name '_param_sets.mat.bck'];
+movefile(filename, backup);
+BrSys = handles.BrSys;
+BrSys.SetInputGenGUI;
+close(handles.breach);
+
+
+
+function edit_pmin_Callback(hObject, eventdata, handles)
+% hObject    handle to edit_pmin (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 
-input_gen.type = 'VarStep';
-input_gen.cp = 2;
-input_gen.method = 'previous';
-
-input_gen = structdlg(input_gen, 'Set input generator');
-if isempty(input_gen)
-    return;
-else
-    answ = questdlg('Are you sure?', 'Reset parameter sets');
-    
-    if strcmp(answ,'Yes')
-        filename = [handles.Sys.Dir filesep handles.Sys.name '_param_sets.mat'];
-        backup = [handles.Sys.Dir filesep '.' handles.Sys.name '_param_sets.mat.bck']; 
-        movefile(filename, backup);
-        handles.BrSys.SetInputGen(input_gen);
-        handles.BrSys.RunGUI;   
-    end 
+val_min = eval(get(hObject,'String'));
+val_max = eval(get(handles.edit_pmax,'String'));
+epsi = (val_max-val_min)/2;
+if epsi<0
+    return
 end
+pts = val_min+ epsi;
+ipts = handles.working_sets.(handles.current_set).dim(handles.selected_varying_param);
+handles.working_sets.(handles.current_set).pts(ipts,handles.current_pts) = pts;
+handles.working_sets.(handles.current_set).epsi(handles.selected_varying_param,handles.current_pts) = epsi;
+
+handles = update_modif_panel(handles);
+guidata(hObject,handles);
+
+
+
+
+% --- Executes during object creation, after setting all properties.
+function edit_pmin_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_pmin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit_pmax_Callback(hObject, eventdata, handles)
+% hObject    handle to edit_pmax (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit_pmax as text
+%        str2double(get(hObject,'String')) returns contents of edit_pmax as a double
+
+val_min = eval(get(handles.edit_pmin,'String'));
+val_max = eval(get(handles.edit_pmax,'String'));
+epsi = (val_max-val_min)/2;
+if epsi<0
+    return
+end
+pts = val_min+ epsi;
+ipts = handles.working_sets.(handles.current_set).dim(handles.selected_varying_param);
+handles.working_sets.(handles.current_set).pts(ipts,handles.current_pts) = pts;
+handles.working_sets.(handles.current_set).epsi(handles.selected_varying_param,handles.current_pts) = epsi;
+
+handles = update_modif_panel(handles);
+guidata(hObject,handles);
+uicontrol(handles.listbox_varying_parameters);
+
+
+% --- Executes during object creation, after setting all properties.
+function edit_pmax_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_pmax (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on key press with focus on listbox_default_parameters and none of its controls.
+function listbox_default_parameters_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to listbox_default_parameters (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+if (isa(eventdata, 'matlab.ui.eventdata.UIClientComponentKeyEvent'))
+    switch eventdata.Key
+        case 'rightarrow'
+            handles = add_param(handles);
+            handles = update_modif_panel(handles);
+            guidata(hObject,handles);
+            
+            
+    end
+end
+
+
+
+
+% --- Executes on key press with focus on listbox_varying_parameters and none of its controls.
+function listbox_varying_parameters_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to listbox_varying_parameters (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+if (isa(eventdata, 'matlab.ui.eventdata.UIClientComponentKeyEvent'))
+    switch eventdata.Key
+        case 'leftarrow'
+            st =    get(handles.listbox_varying_parameters,'String');
+            if(numel(st)>1)
+                
+                handles = rm_param(handles);
+                handles = update_modif_panel(handles);
+                guidata(hObject,handles);
+            end
+        case 'return'
+        uicontrol(handles.edit_pmin);
+    end
+    
+end
+
+
+% --- Executes on button press in checkbox_input_only.
+function checkbox_input_only_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox_input_only (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+handles.BrSys.ResetSimulations();
+handles.working_sets.(handles.current_set) = SPurge(handles.working_sets.(handles.current_set));
+handles.BrSys.SimInputsOnly = get(hObject,'Value');
+guidata(hObject,handles);
+

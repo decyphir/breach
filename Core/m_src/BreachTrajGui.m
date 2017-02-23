@@ -434,25 +434,17 @@ function axes1_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
-% Hint: place code in OpeningFcn to populate axes1
-
-
 % --- Executes during object creation, after setting all properties.
 function axes2_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to axes2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
-% Hint: place code in OpeningFcn to populate axes2
-
-
 % --- Executes during object creation, after setting all properties.
 function axes3_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to axes3 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-
-% Hint: place code in OpeningFcn to populate axes3
 
 % --- Executes on button press in plot_tout_button.
 function plot_tout_button_Callback(hObject, eventdata, handles)
@@ -469,8 +461,6 @@ function plot_tout_button_Callback(hObject, eventdata, handles)
   handles = plot_tout(handles);
   handles = UpdatePlots(handles);
   guidata(hObject,handles);
-
-% Hint: get(hObject,'Value') returns toggle state of plot_tout_button
 
 
 % --- Executes on selection change in listbox.
@@ -549,9 +539,6 @@ function listbox_Callback(hObject, eventdata, handles)
     end
 
 
-% Hints: contents = get(hObject,'String') returns listbox contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from listbox
-
 
 % --- Executes during object creation, after setting all properties.
 function listbox_CreateFcn(hObject, eventdata, handles)
@@ -593,10 +580,6 @@ handles.current_plot{1} = new_plot;
 guidata(hObject, handles);
 
 
-% Hints: contents = get(hObject,'String') returns param12 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from param12
-
-
 % --- Executes during object creation, after setting all properties.
 function param12_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to param12 (see GCBO)
@@ -633,9 +616,6 @@ function param22_Callback(hObject, eventdata, handles)
   handles.current_plot{2} = new_plot;
   guidata(hObject, handles);
   
-% Hints: contents = get(hObject,'String') returns param22 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from param22
-
 
 % --- Executes during object creation, after setting all properties.
 function param22_CreateFcn(hObject, eventdata, handles)
@@ -674,11 +654,6 @@ function param32_Callback(hObject, eventdata, handles)
   
   guidata(hObject, handles);
 
-
-% Hints: contents = get(hObject,'String') returns param32 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from param32
-
-
 % --- Executes during object creation, after setting all properties.
 function param32_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to param32 (see GCBO)
@@ -690,7 +665,6 @@ function param32_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 % --- Executes on selection change in param13.
 function param13_Callback(hObject, eventdata, handles)
@@ -717,10 +691,6 @@ handles.current_plot{1} = new_plot;
 
 guidata(hObject, handles);
 
-% Hints: contents = get(hObject,'String') returns param13 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from param13
-
-
 % --- Executes during object creation, after setting all properties.
 function param13_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to param13 (see GCBO)
@@ -732,7 +702,6 @@ function param13_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 % --- Executes on selection change in param23.
 function param23_Callback(hObject, eventdata, handles)
@@ -759,10 +728,6 @@ function param23_Callback(hObject, eventdata, handles)
   handles.current_plot{2} = new_plot;
   guidata(hObject, handles);
 
-% Hints: contents = get(hObject,'String') returns param23 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from param23
-
-
 % --- Executes during object creation, after setting all properties.
 function param23_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to param23 (see GCBO)
@@ -774,7 +739,6 @@ function param23_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 % --- Executes on selection change in param33.
 function param33_Callback(hObject, eventdata, handles)
@@ -801,10 +765,6 @@ function param33_Callback(hObject, eventdata, handles)
   handles.current_plot{3} = new_plot;
   guidata(hObject, handles);
 
-% Hints: contents = get(hObject,'String') returns param33 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from param33
-
-
 % --- Executes during object creation, after setting all properties.
 function param33_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to param33 (see GCBO)
@@ -816,7 +776,6 @@ function param33_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 % --- Executes on button press in export_button1.
 function export_button1_Callback(hObject, eventdata, handles)
@@ -857,8 +816,7 @@ function export_button1_Callback(hObject, eventdata, handles)
   handles.current_plot{nb_ax} = new_plot; 
   grid on;
   guidata(hObject,handles);
-
-  
+ 
 % --- Executes on button press in export_button2.
 function export_button2_Callback(hObject, eventdata, handles)
 % hObject    handle to export_button2 (see GCBO)
@@ -985,15 +943,6 @@ function edit_change_param_Callback(hObject, eventdata, handles)
       end  
       
     end
- % catch
- %   s = lasterror;
- %   warndlg(['Problem edit_change_param: ' s.message] );
- %   return
- % end
-
-  
-% Hints: get(hObject,'String') returns contents of edit_change_param as text
-%        str2double(get(hObject,'String')) returns contents of edit_change_param as a double
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1056,7 +1005,6 @@ function button_save_all_Callback(hObject, eventdata, handles)
   end
 
   
-  
 function edit_change_tspan_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_change_tspan (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -1077,10 +1025,6 @@ function edit_change_tspan_Callback(hObject, eventdata, handles)
     error(s);
     return
   end
-
-  
-% Hints: get(hObject,'String') returns contents of edit_change_tspan as text
-%        str2double(get(hObject,'String')) returns contents of edit_change_tspan as a double
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1118,11 +1062,6 @@ function plot_pts_checkbox_Callback(hObject, eventdata, handles)
   end
   
   guidata(hObject,handles);
-  
-% Hint: get(hObject,'Value') returns toggle state of plot_pts_checkbox
-
-
-
 
 % --- Executes on button press in for_all_checkbox.
 function for_all_checkbox_Callback(hObject, eventdata, handles)
@@ -1133,108 +1072,6 @@ function for_all_checkbox_Callback(hObject, eventdata, handles)
   handles.change_tspan_for_all  = get(hObject,'Value');
   guidata(hObject, handles);
   
-% Hint: get(hObject,'Value') returns toggle state of for_all_checkbox
-
-
-% --- Executes on button press in sensibutton1.
-function sensibutton1_Callback(hObject, eventdata, handles)
-% hObject    handle to sensibutton1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-val = get(hObject,'Value');
-handles.plot_sensi(1) = val;
-if (val)
-  set(handles.param12,'String',{'' handles.param_list{:}});
-  set(handles.param12,'Value',1);
-  set(handles.param13,'String',{'' handles.param_list{:}});
-  set(handles.param13,'Value',1);
-  handles.current_sensi{1,2} = '';
-  handles.current_sensi{1,3} = '';
-else
-  set(handles.param12,'String',{'' handles.var_list{:}});
-  set(handles.param12,'Value',1);
-  set(handles.param13,'String',{'' handles.var_list{:}});
-  set(handles.param13,'Value',1);
-  handles.current_var{1,2} = '';
-  handles.current_var{1,3} = '';
-end
-
-new_plot = plot_param(handles,1);
-handles.current_plot{1} = new_plot;
-
-guidata(hObject,handles);
-
-% Hint: get(hObject,'Value') returns toggle state of sensibutton1
-
-
-% --- Executes on button press in sensi_button2.
-function sensi_button2_Callback(hObject, eventdata, handles)
-% hObject    handle to sensi_button2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-  val = get(hObject,'Value');
-  handles.plot_sensi(2) = val;
-  if (val)
-    set(handles.param22,'String',{'' handles.param_list{:}});
-    set(handles.param22,'Value',1);
-    set(handles.param23,'String',{'' handles.param_list{:}});
-    set(handles.param23,'Value',1);
-    handles.current_sensi{2,2} = '';
-    handles.current_sensi{2,3} = '';
-  else
-    set(handles.param22,'String',{'' handles.var_list{:}});
-    set(handles.param22,'Value',1);
-    set(handles.param23,'String',{'' handles.var_list{:}});
-    set(handles.param23,'Value',1);
-    handles.current_var{2,2} = '';
-    handles.current_var{2,3} = '';
-    
-  end
-
-  new_plot = plot_param(handles,2);
-  handles.current_plot{2} = new_plot;
-
-  guidata(hObject,handles);
-
-  
-% Hint: get(hObject,'Value') returns toggle state of sensi_button2
-
-
-% --- Executes on button press in sensi_button3.
-function sensi_button3_Callback(hObject, eventdata, handles)
-% hObject    handle to sensi_button3 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-  
-  val = get(hObject,'Value');
-  handles.plot_sensi(3) = val;
-  if (val)    
-    set(handles.param32,'String',{'' handles.param_list{:}});
-    set(handles.param32,'Value',1);
-    set(handles.param33,'String',{'' handles.param_list{:}});
-    set(handles.param33,'Value',1);
-    handles.current_sensi{3,2} = '';
-    handles.current_sensi{3,3} = '';
-  else
-    set(handles.param32,'String',{'' handles.var_list{:}});
-    set(handles.param32,'Value',1);
-    set(handles.param33,'String',{'' handles.var_list{:}});
-    set(handles.param33,'Value',1);
-    handles.current_var{3,2} = '';
-    handles.current_var{3,3} = '';
-  
-  end
-  
-  new_plot = plot_param(handles,3);
-  handles.current_plot{3} = new_plot;
-  
-  guidata(hObject,handles);
-
-  % Hint: get(hObject,'Value') returns toggle state of sensi_button3
-
-
 % --- Executes on button press in recompute_auto.
 function recompute_auto_Callback(hObject, eventdata, handles)
 % hObject    handle to recompute_auto (see GCBO)
@@ -1242,7 +1079,6 @@ function recompute_auto_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
   handles.auto_recompute = get(hObject,'Value');
   guidata(hObject,handles);
-
 
 
 % --- Executes on selection change in popup_pts1.
@@ -1257,9 +1093,6 @@ function popup_pts1_Callback(hObject, eventdata, handles)
   handles=  plot_pts(handles);
   
   guidata(hObject, handles);
-  
-% Hints: contents = get(hObject,'String') returns popup_pts1 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popup_pts1
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1293,10 +1126,6 @@ function popup_pts2_Callback(hObject, eventdata, handles)
   guidata(hObject, handles);
 
   
-% Hints: contents = get(hObject,'String') returns popup_pts2 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popup_pts2
-
-
 % --- Executes during object creation, after setting all properties.
 function popup_pts2_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to popup_pts2 (see GCBO)
@@ -1322,9 +1151,6 @@ function popup_pts3_Callback(hObject, eventdata, handles)
   handles=  plot_pts(handles);
   
   guidata(hObject, handles);
-
-% Hints: contents = get(hObject,'String') returns popup_pts3 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popup_pts3
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1377,7 +1203,6 @@ function handles = init_pts_figure(handles)
   handles.pts_axes = gca;
   handles.pts_figure = h;
   
-
 function handles= plot_pts(handles)
    
   if (get(handles.plot_pts_checkbox,'Value'))  
@@ -1406,7 +1231,6 @@ function handles= plot_pts(handles)
     SplotBoxPts(handles.TrajSet, param_to_plot,handles.current_pts,'+k','r',.1);
   
   end
-
 
 function new_plot= plot_param(handles,ax)
   
@@ -1613,9 +1437,7 @@ function new_plot= plot_param(handles,ax)
       end
     end % if (handles.plot_sensi(ax))
   end % if (nprop) 
-
-  
-  
+    
 function handles= plot_tout(handles)
    
   if (~isfield(handles.TrajSet,'traj'))
@@ -1713,7 +1535,6 @@ function handles= plot_tout(handles)
     end         
 end
 
-
 % --- Executes on slider movement.
 function slider_param_Callback(hObject, eventdata, handles)
 % hObject    handle to slider_param (see GCBO)
@@ -1724,11 +1545,6 @@ function slider_param_Callback(hObject, eventdata, handles)
     handles = update_listbox_param(handles,1);
     guidata(hObject,handles);
   
-  
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-
-
 % --- Executes during object creation, after setting all properties.
 function slider_param_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to slider_param (see GCBO)
@@ -1779,9 +1595,6 @@ function edit_max_slider_param_Callback(hObject, eventdata, handles)
     error(s);
     return
   end
-% Hints: get(hObject,'String') returns contents of edit_max_slider_param as text
-%        str2double(get(hObject,'String')) returns contents of edit_max_slider_param as a double
-
 
 % --- Executes during object creation, after setting all properties.
 function edit_max_slider_param_CreateFcn(hObject, eventdata, handles)
@@ -1832,10 +1645,6 @@ function edit_min_slider_param_Callback(hObject, eventdata, handles)
     return
   end
    
-  
-% Hints: get(hObject,'String') returns contents of edit_min_slider_param as text
-%        str2double(get(hObject,'String')) returns contents of edit_min_slider_param as a double
-
 
 % --- Executes during object creation, after setting all properties.
 function edit_min_slider_param_CreateFcn(hObject, eventdata, handles)
@@ -2048,8 +1857,7 @@ function i = find_prop(st, props_names)
       return;
     end    
   end  
-  
-  
+    
 function expr = evalin_caller(n,expr) 
  
   for i=0:n

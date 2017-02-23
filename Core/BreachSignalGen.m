@@ -34,15 +34,16 @@ classdef BreachSignalGen < BreachSystem
                signalGenerators = {signalGenerators}; 
             end
             
-            this.signalGenerators= signalGenerators;
-            % we need to declare parameters, signals, p0, and simfn
+            % we need to declare parameters, signals, p0, and simfn           
+            this.InitSignalGen(signalGenerators);
             
+        end
+        
+        function InitSignalGen(this, signalGenerators)
+            this.signalGenerators = signalGenerators;
             signals ={}; 
             params = {};
             p0=[];
-            if ~iscell(signalGenerators)
-               signalGenerators= {signalGenerators};    
-            end
             for isg = 1:numel(signalGenerators)
                 signals = {signals{:}, signalGenerators{isg}.signals{:}};
                 params = {params{:}, signalGenerators{isg}.params{:}}; 
@@ -63,8 +64,9 @@ classdef BreachSignalGen < BreachSystem
                 this.ParamRanges = [this.Sys.p(this.Sys.DimX+1:end) this.Sys.p(this.Sys.DimX+1:end)];
                 this.SignalRanges = [];
             end
+            
+            
         end
-        
         
         function [tspan, X] = breachSimWrapper(this, Sys, tspan, p)
             
