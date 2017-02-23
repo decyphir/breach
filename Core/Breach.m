@@ -1,5 +1,5 @@
 function gui = Breach(Sys, P, spec)
-% BREACH  Launches Breach main GUI.
+% BREACH  Launches Breach main GUI. NOW OFFICIALLY BROKEN 
 %
 %   Usage: Breach([Sys, P, spec_file]) or Breach([spec_file, P])
 %
@@ -30,11 +30,7 @@ dr = pwd;
 indst = strfind(dr, filesep);
 SysName = dr(indst(end)+1:end);
 
-% if no BreachSystem is given, create one.
-
-
 if (exist('Sys'))
-    
     % if Sys is a string, try see if it's a Simulink model
     if ischar(Sys)
         try % is this a simulink model?
