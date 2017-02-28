@@ -29,6 +29,8 @@ classdef BreachSet < BreachStatus
         P % legacy parameter structure - contains points data (in P.pts) and traces (P.traj) and many other fields whose purpose is slowly falling into oblivion
         ParamDomain = BreachDomain('double', [])
         % will replace ParamRanges eventually 
+        SignalDomain = BreachDomain('double', [])
+        % will replace SignalRanges eventually 
         ParamRanges  % ranges of possible values for each parameter - determines the parameter sampling domain
         SignalRanges % ranges of values taken by each signal variable
         AppendWhenSample=false % when true, sampling appends new param vectors, otherwise replace.
@@ -43,6 +45,7 @@ classdef BreachSet < BreachStatus
         function SetP(this, P)
             % Get the legacy parameter set structure
             this.P = P;
+            this.CheckinDomain();
         end
     end
     
@@ -75,6 +78,7 @@ classdef BreachSet < BreachStatus
         end
         
         function dom = GetDomain(this, param)
+        % Enforce pts and traj to be in domains, in particular integer
             [idx, found] = FindParam(this.P, param);
                if any(found==0)
                    error('Parameter or signal not found.');
@@ -83,23 +87,43 @@ classdef BreachSet < BreachStatus
         end
         
         function CheckinDomain(this)
-            % Enforce pts to be in domains, in particular integer
+            this.CheckinDomainParam();
+            this.CheckinDomainTraj();
+        end
+        
+        function CheckinDomainParam(this)
             pts = this.P.pts;
             
             % If domain not defined, here is the place to do it
             if numel(this.ParamDomain)<size(pts, 1)
                 diff_size = size(pts,1)-numel(this.ParamDomain);
                 new_domains = repmat(BreachDomain(), 1, diff_size);
-                 this.ParamDomain = [this.ParamDomain new_domains];
+                this.ParamDomain = [this.ParamDomain new_domains];
             end
             
             % TODO? warning when out of domain 
-            for  i =1:size(pts,1)
-                this.P.pts(i,:) = this.ParamDomain(i).checkin(pts(i,:));
+            for  i =this.P.DimX+1:size(pts,1)
+                if ~isempty(this.ParamDomain(i).domain)
+                    this.P.pts(i,:) = this.ParamDomain(i).checkin(pts(i,:));
+                end
             end
+            
         end
-     
-        function SampleAll(this, param) 
+         
+        function CheckinDomainTraj(this)
+            % checks trajectories
+            if this.hasTraj()
+                for itraj = 1:numel(this.P.traj)
+                    for  i=1:this.P.DimX
+                        if ~isempty(this.ParamDomain(i).domain)
+                            this.P.traj(itraj).X(i,:) = this.ParamDomain(i).checkin(this.P.traj(itraj).X(i,:));
+                        end
+                    end
+                end
+            end        
+        end
+        
+        function SampleAll(this, param)
             % returns all values when possible (type == int and bounded
             % domain
             idx = FindParam(this.P, param);
@@ -107,7 +131,7 @@ classdef BreachSet < BreachStatus
             if ~isempty(all)
                 this.SetParam(param, all);
             else
-                warning(['Domain is non empty']) 
+                warning(['Domain is empty.']) 
             end
         end
         %%  Param
@@ -157,6 +181,7 @@ classdef BreachSet < BreachStatus
                 this.P = CreateParamSet(this.P, this.P.ParamList(ipr+this.P.DimX),ranges);
             end
         end
+        
         
         %% Get and Set param ranges
         function SetParamRanges(this, params, ranges)
@@ -229,7 +254,7 @@ classdef BreachSet < BreachStatus
             epsis(this.P.dim,:) = this.P.epsi;
             minP = min(this.P.pts-epsis, [], 2);
             maxP = max(this.P.pts+epsis, [], 2);
-            this.ParamRanges(i_params-this.Sys.DimX,:) = [minP(i_params,:), maxP(i_params,:)];
+            this.ParamRanges(i_params-this.P.DimX,:) = [minP(i_params,:), maxP(i_params,:)];
             
         end
         
@@ -333,6 +358,7 @@ classdef BreachSet < BreachStatus
             
             figure;
             h = SplotVar(this.P, varargin{:});
+            
         end
         
         function h = PlotSigPortrait(this, varargin)
@@ -409,6 +435,47 @@ classdef BreachSet < BreachStatus
             SplotPts(P, varargin{:});
         end
         
+        %% Coverage
+                
+        function [cnt, grd1, grd2] = GetSignalCoverage(this,sigs, delta1,delta2)
+        % 1d or 2d
+         X = this.GetSignalValues(sigs);
+         
+         switch (numel(sigs))
+             case 1
+                 [cnt, grd1] = cover(X,delta1);
+             case 2
+                 [cnt, grd1, grd2] = cover2d(X,delta1,delta2);
+             otherwise
+                 error('Coverage for more than 2 signals is not supported'); 
+         end
+        end
+
+        function [cnt, grd1, grd2] = PlotSignalCoverage(this,sigs, delta1,delta2)
+        % 1d or 2d 
+         X = this.GetSignalValues(sigs);         
+         switch (numel(sigs))
+             case 1
+                 [cnt, grd1] = cover(X,delta1);
+                 figure; 
+                 plot(grd1, cnt);
+                 
+             case 2
+                 [cnt, grd1, grd2] = cover2d(X,delta1,delta2);
+                 figure;
+                 surface(grd2, grd1, cnt);
+                 xlabel(sigs{2});
+                 ylabel(sigs{1});
+                 colormap(jet);
+                 colorbar;
+                 title('num. samples per grid element')
+             otherwise
+                 error('Coverage for more than 2 signals is not supported'); 
+         end
+        end
+
+        
+        
         %% Printing
         function PrintSignals(this)
             if isempty(this.SignalRanges)
@@ -419,8 +486,7 @@ classdef BreachSet < BreachStatus
                 end
             else
                 
-                fprintf('Signals (in range estimated over %d simulations):\n', numel(this.P.traj))
-                disp('-------')
+                   disp('-------')
                 for isig = 1:this.P.DimX
                     fprintf('%s in  [%g, %g]\n', this.P.ParamList{isig}, this.SignalRanges(isig,1),this.SignalRanges(isig,2));
                 end
@@ -467,7 +533,11 @@ classdef BreachSet < BreachStatus
             end
         end
         
-   
+        function bl = hasTraj(this)
+        % checks if this has traces    
+            bl=isfield(this.P, 'traj');
+        end
+        
         function Reset(this)
             % Resets the system to nominal parameters
             this.P = CreateParamSet(this.Sys);

@@ -4,7 +4,7 @@ classdef from_file_pattern_signal_gen < signal_gen
         data_fmt = 'timed_variables' % other could be 'timed_array', 'struct_with_time', etc
     end
     methods
-        function this = from_file_pattern_signal_gen(fname, signals)
+        function this = from_file_pattern_signal_gen(signals,fname)
             this.signals =signals;
             [this.params,this.p0, this.pattern] = guess_filename_params(fname);           
         end
@@ -13,7 +13,7 @@ classdef from_file_pattern_signal_gen < signal_gen
             fname = sprintf(this.pattern,p);
             X = zeros(numel(this.signals), numel(time));
             try 
-            st = load(fname);
+                st = load(fname);
             catch
                 warning(['Could not read file ' fname '. Returning NaN trace.'] )
                 X(:,:) = NaN;

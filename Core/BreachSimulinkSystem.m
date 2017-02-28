@@ -126,6 +126,10 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             try
                 t_step= str2num(cs.get_param('FixedStep'));
             catch % default fixed step is t_end/1000, unless MaxStep is set smaller
+                t_step=[];
+            end
+
+            if isempty(t_step) % makes it some default
                 t_step= t_end/1000;
                 try
                     maxstep = cs.get_param('MaxStep');
@@ -133,7 +137,6 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 catch
                 end
             end
-            
             cs.set_param('StartTime', '0.0');   % Start time
             cs.set_param('StopTime', 'tspan(end)');   % Stop time
             cs.set_param('SaveTime', 'on');   % Time
@@ -157,6 +160,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             %% Find and log input signals
             in_blks = find_system(mdl_breach,'SearchDepth',1, 'BlockType', 'Inport');
             nb_inputs= numel(in_blks);
+            
             sig_in = cell(1, nb_inputs);
             
             for iblk = 1:nb_inputs
@@ -288,20 +292,26 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             exclude = {'tspan','u__','t__'};
             assignin('base','tspan', 0:1);
             
-            if ~exist('params','var')
+            if ~exist('params','var')||(exist('params','var')&&isequal(params, 'all'))  
                 [params, p0] = filter_vars(mdl_breach, exclude);
-            elseif strcmp(params, 'all')
-                [params, p0] = filter_vars(mdl_breach, exclude);
+                % adds in signal_builder params
+                params = [params sig_build_params];
+                p0 = [p0 sig_build_p0];
             elseif ~isempty(params)&&isempty(p0)
-                p0 = zeros(1,numel(params));
+                p0 = zeros(1,numel(params));                
+                
                 for ip = 1:numel(params)
-                   p0(ip) = evalin('base',params{ip}); 
+                    % need to check for sig_builder params
+                    idbp = strcmp(params{ip}, sig_build_params);
+                    if ~isempty(idbp)
+                        p0(ip) = 1; % default value for signal builder parameter (group idx)
+                    else
+                        p0(ip) = evalin('base',params{ip});
+                    end
                 end
+               
             end
             
-            % adds in signal_builder params
-            params = [params sig_build_params];
-            p0 = [p0 sig_build_p0];
             if ~exist('p0', 'var')||isempty(p0)
                 p0 = zeros(1,numel(params));
             end

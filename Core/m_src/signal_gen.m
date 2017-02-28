@@ -16,6 +16,7 @@ classdef signal_gen <handle
         signals % names of the signals it generates
         params  % parameters such as control points, etc
         p0      % default values
+        domain
     end
     
     

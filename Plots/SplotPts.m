@@ -106,12 +106,13 @@ switch (numel(proj))
         else
             xlabel(['x_' num2str(proj(1))],'Interpreter','tex');
         end
-        
+        ylabel('');
         x = P.pts(proj(1),ipts)*rescale;
         plot(x,0*x,opt.plot_opt{:});
         
     case {2}
         hold on;
+        grid on;
         if isfield(P,'ParamList')
             xlabel(P.ParamList{proj(1)},'Interpreter','none');
             ylabel(P.ParamList{proj(2)},'Interpreter','none');
@@ -126,6 +127,7 @@ switch (numel(proj))
         
     otherwise
         hold on;
+        grid on;
         if isfield(P,'ParamList')
             xlabel(P.ParamList{proj(1)},'Interpreter','none');
             ylabel(P.ParamList{proj(2)},'Interpreter','none');

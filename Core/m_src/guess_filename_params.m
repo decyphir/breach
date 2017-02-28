@@ -2,7 +2,7 @@ function [params, values,pattern] = guess_filename_params(fname)
 % guess_filename_params supports format
 % dataname_[firstparam][val]_[secondparam][val]_[etc].[ext]
 
-[~,name,ext] = fileparts(fname);
+[fpath,name,ext] = fileparts(fname);
 
 params = {};
 values=[];
@@ -21,5 +21,5 @@ for ip = 2:numel(plist)
     end
     pattern= [pattern '_' tok{1}{1} '%d'];
 end
-pattern = [pattern ext];
+pattern = [fpath '/' pattern ext];
 end

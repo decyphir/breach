@@ -106,8 +106,6 @@ switch numel(varargin)
         if(numel(varargin)==1 && ischar(st))
             st = regexprep(st,'eventually', 'ev');
             st = regexprep(st,'always','alw');
-%            st = regexprep(st,'<=', '<');
-%            st = regexprep(st,'>=', '>');
             % deals with true and false
             st = regexprep(st, 'true', 'inf>0');
             st = regexprep(st, 'false', 'inf<0');

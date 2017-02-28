@@ -22,8 +22,10 @@ niou_sigs = select_cell_gui(signals, 'Select signals from list');
 assignin('base','sigs__', niou_sigs);
 
 params = B.GetParamsSysList();
-niou_params = select_cell_gui(params, 'Select parameters from list');
-assignin('base','params__', niou_params);
-evalin('base', ['B=BreachSimulinkSystem(''' Name ''', params__,[],sigs__);']);
-evalin('base', 'B.RunGUI');
+if ~isempty(params)
+    params = select_cell_gui(params, 'Select parameters from list');
+end
+    assignin('base','params__', params);
+    evalin('base', ['B=BreachSimulinkSystem(''' Name ''', params__,[],sigs__);']);
+    evalin('base', 'B.RunGUI');
 end

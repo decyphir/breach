@@ -146,7 +146,7 @@ classdef BreachSystem < BreachSet
            this.AddSpec(varargin{:});
         end
   
-        function val = CheckSpec(this, spec)
+        function val = CheckSpec(this, spec,t_spec)
             if ~exist('spec','var')
                 spec = this.Specs.values;
                 spec = spec{1};
@@ -160,7 +160,11 @@ classdef BreachSystem < BreachSet
                 end
             end
             
-            if isfield(this.P, 'props_names')               
+            if ~exist('t_spec', 'var')
+               t_spec= 0; 
+            end
+            
+            if isfield(this.P, 'props_names')&&(nargin<=2)               
                 iprop = find(strcmp(get_id(spec), this.P.props_names));
             else
                 iprop = 0;
@@ -168,7 +172,7 @@ classdef BreachSystem < BreachSet
             if iprop
                 val = cat(1, this.P.props_values(iprop,:).val);
             else
-                [this.P, val] = SEvalProp(this.Sys,this.P,spec);
+                [this.P, val] = SEvalProp(this.Sys,this.P,spec,  t_spec);
                 this.addStatus(0, 'spec_evaluated', 'A specification has been evaluated.')
             end
         end
@@ -217,11 +221,17 @@ classdef BreachSystem < BreachSet
                 values = [];
             end
             
-            if ischar(phi)
-                this__phi__ = STL_Formula('this__phi__', phi);
-            else
-                this__phi__ = phi;
+            if nargin==3
+              t_phi = params;
+              params = {};
+              values = [];
             end
+            
+            %if ischar(phi)
+            %    this__phi__ = STL_Formula('this__phi__', phi);
+            %else
+            %    this__phi__ = phi;
+            %end
             
             if ~isempty(params)
                 this.P = SetParam(this.P, params, values);
@@ -235,7 +245,7 @@ classdef BreachSystem < BreachSet
                 rob = t_phi;
                 rob(:) = NaN;
             else
-            [rob, tau] = STL_Eval(this.Sys, this__phi__, this.P, this.P.traj,t_phi);
+            [rob, tau] = STL_Eval(this.Sys, phi, this.P, this.P.traj,t_phi);
             end
         end
         
@@ -354,10 +364,9 @@ classdef BreachSystem < BreachSet
                 [X, t] = STL_Eval(this.Sys, expr_tmp_, this.P, this.P.traj, this.P.traj(1).time);
             end
         end
-
+a
         
-        
-        
+        exp       
         %% Sensitivity analysis
         function [mu, mustar, sigma] = SensiSpec(this, phi, params, ranges, opt)
             % SensiSpec Sensitivity analysis of a formula to a set of parameters
@@ -430,8 +439,6 @@ classdef BreachSystem < BreachSet
         function RunGUI(this)
             P.P = this.P;
             phis=  this.Specs.keys;
-            
-            Psave(this.Sys, 'Pthis', this.P);
             if (~isempty(phis))
                 Propsave(this.Sys, phis{:});
             end

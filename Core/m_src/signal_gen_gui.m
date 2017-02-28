@@ -76,6 +76,7 @@ signal_types= {
  'fixed_cp_signal_gen',...
  'var_cp_signal_gen',...
  'pulse_signal_gen',...
+ 'random_signal_gen',...
  };
 set(handles.popupmenu_signal_gen_type, 'String', signal_types);
 
@@ -354,8 +355,8 @@ sgs = handles.signal_gen_map.values;
 handles.output.InitSignalGen(sgs);
 if ~isempty(handles.B)
     handles.B.SetInputGen(handles.output);
+    handles.B.RunGUI;
 end
-handles.B.RunGUI;
 close(handles.main);
 
 
@@ -414,7 +415,7 @@ sg = handles.signal_gen_map(sig_name);
 % compute and plot signal
 X = sg.computeSignals(sg.p0, handles.time);
 plot(handles.time, X );        
-title(sig_name);    
+title(sig_name, 'Interpreter', 'None');    
 grid on;
 set(gca, 'FontSize',8)
 

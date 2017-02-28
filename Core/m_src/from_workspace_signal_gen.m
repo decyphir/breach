@@ -1,4 +1,5 @@
 classdef from_workspace_signal_gen < signal_gen
+% from_workspace_signal_gen meant to be used with a From Workspace block.
     properties
         data_fmt = 'timed_variables' 
         org_signals 

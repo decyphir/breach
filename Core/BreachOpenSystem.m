@@ -187,9 +187,14 @@ classdef BreachOpenSystem < BreachSystem
         
         function [params, idx] = GetParamsSysList(this)
             idx_inputs = this.GetParamsInputIdx();
-            idx = this.Sys.DimX+1:idx_inputs(1)-1;
+            if isempty(idx_inputs)
+                idx = this.Sys.DimX+1:this.Sys.DimP;
+            else
+                idx = this.Sys.DimX+1:idx_inputs(1)-1;                
+            end
             params = this.Sys.ParamList(idx);
         end
+        
         
         function idx = GetParamsInputIdx(this)
             if isempty(this.InputGenerator)

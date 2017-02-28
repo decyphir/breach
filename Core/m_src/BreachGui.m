@@ -22,7 +22,7 @@ function varargout = BreachGui(varargin)
 
 % Edit the above text to modify the response to help BreachGui
 
-% Last Modified by GUIDE v2.5 22-Feb-2017 23:18:47
+% Last Modified by GUIDE v2.5 26-Feb-2017 22:40:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -68,8 +68,11 @@ Sys = Br.Sys;
 SysName = Sys.name;
 handles.Sys=Sys;
 
-set(handles.checkbox_input_only,'Value',handles.BrSys.SimInputsOnly);
-
+if isfield(handles.BrSys,  'SimInputsOnly')
+    set(handles.checkbox_input_only,'Value',handles.BrSys.SimInputsOnly);
+%else
+%    set(handles.checkbox_input_only,'Visible','off');
+end
 handles.system_name_file = [ SysName '.mat' ];
 if (isfield(Sys,'tspan'))
     if isscalar(Sys.tspan)
@@ -93,7 +96,6 @@ handles = update_system_panel(handles);
 handles.figp=[];
 
 %% Init working sets panel
-
 handles.working_sets_file_name = [Sys.Dir filesep SysName, '_param_sets.mat'];
 try
     handles.working_sets = load(handles.working_sets_file_name);
@@ -104,8 +106,10 @@ catch
 end
 
 fnames = fieldnames(handles.working_sets);
-handles.current_set = fnames{1};
-set(handles.working_sets_listbox, 'Value', 1);
+handles.current_set = 'Pthis';
+handles.working_sets.Pthis = Br.P;
+ithis = find(strcmp('Pthis', fnames));
+set(handles.working_sets_listbox, 'Value', ithis);
 set(handles.autosave_checkbox, 'Value', 1);
 
 P = handles.working_sets.(handles.current_set);
@@ -358,8 +362,6 @@ function button_compute_traj_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
-% try
 tspan = inputdlg('Enter tspan (Format: [ti tf] or [t0 t1 t2 ... tn] or ti:dt:tf)','Compute trajectories', 1, {handles.last_tspan});
 if isempty(tspan)
     return;
@@ -367,13 +369,7 @@ end
 handles.last_tspan = tspan{1};
 tspan = eval(tspan{1});
 
-if (exist([pwd filesep 'cvm'])~=3)
-    if (~isfield(handles.Sys,'type'))
-        CompileSystem(handles.Sys);
-    end
-end
 handles= info(handles,'Computing trajectories...');
-%handles.working_sets.(handles.current_set) = ComputeTraj(handles.Sys, handles.working_sets.(handles.current_set), tspan);
 handles.BrSys.SetP(handles.working_sets.(handles.current_set));
 handles.BrSys.Sim(tspan);
 handles.working_sets.(handles.current_set) = handles.BrSys.P;
@@ -405,7 +401,7 @@ handles.selected_varying_param = max(1,handles.selected_varying_param-1);
 set(handles.listbox_varying_parameters, 'Value', handles.selected_varying_param);
 P.dim = P.dim([1:ind-1 ind+1:end]);
 P.epsi = P.epsi([1:ind-1 ind+1:end],:);
-handles.working_sets.(handles.current_set) =P;
+handles.working_sets.(handles.current_set)=P;
 
 % --- Executes during object creation, after setting all properties.
 function edit_tspan_CreateFcn(hObject, eventdata, handles)
@@ -471,14 +467,11 @@ if ~any(handles.working_sets.(handles.current_set).dim==ii)
     end
     
     handles = update_modif_panel(handles);
-    handles = update_properties_panel(handles);
-    
+    handles = update_properties_panel(handles);   
     guidata(hObject,handles);
     
 else
-    
-    handles = info(handles, 'To change this value, use Modif current subset');
-    
+    handles = info(handles, 'To change this value, use Modif current sample');
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -577,7 +570,6 @@ handles.working_sets.(handles.current_set).pts(ipts,handles.current_pts) = val;
 handles = update_modif_panel(handles);
 guidata(hObject,handles);
 
-
 % --- Executes during object creation, after setting all properties.
 function edit_value_pts_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to edit_value_pts (see GCBO)
@@ -589,7 +581,6 @@ function edit_value_pts_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 % --- Executes on button press in button_new_set.
 function button_new_set_Callback(hObject, eventdata, handles)
@@ -632,9 +623,7 @@ function menu_load_working_set_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
 [FileName,PathName] = uigetfile('*.mat','Load Parameter Set...');
-
 if(FileName==0)
     return;
 end
@@ -706,7 +695,6 @@ function edit_rename_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-try
     new_name= get(hObject,'String');
     if (isfield(handles.working_sets,new_name))
         return
@@ -719,13 +707,6 @@ try
     handles = update_modif_panel(handles);
     handles= update_properties_panel(handles);
     guidata(hObject, handles);
-    
-catch
-    s = lasterror;
-    warndlg(['Problem renaming: ' s.message] );
-    error(s);
-    return
-end
 
 % --- Executes during object creation, after setting all properties.
 function edit_rename_CreateFcn(hObject, eventdata, handles)
@@ -891,7 +872,7 @@ try
     guidata(hObject,handles);
 end
 
-% --- Executes on button press in checkbox_refine_all.
+% FIXME copy this in checkbox_sample_locally? --- Executes on button press in checkbox_refine_all.
 function checkbox_refine_all_Callback(hObject, eventdata, handles)
 % hObject    handle to checkbox_refine_all (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -967,9 +948,8 @@ prompt = {'Enter tspan for trajectory computation (empty = existing traj), ',...
 opt.tspan_traj= [];
 opt.tspan_prop_eval = [];
 
-[opt, handles.check_prop_options] = structdlg(opt,title,prompt, handles.check_prop_options);
-
-handles.check_prop_options = {handles.check_prop_options{:} '1'};
+%[opt, handles.check_prop_options] = structdlg(opt,title,prompt, handles.check_prop_options);
+%handles.check_prop_options = {handles.check_prop_options{:} '1'};
 if isempty(opt)
     return;
 end
@@ -1046,22 +1026,9 @@ save(handles.properties_file_name, '-append', get_id(PHI));
 handles = update_properties_panel(handles);
 guidata(hObject, handles);
 
-% --- Executes on button press in button_reload.
-function button_reload_Callback(hObject, eventdata, handles)
-% hObject    handle to button_reload (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-handles.working_sets = load(handles.working_sets_file_name);
-handles.properties = load(handles.properties_file_name);
-handles = update_working_sets_panel(handles);
-handles = update_properties_panel(handles);
-handles = update_modif_panel(handles);
-
-guidata(hObject, handles);
-
 function handles = update_working_sets_panel(handles)
 
+%% Set title
 k = strfind(handles.working_sets_file_name,filesep);
 if ~isempty(k)
     str_name = handles.working_sets_file_name(k(end)+1:end);
@@ -1073,17 +1040,17 @@ if(numel(str_name)>35)
     str_name = [str_name(1:26) '...' str_name(end-5:end)];
 end
 set(handles.working_sets_panel,'Title',str_name );
-fn = fieldnames(handles.working_sets);
 
+%% Filter out invalid entries     
+fn = fieldnames(handles.working_sets);
 for ii=1:numel(fn)
-    % check if field is indeed a param set
     if ~isfield(handles.working_sets.(fn{ii}),'pts')
         handles.working_sets = rmfield(handles.working_sets, fn{ii});
     end
 end
-
 fn = fieldnames(handles.working_sets);
 
+%% 
 for ii=1:numel(fn)
     pref = '';
     if(handles.working_sets.(fn{ii}).DimP ~= handles.Sys.DimP)
@@ -1106,6 +1073,8 @@ end
 
 set(handles.working_sets_listbox,'String', fn);
 set(handles.edit_rename,'String',handles.current_set);
+handles.BrSys.SetP(handles.working_sets.(handles.current_set)); 
+
 if get(handles.autosave_checkbox, 'Value')
     handles = info(handles, 'Autosaving parameter sets...');
     ws = handles.working_sets; %#ok<NASGU>
@@ -1147,14 +1116,19 @@ set(handles.listbox_prop,'String', content);
 
 function handles = update_modif_panel(handles)
 
-% parameters listbox
-nb_pts = size(handles.working_sets.(handles.current_set).pts,2);
-DimX = handles.working_sets.(handles.current_set).DimX;
-DimP = handles.working_sets.(handles.current_set).DimP;
-ParamList = handles.working_sets.(handles.current_set).ParamList;
-dim = handles.working_sets.(handles.current_set).dim;
+%% parameters listbox
 
-if ~isfield(handles.working_sets.(handles.current_set), 'selected')
+if ~isfield(handles.working_sets.(handles.current_set),'selected')
+    handles.working_sets.(handles.current_set).selected=zeros(1,nb_pts);
+end
+handles.BrSys.SetP(handles.working_sets.(handles.current_set));
+nb_pts = size(handles.BrSys.P.pts,2);
+DimX = handles.BrSys.P.DimX;
+DimP = handles.BrSys.P.DimP;
+ParamList = handles.BrSys.P.ParamList;
+dim = handles.BrSys.P.dim;
+
+if ~isfield(handles.BrSys.P, 'selected')
     val = get(handles.working_sets_listbox, 'Value');
     names = fieldnames(handles.working_sets);
     set_name = names{val};
@@ -1175,17 +1149,17 @@ for i=1:DimX
             case {'Simulink'}
                 st = strcat(st, ':','--');
             case {'Breach', 'Extern'}
-                st = strcat(st, '[0]:',' ',dbl2str(handles.working_sets.(handles.current_set).pts(i,k)));
+                st = strcat(st, '[0]:',' ',dbl2str(handles.BrSys.P.pts(i,k)));
         end
     else
-        st = strcat(st, '[0]:',' ',dbl2str(handles.working_sets.(handles.current_set).pts(i,k)));
+        st = strcat(st, '[0]:',' ',dbl2str(handles.BrSys.P.pts(i,k)));
     end
     content = {content{:} st};
     
 end
 for i=DimX+1:numel(ParamList)
     st = ParamList{i};
-    st = strcat(st, ':',' ',dbl2str(handles.working_sets.(handles.current_set).pts(i,k)));
+    st = strcat(st, ':',' ',dbl2str(handles.BrSys.P.pts(i,k)));
     content = {content{:} st};
 end
 
@@ -1195,8 +1169,8 @@ handles.selected_param = min(handles.selected_param, ...
 set(handles.listbox_default_parameters,'String',content);
 set(handles.listbox_default_parameters,'Value',handles.selected_param);
 
-set(handles.edit_default_param, 'String', dbl2str(handles.working_sets.(handles.current_set).pts(handles.selected_param,k)));
-set(handles.edit_param_name, 'String', handles.working_sets.(handles.current_set).ParamList(handles.selected_param));
+set(handles.edit_default_param, 'String', dbl2str(handles.BrSys.P.pts(handles.selected_param,k)));
+set(handles.edit_param_name, 'String', handles.BrSys.P.ParamList(handles.selected_param));
 
 %% Varying parameters listbox
 content = {};
@@ -1215,8 +1189,8 @@ set(handles.listbox_varying_parameters,'Value',handles.selected_varying_param);
 % edit pts and epsi
 
 ipts = dim(min(handles.selected_varying_param, numel(dim)));
-pts = handles.working_sets.(handles.current_set).pts(ipts,k);
-epsi = handles.working_sets.(handles.current_set).epsi(handles.selected_varying_param,k);
+pts = handles.BrSys.P.pts(ipts,k);
+epsi = handles.BrSys.P.epsi(handles.selected_varying_param,k);
 
 set(handles.edit_value_pts, 'String', dbl2str(pts));
 set(handles.edit_uncertainty, 'String', dbl2str(epsi));
@@ -1230,11 +1204,11 @@ set(handles.edit_pmax, 'String', st_max);
 tt=strcat('pts ',num2str(handles.current_pts),'/',num2str(nb_pts));
 set(handles.text_pts, 'String', tt );
 set(handles.slider_current_pts, 'Value',handles.current_pts,'Min', .9999, 'Max',nb_pts, 'SliderStep', [1/nb_pts 10/nb_pts]);
-set(handles.checkbox_selected, 'Value', handles.working_sets.(handles.current_set).selected(handles.current_pts));
+set(handles.checkbox_selected, 'Value', handles.BrSys.P.selected(handles.current_pts));
 
 % button plot all/selected
 
-if isempty(find(handles.working_sets.(handles.current_set).selected))
+if isempty(find(handles.BrSys.P.selected))
     set(handles.button_plot_selected, 'String', 'Plot traj(s)')
 else
     set(handles.button_plot_selected, 'String', 'Plot selected')
@@ -1273,10 +1247,10 @@ function handles = update_system_panel(handles)
 
 function [st, st_min,st_max] = get_varying_param_string(handles, i)
 
-ipts = handles.working_sets.(handles.current_set).dim(i);
-pts = handles.working_sets.(handles.current_set).pts(ipts,handles.current_pts);
-epsi = handles.working_sets.(handles.current_set).epsi(i, handles.current_pts);
-st = handles.working_sets.(handles.current_set).ParamList{ipts};
+ipts = handles.BrSys.P.dim(i);
+pts = handles.BrSys.P.pts(ipts,handles.current_pts);
+epsi = handles.BrSys.P.epsi(i, handles.current_pts);
+st = handles.BrSys.P.ParamList{ipts};
 
 st_min = dbl2str(pts-epsi);
 st_max = dbl2str(pts+epsi);
@@ -1293,11 +1267,11 @@ set(gca,'YLimMode','auto');
 
 param_to_plot = handles.current_plot_pts{1};
 
-if ~isfield(handles.working_sets.(handles.current_set),'selected')
-    handles.working_sets.(handles.current_set).selected = zeros(size(handles.working_sets.(handles.current_set).pts,2))
+if ~isfield(handles.BrSys.P,'selected')
+    handles.BrSys.P.selected = zeros(size(handles.BrSys.P.pts,2))
 end
 
-ipts = [handles.current_pts find(handles.working_sets.(handles.current_set).selected)];
+ipts = [handles.current_pts find(handles.BrSys.P.selected)];
 ipts = unique(sort(ipts));
 
 if ~strcmp(param_to_plot,'')
@@ -1311,7 +1285,7 @@ if ~strcmp(param_to_plot,'')
 end
 
 
-P = handles.working_sets.(handles.current_set);
+P = handles.BrSys.P;
 i0=0;
 if ~isfield(P, 'props_values')
     SplotPts(P, param_to_plot);
@@ -2035,7 +2009,7 @@ try
     end
     
     nb_pts = size(handles.working_sets.(handles.current_set).pts,2);
-    if(handles.refine_all)
+    if(get(handles.checkbox_sample_locally, 'Value'))
         if(handles.halton)
             Pr = QuasiRefine(handles.working_sets.(handles.current_set), ...
                 handles.refine_args);
@@ -2089,7 +2063,7 @@ try
     end
     
     set(handles.edit_refine, 'String','');
-    set(hObject,'String','Go (0 new subsets)');
+    set(hObject,'String','Go (0 new samples)');
     handles.refine_args = 0 ;
     
     handles = update_working_sets_panel(handles);
@@ -2099,7 +2073,7 @@ try
 catch
     s = lasterror;
     set(handles.edit_refine, 'String','');
-    set(hObject,'String','Go (0 new subsets)');
+    set(hObject,'String','Go (0 new samples)');
     handles.refine_args = 0 ;
     handles = update_working_sets_panel(handles);
     handles = update_modif_panel(handles);
@@ -2152,7 +2126,7 @@ try
     end
     
     nb_pts = size(handles.working_sets.(handles.current_set).pts,2);
-    if(nb_pts == 1) % cannot delete a unique subset
+    if(nb_pts == 1) % cannot delete a unique sample
         return;
     end
     
@@ -2268,9 +2242,9 @@ prompt = {'Enter tspan for trajectory computation (empty = existing traj), ',...
     'Levels of subformulas to plot'};
 opt.tspan_traj = [];
 opt.tspan_prop_eval = [];
-opt.break_lev = 1;
+opt.break_lev = inf;
 
-[opt, handles.check_prop_options] = structdlg(opt, title, prompt, handles.check_prop_options);
+%[opt, handles.check_prop_options] = structdlg(opt, title, prompt, handles.check_prop_options);
 
 if isempty(opt)
     return;
@@ -2354,13 +2328,11 @@ try
         
         SplotVar(handles.working_sets.(handles.current_set), args.iX,ipts ,[], args.same_axe);
     end
-    guidata(hObject, handles);
     
 catch
     s = lasterror;
-    warndlg(['Problem computing traj: ' s.message] );
-    error(s);
-    return
+    handles = info(handles,['Problem plotting trajectories: did you run simulation first?'] );
+    guidata(hObject, handles);
 end
 
 return
@@ -2698,3 +2670,12 @@ handles.working_sets.(handles.current_set) = SPurge(handles.working_sets.(handle
 handles.BrSys.SimInputsOnly = get(hObject,'Value');
 guidata(hObject,handles);
 
+
+
+% --- Executes on button press in checkbox_sample_locally.
+function checkbox_sample_locally_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox_sample_locally (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox_sample_locally
