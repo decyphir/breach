@@ -234,7 +234,11 @@ classdef BreachOpenSystem < BreachSystem
                end
             end
             
-            U.t = this.InputGenerator.P.traj.time';
+            U.t = this.InputGenerator.P.traj.time;
+            if size(U.t, 1)==1
+                U.t=U.t';
+            end
+            
             U.u = zeros(numel(U.t), this.InputGenerator.Sys.DimX);
             idx_mdl = 0;
             for input= this.Sys.InputList % Sys.InputList is in the same order as the model

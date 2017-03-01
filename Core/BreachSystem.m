@@ -364,7 +364,7 @@ classdef BreachSystem < BreachSet
                 [X, t] = STL_Eval(this.Sys, expr_tmp_, this.P, this.P.traj, this.P.traj(1).time);
             end
         end
-a
+
         
         exp       
         %% Sensitivity analysis

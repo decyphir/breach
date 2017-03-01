@@ -115,7 +115,7 @@ if(same_axe==1)
     set(hl, 'Interpreter','none');
     hold off;
     xlabel('time')
-    
+    grid on;
 else % plots on multi axes
     
     for ii = 1:numel(i_var) % for each variable
