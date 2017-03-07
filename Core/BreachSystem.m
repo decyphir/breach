@@ -84,7 +84,7 @@ classdef BreachSystem < BreachSet
                 this.P =P;
                 this.UpdateParamRanges();
             else
-                error('Argument should a Breach parameter structure.');
+                error('Argument should a Breach legacy parameter structure.');
             end
             
         end
@@ -367,6 +367,7 @@ classdef BreachSystem < BreachSet
 
         
         exp       
+
         %% Sensitivity analysis
         function [mu, mustar, sigma] = SensiSpec(this, phi, params, ranges, opt)
             % SensiSpec Sensitivity analysis of a formula to a set of parameters
@@ -417,8 +418,8 @@ classdef BreachSystem < BreachSet
         
         function PrintAll(this)
             this.UpdateSignalRanges();
-            this.PrintParams();
             this.PrintSignals();
+            this.PrintParams();
             this.PrintSpecs();
         end
         
@@ -463,7 +464,7 @@ classdef BreachSystem < BreachSet
             system(['rm -f ' this.Sys.name '_properties.mat']);
         end
         
-         %% Experimental
+        %% Experimental
         function report = Analysis(this)
             
             STL_ReadFile('stlib.stl');

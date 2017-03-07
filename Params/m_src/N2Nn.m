@@ -5,10 +5,8 @@ function Nn = N2Nn(n,nb)
 %
 %  l = VanDerCorp(nb,3);
 %
-
 %  [ignore, p] = sort(l); % astuce taken from randperm.m. p is now a
-% kind of max dispersion permutation of the
-% nb first integers
+%  kind of max dispersion permutation of the nb first integers
 
 if isscalar(nb)
     nb = nb*ones(1,n);

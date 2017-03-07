@@ -1117,7 +1117,7 @@ set(handles.listbox_prop,'String', content);
 function handles = update_modif_panel(handles)
 
 %% parameters listbox
-
+nb_pts = size( handles.working_sets.(handles.current_set).pts,2);
 if ~isfield(handles.working_sets.(handles.current_set),'selected')
     handles.working_sets.(handles.current_set).selected=zeros(1,nb_pts);
 end

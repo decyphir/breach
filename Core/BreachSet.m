@@ -28,11 +28,12 @@ classdef BreachSet < BreachStatus
     properties
         P % legacy parameter structure - contains points data (in P.pts) and traces (P.traj) and many other fields whose purpose is slowly falling into oblivion
         ParamDomain = BreachDomain('double', [])
-        % will replace ParamRanges eventually 
+        % will replace ParamRanges eventually (?) 
         SignalDomain = BreachDomain('double', [])
-        % will replace SignalRanges eventually 
+        % will replace SignalRanges eventually (?)
         ParamRanges  % ranges of possible values for each parameter - determines the parameter sampling domain
         SignalRanges % ranges of values taken by each signal variable
+   
         AppendWhenSample=false % when true, sampling appends new param vectors, otherwise replace.
     end
     
@@ -67,14 +68,21 @@ classdef BreachSet < BreachStatus
             this.CheckinDomain();
             this.UpdateParamRanges();
         end
+        
         %% Domains
+                
         function SetDomain(this, param, type, domain) 
         % should be improved to set more than one domain at a time
-            [idx, found] = FindParam(this.P, param);
-               if any(found==0)
-                   error('Parameter or signal not found.');
-               end
-               this.ParamDomain(idx) = BreachDomain(type, domain);
+        
+        if nargin<4
+            domain =[];
+        end
+       
+        [idx, found] = FindParam(this.P, param);
+        if any(found==0)
+            error('Parameter or signal not found.');
+        end
+        this.ParamDomain(idx) = BreachDomain(type, domain);
         end
         
         function dom = GetDomain(this, param)
@@ -83,7 +91,11 @@ classdef BreachSet < BreachStatus
                if any(found==0)
                    error('Parameter or signal not found.');
                end
-             dom = this.ParamDomain(idx); 
+               
+               if numel(this.ParamDomain)<idx
+                   this.ParamDomain(idx) = BreachDomain();
+               end 
+               dom = this.ParamDomain(idx);
         end
         
         function CheckinDomain(this)
@@ -93,20 +105,22 @@ classdef BreachSet < BreachStatus
         
         function CheckinDomainParam(this)
             pts = this.P.pts;
-            
-            % If domain not defined, here is the place to do it
-            if numel(this.ParamDomain)<size(pts, 1)
-                diff_size = size(pts,1)-numel(this.ParamDomain);
-                new_domains = repmat(BreachDomain(), 1, diff_size);
-                this.ParamDomain = [this.ParamDomain new_domains];
+            if numel(this.ParamDomain)< size(pts,1)
+                   this.ParamDomain(size(pts,1)) = BreachDomain();
             end
-            
+
             % TODO? warning when out of domain 
             for  i =this.P.DimX+1:size(pts,1)
                 if ~isempty(this.ParamDomain(i).domain)
-                    this.P.pts(i,:) = this.ParamDomain(i).checkin(pts(i,:));
+                    pts(i,:) = this.ParamDomain(i).checkin(pts(i,:));
                 end
             end
+            
+            % Eliminate resulting duplicates
+            [pts, ipts]=unique(pts','rows');
+            pts= pts'; 
+            this.P = Sselect(this.P, ipts);
+            this.P.pts = pts;
             
         end
          
@@ -122,18 +136,7 @@ classdef BreachSet < BreachStatus
                 end
             end        
         end
-        
-        function SampleAll(this, param)
-            % returns all values when possible (type == int and bounded
-            % domain
-            idx = FindParam(this.P, param);
-            all = this.ParamDomain(idx).sample_all();
-            if ~isempty(all)
-                this.SetParam(param, all);
-            else
-                warning(['Domain is empty.']) 
-            end
-        end
+               
         %%  Param
         function SetParam(this, params, values, opt)
             ip = FindParam(this.P, params);
@@ -371,6 +374,33 @@ classdef BreachSet < BreachStatus
             SplotTraj(this.P, varargin{:});
         end
         %% Sampling
+        function SampleDomain(this, params, num_samples, method, opt_multi)
+            % SampleDomain generic sampling function
+            %
+            % B.SampleDomain('p', 5) creates 5 samples drawn randomly
+            % from the domain of parameter p. Do nothing if domain is 
+            % empty (which it is by default).
+            %
+            % B.SampleDomain('p', 'all') create samples enumerating all
+            % possible values in the domain of 'p'.
+            %
+            % B.SampleDomain('p', ... ,'grid') draw samples on a grid
+            % rather than randomly (default)
+            
+        end
+               
+        function SampleAll(this, param)
+            % returns all values when possible (type == int and bounded
+            % domain
+            idx = FindParam(this.P, param);
+            all = this.ParamDomain(idx).sample_all();
+            if ~isempty(all)
+                this.SetParam(param, all);
+            else
+                warning(['Domain is empty.']) 
+            end
+        end
+        
         function GridSample(this, delta)
             % Grid Sample
             newP = Refine(this.P,delta, 1);
@@ -379,7 +409,8 @@ classdef BreachSet < BreachStatus
             else
                 this.P = newP;
             end
-        
+            this.CheckinDomainParam();
+            
         end
         
         % Get corners of parameter domain
@@ -388,28 +419,30 @@ classdef BreachSet < BreachStatus
             newP.epsi = 2*newP.epsi;
             newP = Refine(newP,2);
             newP.epsi = newP.epsi/2;
-          if this.AppendWhenSample
+            if this.AppendWhenSample
                 this.P = SConcat(this.P, newP);
             else
                 this.P = newP;
             end
+            this.CheckinDomainParam();
       
         end
         
         function QuasiRandomSample(this, nb_sample, step)
-        % Quasi-Random Sampling
+            % Quasi-Random Sampling
             if nargin==3
                 newP = QuasiRefine(this.P,nb_sample, step);
             else
                 newP = QuasiRefine(this.P, nb_sample);
             end
             
-          if this.AppendWhenSample
+            if this.AppendWhenSample
                 this.P = SConcat(this.P, newP);
             else
                 this.P = newP;
             end
             
+            this.CheckinDomainParam();
             
         end
         
@@ -474,8 +507,7 @@ classdef BreachSet < BreachStatus
          end
         end
 
-        
-        
+              
         %% Printing
         function PrintSignals(this)
             if isempty(this.SignalRanges)

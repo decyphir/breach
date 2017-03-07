@@ -68,11 +68,12 @@ classdef random_signal_gen < signal_gen
             
             X = zeros(numel(this.signals),numel(time));
             for isg = 1:numel(this.signals)
-                rng(p((isg-1)*4+1));    
-                dt_min = p((isg-1)*4+2);
-                dt_max = p((isg-1)*4+3);
-                cp_min = p(isg*4);
-                cp_max = p(isg*4+1);
+                
+                rng(p((isg-1)*5+1));    
+                dt_min = p((isg-1)*5+2);
+                dt_max = p((isg-1)*5+3);
+                cp_min = p((isg-1)*5+4);
+                cp_max = p(isg*5);
                 
                 t_cp = 0;
                 while t_cp(end)<time(end)

@@ -23,3 +23,4 @@ Ext/*
 !Ext/Specs/
 !Ext/Toolboxes/
 toggleHighDPISupport.p
+*.bck

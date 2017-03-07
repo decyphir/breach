@@ -134,6 +134,7 @@ classdef BreachProblem < BreachStatus
         end
     end
     
+    %% Methods
     methods
         
         
@@ -352,9 +353,11 @@ classdef BreachProblem < BreachStatus
                     optimtool(problem);
                     res = [];
                     return;
+
                 case 'binsearch'
                     res = solve_binsearch(this);
                     this.res = res;
+
                 otherwise
                     res = feval(this.solver, problem);
                     this.res = res;
@@ -400,8 +403,8 @@ classdef BreachProblem < BreachStatus
             
         end
         
-        function problem = get_problem(this) 
-                    problem =struct('objective', this.objective, ...
+        function problem = get_problem(this)
+            problem =struct('objective', this.objective, ...
                 'fitnessfcn', this.objective, ... % for ga
                 'x0', this.x0, ...
                 'nvars', size(this.x0, 1),... % for ga
@@ -416,6 +419,15 @@ classdef BreachProblem < BreachStatus
                 'intcon',[],...
                 'rngstate',[],...
                 'options', this.solver_options);
+            
+            % Checks whether some variables are integer
+            for ip = 1:numel(this.params)
+                dom = this.BrSys.GetDomain(this.params{ip});
+                if strcmp(dom.type, 'int')
+                    problem.intcon = [problem.intcon ip];
+                end
+            end
+            
         end
         
         %% Parallel 
@@ -458,8 +470,7 @@ classdef BreachProblem < BreachStatus
             b =  (this.time_spent > this.max_time) ||...
                     (this.nb_obj_eval> this.max_obj_eval) ;
         end
-        
-        
+              
         %% Misc methods
         function LogX(this, x, fval)
             % LogX logs values tried by the optimizer
@@ -592,7 +603,6 @@ classdef BreachProblem < BreachStatus
             objByteArray = getByteStreamFromArray(this);
             new = getArrayFromByteStream(objByteArray);
         end
-        
-        
+                
     end
 end

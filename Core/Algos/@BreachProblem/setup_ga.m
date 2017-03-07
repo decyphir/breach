@@ -9,6 +9,7 @@ this.display = 'off'; % use ga display by default
 solver_options = gaoptimset('TimeLimit',this.max_time,... % doesn't seem to work well in parallel
     'Display', 'iter');
 
+
 if this.max_obj_eval<inf
     solver_options = gaoptimset('Generations', ceil(this.max_obj_eval/50)); % check that 50 is default population size..
 end

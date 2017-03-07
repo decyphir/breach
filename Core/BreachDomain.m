@@ -10,23 +10,27 @@ classdef BreachDomain
     end
     
     methods
-        function this = BreachDomain(newtype, domain , enum, tabu_list )
+        function this = BreachDomain(type, domain , enum, tabu_list )
+            if nargin>1 && isempty(domain)
+               domain=[]; 
+            end
+            
             switch nargin
                 case 0
                     this.type  = 'double';
                     this.domain = [];
                 case 1
-                    this.type  = newtype;
+                    this.type  = type;
                     this.domain = [];
                 case 2
-                    this.type  = newtype;
+                    this.type  = type;
                     this.domain = domain;
                 case 3
-                    this.type  = newtype;
+                    this.type  = type;
                     this.domain = domain;
                     this.enum = enum;
                 case 4
-                    this.type  = newtype;
+                    this.type  = type;
                     this.domain = domain;
                     this.enum = enum;
                     this.tabu_list = tabu_list;
@@ -35,8 +39,13 @@ classdef BreachDomain
             % init enum (I feel this will explode on me some day)
             switch this.type
                 case 'int'
+                    if ~isempty(this.domain)
                     if isempty(this.enum)&&((this.domain(2)-this.domain(1))<inf)
                         this.enum = ceil(this.domain(1)):floor(this.domain(2));
+                    end
+                    else
+                        this.domain = [-inf, inf];
+                        this.enum=[];
                     end
                 case 'bool'
                     this.domain = [0 1];
@@ -73,6 +82,7 @@ classdef BreachDomain
         function all_x = sample_all(this)
             all_x = this.enum;
         end
+  
         
     end
 end

@@ -681,16 +681,20 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
         end
         
-        function U = InitU(this,pts,tspan) 
+        function U = InitU(this,pts,tspan)
+            % Computes input values
             U = InitU@BreachOpenSystem(this,pts,tspan);
-            idx_ports= this.InputSrc>0;
-            idx_fw = find(this.InputSrc==0);
-            for idx = idx_fw
-                assignin('base', this.Sys.InputList{idx}, [U.t U.u(:,idx)]);
+            if ~isnan(U.t)
+                
+                idx_ports= this.InputSrc>0;
+                idx_fw = find(this.InputSrc==0);
+                for idx = idx_fw
+                    assignin('base', this.Sys.InputList{idx}, [U.t U.u(:,idx)]);
+                end
+                U.u = U.u(:, idx_ports);
+                
             end
-            U.u = U.u(:, idx_ports);
         end
-            
         function disp(this)
             disp(['BreachSimulinkSystem intefacing model ' this.Sys.name '.']);
         end
