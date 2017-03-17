@@ -3,10 +3,6 @@ function Nn = N2Nn(n,nb)
 %
 % Synopsis : Nn = N2Nn(n,nb)
 %
-%  l = VanDerCorp(nb,3);
-%
-%  [ignore, p] = sort(l); % astuce taken from randperm.m. p is now a
-%  kind of max dispersion permutation of the nb first integers
 
 if isscalar(nb)
     nb = nb*ones(1,n);
@@ -30,6 +26,10 @@ end
 end
 
 function l = VanDerCorp(nb, base)
+%  l = VanDerCorp(nb,3);
+%
+%  [ignore, p] = sort(l); % astuce taken from randperm.m. p is now a
+%  kind of max dispersion permutation of the nb first integers
 
 nbit = ceil(log(nb)/log(base))+1;
 inv_base = 1./(base.^(1:nbit));
@@ -41,6 +41,7 @@ end
 end
 
 function b = baseget(i,nbit,base)
+
 % i is an integer
 
 b = zeros(1,nbit);

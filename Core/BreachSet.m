@@ -152,9 +152,30 @@ classdef BreachSet < BreachStatus
                         ' If this is intended to be a spec. parameter, consider using SetParamSpec instead.']);
                 end
             end
-            this.P = SetParam(this.P, params, values);
+            this.P = SetParam(this.P, ip, values);
             this.UpdateParamRanges();
         end
+
+        function ResetParam(this, params, values,opt)
+            ip = FindParam(this.P, params);
+            i_not_sys = find(ip>this.P.DimP);
+            if ~isempty(i_not_sys)
+                if iscell(params)
+                    nparam = params{i_not_sys(1)};
+                else
+                    nparam = params;
+                end
+                if ~exist('opt','var')
+                    warning('SetParam:param_not_in_list',['Parameter ' nparam ' was set but is not a system parameter.' ...
+                        ' If this is intended to be a spec. parameter, consider using SetParamSpec instead.']);
+                end
+            end
+            this.P = Sselect(SPurge(this.P),1);
+            this.P.pts = repmat(this.P.pts,1, size(values, 2));
+            this.P.epsi= repmat(this.P.epsi,1, size(values, 2));            
+            this.P = SetParam(this.P, ip, values);
+            this.UpdateParamRanges();
+        end        
         
         function SetParamSpec(this, params, values)
             ip = FindParam(this.P, params);
@@ -352,7 +373,6 @@ classdef BreachSet < BreachStatus
             end
         end
         
-        
         function h = PlotSignals(this, varargin)
         % Plot signals
             if (~isfield(this.P,'traj'))
@@ -373,24 +393,80 @@ classdef BreachSet < BreachStatus
             figure;
             SplotTraj(this.P, varargin{:});
         end
+        
         %% Sampling
         function SampleDomain(this, params, num_samples, method, opt_multi)
-            % SampleDomain generic sampling function
+            % SampleDomain generic sampling function TODO 
             %
             % B.SampleDomain('p', 5) creates 5 samples drawn randomly
             % from the domain of parameter p. Do nothing if domain is 
             % empty (which it is by default).
             %
-            % B.SampleDomain('p', 'all') create samples enumerating all
+            % B.SampleDomain('p','all') create samples enumerating all
             % possible values in the domain of 'p'.
             %
-            % B.SampleDomain('p', ... ,'grid') draw samples on a grid
-            % rather than randomly (default)
+            % B.SampleDomain('p',...,'rand') default 
+            %
+            % B.SampleDomain('p',...,'grid') draw samples on a grid
+            % 
+            % B.SampleDomain('p',...,..., 'replace') default 
+            %
+            % B.SampleDomain('p',...,..., 'append') 
+            % 
+            % B.SampleDomain('p',...,..., 'combine')
+            %
+
             
+            % process parameters 
+            if ~exist('method')
+               method = 'rand'; 
+            end
+            
+            if ~exist('opt_multi')
+               opt_multi='replace'; %   
+            end
+                       
+            % creates new samples
+            idx_param = FindParam(this.Sys, params);
+            domain = this.ParamDomain(idx_param);
+            
+            if isequal(num_samples, 'all')
+                x = domain.sample_all();
+            else               
+                x = domain.sample_rand(num_samples);
+            end  
+            
+            % combine (or not) with others
+            
+            num_old = this.GetNbParamVectors();
+            switch opt_multi
+                case 'replace'
+                    % if there are multiple samples already, discard them
+                    % and use default p 
+                    if num_old==1
+                        this.ResetParam(params, x)
+                    else
+                        this.Reset();
+                        this.ResetParam(params, x);
+                    end
+                case 'append'  % TODO
+                    if num_old==1
+                        this.P.SetParam(params, x)
+                    else
+                        this.Reset();
+                        this.SetParam(params, x);
+                    end
+                case 'combine'
+                    num_new = numel(x);
+                    idx = N2Nn(2, [num_old num_new]);
+                    pts = this.P.pts(:, idx(1,:));
+                    pts(idx_param,:) = x(:, idx(2,:));                      
+                    this.ResetParam(1:size(pts,1),pts, 'force');
+            end    
         end
                
         function SampleAll(this, param)
-            % returns all values when possible (type == int and bounded
+            % returns all values when possible (type == int and bounded)
             % domain
             idx = FindParam(this.P, param);
             all = this.ParamDomain(idx).sample_all();
@@ -459,8 +535,7 @@ classdef BreachSet < BreachStatus
         function Concat(this, other)
             this.P = SConcat(this.P, other.P);
         end
-        
-       
+              
         function PlotParams(this, varargin)
         % Plot parameters 
             figure;
