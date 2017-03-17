@@ -1,4 +1,3 @@
-
 classdef BreachOpenSystem < BreachSystem
     % BreachOpenSystem  a BreachSystem derivated class with an input generator.
     %
@@ -21,6 +20,10 @@ classdef BreachOpenSystem < BreachSystem
     end
  
     methods
+        
+        function  this = BreachOpenSystem(varargin)
+            this=this@BreachSystem(varargin{:});
+        end
         
         function Sim(this,tspan,U)
             if ~exist('tspan','var')

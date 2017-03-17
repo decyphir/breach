@@ -100,8 +100,7 @@ classdef BreachSystem < BreachSet
                 this.P = CreateParamSet(this.P, this.P.ParamList(ipr+this.P.DimX),ranges);
             end
         end
-
-        
+     
         %% Signals plots and stuff
         function SetTime(this,tspan)
             this.Sys.tspan = tspan;
@@ -117,8 +116,7 @@ classdef BreachSystem < BreachSet
             end
             this.P = ComputeTraj(this.Sys, this.P, tspan);
         end
-        
-        
+               
         %% Specs
         function phi = AddSpec(this, varargin)
         % AddSpec Adds a specification
@@ -366,7 +364,7 @@ classdef BreachSystem < BreachSet
         end
 
         
-        exp       
+             
 
         %% Sensitivity analysis
         function [mu, mustar, sigma] = SensiSpec(this, phi, params, ranges, opt)
@@ -456,7 +454,7 @@ classdef BreachSystem < BreachSet
                args.properties.(specs{ispec}) = this.Specs(specs{ispec});
             end
             
-            BreachTrajGui('varargin',args);          
+            BreachTrajGui(this,args);          
         end
         
         function ResetFiles(this)

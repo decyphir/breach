@@ -52,34 +52,34 @@ function BreachTrajGui_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to BreachTrajGui (see VARARGIN)
 
-% load parameter set  
-
+%% load parameter set  
+handles.BrSys = varargin{1};
 handles_main = varargin{2};    
 handles.protected_names = fieldnames(handles_main.working_sets);
 handles.working_sets_filename = handles_main.working_sets_file_name;
 handles.Sys= handles_main.Sys;
 handles.properties= handles_main.properties;
+
 if isfield(handles_main, 'TrajSet')
     handles.TrajSet = handles_main.TrajSet;
 else
     handles.TrajSet= handles_main.working_sets.(handles_main.current_set);
 end
 
-if (isfield(handles.TrajSet, 'traj'))
-  if ~isfield(handles.TrajSet, 'traj_ref')
-    handles.TrajSet.traj_ref = 1:numel(handles.TrajSet.traj);   
+if (isfield(handles.BrSys.P, 'traj'))
+  if ~isfield(handles.BrSys.P, 'traj_ref')
+    handles.BrSys.P.traj_ref = 1:numel(handles.BrSys.P.traj);   
   end
-  handles.traj_ref = handles.TrajSet.traj_ref;    
+  handles.traj_ref = handles.BrSys.P.traj_ref;    
 end
 
-%  init things
-
+%%  init things
 if (isfield(handles.Sys,'time_mult'))
   time_mult = handles.Sys.time_mult;
 else
   time_mult=1;
 end
-handles.TrajSet.time_mult = time_mult;      
+handles.BrSys.P.time_mult = time_mult;      
 
 handles.has_dynamics=1;
 if(isfield(handles.Sys, 'type'))
@@ -91,7 +91,7 @@ end
 handles.auto_recompute = 1;
 set(handles.recompute_auto,'Value',1);
 handles.traj_opt = {'b'};
-plist = handles.TrajSet.ParamList(1:handles.TrajSet.DimX);
+plist = handles.BrSys.P.ParamList(1:handles.BrSys.P.DimX);
 
 pnames = fieldnames(handles.properties);
 plist = {plist{:} pnames{:}};
@@ -118,7 +118,7 @@ handles.current_var{1,3} = '';
 set(handles.param1,'Value', 1);
 
 plist2 = {'' plist{:}};
-handles.param_list=handles.TrajSet.ParamList(:);
+handles.param_list=handles.BrSys.P.ParamList(:);
 
 set(handles.param12,'String',plist2);
 handles.current_var{2,1} = plist2(1);
@@ -147,7 +147,6 @@ handles.plot_tout = 0;
 % menu for axes 2
 
 if numel(plist)>=2
-
   set(handles.param2,'String',plist);
   handles.current_var{2,1} = plist(2);
   set(handles.param2,'Value', 2);
@@ -161,7 +160,6 @@ if numel(plist)>=2
   set(handles.param23,'Value', 1);
 
 else
-
   set(handles.param2,'String',{''})
   handles.current_var{2,1} = '';
   set(handles.param2,'Value',1);
@@ -169,7 +167,6 @@ else
   set(handles.param22,'Value',1);
   set(handles.param23,'String',{''})
   set(handles.param23,'Value',1);
-
 end
   
 % menu for axes 3
@@ -202,12 +199,12 @@ end
 % menu for param pts plot
 
 set(handles.popup_pts1,'String',handles.param_list);
-handles.current_plot_pts{1} = handles.param_list(handles.TrajSet.dim(1));
-set(handles.popup_pts1,'Value', handles.TrajSet.dim(1));
+handles.current_plot_pts{1} = handles.param_list(handles.BrSys.P.dim(1));
+set(handles.popup_pts1,'Value', handles.BrSys.P.dim(1));
 
 set(handles.popup_pts2,'String',{'', handles.param_list{:}});
-if numel(handles.TrajSet.dim)>=2
-  handles.current_plot_pts{2} = handles.param_list(handles.TrajSet.dim(2));
+if numel(handles.BrSys.P.dim)>=2
+  handles.current_plot_pts{2} = handles.param_list(handles.BrSys.P.dim(2));
   set(handles.popup_pts2,'Value', 3);  
 else
   handles.current_plot_pts{2} = '';
@@ -215,8 +212,8 @@ else
 end
 
 set(handles.popup_pts3,'String',{'', handles.param_list{:}});
-if numel(handles.TrajSet.dim)>=3
-  handles.current_plot_pts{3} = handles.param_list(handles.TrajSet.dim(3));
+if numel(handles.BrSys.P.dim)>=3
+  handles.current_plot_pts{3} = handles.param_list(handles.BrSys.P.dim(3));
   set(handles.popup_pts3,'Value', 4);  
 else
   handles.current_plot_pts{3} = '';
@@ -234,7 +231,7 @@ set(handles.pts_figure,'Visible','off');
 % slider
 
 handles.current_pts = 1;
-handles.nb_pts = size(handles.TrajSet.pts,2);
+handles.nb_pts = size(handles.BrSys.P.pts,2);
 tt=strcat('pts ',num2str(handles.current_pts),'/',num2str(handles.nb_pts));
 handles.slider_param_coeff =1;
 set(handles.text_pts, 'String', tt );
@@ -286,18 +283,12 @@ function param1_Callback(hObject, eventdata, handles)
   handles.current_plot{1} = new_plot;
   guidata(hObject, handles);
   
-% Hints: contents = get(hObject,'String') returns param1 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from param1
-
-
 % --- Executes during object creation, after setting all properties.
 function param1_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to param1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -315,7 +306,7 @@ function slider2_Callback(hObject, eventdata, handles)
     set(handles.text_pts, 'String', tt );
 
     %content = get(handles.listbox, 'String');
-    %Pf = handles.TrajSet;
+    %Pf = handles.BrSys.P;
 
     %for i=1:numel(Pf.dim)
     %  st = Pf.ParamList{Pf.dim(i)};
@@ -338,10 +329,6 @@ function slider2_Callback(hObject, eventdata, handles)
     return
   
   end
-
-
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 
 
 % --- Executes during object creation, after setting all properties.
@@ -375,10 +362,6 @@ function param2_Callback(hObject, eventdata, handles)
   guidata(hObject,handles);
 
 
-% Hints: contents = get(hObject,'String') returns param2 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from param2
-
-
 % --- Executes during object creation, after setting all properties.
 function param2_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to param2 (see GCBO)
@@ -410,9 +393,6 @@ function param3_Callback(hObject, eventdata, handles)
   new_plot = plot_param(handles,3);
   handles.current_plot{3} = new_plot;
   guidata(hObject,handles);
-
-% Hints: contents = get(hObject,'String') returns param3 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from param3
 
 
 % --- Executes during object creation, after setting all properties.
@@ -470,17 +450,17 @@ function listbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
  try
    val = get(hObject,'Value');
-   nbd = numel(handles.TrajSet.dim);
-   nbp = numel(handles.TrajSet.ParamList);
+   nbd = numel(handles.BrSys.P.dim);
+   nbp = numel(handles.BrSys.P.ParamList);
    if (val>2&&val<=nbd+2)
      
-     val = handles.TrajSet.dim(val-2);
-     valpts = handles.TrajSet.pts(val,handles.current_pts);
+     val = handles.BrSys.P.dim(val-2);
+     valpts = handles.BrSys.P.pts(val,handles.current_pts);
    
    elseif (val>nbd+5)&&(val<=nbd+5+nbp)
    
      val = val - (5+nbd);
-     valpts = handles.TrajSet.pts(val,handles.current_pts);
+     valpts = handles.BrSys.P.pts(val,handles.current_pts);
    
    elseif (handles.indices_selected_prop(val))
    
@@ -578,7 +558,6 @@ new_plot = plot_param(handles,1);
 handles.current_plot{1} = new_plot;
 
 guidata(hObject, handles);
-
 
 % --- Executes during object creation, after setting all properties.
 function param12_CreateFcn(hObject, eventdata, handles)
@@ -809,7 +788,7 @@ function export_button1_Callback(hObject, eventdata, handles)
         param_to_plot = {param_to_plot{:} handles.current_var{1,3}};
       end
     end
-    SplotTraj(handles.TrajSet, param_to_plot);    
+    SplotTraj(handles.BrSys.P, param_to_plot);    
   end
   
   new_plot = plot_param(handles,nb_ax);
@@ -848,7 +827,7 @@ function export_button2_Callback(hObject, eventdata, handles)
         param_to_plot = {param_to_plot{:} handles.current_var{2,3}};
       end
     end
-    SplotTraj(handles.TrajSet, param_to_plot);    
+    SplotTraj(handles.BrSys.P, param_to_plot);    
   end
   
   new_plot = plot_param(handles,nb_ax);
@@ -888,14 +867,13 @@ function export_button3_Callback(hObject, eventdata, handles)
         param_to_plot = {param_to_plot{:} handles.current_var{3,3}};
       end
     end
-    SplotTraj(handles.TrajSet, param_to_plot);    
+    SplotTraj(handles.BrSys.P, param_to_plot);    
   end
   
   new_plot = plot_param(handles,nb_ax);
   handles.current_plot{nb_ax} = new_plot;
   grid on;
   guidata(hObject,handles);
-
 
 
 function edit_change_param_Callback(hObject, eventdata, handles)
@@ -966,7 +944,7 @@ function button_save_pts_Callback(hObject, eventdata, handles)
   
   try
     
-    Ptmp = select(handles.TrajSet,handles.current_pts);
+    Ptmp = select(handles.BrSys.P,handles.current_pts);
     Ptmp = SPurge(Ptmp);
     
     name = handles.traj_set_name;
@@ -990,7 +968,7 @@ function button_save_all_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
   try
-    Ptmp = SPurge(handles.TrajSet);
+    Ptmp = SPurge(handles.BrSys.P);
     name = handles.traj_set_name;
     new_name = genvarname(name, handles.protected_names);
     eval([new_name '= Ptmp']);   
@@ -1178,7 +1156,7 @@ function button_go_Callback(hObject, eventdata, handles)
 function handles = UpdatePlots(handles)
   
   handles = plot_pts(handles);
-  if (~isfield(handles.TrajSet,'traj'))
+  if (~isfield(handles.BrSys.P,'traj'))
     return
   end
   
@@ -1225,10 +1203,10 @@ function handles= plot_pts(handles)
       end
     end
         
-    %    SplotPts(handles.TrajSet,param_to_plot);  
-    S = DiscrimPropValues(handles.TrajSet);
+    %    SplotPts(handles.BrSys.P,param_to_plot);  
+    S = DiscrimPropValues(handles.BrSys.P);
     SplotPts(S,param_to_plot);  
-    SplotBoxPts(handles.TrajSet, param_to_plot,handles.current_pts,'+k','r',.1);
+    SplotBoxPts(handles.BrSys.P, param_to_plot,handles.current_pts,'+k','r',.1);
   
   end
 
@@ -1240,8 +1218,7 @@ function new_plot= plot_param(handles,ax)
     time_mult=1;
   end
 
-  
-  if (~isfield(handles.TrajSet,'traj'))
+  if (~isfield(handles.BrSys.P,'traj'))
     new_plot = [];
     return
   end
@@ -1276,28 +1253,22 @@ function new_plot= plot_param(handles,ax)
       grid on;
       st = param_to_plot{1};
       ipts = handles.current_pts;
-      %      phi_val = handles.TrajSet.props_values(nprop,ipts).val;
-      %      phi_tspan = handles.TrajSet.props_values(nprop,ipts).tspan;
+      %      phi_val = handles.BrSys.P.props_values(nprop,ipts).val;
+      %      phi_tspan = handles.BrSys.P.props_values(nprop,ipts).tspan;
         
       sensi_param = [];
-      if (~strcmp(handles.current_sensi{ax,2},''))
-        sensi_param = [sensi_param  FindParam(handles.TrajSet,handles.current_sensi{ax,2})];
-      end
-
-      if (~strcmp(handles.current_sensi{ax,3},''))
-        sensi_param = [sensi_param  FindParam(handles.TrajSet,handles.current_sensi{ax,3})];
-      end
       colors = {'b','r'};
+%%
       if (numel(sensi_param)>0)
 
         % if needed, recompute sensitivity of the variable and the property 
         plot_done =0;
         for is=1:numel(sensi_param)
-          if isfield(handles.TrajSet.traj(handles.current_pts), 'XS')
-            isf =find(handles.TrajSet.traj(handles.current_pts).sensis==sensi_param(is));
+          if isfield(handles.BrSys.P.traj(handles.current_pts), 'XS')
+            isf =find(handles.BrSys.P.traj(handles.current_pts).sensis==sensi_param(is));
             if ~isempty(isf) % ok, no need to recompute
-              phi_tspan = handles.TrajSet.traj(handles.traj_ref(ipts)).time;
-              [phi_val phivald] = STL_EvalSensi(handles.Sys,prop,handles.TrajSet.traj(handles.traj_ref(ipts)),phi_tspan);
+              phi_tspan = handles.BrSys.P.traj(handles.traj_ref(ipts)).time;
+              [phi_val phivald] = STL_EvalSensi(handles.Sys,prop,handles.BrSys.P.traj(handles.traj_ref(ipts)),phi_tspan);
               plot(phi_tspan*time_mult, phi_vald,colors{is});            
               plot_done=1;            
             end
@@ -1306,8 +1277,8 @@ function new_plot= plot_param(handles,ax)
           % recompute
           if (~plot_done)
               
-            if isfield(handles.TrajSet, 'traj')
-              tspan = handles.TrajSet.traj(handles.current_pts).time;
+            if isfield(handles.BrSys.P, 'traj')
+              tspan = handles.BrSys.P.traj(handles.current_pts).time;
             else
               if ~isempty(handles.tspan)
                 tspan = handles.tspan;
@@ -1317,13 +1288,13 @@ function new_plot= plot_param(handles,ax)
             end
               
             Ptmp = CreateParamSet(handles.Sys,sensi_param(is));
-            Ptmp.pts = handles.TrajSet.pts(:,handles.current_pts);
+            Ptmp.pts = handles.BrSys.P.pts(:,handles.current_pts);
             Pftmp = ComputeTrajSensi(handles.Sys, Ptmp,tspan);          
 
-%            handles.TrajSet.traj(handles.current_pts) = Pftmp.traj;
-            handles.TrajSet.Xf(:,handles.current_pts) = Pftmp.Xf;
+%            handles.BrSys.P.traj(handles.current_pts) = Pftmp.traj;
+            handles.BrSys.P.Xf(:,handles.current_pts) = Pftmp.Xf;
             
-            phi_tspan = handles.TrajSet.traj(handles.traj_ref(ipts)).time;
+            phi_tspan = handles.BrSys.P.traj(handles.traj_ref(ipts)).time;
             [phi_val phi_vald] = STL_EvalSensi(prop,Pftmp.traj,phi_tspan);
             plot(phi_tspan*time_mult, phi_vald,colors{is});
           end
@@ -1335,14 +1306,14 @@ function new_plot= plot_param(handles,ax)
              
       end %  if (numel(sensi_param)>0)
     else      
-      
+    %%  
       prop = handles.properties.(pnames{nprop});
       cla;legend('off');
       hold on;
       grid on;
       st = param_to_plot{1};
       ipts = handles.current_pts;
-      phi_tspan = handles.TrajSet.traj(handles.traj_ref(ipts)).time;      
+      phi_tspan = handles.BrSys.P.traj(handles.traj_ref(ipts)).time;      
       
       % checks if sensitivities needs be (re)computed for the formula
       
@@ -1351,12 +1322,12 @@ function new_plot= plot_param(handles,ax)
       is = STL_ExtractSensi(prop);
       if (~isempty(is))        
         Ptmp = CreateParamSet(handles.Sys,is);
-        Ptmp.pts = handles.TrajSet.pts(:,handles.current_pts);
-        Pftmp = ComputeTrajSensi(handles.Sys, Ptmp, handles.TrajSet.traj(handles.traj_ref(ipts)).time);          
+        Ptmp.pts = handles.BrSys.P.pts(:,handles.current_pts);
+        Pftmp = ComputeTrajSensi(handles.Sys, Ptmp, handles.BrSys.P.traj(handles.traj_ref(ipts)).time);          
         phi_val = STL_Eval(handles.Sys,prop,Ptmp, Pftmp.traj,phi_tspan);
       else        
-        Ptmp = Sselect(handles.TrajSet, ipts);
-        phi_val = STL_Eval(handles.Sys,prop,Ptmp,handles.TrajSet.traj(handles.traj_ref(ipts)),phi_tspan);   
+        Ptmp = Sselect(handles.BrSys.P, ipts);
+        phi_val = STL_Eval(handles.Sys,prop,Ptmp,handles.BrSys.P.traj(handles.traj_ref(ipts)),phi_tspan);   
       end
                  
       
@@ -1375,23 +1346,24 @@ function new_plot= plot_param(handles,ax)
     
   else  % plot values for a variable      
       
-    if (handles.plot_sensi(ax)) % plot sensitivity of a variable
+    
+      if (handles.plot_sensi(ax)) % plot sensitivity of a variable
 
       cla;legend('off');
       sensi_param = [];
       if (~strcmp(handles.current_sensi{ax,2},''))
-        sensi_param = [sensi_param  FindParam(handles.TrajSet,handles.current_sensi{ax,2})];
+        sensi_param = [sensi_param  FindParam(handles.BrSys.P,handles.current_sensi{ax,2})];
       end
 
       if (~strcmp(handles.current_sensi{ax,3},''))
-        sensi_param = [sensi_param  FindParam(handles.TrajSet,handles.current_sensi{ax,3})];
+        sensi_param = [sensi_param  FindParam(handles.BrSys.P,handles.current_sensi{ax,3})];
       end
  
       if (numel(sensi_param)>0)
         Ptmp = CreateParamSet(handles.Sys,sensi_param);
-        Ptmp.pts = handles.TrajSet.pts(:,handles.current_pts);
-        if isfield(handles.TrajSet, 'traj')
-          tspan = handles.TrajSet.traj(handles.current_pts).time;
+        Ptmp.pts = handles.BrSys.P.pts(:,handles.current_pts);
+        if isfield(handles.BrSys.P, 'traj')
+          tspan = handles.BrSys.P.traj(handles.current_pts).time;
         else
           if ~isempty(handles.tspan)
             tspan = handles.tspan;
@@ -1401,7 +1373,7 @@ function new_plot= plot_param(handles,ax)
         end
         Pftmp = ComputeTrajSensi(handles.Sys, Ptmp, tspan);
 
-        handles.TrajSet.Xf(:,handles.current_pts) = Pftmp.Xf;
+        handles.BrSys.P.Xf(:,handles.current_pts) = Pftmp.Xf;
         Pftmp.time_mult = time_mult;
         SplotSensi(Pftmp, param_to_plot, sensi_param);
 
@@ -1428,7 +1400,7 @@ function new_plot= plot_param(handles,ax)
         cla;legend('off');
       end
 
-      SplotTraj(handles.TrajSet, param_to_plot,handles.current_pts, handles.traj_opt);
+      SplotTraj(handles.BrSys.P, param_to_plot,handles.current_pts, handles.traj_opt);
       children = get(gca, 'Children');
       if (numel(param_to_plot)>1)
         new_plot=  children(1:2);
@@ -1440,7 +1412,7 @@ function new_plot= plot_param(handles,ax)
     
 function handles= plot_tout(handles)
    
-  if (~isfield(handles.TrajSet,'traj'))
+  if (~isfield(handles.BrSys.P,'traj'))
     return
   end
     
@@ -1478,7 +1450,7 @@ function handles= plot_tout(handles)
         param_to_plot = {param_to_plot{:} handles.current_var{1,3}};
       end
 
-      SplotTraj(handles.TrajSet, param_to_plot);
+      SplotTraj(handles.BrSys.P, param_to_plot);
     end
     
     % Axes2
@@ -1492,7 +1464,7 @@ function handles= plot_tout(handles)
         if (~strcmp(handles.current_var{2,3},''))
           param_to_plot = {param_to_plot{:} handles.current_var{2,3}};
         end
-        SplotTraj(handles.TrajSet, param_to_plot);
+        SplotTraj(handles.BrSys.P, param_to_plot);
       end
     end
     % Axes 3
@@ -1509,7 +1481,7 @@ function handles= plot_tout(handles)
           param_to_plot = {param_to_plot{:} handles.current_var{3,3}};
         end
       end
-      SplotTraj(handles.TrajSet, param_to_plot);    
+      SplotTraj(handles.BrSys.P, param_to_plot);    
     end
     % Other Axes
 
@@ -1530,7 +1502,7 @@ function handles= plot_tout(handles)
             param_to_plot = {param_to_plot{:} handles.current_var{i,3}};
           end
         end
-        SplotTraj(handles.TrajSet, param_to_plot);    
+        SplotTraj(handles.BrSys.P, param_to_plot);    
       end
     end         
 end
@@ -1662,7 +1634,7 @@ function handles = update_trajectories(handles)
   
   if isempty(handles.tspan)
     try 
-       tspan = handles.TrajSet.traj(handles.current_pts).time;       
+       tspan = handles.BrSys.P.traj(handles.current_pts).time;       
     catch
       tspan= [0 1];             
     end
@@ -1672,19 +1644,20 @@ function handles = update_trajectories(handles)
   end
   
   % check if we need to recompute everything
-  if (get(handles.for_all_checkbox,'Value')||~isfield(handles.TrajSet,'traj'))
+  if (get(handles.for_all_checkbox,'Value')||~isfield(handles.BrSys.P,'traj'))
     
-    handles.TrajSet = ComputeTraj(handles.Sys, handles.TrajSet, tspan);
-    traj_ref = handles.TrajSet.traj_ref;
+    handles.BrSys.ResetSimulations();
+    handles.BrSys.Sim(tspan);
+    traj_ref = handles.BrSys.P.traj_ref;
    
-    if isfield(handles.TrajSet,'props')
-      for i=1:numel(handles.TrajSet.props)
-        prop = handles.TrajSet.props(i);
-        for j= 1:size(handles.TrajSet.pts,2)          
-          traj = handles.TrajSet.traj(traj_ref(j));
-          P = Sselect(handles.TrajSet,j);
-          handles.TrajSet.props_values(i,j).val = ...
-          STL_Eval(handles.Sys,props, P, traj,handles.TrajSet.props_values(i,j).tspan);         
+    if isfield(handles.BrSys.P,'props')
+      for i=1:numel(handles.BrSys.P.props)
+        prop = handles.BrSys.P.props(i);
+        for j= 1:size(handles.BrSys.P.pts,2)          
+          traj = handles.BrSys.P.traj(traj_ref(j));
+          P = Sselect(handles.BrSys.P,j);
+          handles.BrSys.P.props_values(i,j).val = ...
+          STL_Eval(handles.Sys,props, P, traj,handles.BrSys.P.props_values(i,j).tspan);         
         end
       end
     end    
@@ -1699,27 +1672,17 @@ function handles = update_trajectories(handles)
     
   else % only one traj needs to be computed
     
-    Ptmp = Sselect(handles.TrajSet,handles.current_pts);    
-    % check if sensi had been computed for this traj
-           
-    if (handles.has_dynamics==1)
-      if isfield(Ptmp.traj, 'sensis')
-        Ptmp = SPurge(Ptmp);
-        Pftmp = ComputeTrajSensi(handles.Sys, Ptmp, tspan);
-      else
-        Ptmp = SPurge(Ptmp);
-        Pftmp = ComputeTraj(handles.Sys, Ptmp, tspan);
-      end
-    else
-        Pftmp = Ptmp;
-    end
-    traj_ref = handles.TrajSet.traj_ref;
-    handles.TrajSet.traj(traj_ref(handles.current_pts)) = Pftmp.traj;
-    handles.TrajSet.Xf(:,traj_ref(handles.current_pts)) = Pftmp.traj.X(:,end);
+    Btmp = handles.BrSys.copy();
+    Btmp.P = Sselect(handles.BrSys.P,handles.current_pts);
+    Btmp.Sim(tspan);       
+     
+    traj_ref = handles.BrSys.P.traj_ref;
+    handles.BrSys.P.traj(traj_ref(handles.current_pts)) = Btmp.P.traj;
+    handles.BrSys.P.Xf(:,traj_ref(handles.current_pts)) = Btmp.P.traj.X(:,end);
     
     % This is needed if, e.g., ComputeTraj called an init_fun which changed
     % some other values in Ptmp.pts
-    handles.TrajSet.pts(:,handles.current_pts) = Pftmp.pts;
+    handles.BrSys.P.pts(:,handles.current_pts) = Btmp.P.pts;
     
     new_plot = plot_param(handles,1);
     handles.current_plot{1} = new_plot;
@@ -1746,18 +1709,18 @@ function handles =  update_listbox_param(handles, changed)
   if (ind_p)
     if (changed)
       new_val = get(handles.slider_param,'Value')*lbda;
-      if (ind_p<=numel(handles.TrajSet.ParamList))
+      if (ind_p<=numel(handles.BrSys.P.ParamList))
         if (get(handles.for_all_checkbox,'Value'))        
-          handles.TrajSet.pts(ind_p, :) = new_val;
-          if (ind_p<=handles.TrajSet.DimP)
-            for i = 1:numel(handles.TrajSet.traj)
-              handles.TrajSet.traj(i).param(ind_p) = new_val;
+          handles.BrSys.P.pts(ind_p, :) = new_val;
+          if (ind_p<=handles.BrSys.P.DimP)
+            for i = 1:numel(handles.BrSys.P.traj)
+              handles.BrSys.P.traj(i).param(ind_p) = new_val;
             end
           end
         else
-          handles.TrajSet.pts(ind_p, handles.current_pts) = new_val;      
-          if (ind_p<=handles.TrajSet.DimP)
-            handles.TrajSet.traj(handles.current_pts).param(ind_p) = new_val;
+          handles.BrSys.P.pts(ind_p, handles.current_pts) = new_val;      
+          if (ind_p<=handles.BrSys.P.DimP)
+            handles.BrSys.P.traj(handles.current_pts).param(ind_p) = new_val;
           end
           
         end
@@ -1772,7 +1735,7 @@ function handles =  update_listbox_param(handles, changed)
       end
       
       if (handles.auto_recompute)
-        if (ind_p<=handles.TrajSet.DimP)
+        if (ind_p<=handles.BrSys.P.DimP)
           handles = update_trajectories(handles);
         end
         handles = UpdatePlots(handles);
@@ -1801,17 +1764,17 @@ function handles =  update_listbox_param(handles, changed)
   
   content = {'Varying parameters' '-------------------'};
 
-  for i=1:numel(handles.TrajSet.dim)
-    st = handles.TrajSet.ParamList{handles.TrajSet.dim(i)};
-    st = strcat(st, ':',' ',dbl2str(handles.TrajSet.pts(handles.TrajSet.dim(i), handles.current_pts)));
+  for i=1:numel(handles.BrSys.P.dim)
+    st = handles.BrSys.P.ParamList{handles.BrSys.P.dim(i)};
+    st = strcat(st, ':',' ',dbl2str(handles.BrSys.P.pts(handles.BrSys.P.dim(i), handles.current_pts)));
     handles.current_varying_param{i} = st;
   end
   
   content = {content{:} handles.current_varying_param{:} '' 'Systems and props parameters' '-------------------'};
 
-  for i=1:numel(handles.TrajSet.ParamList)
-    st = handles.TrajSet.ParamList{i};
-    st = strcat(st, ':',' ',dbl2str(handles.TrajSet.pts(i, handles.current_pts)));
+  for i=1:numel(handles.BrSys.P.ParamList)
+    st = handles.BrSys.P.ParamList{i};
+    st = strcat(st, ':',' ',dbl2str(handles.BrSys.P.pts(i, handles.current_pts)));
     content = {content{:} st};
   end
   

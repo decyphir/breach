@@ -377,7 +377,7 @@ handles= info(handles,'Computing trajectories... Done.');
 
 handles = update_working_sets_panel(handles);
 guidata(hObject, handles);
-h = BreachTrajGui('varargin', handles);
+h = BreachTrajGui(handles.BrSys, handles);
 
 % --- Executes on button press in button_remove_param.
 function button_remove_param_Callback(hObject, eventdata, handles)
@@ -2086,7 +2086,7 @@ function button_explore_traj_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-h = BreachTrajGui('varargin', handles);
+h = BreachTrajGui(handles.BrSys, handles);
 
 % --------------------------------------------------------------------
 function System_Callback(hObject, eventdata, handles)

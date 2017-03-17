@@ -43,7 +43,6 @@ classdef signal_gen <handle
            end
         end
         
-        
     end
     
     methods (Abstract)
