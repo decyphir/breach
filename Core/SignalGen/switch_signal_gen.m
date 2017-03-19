@@ -9,17 +9,27 @@ classdef switch_signal_gen < signal_gen
         function this= switch_signal_gen(sgs)
             this.sgs = sgs;
             this.params = {'sg_num'};
+            this.params_domain = BreachDomain('int', [1 numel(sgs)]); 
             this.p0 = 1;
             this.signals = sgs{1}.signals;
+            this.signals_domain = sgs{1}.signals_domain; % discutable ...   
             
             for isg = 1:numel(sgs)
                 sg = sgs{isg};
                 this.sg_1st_param_idx(isg) = numel(this.params)+1;
+                if isempty(sg.params_domain)
+                    sg.params_domain =  repmat(BreachDomain(),1, numel(sg.params));
+                end
+                this.params_domain = [this.params_domain sg.params_domain];
                 for ip = 1:numel(sg.params)
                     this.params = [this.params ['sg' num2str(isg) '_' sg.params{ip}]];
                 end
                 this.p0 = [this.p0 sg.p0];
             end
+            
+            
+            
+            
         end
         
         function  X = computeSignals(this, p, time)

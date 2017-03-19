@@ -34,6 +34,8 @@ classdef BreachSignalGen < BreachSystem
                signalGenerators = {signalGenerators}; 
             end
             
+            this.SignalDomain= [];
+            this.ParamDomain = [];
             % we need to declare parameters, signals, p0, and simfn           
             this.InitSignalGen(signalGenerators);
             
@@ -45,8 +47,26 @@ classdef BreachSignalGen < BreachSystem
             params = {};
             p0=[];
             for isg = 1:numel(signalGenerators)
+                sg=  signalGenerators{isg};
                 signals = {signals{:}, signalGenerators{isg}.signals{:}};
                 params = {params{:}, signalGenerators{isg}.params{:}}; 
+                
+                % domains 
+                num_sig = numel(sg.signals);
+                if isempty(sg.signals_domain)
+                    this.SignalDomain = [this.SignalDomain repmat(BreachDomain(),1, num_sig)];
+                else
+                    this.SignalDomain = [this.SignalDomain sg.signals_domain];
+                end
+                
+                num_par = numel(sg.params);
+                if isempty(sg.params_domain)
+                    this.ParamDomain = [this.ParamDomain repmat(BreachDomain(),1, num_par)];
+                else
+                    this.ParamDomain = [this.ParamDomain sg.params_domain];
+                end
+                
+                % default values
                 p0sg = signalGenerators{isg}.p0;
                 if size(p0sg,2) >1
                     p0sg = p0sg';

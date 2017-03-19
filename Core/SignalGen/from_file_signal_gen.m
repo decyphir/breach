@@ -11,7 +11,7 @@ classdef from_file_signal_gen < signal_gen
             if ~iscell(fname)
                 fname= {fname};
             end
-            
+             
             for ifn=1:numel(fname)
                 dir_file_list = dir(fname{ifn});
                 pathstr = fileparts(fname{ifn}); % dir does not keep the path...
@@ -25,12 +25,9 @@ classdef from_file_signal_gen < signal_gen
                 end
             end
             
-            
-            
-            
             this.params = {'file_idx'};
             this.p0 = 1;
-            this.domain = BreachDomain('int', [1 numel(this.file_list)]);
+            this.params_domain = BreachDomain('int', [1 numel(this.file_list)]);
             if nargin==3
                 this.data_fmt = 'timed_array';
                 this.varname = varname;

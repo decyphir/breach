@@ -96,10 +96,10 @@ handles.figp=[];
 
 %% Init working sets panel
 handles.working_sets_file_name = [Sys.Dir filesep SysName, '_param_sets.mat'];
+Pthis = Br.P;   
 try
     handles.working_sets = load(handles.working_sets_file_name);
 catch
-    Pthis = Br.P;
     save([Sys.Dir filesep SysName '_param_sets.mat'], 'Pthis');
     handles.working_sets = load(handles.working_sets_file_name);
 end
@@ -1248,6 +1248,7 @@ ipts = handles.BrSys.P.dim(i);
 pts = handles.BrSys.P.pts(ipts,handles.current_pts);
 epsi = handles.BrSys.P.epsi(i, handles.current_pts);
 st = handles.BrSys.P.ParamList{ipts};
+
 
 st_min = dbl2str(pts-epsi);
 st_max = dbl2str(pts+epsi);

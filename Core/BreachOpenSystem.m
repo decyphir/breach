@@ -31,7 +31,8 @@ classdef BreachOpenSystem < BreachSystem
             end
             Sys = this.Sys;
             if exist('U','var') % in this case, the InputGenerator becomes a trace object
-                % TODO: handles multiple input signals
+                % TODO: handles multiple input signals - or use an
+                % from_workspace_signal_gen? 
                 
                 if isnumeric(U)
                     DimU = this.InputMap.Count();
@@ -185,6 +186,11 @@ classdef BreachOpenSystem < BreachSystem
             % Sets the new input function for ComputeTraj
             % FIXME?: tilde?
             this.Sys.init_u = @(~, pts, tspan) (InitU(this,pts,tspan));
+           
+            % Copy Domains of input generator
+            IGdomains = IG.GetDomain(IG.P.ParamList);
+            this.SetDomain(IG.P.ParamList, IGdomains);
+            
             
         end
         

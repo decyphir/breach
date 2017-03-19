@@ -52,7 +52,13 @@ classdef BreachStatus < handle
         function printStatus(this)
            fprintf(getStatus(this));
         end
-        
+      
+        function new = copy(this)
+            % copy operator for BreachSet, works with R2010b or newer.
+            objByteArray = getByteStreamFromArray(this);
+            new = getArrayFromByteStream(objByteArray);
+        end
+
     end
     
 end

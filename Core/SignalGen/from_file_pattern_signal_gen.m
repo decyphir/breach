@@ -6,7 +6,7 @@ classdef from_file_pattern_signal_gen < signal_gen
     methods
         function this = from_file_pattern_signal_gen(signals,fname)
             this.signals =signals;
-            [this.params,this.p0, this.pattern] = guess_filename_params(fname);           
+            [this.params,this.p0, this.pattern] = guess_filename_params(fname);                         
         end
         
         function X= computeSignals(this, p, time)
