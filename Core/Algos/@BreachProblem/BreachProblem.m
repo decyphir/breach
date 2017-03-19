@@ -136,8 +136,7 @@ classdef BreachProblem < BreachStatus
     
     %% Methods
     methods
-        
-        
+             
         %% Constructor
         function this = BreachProblem(BrSet, phi, params, ranges)
             
@@ -236,7 +235,6 @@ classdef BreachProblem < BreachStatus
             this.time_spent = 0;
             this.nb_obj_eval = 0;
         end
-        
         
         %% Options for various solvers
         function solver_opt = setup_solver(this, solver_name)
@@ -364,7 +362,6 @@ classdef BreachProblem < BreachStatus
             end
             this.DispResultMsg(); 
         end
-        
         
         %% Utility functions for solvers
         

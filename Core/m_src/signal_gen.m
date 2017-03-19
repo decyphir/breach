@@ -13,13 +13,13 @@ classdef signal_gen <handle
     % var_cp_signal_gen, pulse_signal_gen, step_signal_gen
     
     properties
-        signals % names of the signals it generates
-        params  % parameters such as control points, etc
-        p0      % default values
-        domain
+        signals         % names of the signals it generates
+        signals_domain  % domains for signals. If empty, all double, unbounded
+        params          % parameters such as control points, etc
+        params_domain   % domains for parameters. If empty, all double, unbounded   
+        p0              % default values
     end
-    
-    
+      
     methods
         function params = getParamNames(this)
             params = this.params;

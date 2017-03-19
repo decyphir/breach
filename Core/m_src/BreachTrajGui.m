@@ -1674,6 +1674,7 @@ function handles = update_trajectories(handles)
     
     Btmp = handles.BrSys.copy();
     Btmp.P = Sselect(handles.BrSys.P,handles.current_pts);
+    Btmp.ResetSimulations();
     Btmp.Sim(tspan);       
      
     traj_ref = handles.BrSys.P.traj_ref;

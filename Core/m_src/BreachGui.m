@@ -70,10 +70,9 @@ handles.Sys=Sys;
 
 if isfield(handles.BrSys,  'SimInputsOnly')
     set(handles.checkbox_input_only,'Value',handles.BrSys.SimInputsOnly);
-%else
-%    set(handles.checkbox_input_only,'Visible','off');
 end
 handles.system_name_file = [ SysName '.mat' ];
+
 if (isfield(Sys,'tspan'))
     if isscalar(Sys.tspan)
         handles.last_tspan = ['[0 ' dbl2str(Sys.tspan) ']'];
@@ -100,19 +99,17 @@ handles.working_sets_file_name = [Sys.Dir filesep SysName, '_param_sets.mat'];
 try
     handles.working_sets = load(handles.working_sets_file_name);
 catch
-    P0 = CreateParamSet(Sys,min(Sys.DimX+1, Sys.DimP)); %#ok<NASGU>
-    save([Sys.Dir filesep SysName '_param_sets.mat'], 'P0');
+    Pthis = Br.P;
+    save([Sys.Dir filesep SysName '_param_sets.mat'], 'Pthis');
     handles.working_sets = load(handles.working_sets_file_name);
 end
 
 fnames = fieldnames(handles.working_sets);
-handles.current_set = 'Pthis';
-handles.working_sets.Pthis = Br.P;
-ithis = find(strcmp('Pthis', fnames));
-set(handles.working_sets_listbox, 'Value', ithis);
+handles.current_set = fnames{1};
+handles.working_sets.Pthis = Pthis;
+set(handles.working_sets_listbox, 'Value', 1);
 set(handles.autosave_checkbox, 'Value', 1);
 
-P = handles.working_sets.(handles.current_set);
 nb_pts = size(handles.working_sets.(handles.current_set).pts, 2);
 handles.working_sets.(handles.current_set).selected = zeros(1,nb_pts);
 handles = update_working_sets_panel(handles);
@@ -2528,7 +2525,7 @@ function pushbutton_input_gen_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 filename = [handles.Sys.Dir filesep handles.Sys.name '_param_sets.mat'];
 backup = [handles.Sys.Dir filesep '.' handles.Sys.name '_param_sets.mat.bck'];
-movefile(filename, backup);
+[~] = movefile(filename, backup);
 BrSys = handles.BrSys;
 BrSys.SetInputGenGUI;
 close(handles.breach);

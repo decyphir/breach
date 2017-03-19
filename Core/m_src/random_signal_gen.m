@@ -45,7 +45,6 @@ classdef random_signal_gen < signal_gen
             this.p0 = p0;
             
             for ku = 1:numel(signals)
-            
                 this.params= [this.params { ...
                     [signals{ku} '_seed'],...
                     [signals{ku} '_dt_min'],...
@@ -53,12 +52,16 @@ classdef random_signal_gen < signal_gen
                     [signals{ku} '_min'],...
                     [signals{ku} '_max'],...
                     }];
+                    
             end
             
             if  isempty(this.p0)
                 this.p0 = repmat( [0 0 1 -1 1] , 1, numel(signals));
             end
-                        
+           
+            % domains 
+            
+            
         end
         
         function X = computeSignals(this,p, time)
