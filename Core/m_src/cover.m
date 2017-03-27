@@ -1,4 +1,4 @@
-function [cnt, grd] =cover(x, delta)
+function [cnt, grd] = cover(x, delta)
 % Compute grid of interest 
 xmin = min(x); 
 xmax = max(x);
@@ -6,7 +6,6 @@ xmax = max(x);
 if nargin==1  % sth like 10 bins by default..
     delta = (xmax-xmin)/10; 
 end
-
 
 grd = xmin:delta:xmax;
 

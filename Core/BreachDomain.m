@@ -6,11 +6,10 @@ classdef BreachDomain
         type='double'
         domain
         enum
-        tabu_list
     end
     
     methods
-        function this = BreachDomain(type, domain , enum, tabu_list )
+        function this = BreachDomain(type, domain)
             if nargin>1 && isempty(domain)
                 domain=[];
             end
@@ -25,40 +24,24 @@ classdef BreachDomain
                 case 2
                     this.type  = type;
                     this.domain = domain;
-                case 3
-                    this.type  = type;
-                    this.domain = domain;
-                    this.enum = enum;
-                case 4
-                    this.type  = type;
-                    this.domain = domain;
-                    this.enum = enum;
-                    this.tabu_list = tabu_list;
-            end
+             end
             
             % init enum (I feel this will explode on me some day)
             switch this.type
                 case 'int'
-                    if ~isempty(this.domain)
-                        if isempty(this.enum)&&((this.domain(2)-this.domain(1))<inf)
-                            this.enum = ceil(this.domain(1)):floor(this.domain(2));
-                        end
+                    if numel(this.domain)~=2
+                       this.enum = round(this.domain);
+                       this.domain  = [min(this.enum), max(this.enum)];
                     else
-                        this.domain = [-inf, inf];
-                        this.enum=[];
+                        this.enum = this.domain(1):this.domain(2);
                     end
-                    
                 case 'enum'
                     this.enum = this.domain;
                     this.domain = [min(this.enum), max(this.enum)];
-                    
                 case 'bool'
                     this.domain = [0 1];
                     this.enum = [0 1];
-                
-            
             end
-            
         end
         
         function new_x = checkin(this,x)
@@ -101,6 +84,21 @@ classdef BreachDomain
             all_x = this.enum;
         end
         
+        function new_x = sample_rand(this, num_samples)
+        % assumes bounded domain 
+            switch this.type
+                case {'enum', 'int'}
+                    new_x = this.enum(randi(numel(this.enum),1,num_samples));
+                case 'double'
+                    new_x = (this.domain(2)-this.domain(1))*rand(1,num_samples) + this.domain(1);
+            end
+        end
+        
+        function new_x = sample_grid(this, num_samples)
+            new_x = linspace(this.domain(1),this.domain(2), num_samples);
+            new_x = this.checkin(new_x);
+        
+        end
         
     end
 end

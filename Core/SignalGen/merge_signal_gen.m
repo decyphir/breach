@@ -29,10 +29,10 @@ classdef merge_signal_gen < signal_gen
                 
                 % default values
                 p0sg = sg.p0;
-                if size(p0sg,2) >1
+                if size(p0sg,1) >1
                     p0sg = p0sg';
                 end
-                this.p0 = [this.p0; p0sg ];
+                this.p0 = [this.p0 p0sg ];
             end
             
         end

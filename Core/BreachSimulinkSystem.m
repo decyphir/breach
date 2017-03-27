@@ -34,6 +34,9 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         InputSrc          % for each input, we match an input port or base workspace (0)
         ParamSrc 
         SimInputsOnly=false % if true, will not run Simulink model    
+        mdl_name
+        mdl_checksum    
+        log_folder
     end
     
     methods
@@ -47,7 +50,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             if ~exist(mdl_name)==4  %  create Simulink system with default options
                 error('BreachSimulinkSystem first argument must be the name of a Simulink model.');
             end
-            
+            this.mdl_name = mdl_name;
             this.ParamSrc = containers.Map();
             
             switch nargin
@@ -74,6 +77,31 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             
         end
         
+        function SetupLogFolder(this, folder_name)
+        % SetupLogFolder creates a 
+        
+            mdl_checksum_hash = DataHash(this.mdl_checksum);
+                           
+            if nargin<2
+                folder_name = [this.Sys.Dir filesep this.Sys.name filesep mdl_checksum_hash]; 
+            else
+                folder_name = [folder_name filesep mdl_checksum_hash];
+            end
+            
+            [success,msg,msg_id] = mkdir(folder_name);           
+            if success == 1
+                if isequal(msg_id, 'MATLAB:MKDIR:DirectoryExists')
+                    this.disp_msg(['Using existing logging folder at ' folder_name]);
+                else
+                    this.disp_msg(['Created logging folder at ' folder_name]);
+                end
+                this.log_folder = folder_name;
+            else
+                error(['Couldn''t create folder'  folder_name '.']);
+            end
+            
+        end
+            
         function SetupParallel(this)
             this.use_parallel = 1;
             gcp;
@@ -92,13 +120,14 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             global BreachGlobOpt
             breach_dir = BreachGlobOpt.breach_dir;
             breach_data_dir = [breach_dir filesep 'Ext' filesep 'ModelsData' ];
-            
+                    
             % Give it a name
             mdl_breach = [mdl '_breach'];
-            
-            % Would be nice to check if mdl changed - could be done with
-            % mdl.Get_CheckSum or sth similar
             load_system(mdl);
+
+            % Get checksum of the model
+            this.mdl_checksum = Simulink.BlockDiagram.getChecksum(mdl);
+
             close_system(mdl_breach,0);
             save_system(mdl,[breach_data_dir filesep mdl_breach]);
             close_system(mdl,0);
@@ -517,8 +546,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 end
             end
         end
-        
-        
+          
         function [tout, X, signals] = simout2X(this, simout)
             %
             % converts a simulink output to a data structure Breach can handle
@@ -696,7 +724,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
         end
         function disp(this)
-            disp(['BreachSimulinkSystem intefacing model ' this.Sys.name '.']);
+            disp(['BreachSimulinkSystem intefacing model ' this.mdl_name '.']);
         end
         
         

@@ -67,11 +67,14 @@ classdef BreachSet < BreachStatus
             end
             this.CheckinDomain();
             this.UpdateParamRanges();
+            
+            
         end
         
         %% Domains
         
         function SetDomain(this, params, type, domain)
+            % SetDomain
             
             if nargin<4
                 domain =[];
@@ -104,8 +107,9 @@ classdef BreachSet < BreachStatus
                 end
             end
         end
+        
         function dom = GetDomain(this, param)
-            
+            % GetDomain
             idx = FindParam(this.P, param);
             for i=1:numel(idx)
                 if numel(this.ParamDomain)<idx(i)
@@ -117,6 +121,7 @@ classdef BreachSet < BreachStatus
         end
         
         function CheckinDomain(this)
+            % CheckinDomain
             this.CheckinDomainParam();
             this.CheckinDomainTraj();
         end
@@ -143,6 +148,7 @@ classdef BreachSet < BreachStatus
         end
         
         function CheckinDomainTraj(this)
+            % CheckinDomainTraj
             % checks trajectories
             if this.hasTraj()
                 for itraj = 1:numel(this.P.traj)
@@ -423,20 +429,26 @@ classdef BreachSet < BreachStatus
             % B.SampleDomain('p','all') create samples enumerating all
             % possible values in the domain of 'p'.
             %
-            % B.SampleDomain('p',...,'rand') default
+            % B.SampleDomain('p',5,'grid') draw samples regularly spaced, including corners
             %
-            % B.SampleDomain('p',...,'grid') draw samples on a grid
+            % B.SampleDomain({'p1','p2'},5,'grid') 5x5 grid
             %
-            % B.SampleDomain('p',...,..., 'replace') default
+            % B.SampleDomain(...,...,..., 'replace') default: repla
             %
-            % B.SampleDomain('p',...,..., 'append')
+            % B.SampleDomain(...,...,..., 'append')
             %
-            % B.SampleDomain('p',...,..., 'combine')
+            % B.SampleDomain(...,...,..., 'combine')
             %
-            
             
             % process parameters
-            if ~exist('method')
+            
+            if ischar(params)
+                params = {params};
+            end
+            
+            num_params =numel(params);
+            
+            if ~exist('method')||isempty(method)
                 method = 'rand';
             end
             
@@ -444,14 +456,65 @@ classdef BreachSet < BreachStatus
                 opt_multi='replace'; %
             end
             
+            % if all is selected, combine new samples
+            combine_x=0;
+            if (isequal(num_samples, 'all') || ...
+                    isequal(method,'grid'))
+                combine_x = 1;
+            end
+            
+            if ischar(method)||isscalar(method)
+                m = method;
+                method = cell(1, num_params);
+                for ic = 1:num_params
+                    method{ic} = m;
+                end
+            end
+            
+            if ischar(num_samples)||isscalar(num_samples)
+                ns = num_samples;
+                num_samples = cell(1, num_params);
+                for ic = 1:num_params
+                    num_samples{ic} = ns;
+                end
+            end
+            
+            if isnumeric(num_samples)
+                num_samples = num2cell(num_samples);
+            end
+            
             % creates new samples
             idx_param = FindParam(this.Sys, params);
-            domain = this.ParamDomain(idx_param);
+            x = cell(1, num_params);
+            num_x = zeros(1, num_params);
+            for ip = 1:num_params
+                domain = this.ParamDomain(idx_param(ip));
+                if isequal(num_samples{ip}, 'all')
+                    x{ip} = domain.sample_all();
+                else
+                    if isequal(method{ip}, 'grid')
+                        x{ip} = domain.sample_grid(num_samples{ip});
+                    elseif isequal(method{ip}, 'rand')
+                        x{ip} = domain.sample_rand(num_samples{ip});
+                    end
+                end
+                num_x(ip) = numel(x{ip});
+            end
             
-            if isequal(num_samples, 'all')
-                x = domain.sample_all();
+            % Combine new samples
+            if num_params>1
+                if combine_x
+                    idx = N2Nn(num_params, num_x);
+                    for ip = 1:num_params
+                        new_x(ip,:) = x{ip}(1, idx(ip,:));
+                    end
+                    x = new_x;
+                    
+                else
+                    x = cell2mat(x');
+                end
             else
-                x = domain.sample_rand(num_samples);
+                x= x{1};
             end
             
             % combine (or not) with others
@@ -467,6 +530,7 @@ classdef BreachSet < BreachStatus
                         this.Reset();
                         this.ResetParam(params, x);
                     end
+                    
                 case 'append'  % TODO
                     if num_old==1
                         this.P.SetParam(params, x)
@@ -474,6 +538,7 @@ classdef BreachSet < BreachStatus
                         this.Reset();
                         this.SetParam(params, x);
                     end
+                    
                 case 'combine'
                     num_new = numel(x);
                     idx = N2Nn(2, [num_old num_new]);
@@ -495,6 +560,7 @@ classdef BreachSet < BreachStatus
             end
         end
         
+        %% Legacy sampling
         function GridSample(this, delta)
             % Grid Sample
             newP = Refine(this.P,delta, 1);
@@ -549,11 +615,12 @@ classdef BreachSet < BreachStatus
             end
         end
         
-        % Concatenation - needs some additional compatibility checks...
+        %% Concatenation - needs some additional compatibility checks...
         function Concat(this, other)
             this.P = SConcat(this.P, other.P);
         end
         
+        %% Plot parameters
         function PlotParams(this, varargin)
             % Plot parameters
             figure;
@@ -561,8 +628,8 @@ classdef BreachSet < BreachStatus
             SplotPts(P, varargin{:});
         end
         
-        %% Coverage
         
+        %% Coverage
         function [cnt, grd1, grd2] = GetSignalCoverage(this,sigs, delta1,delta2)
             % 1d or 2d
             X = this.GetSignalValues(sigs);
@@ -583,17 +650,29 @@ classdef BreachSet < BreachStatus
             switch (numel(sigs))
                 case 1
                     [cnt, grd1] = cover(X,delta1);
-                    figure;
-                    plot(grd1, cnt);
+                    X = grd1+delta1/2; % centers of bins
+                    bar(cnt)
+                    set(gca, 'XTick', round([grd1 grd1(end)+delta1]))
                     
                 case 2
                     [cnt, grd1, grd2] = cover2d(X,delta1,delta2);
+                    X = grd1+delta1/2; % centers of bins
+                    Y = grd2+delta2/2; % centers of bins
                     figure;
-                    surface(grd2, grd1, cnt);
-                    xlabel(sigs{2});
-                    ylabel(sigs{1});
+                    b= bar3(cnt');
+                    set(gca,'XTickLabel', round([X X(end)+delta1]) )
+                    set(gca,'YTickLabel', round([Y Y(end)+delta2]) )
+                    %surface(grd2, grd1, cnt);
+                    xlabel(sigs{1});
+                    ylabel(sigs{2});
                     colormap(jet);
                     colorbar;
+                    
+                    for k = 1:length(b)
+                        zdata = b(k).ZData;
+                        b(k).CData = zdata;
+                        b(k).FaceColor = 'interp';
+                    end
                     title('num. samples per grid element')
                 otherwise
                     error('Coverage for more than 2 signals is not supported');

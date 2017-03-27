@@ -15,6 +15,7 @@ classdef switch_signal_gen < signal_gen
             this.signals_domain = sgs{1}.signals_domain; % discutable ...   
             
             for isg = 1:numel(sgs)
+
                 sg = sgs{isg};
                 this.sg_1st_param_idx(isg) = numel(this.params)+1;
                 if isempty(sg.params_domain)
@@ -24,11 +25,14 @@ classdef switch_signal_gen < signal_gen
                 for ip = 1:numel(sg.params)
                     this.params = [this.params ['sg' num2str(isg) '_' sg.params{ip}]];
                 end
-                this.p0 = [this.p0 sg.p0];
+                
+                if size(sg.p0,1)>1
+                    this.p0 = [this.p0 sg.p0'];
+                else
+                    this.p0 = [this.p0 sg.p0];
+                end
+                
             end
-            
-            
-            
             
         end
         
