@@ -38,7 +38,7 @@ classdef BreachOpenSystem < BreachSystem
                hash = DataHash({this.P.ParamList, this.P.pts, tspan});
              %  log_Brfilename = [this.log_folder filesep 'Br' hash '.mat'];
              %  log_Pfilename = [this.log_folder filesep 'P' hash '.mat'];
-               log_filename = [this.log_folder filesep hash '.mat'];
+               log_filename = [this.log_folder filesep 'Br' hash '.mat'];
                
                if exist(log_filename, 'file')
                   % additional check? 
@@ -46,6 +46,9 @@ classdef BreachOpenSystem < BreachSystem
                   this.P = Br.P;
                   this.disp_msg('Reading trace from log file.', 2);
                   do_compute=0;
+               else
+                  % TODO figure out for each trace if a log file exist 
+               
                end                 
             end
             
@@ -75,18 +78,20 @@ classdef BreachOpenSystem < BreachSystem
             this.P = ComputeTraj(Sys, this.P, tspan);
             this.CheckinDomainTraj();
             
-            % Write log file and discard traces if needed
+            % Write log file 
             if ~isempty(this.log_folder)
                this.disp_msg('Writing to log file.', 2);
                
-               hash_traj = DataHash({this.Sys.ParamList, this.P.traj{1}.param, this.P.traj{1}.time});
-               log_traj_filename = [this.log_folder filesep 'traj_' hash_traj '.mat'];
-               log_traj = matfile(log_traj_filename); 
-               log_traj.param = this.P.traj{1}.param; 
-               log_traj.time = this.P.traj{1}.time; 
-               log_traj.X = this.P.traj{1}.X;                
-               this.P.traj = log_traj; 
-               
+               for itraj = 1:numel(this.P.traj)
+                   hash_traj = DataHash({this.Sys.ParamList, this.P.traj{itraj}.param, this.P.traj{itraj}.time});
+                   log_traj_filename = [this.log_folder filesep 'traj_' hash_traj '.mat'];
+                   log_traj = matfile(log_traj_filename);
+                   log_traj.param = this.P.traj{itraj}.param;
+                   log_traj.time = this.P.traj{itraj}.time;
+                   log_traj.X = this.P.traj{itraj}.X;
+                   this.P.traj{itraj} = log_traj;
+                   this.P.traj{itraj}.Properties.Writable= false;
+               end
                Br = this.copy();
                save(log_filename,'Br');
             end

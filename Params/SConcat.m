@@ -149,7 +149,7 @@ if(isfield(P,'traj') && isfield(P2,'traj'))
     num_traj_P = numel(P.traj);
     P2.traj_ref(P2.traj_ref~=0) = P2.traj_ref(P2.traj_ref~=0) + num_traj_P;
     
-    % link param vector of P2 to traj of  P
+    % link param vector of P2 to traj of P
     for ii = 1:num_traj_P
         P2.traj_ref(ismember(P2.pts(1:P2.DimP,:)',P.traj{ii}.param,'rows')) = ii; % P.traj{ii}.param is a row vector
     end
@@ -157,7 +157,7 @@ if(isfield(P,'traj') && isfield(P2,'traj'))
     % copy P2.traj not in P.traj
     [traj_valid,~,i_unique] = unique(P2.traj_ref(P2.traj_ref>num_traj_P),'stable');
     i_unique = reshape(i_unique,1,[]);
-    P.traj = [ P.traj , P2.traj{traj_valid-num_traj_P} ];
+    P.traj = [ P.traj , P2.traj(traj_valid-num_traj_P) ];
     
     % update P2.traj_ref (for traj not in P)
     P2.traj_ref(P2.traj_ref>num_traj_P) = i_unique+num_traj_P;

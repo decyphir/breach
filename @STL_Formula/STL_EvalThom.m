@@ -71,24 +71,24 @@ for ii=1:numTrajs % we loop on every traj in case we check more than one
     end
     
     % Ensures that traj.X and traj.time are double precision
-    trajs{ii}.time = double(trajs{ii}.time);
-    trajs{ii}.X = double(trajs{ii}.X);
+    traj.time = double(trajs{ii}.time);
+    traj.X = double(trajs{ii}.X);
     
     % Robusthom doesn't like singular intervals - should be optimized one
     % of these days ...
     if exist('t','var')
         time_values__{ii} = t;
         if(numel(t)==1)
-            tn = find(trajs{ii}.time>t,1);
+            tn = find(traj.time>t,1);
             if isempty(tn)
                 interval = [t t+1]; % Maybe not the best choice, but we have to make one !
             else
-                interval = [t trajs{ii}.time(tn)];
+                interval = [t traj.time(1,tn)];
             end
         else
             interval = [t(1) t(end)];
         end
-        [val, time_values] = GetValues(Sys, phi, Pii, trajs{ii}, interval);
+        [val, time_values] = GetValues(Sys, phi, Pii, traj, interval);
         
         try
             if(numel(t)==1) % we handle singular times
@@ -101,14 +101,14 @@ for ii=1:numTrajs % we loop on every traj in case we check more than one
         end
     else
         interval = [0 trajs{ii}.time(end)];
-        [val__ii, time_values__ii] = GetValues(Sys, phi, Pii, trajs{ii}, interval);
+        [val__ii, time_values__ii] = GetValues(Sys, phi, Pii, traj, interval);
         
-        val__{ii} = val__ii(time_values__ii<=trajs{ii}.time(end));
-        time_values__{ii} = time_values__ii(time_values__ii<=trajs{ii}.time(end));
+        val__{ii} = val__ii(time_values__ii<=traj.time(1,end));
+        time_values__{ii} = time_values__ii(time_values__ii<=traj.time(1,end));
         
-        if (time_values__{ii}(end) < trajs{ii}.time(end))
-            vend__ = interp1(time_values__ii, val__ii,trajs{ii}.time(end));
-            time_values__{ii}(end+1) = trajs{ii}.time(end);
+        if (time_values__{ii}(end) < traj.time(end))
+            vend__ = interp1(time_values__ii, val__ii,traj.time(1,end));
+            time_values__{ii}(end+1) = traj.time(1,end);
             val__{ii}(end+1)= vend__;
         end
         
@@ -270,12 +270,12 @@ end
 % first time instant
 ind_ti = find(traj.time>=interval(1),1);
 if isempty(ind_ti) 
-    time_values = [traj.time(end) traj.time(end)+1];
+    time_values = [traj.time(1,end) traj.time(1,end)+1];
     return
 end
 
-if(traj.time(ind_ti)==interval(1))
-    time_values = traj.time(ind_ti);
+if(traj.time(1,ind_ti)==interval(1))
+    time_values = traj.time(1,ind_ti);
     ind_ti = ind_ti+1;
 else
     time_values = interval(1);
@@ -284,18 +284,18 @@ end
 % Last time instant
 if(interval(end)==inf)
     if isempty(ind_ti)
-        time_values = [time_values time_values(end)+1];
+        time_values = [time_values time_values(1,end)+1];
     else
-        time_values = [time_values traj.time(ind_ti:end)];
+        time_values = [time_values traj.time(1,ind_ti:end)];
     end
 else
     ind_tf = find(traj.time >= interval(end),1);
     if isempty(ind_tf)
-        time_values = [time_values traj.time(ind_ti:end) interval(end)];
-    elseif(traj.time(ind_tf)==interval(end))
-        time_values = [time_values traj.time(ind_ti:ind_tf)];
+        time_values = [time_values traj.time(1,ind_ti:end) interval(end)];
+    elseif(traj.time(1,ind_tf)==interval(end))
+        time_values = [time_values traj.time(1,ind_ti:ind_tf)];
     else
-        time_values = [time_values traj.time(ind_ti:ind_tf-1) interval(end)];
+        time_values = [time_values traj.time(1,ind_ti:ind_tf-1) interval(end)];
     end
 end
 

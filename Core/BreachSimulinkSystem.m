@@ -81,7 +81,6 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         % SetupLogFolder creates a 
         
             mdl_checksum_hash = DataHash(this.mdl_checksum);
-                           
             if nargin<2
                 folder_name = [this.Sys.Dir filesep this.Sys.name filesep mdl_checksum_hash]; 
             else
@@ -101,7 +100,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
             
         end
-            
+             
         function SetupParallel(this)
             this.use_parallel = 1;
             gcp;
@@ -114,7 +113,6 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         end
         
         function [sig_in, sig_out, sig_fw, params, sig_build_params] = CreateInterface(this, mdl, params, p0, signals)
-            
             %% Copy the model
             %  Get Breach directory
             global BreachGlobOpt

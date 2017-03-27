@@ -28,7 +28,7 @@ end
 global BreachGlobOpt;
 eval(BreachGlobOpt.GlobVarsDeclare);
 
-dt__ = traj.time(2)-traj.time(1);
+dt__ = traj.time(1,2)-traj.time(1,1);
 Sys = params.Sys;
 P =params.P;
 

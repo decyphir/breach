@@ -107,9 +107,10 @@ switch(numel(proj))
         
         for ii = ipts
             time = P.traj{ii}.time;
+            ind_time = find(time>=t0); 
             if(numel(time>t0))
-                y = P.traj{ii}.X(proj(1),time>=t0) * rescale;
-                x = P.traj{ii}.time(time>=t0)*time_mult;
+                y = P.traj{ii}.X(proj(1),ind_time) * rescale;
+                x = P.traj{ii}.time(1,ind_time)*time_mult;
                 plot(x,y, opt{:});
                 % drawnow
             end

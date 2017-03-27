@@ -521,6 +521,8 @@ classdef BreachProblem < BreachStatus
             % GetBrSet_Logged gets BreachSet object containing parameters and traces computed during optimization
             if this.log_traces
                 BrOut = this.BrSet_Logged;
+            elseif ~isempty(this.BrSys.log_folder)
+                BrOut = LoadLogFolder(this.BrSys.log_folder);
             else
                 BrOut = this.BrSys.copy();
                 BrOut.ResetSimulations();
