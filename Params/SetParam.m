@@ -2,9 +2,9 @@ function P = SetParam(P, ParamList, ParamValues)
 %SETPARAM sets the values of parameters in a parameter set. Note that if
 % the parameter is not present in P, it is created and appended as a fixed
 % parameter. The epsi are neither modified nor created.
-% 
+%
 % Synopsis: P = SetParam(P, ParamList, ParamValues)
-% 
+%
 % Inputs:
 %  - P          : the parameter set to modify;
 %  - ParamList  : a cell array containting the list of parameter names for
@@ -14,16 +14,16 @@ function P = SetParam(P, ParamList, ParamValues)
 %                 is either ( numel(ParamList) , size(P.pts,2) ) or
 %                 ( numel(ParamList) , 1 ), in which case, the same value
 %                 is set to each parameter.
-% 
+%
 % Output:
 %  - P : the modified parameter set
-% 
+%
 % Example (for Lorenz84 system):
 %   CreateSystem
 %   P = CreateParamSet(Sys, {'a', 'b'}, [0 9; 0 5]);
 %   Pr = Refine(P, 3);
 %   val = GetParam(Pr, 'a')
-%   val10 = 10*val; 
+%   val10 = 10*val;
 %   Pr10 = SetParam(Pr, 'a', val10); % values for 'a' in Pr10 are ten
 %                                    % times those in Pr
 %   GetParam(Pr10,'a') % 10 times higher
@@ -32,20 +32,20 @@ function P = SetParam(P, ParamList, ParamValues)
 %                    % 'G') equals to 0.4 (resp 0.6) in the nine points.
 %                    % Values of 'a' and 'b' are equals in Pr and Pr_2.
 %   GetParam(Pr_2,{'a','F'})
-%   
+%
 %   Pr_3 = SetParam(Pr, 'a', 5); % a is equal to 5 in the nine points
 %   GetParam(Pr_3,'a')
-%   
+%
 %   Pr = ComputeTraj(Sys, Pr, 0:0.1:10);
 %   Pr.traj_ref              % should be [1:9]
 %   Pr_4 = SetParam(Pr,'a',1.5);
 %   Pr_4.traj_ref            % should be [1,1,1,2,2,2,3,3,3]
 %   Pr_4.traj_to_compute     % should be empty
-%   
+%
 %   Pr_5 = SetParam(Pr,'a',2);
 %   Pr_5.traj_ref            % should be all zero
 %   Pr_5.traj_to_compute     % should be [1,4,7]
-% 
+%
 %See also GetParam CreateParamSet SetEpsi
 %
 
@@ -59,7 +59,7 @@ elseif ischar(ParamList)
 end
 
 if(size(ParamValues,1) == 1 && numel(ParamList)~=1)
-    ParamValues = ParamValues'; 
+    ParamValues = ParamValues';
 end
 
 if(numel(ParamList) ~= size(ParamValues,1) && size(ParamValues,1)~=1)
@@ -88,7 +88,7 @@ if iscell(ParamList)
     
     if (size(P.(pts), 2)==1 && size(ParamValues,2)>1)
         P.(pts) = repmat(P.(pts), [1 size(ParamValues,2)]);
-        P.(pts)(inds,:) = ParamValues;               
+        P.(pts)(inds,:) = ParamValues;
         if isfield(P, 'epsi') % I guess we'll want to check other fields too,e.g., selected etc
             P.epsi = repmat(P.epsi, [1 size(ParamValues,2)]);
         end
@@ -97,7 +97,7 @@ if iscell(ParamList)
             P.(pts)(inds(ii),:) = ParamValues(ii,:);
         end
     end
-
+    
 elseif isnumeric(ParamList)
     if any(ParamList>size(P.(pts), 1))
         warning('SetParam:index','Indexes out of range have been skipped')
@@ -115,12 +115,15 @@ end
 % manage traj_ref and traj_to_compute
 P.traj_ref = zeros(1,size(P.(pts),2)); % initialise traj_ref
 if isfield(P,'traj')
-    param_traj = cat(1,P.traj(:).param)'; % param value for computed traj
+    param_traj = zeros(numel(P.traj{1}.param),numel(P.traj));
+    for itraj = 1:numel(P.traj)
+        param_traj(:,itraj)=P.traj{itraj}.param'; % param value for computed traj
+    end
     idx_new_traj = 1;
     for ii = 1:size(param_traj,2) % for each existing traj
         same = all(bsxfun(@eq,P.(pts)(1:P.DimP,:),param_traj(:,ii)),1);
         if any(same) % if it is equal to a parameter vector
-            P.traj(idx_new_traj) = P.traj(ii); % then keep the traj (ok because idx_new_traj<=ii)
+            P.traj{idx_new_traj} = P.traj{ii}; % then keep the traj (ok because idx_new_traj<=ii)
             P.traj_ref(same) = idx_new_traj;
             idx_new_traj = idx_new_traj + 1;
         end

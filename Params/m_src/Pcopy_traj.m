@@ -41,7 +41,7 @@ P.traj_ref = zeros(1,size(P.pts,2));
 
 for ii = 1:numel(iP) % for all param vector common between P and those computed in P0
     P.traj_ref(i_pts==iP(ii)) = ii; % affect the ith traj to all param vector equals to the one in P0
-    P.traj(ii) = P0.traj(P0.traj_ref(iP0(ii))); % and fill the iith traj in P
+    P.traj{ii} = P0.traj{P0.traj_ref(iP0(ii))}; % and fill the iith traj in P
     P.Xf(1:P.DimX,ii) = P0.Xf(1:P0.DimX,P0.traj_ref(iP0(ii)));
 end
 

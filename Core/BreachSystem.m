@@ -238,7 +238,7 @@ classdef BreachSystem < BreachSet
             Sim(this);
             % FIXME: this is going to break with multiple trajectories with
             % some of them containing NaN - 
-            if any(isnan(this.P.traj(1).X))
+            if any(isnan(this.P.traj{1}.X))
                 tau = t_phi;
                 rob = t_phi;
                 rob(:) = NaN;
@@ -339,7 +339,7 @@ classdef BreachSystem < BreachSet
             
             for i_exp = 1:numel(stl_expr)
                 expr_tmp_ = STL_Formula('expr_tmp_', [stl_expr{i_exp} '> 0.']);
-                [X, t] = STL_Eval(this.Sys, expr_tmp_, this.P, this.P.traj, this.P.traj(1).time);
+                [X, t] = STL_Eval(this.Sys, expr_tmp_, this.P, this.P.traj, this.P.traj{1}.time);
                 if iscell(t)
                     for i_x = 1:numel(t)
                         h = plot(t{i_x},X{i_x}, varargin{:});
@@ -359,7 +359,7 @@ classdef BreachSystem < BreachSet
             
             for i_exp = 1:numel(stl_expr)
                 expr_tmp_ = STL_Formula('expr_tmp_', [stl_expr{i_exp} '> 0.']);
-                [X, t] = STL_Eval(this.Sys, expr_tmp_, this.P, this.P.traj, this.P.traj(1).time);
+                [X, t] = STL_Eval(this.Sys, expr_tmp_, this.P, this.P.traj, this.P.traj{1}.time);
             end
         end
 

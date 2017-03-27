@@ -58,6 +58,10 @@ numTrajs = numel(trajs);
 val__ = cell(1, numTrajs);
 time_values__ = cell(1, numTrajs);
 
+if isstruct(trajs)
+    trajs = {trajs};
+end
+
 for ii=1:numTrajs % we loop on every traj in case we check more than one
     if (Psize_pts(P)==1)
         Pii = P;
@@ -67,24 +71,24 @@ for ii=1:numTrajs % we loop on every traj in case we check more than one
     end
     
     % Ensures that traj.X and traj.time are double precision
-    trajs(ii).time = double(trajs(ii).time);
-    trajs(ii).X = double(trajs(ii).X);
+    trajs{ii}.time = double(trajs{ii}.time);
+    trajs{ii}.X = double(trajs{ii}.X);
     
     % Robusthom doesn't like singular intervals - should be optimized one
     % of these days ...
     if exist('t','var')
         time_values__{ii} = t;
         if(numel(t)==1)
-            tn = find(trajs(ii).time>t,1);
+            tn = find(trajs{ii}.time>t,1);
             if isempty(tn)
                 interval = [t t+1]; % Maybe not the best choice, but we have to make one !
             else
-                interval = [t trajs(ii).time(tn)];
+                interval = [t trajs{ii}.time(tn)];
             end
         else
             interval = [t(1) t(end)];
         end
-        [val, time_values] = GetValues(Sys, phi, Pii, trajs(ii), interval);
+        [val, time_values] = GetValues(Sys, phi, Pii, trajs{ii}, interval);
         
         try
             if(numel(t)==1) % we handle singular times
@@ -96,15 +100,15 @@ for ii=1:numTrajs % we loop on every traj in case we check more than one
             val__{ii} = NaN(1,numel(t));
         end
     else
-        interval = [0 trajs(ii).time(end)];
-        [val__ii, time_values__ii] = GetValues(Sys, phi, Pii, trajs(ii), interval);
+        interval = [0 trajs{ii}.time(end)];
+        [val__ii, time_values__ii] = GetValues(Sys, phi, Pii, trajs{ii}, interval);
         
-        val__{ii} = val__ii(time_values__ii<=trajs(ii).time(end));
-        time_values__{ii} = time_values__ii(time_values__ii<=trajs(ii).time(end));
+        val__{ii} = val__ii(time_values__ii<=trajs{ii}.time(end));
+        time_values__{ii} = time_values__ii(time_values__ii<=trajs{ii}.time(end));
         
-        if (time_values__{ii}(end) < trajs(ii).time(end))
-            vend__ = interp1(time_values__ii, val__ii,trajs(ii).time(end));
-            time_values__{ii}(end+1) = trajs(ii).time(end);
+        if (time_values__{ii}(end) < trajs{ii}.time(end))
+            vend__ = interp1(time_values__ii, val__ii,trajs{ii}.time(end));
+            time_values__{ii}(end+1) = trajs{ii}.time(end);
             val__{ii}(end+1)= vend__;
         end
         

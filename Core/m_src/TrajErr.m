@@ -9,20 +9,20 @@ function S = TrajErr(S)
     
   nb_traj = numel(S.traj);
 
-  N = size(S.traj(1).X,1);
-  Ns = size(S.traj(1).XS,1)/N;
+  N = size(S.traj{1}.X,1);
+  Ns = size(S.traj{1}.XS,1)/N;
   
   for j = 1:nb_traj
     
     % Synchronize real and estimated trajectories 
     
-    n = length(S.traj(j).time);
-    Xt = interp1(S.etraj(j).time', S.etraj(j).X', S.traj(j).time')';
-    XSt = interp1(S.etraj(j).time', S.etraj(j).XS', S.traj(j).time')';    
+    n = length(S.traj{j}.time);
+    Xt = interp1(S.etraj(j).time', S.etraj(j).X', S.traj{j}.time')';
+    XSt = interp1(S.etraj(j).time', S.etraj(j).XS', S.traj{j}.time')';    
     
     % Sensitivity matrices difference
     
-    dXSt = abs(S.traj(j).XS-XSt);
+    dXSt = abs(S.traj{j}.XS-XSt);
 
     % Construct the initial perturbation vector of the same size as the
     % trajectory  
@@ -43,7 +43,7 @@ function S = TrajErr(S)
     for is = 1:Ns-1
       ExpaErr = ExpaErr+EXPAErr(is*N+1:(is+1)*N,:);
     end  
-    S.traj(j).ExpaErr = ExpaErr+abs(S.traj(j).X-Xt);
+    S.traj{j}.ExpaErr = ExpaErr+abs(S.traj{j}.X-Xt);
   end
 
   %  Err = Err/nb_traj; 

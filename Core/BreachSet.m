@@ -154,7 +154,7 @@ classdef BreachSet < BreachStatus
                 for itraj = 1:numel(this.P.traj)
                     for  i=1:this.P.DimX
                         if ~isempty(this.ParamDomain(i).domain)
-                            this.P.traj(itraj).X(i,:) = this.ParamDomain(i).checkin(this.P.traj(itraj).X(i,:));
+                            this.P.traj{itraj}.X(i,:) = this.ParamDomain(i).checkin(this.P.traj{itraj}.X(i,:));
                         end
                     end
                 end
@@ -328,7 +328,7 @@ classdef BreachSet < BreachStatus
                 end
                 val=inf;
                 for itraj = 1:numel(this.P.traj)
-                    traj = this.P.traj(itraj);
+                    traj = this.P.traj{itraj};
                     traj_maxX = max(traj.X,[], 2);
                     traj_minX = min(traj.X,[], 2);
                     dist_maxX = min(maxX-traj_maxX);
@@ -383,9 +383,9 @@ classdef BreachSet < BreachStatus
             X = cell(nb_traj,1);
             for i_traj = 1:nb_traj
                 if (~exist('t','var'))
-                    X{i_traj} = this.P.traj(i_traj).X(iX,:);
+                    X{i_traj} = this.P.traj{i_traj}.X(iX,:);
                 else
-                    X{i_traj} = interp1(this.P.traj(i_traj).time, this.P.traj(i_traj).X(iX,:)',t)';
+                    X{i_traj} = interp1(this.P.traj{i_traj}.time, this.P.traj{i_traj}.X(iX,:)',t)';
                     if numel(iX)==1
                         X{i_traj} = X{i_traj}';
                     end
@@ -881,8 +881,8 @@ classdef BreachSet < BreachStatus
                     max_diff_time = 0;
                     max_diff_X = 0;
                     for itraj=1:nb_traj_this
-                        tr1 = this.P.traj(itraj);
-                        tr2 = other.P.traj(itraj);
+                        tr1 = this.P.traj{itraj};
+                        tr2 = other.P.traj{itraj};
                         if (isequal(size(tr1.param), size(tr2.param)) &&  isequal(size(tr1.time), size(tr2.time)) && isequal(size(tr1.X), size(tr2.X)))
                             diff_p = tr1.param - tr2.param;
                             diff_time = tr1.time - tr2.time;

@@ -34,13 +34,13 @@ end
 %GetTrajValues is correctly used
 
 if (~exist('t','var'))
-    t = Pf.traj(1).time;
+    t = Pf.traj{1}.time;
 end
 
-X = cat(1, Pf.traj.X); % concatenate all trajectories
+X = cat(1, Pf.traj{1}.X); % concatenate all trajectories
 
 X = X(iX:Pf.DimX:end,:); % keep only the evolution of iX over time
 
-Y = interp1(Pf.traj(1).time, X',t)';
+Y = interp1(Pf.traj{1}.time, X',t)';
 
 end

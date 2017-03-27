@@ -74,7 +74,7 @@ function [mu, mustar, sigma, Pr, EE] = SPropSensi(Sys, P, phi, opt)
 if isfield(opt, 'tspan')
     tspan = opt.tspan;
 elseif isfield(P, 'traj')
-    tspan = P.traj(1).time;
+    tspan = P.traj{1}.time;
 elseif isfield(Sys, 'tspan')
     tspan = Sys.tspan;
 else

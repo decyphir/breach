@@ -96,7 +96,7 @@ classdef BreachTraceSystem < BreachSystem
             
             traj.param(end+1) = nb_traces+1;
             Pnew.Xf = traj.X(:,end);
-            Pnew.traj=traj;
+            Pnew.traj={traj};
             Pnew.traj_ref = 1;
             Pnew.traj_to_compute =  [];
             Pnew.pts(1:Pnew.DimP,1) = traj.param';

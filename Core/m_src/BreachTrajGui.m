@@ -1235,11 +1235,11 @@ if (nprop)  % plot values for a property
     grid on;
     st = param_to_plot{1};
     ipts = handles.current_pts;
-    phi_tspan = handles.BrSys.P.traj(handles.traj_ref(ipts)).time;
+    phi_tspan = handles.BrSys.P.traj{handles.traj_ref(ipts)}.time;
     
     Ptmp = Sselect(handles.BrSys.P, ipts);
     
-    phi_val = STL_Eval(handles.Sys,prop,Ptmp,handles.BrSys.P.traj(handles.traj_ref(ipts)),phi_tspan);
+    phi_val = STL_Eval(handles.Sys,prop,Ptmp,handles.BrSys.P.traj{handles.traj_ref(ipts)},phi_tspan);
     ylabel(get_id(prop),'Interpreter','none');
     xlabel(['time']);
     
@@ -1311,7 +1311,7 @@ if (handles.plot_tout == 1)
     axes(handles.axes1);
     param_to_plot = handles.current_var{1,1};
     
-    if (find_prop(param_to_plot{1}, pnames)==0)&&(~handles.plot_sensi(1))
+    if find_prop(param_to_plot{1}, pnames)==0
         
         if (~strcmp(handles.current_var{1,2},''))
             param_to_plot = {param_to_plot{:} handles.current_var{1,2}};
@@ -1327,7 +1327,7 @@ if (handles.plot_tout == 1)
     % Axes2
     axes(handles.axes2);
     param_to_plot = handles.current_var{2,1};
-    if (find_prop(param_to_plot{1}, pnames)==0)&&(~handles.plot_sensi(2))
+    if find_prop(param_to_plot{1}, pnames)==0
         if (~strcmp(param_to_plot,''))
             if (~strcmp(handles.current_var{2,2},''))
                 param_to_plot = {param_to_plot{:} handles.current_var{2,2}};
@@ -1342,7 +1342,7 @@ if (handles.plot_tout == 1)
     axes(handles.axes3);
     param_to_plot = handles.current_var{3,1};
     
-    if (find_prop(param_to_plot{1}, pnames)==0)&&(~handles.plot_sensi(3))
+    if find_prop(param_to_plot{1}, pnames)==0
         if (~strcmp(param_to_plot,''))
             if (~strcmp(handles.current_var{3,2},''))
                 param_to_plot = {param_to_plot{:} handles.current_var{3,2}};
@@ -1363,7 +1363,7 @@ if (handles.plot_tout == 1)
             continue;
         end
         param_to_plot = handles.current_var{i,1};
-        if (find_prop(param_to_plot{1}, fnames)==0)&&(~handles.plot_sensi(i))
+        if find_prop(param_to_plot{1}, fnames)==0
             if (~strcmp(param_to_plot,''))
                 if (~strcmp(handles.current_var{i,2},''))
                     param_to_plot = {param_to_plot{:} handles.current_var{i,2}};
@@ -1505,7 +1505,7 @@ function handles = update_trajectories(handles)
 
 if isempty(handles.tspan)
     try
-        tspan = handles.BrSys.P.traj(handles.current_pts).time;
+        tspan = handles.BrSys.P.traj{handles.current_pts}.time;
     catch
         tspan= [0 1];
     end
@@ -1525,7 +1525,7 @@ if (get(handles.for_all_checkbox,'Value')||~isfield(handles.BrSys.P,'traj'))
         for i=1:numel(handles.BrSys.P.props)
             prop = handles.BrSys.P.props(i);
             for j= 1:size(handles.BrSys.P.pts,2)
-                traj = handles.BrSys.P.traj(traj_ref(j));
+                traj = handles.BrSys.P.traj{traj_ref(j)};
                 P = Sselect(handles.BrSys.P,j);
                 handles.BrSys.P.props_values(i,j).val = ...
                     STL_Eval(handles.Sys,props, P, traj,handles.BrSys.P.props_values(i,j).tspan);
@@ -1549,8 +1549,8 @@ else % only one traj needs to be computed
     Btmp.Sim(tspan);
     
     traj_ref = handles.BrSys.P.traj_ref;
-    handles.BrSys.P.traj(traj_ref(handles.current_pts)) = Btmp.P.traj;
-    handles.BrSys.P.Xf(:,traj_ref(handles.current_pts)) = Btmp.P.traj.X(:,end);
+    handles.BrSys.P.traj{traj_ref(handles.current_pts)} = Btmp.P.traj;
+    handles.BrSys.P.Xf(:,traj_ref(handles.current_pts)) = Btmp.P.traj{1}.X(:,end);
     
     % This is needed if, e.g., ComputeTraj called an init_fun which changed
     % some other values in Ptmp.pts
@@ -1586,13 +1586,13 @@ if (ind_p)
                 handles.BrSys.P.pts(ind_p, :) = new_val;
                 if (ind_p<=handles.BrSys.P.DimP)
                     for i = 1:numel(handles.BrSys.P.traj)
-                        handles.BrSys.P.traj(i).param(ind_p) = new_val;
+                        handles.BrSys.P.traj{i}.param(ind_p) = new_val;
                     end
                 end
             else
                 handles.BrSys.P.pts(ind_p, handles.current_pts) = new_val;
                 if (ind_p<=handles.BrSys.P.DimP)
-                    handles.BrSys.P.traj(handles.current_pts).param(ind_p) = new_val;
+                    handles.BrSys.P.traj{handles.current_pts}.param(ind_p) = new_val;
                 end
                 
             end

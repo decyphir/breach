@@ -25,11 +25,11 @@ function  [S SToCheckNew ErrMax] = SCheckSensiEstim(Sys,SToCheck, tspan,tol)
             
   for j = 1:numel(St.traj)
     
-    l = numel(St.traj(j).time);
+    l = numel(St.traj{j}.time);
     TOL = repmat(tol',l,1);        
-    ExpaErrMax = max((St.traj(j).ExpaErr')./TOL);
+    ExpaErrMax = max((St.traj{j}.ExpaErr')./TOL);
 
-    %  ExpaErrMax= sqrt(sum((St.traj(j).ExpaErr')./(ATOL+RTOL.*St.traj(j).Expa').^2,2));
+    %  ExpaErrMax= sqrt(sum((St.traj{j}.ExpaErr')./(ATOL+RTOL.*St.traj{j}.Expa').^2,2));
     ErrMax = max([ErrMax ; ExpaErrMax]);
         
     Err = max(ExpaErrMax);

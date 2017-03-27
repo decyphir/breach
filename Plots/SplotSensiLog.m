@@ -94,7 +94,7 @@ function SplotSensiLog(S,iX,iP,ipts)
           
   for i = ipts
     
-    time = S.traj(i).time;       
+    time = S.traj{i}.time;       
 
     for j = 1:numel(iX)
       if (numel(iX)>1)
@@ -107,16 +107,16 @@ function SplotSensiLog(S,iX,iP,ipts)
 
       for k = 1:numel(iP)
 
-        is = (find(S.dim==iP(k))-1)*size(S.traj(i).X,1)+iX(j);      
-        dx = S.traj(i).XS(is,:);  % dX/dp[t]        
+        is = (find(S.dim==iP(k))-1)*size(S.traj{i}.X,1)+iX(j);      
+        dx = S.traj{i}.XS(is,:);  % dX/dp[t]        
 
-        x = S.traj(i).X(iX(j),:);  % X[t]        
+        x = S.traj{i}.X(iX(j),:);  % X[t]        
         % replace zeros by small quantities
         ind = find(abs(x)<1e-16);        
         x(ind) = sign(x(ind))*1e-16;       
         x(x==0) = 1e-16;
 
-        p = S.traj(i).param(iP(k));    % p
+        p = S.traj{i}.param(iP(k));    % p
         
         plot(time, (dx*p)./x ,opt{:},'Color',colors(k,:)); % plot
                                                            % dX/dp[t]* p/X

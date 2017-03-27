@@ -448,7 +448,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             
             try
                 if (this.SimInputsOnly)||(~isempty(this.InputGenerator))&&this.InputGenerator.statusMap.isKey('input_spec_false')
-                    tout = this.InputGenerator.P.traj.time;
+                    tout = this.InputGenerator.P.traj{1}.time;
                     X = NaN(Sys.DimX, numel(tout));
                     idx= this.GetInputSignalsIdx();
                     Xin = this.InputGenerator.GetSignalValues(this.Sys.InputList);

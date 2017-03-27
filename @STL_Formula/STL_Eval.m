@@ -41,8 +41,8 @@ function [val, tau] = STL_Eval(Sys, phi, P, trajs, varargin)
 %  P = SetParam(P, 'theta', 2);
 %  P = ComputeTraj(Sys, P, 0:.01:10);
 %  phi = STL_Formula('phi','ev_[0,1] (x0[t]>theta)');
-%  [val,tau] = STL_Eval(Sys, phi, P, P.traj(P.traj_ref(1)), 0)
-%  [val,tau] = STL_Eval(Sys, phi, P, P.traj(P.traj_ref(1)), [3,7])
+%  [val,tau] = STL_Eval(Sys, phi, P, P.traj{P.traj_ref(1}), 0)
+%  [val,tau] = STL_Eval(Sys, phi, P, P.traj{P.traj_ref(1}), [3,7])
 % 
 %See also SEvalProp STL_Formula
 %

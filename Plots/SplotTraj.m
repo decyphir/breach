@@ -106,10 +106,10 @@ switch(numel(proj))
         end
         
         for ii = ipts
-            time = P.traj(ii).time;
+            time = P.traj{ii}.time;
             if(numel(time>t0))
-                y = P.traj(ii).X(proj(1),time>=t0) * rescale;
-                x = P.traj(ii).time(time>=t0)*time_mult;
+                y = P.traj{ii}.X(proj(1),time>=t0) * rescale;
+                x = P.traj{ii}.time(time>=t0)*time_mult;
                 plot(x,y, opt{:});
                 % drawnow
             end
@@ -132,10 +132,10 @@ switch(numel(proj))
         end
         
         for ii = ipts
-            time = P.traj(ii).time;
-            if (numel(P.traj(ii).time)>0)
-                x = P.traj(ii).X(proj(1),time>=t0)*rescale;
-                y = P.traj(ii).X(proj(2),time>=t0)*rescale;
+            time = P.traj{ii}.time;
+            if (numel(P.traj{ii}.time)>0)
+                x = P.traj{ii}.X(proj(1),time>=t0)*rescale;
+                y = P.traj{ii}.X(proj(2),time>=t0)*rescale;
                 plot(x,y,opt{:});
                 plot(x(1),y(1),'xr');
             end
@@ -160,11 +160,11 @@ switch(numel(proj))
         end
         
         for ii = ipts
-            time = P.traj(ii).time;
+            time = P.traj{ii}.time;
             if ~isempty(time)
-                x = P.traj(ii).X(proj(1),time>=t0)*rescale;
-                y = P.traj(ii).X(proj(2),time>=t0)*rescale;
-                z = P.traj(ii).X(proj(3),time>=t0)*rescale;
+                x = P.traj{ii}.X(proj(1),time>=t0)*rescale;
+                y = P.traj{ii}.X(proj(2),time>=t0)*rescale;
+                z = P.traj{ii}.X(proj(3),time>=t0)*rescale;
                 plot3(x,y,z,opt{:});
                 plot3(x(1),y(1),z(1),'xr');
             end

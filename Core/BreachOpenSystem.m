@@ -79,12 +79,12 @@ classdef BreachOpenSystem < BreachSystem
             if ~isempty(this.log_folder)
                this.disp_msg('Writing to log file.', 2);
                
-               hash_traj = DataHash({this.Sys.ParamList, this.P.traj.param, this.P.traj(1).time});
+               hash_traj = DataHash({this.Sys.ParamList, this.P.traj{1}.param, this.P.traj{1}.time});
                log_traj_filename = [this.log_folder filesep 'traj_' hash_traj '.mat'];
                log_traj = matfile(log_traj_filename); 
-               log_traj.param = this.P.traj.param; 
-               log_traj.time = this.P.traj.time; 
-               log_traj.X = this.P.traj.X;                
+               log_traj.param = this.P.traj{1}.param; 
+               log_traj.time = this.P.traj{1}.time; 
+               log_traj.X = this.P.traj{1}.X;                
                this.P.traj = log_traj; 
                
                Br = this.copy();
@@ -276,7 +276,7 @@ classdef BreachOpenSystem < BreachSystem
                 end
             end
             
-            U.t = this.InputGenerator.P.traj.time;
+            U.t = this.InputGenerator.P.traj{1}.time;
             if size(U.t, 1)==1
                 U.t=U.t';
             end
@@ -286,7 +286,7 @@ classdef BreachOpenSystem < BreachSystem
             for input= this.Sys.InputList % Sys.InputList is in the same order as the model
                 idx_mdl = idx_mdl+1;
                 idx =  FindParam(this.InputGenerator.P, input{1});
-                U.u(:,idx_mdl) = this.InputGenerator.P.traj.X(idx,:)';
+                U.u(:,idx_mdl) = this.InputGenerator.P.traj{1}.X(idx,:)';
             end
         end
         
@@ -295,12 +295,12 @@ classdef BreachOpenSystem < BreachSystem
             
             if isa(this.InputGenerator, 'BreachTraceSystem')
                 % TODO Concat other with more than one trace...
-                trace = [other.InputGenerator.P.traj(1).time' other.InputGenerator.P.traj(1).X'];
+                trace = [other.InputGenerator.P.traj{1}.time' other.InputGenerator.P.traj{1}.X'];
                 this.InputGenerator.AddTrace(trace);
                 % Using SetParam here erases the trajectory...
                 i_trace_id = FindParam(other.P, 'trace_id');
                 other.P.pts(i_trace_id,1) = numel(this.P.traj)+1;
-                other.P.traj(1).param(i_trace_id) = numel(this.P.traj)+1;
+                other.P.traj{1}.param(i_trace_id) = numel(this.P.traj)+1;
                 this.P = SConcat(this.P, other.P);
             else
                 this.InputGenerator.P= SConcat(this.InputGenerator.P, other.InputGenerator.P);

@@ -68,7 +68,7 @@ if isfield(opt, 'tspan')
 elseif isfield(Sys, 'tspan')
     tspan = Sys.tspan;
 elseif isfield(P, 'traj')
-    tspan = P.traj(1).time;
+    tspan = P.traj{1}.time;
 else
     error('SOptimeProp:noTspan','The field opt.tspan is not provided.');
 end

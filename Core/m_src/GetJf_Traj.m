@@ -2,7 +2,7 @@ function J = GetJf_Traj(Sys,Pf,ind_traj, t)
 
   InitSystem(Sys);
   
-  traj = Pf.traj(ind_traj);  
+  traj = Pf.traj{ind_traj};  
   ind_t= find(traj.time>= t,1);
   
   t0 = traj.time(ind_t-1);

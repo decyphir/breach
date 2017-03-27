@@ -143,7 +143,7 @@ if(open_dialog)
     
     if isempty(tspan)
         if isfield(P, 'traj')
-            tspan = P.traj(1).time; %NM: not correct because two trajectories may have different time field
+            tspan = P.traj{1}.time; %NM: not correct because two trajectories may have different time field
         else
             error('SplotSensiBar:noTspan','No precomputed trajectories.')
         end
@@ -242,7 +242,7 @@ switch(stat_type)
         
         % 1/ Compute variable sensitivities
         for ii = 1:size(P.pts,2)
-            traj = P.traj(P.traj_ref(ii));
+            traj = P.traj{P.traj_ref(ii});
             time = traj.time;
             
             for jj = 1:numel(iX)
@@ -277,7 +277,7 @@ switch(stat_type)
         
         % 1/ Compute variable sensitivities
         for ii = 1:size(P.pts,2)
-            traj = P.traj(P.traj_ref(ii));
+            traj = P.traj{P.traj_ref(ii});
             for jj = 1:numel(iX)
                 for kk = 1:numel(iP)
                     is = (find(P.dim==iP(kk))-1)*size(traj.X,1)+iX(jj);
@@ -336,7 +336,7 @@ switch(stat_type)
         
         % 1/ Compute variable sensitivities
         for ii = 1:size(P.pts,2)
-            traj = P.traj(P.traj_ref(ii));
+            traj = P.traj{P.traj_ref(ii});
             for jj = 1:numel(iX)
                 for kk = 1:numel(iP)
                     is = (find(P.dim==iP(kk))-1)*size(traj.X,1)+iX(jj);

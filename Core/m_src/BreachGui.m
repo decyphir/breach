@@ -430,7 +430,7 @@ if ~any(handles.working_sets.(handles.current_set).dim==ii)
     
     if isfield(handles.working_sets.(handles.current_set), 'traj')
         if(handles.selected_param <= handles.working_sets.(handles.current_set).DimP)
-            %NM: tspan=handles.working_sets.(handles.current_set).traj(1).time;
+            %NM: tspan=handles.working_sets.(handles.current_set).traj{1}.time;
             [~,~,~,~,tokens] = regexp(handles.last_tspan,'([0-9eE\+-\.]+):([0-9eE\+-\.]+):([0-9eE\+-\.]+)');
             tspan = str2double(tokens{1}{1}):str2double(tokens{1}{2}):str2double(tokens{1}{3});
             handles = info(handles,'Updating trajectories...');
@@ -1418,7 +1418,7 @@ restore_traj =0;
 if isfield( handles.Sys, 'type')
     if strcmp(handles.Sys.type,'traces')
         if isfield(handles.working_sets.(handles.current_set), 'traj')
-            traj(1) = handles.working_sets.(handles.current_set).traj(1);
+            traj(1) = handles.working_sets.(handles.current_set).traj{1};
             restore_traj =1;
         end
     end
@@ -1444,7 +1444,7 @@ else
 end
 
 if isempty(ins{2})
-    tspan = S.traj(1).time;
+    tspan = S.traj{1}.time;
 else
     tspan = eval(ins{2});
 end
@@ -2052,7 +2052,7 @@ try
         if(restore_traj)
             Pf.traj = repmat(traj(1), [1 size(Pf.pts,2)]);
             for j = 1:numel(Pf.traj)
-                Pf.traj(j).param = Pf.pts(:,j);
+                Pf.traj{j}.param = Pf.pts(:,j);
             end
         end
         
@@ -2182,7 +2182,7 @@ try
     end
     
     if isempty(ins{1})
-        tspan = S.traj(1).time;
+        tspan = S.traj{1}.time;
     else
         tspan = eval(ins{1});
     end
@@ -2258,7 +2258,7 @@ else
 end
 
 if isempty(opt.tspan_prop_eval)
-    opt.tspan_prop_eval = Pphi.traj(Pphi.traj_ref(1)).time;
+    opt.tspan_prop_eval = Pphi.traj{Pphi.traj_ref(1)}.time;
 end
 
 handles = info(handles, 'Computing satisfaction of formula...');

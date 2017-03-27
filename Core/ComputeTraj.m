@@ -100,7 +100,7 @@ if strcmp(Sys.type,'traces') % No model
     % If system type is only traces, check consistency of params and pts
     Pf = P0;
     for ii = 1:numel(Pf.traj)
-        Pf.traj(ii).param = Pf.pts(1:Pf.DimP,ii)';
+        Pf.traj{ii}.param = Pf.pts(1:Pf.DimP,ii)';
     end
 elseif(isfield(P0,'traj_to_compute') && ~isempty(P0.traj_to_compute) && ~isequal(P0.traj_to_compute,1:size(P0.pts,2)))
     % Here, we assume:
@@ -118,7 +118,7 @@ elseif(isfield(P0,'traj_to_compute') && ~isempty(P0.traj_to_compute) && ~isequal
     end
     [~,~,i_P0] = unique([Ptmp.pts(1:P0.DimP,:),P0.pts(1:P0.DimP,:)]','rows','stable'); % Ptmp(1:P0.DimP,:) are all unique
     for ii = 1:numel(P0.traj_to_compute) % for each newly computed traj
-        Pf.traj(numTrajP0+ii) = Ptmp.traj(Ptmp.traj_ref(ii)); % add it to Pf
+        Pf.traj{numTrajP0+ii} = Ptmp.traj{Ptmp.traj_ref(ii)}; % add it to Pf
         Pf.Xf(1:Pf.DimX,numTrajP0+ii) = Ptmp.Xf(1:Ptmp.DimX,Ptmp.traj_ref(ii));
         i_traj_ref = find(i_P0==ii); % look for indexes of param vector in Pf corresponding to this traj
         i_traj_ref = i_traj_ref(i_traj_ref>numel(P0.traj_to_compute)) - numel(P0.traj_to_compute); % The first ones are Ptmp index, skip them
@@ -157,7 +157,7 @@ switch Sys.type
             
             [traj.time, traj.X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
             traj.param = P0.pts(1:P0.DimP,ii)';
-            Pf.traj(ii) = traj;
+            Pf.traj{ii} = traj;
             Pf.Xf(:,ii) = traj.X(:,end);
             
             if Verbose==1
@@ -200,7 +200,7 @@ switch Sys.type
             end
             Pf.traj = trajs;
             for ii=ipts
-                Pf.Xf(:,ii) = Pf.traj(ii).X(:,end);
+                Pf.Xf(:,ii) = Pf.traj{ii}.X(:,end);
             end
             
         else
@@ -210,8 +210,7 @@ switch Sys.type
                 rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
             end
             
-            trajs = repmat(struct(), 1, numel(ipts));
-            
+            trajs = cell(1, numel(ipts));
             for ii = ipts
                 if isfield(Sys,'init_u')
                     U = Sys.init_u(Sys.InputOpt, P0.pts(1:Sys.DimP,ii), tspan);
@@ -219,15 +218,15 @@ switch Sys.type
                     assignin('base', 'u__',U.u);
                 end
                 
-                [trajs(ii).time, trajs(ii).X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
-                trajs(ii).param = P0.pts(1:P0.DimP,ii)';
+                [trajs{ii}.time, trajs{ii}.X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
+                trajs{ii}.param = P0.pts(1:P0.DimP,ii)';
                 if Verbose ==1
                     rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
                 end
             end
             Pf.traj = trajs;
             for ii=ipts
-                Pf.Xf(:,ii) = Pf.traj(ii).X(:,end);
+                Pf.Xf(:,ii) = Pf.traj{ii}.X(:,end);
             end
             if Verbose==1
                 if(numel(ipts)>1)

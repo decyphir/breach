@@ -152,7 +152,7 @@ for np = 1:numel(phis) % for each property
     
     for ii = 1:numel(ipts) % we compute the truth value of phi for each parameter vector
         i_pt = ipts(ii);
-        traj_tmp = P.traj(P.traj_ref(i_pt));
+        traj_tmp = P.traj{P.traj_ref(i_pt)};
         Ptmp = Sselect(P,i_pt);
         
         if(isempty(taus)||isempty(taus{np}))

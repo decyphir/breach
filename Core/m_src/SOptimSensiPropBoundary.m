@@ -16,7 +16,7 @@ function [val vald] = fun0(x, Sys,Stmp, prop, tspan)
   
   Stmp.pts(Stmp.dim)=x;
   Sf = ComputeTrajSensi(Sys, Stmp, tspan);
-  [val vald] = STL_EvalSensi(prop,Sf.traj(1),0);
+  [val vald] = STL_EvalSensi(prop,Sf.traj{1},0);
   val = abs(val);
   vald= sign(val)*vald;
   

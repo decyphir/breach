@@ -43,8 +43,8 @@ function SplotBoxXf(S,c,alpha)
       nb_pts= size(Sp.pts,2);
 
       for k=1:nb_pts
-        DX = Sp.traj(k).Expa(proj,end)';
-        X = Sp.traj(k).X(proj,end)'-DX;        
+        DX = Sp.traj{k}.Expa(proj,end)';
+        X = Sp.traj{k}.X(proj,end)'-DX;        
         rect(X,2*DX,c,alpha);
       end
       
@@ -61,8 +61,8 @@ function SplotBoxXf(S,c,alpha)
       nb_pts= size(Sp.pts,2);
 
       for k=1:nb_pts
-        DX = Sp.traj(k).Expa(proj,end)';
-        X = Sp.traj(k).X(proj,end)'-DX;        
+        DX = Sp.traj{k}.Expa(proj,end)';
+        X = Sp.traj{k}.X(proj,end)'-DX;        
         voxel(X,2*DX,c,alpha);
       end
       
