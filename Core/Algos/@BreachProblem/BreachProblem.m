@@ -523,6 +523,7 @@ classdef BreachProblem < BreachStatus
                 BrOut = this.BrSet_Logged;
             else
                 BrOut = this.BrSys.copy();
+                BrOut.ResetSimulations();
                 BrOut.SetParam(this.params, this.X_log);
             end
             BrOut.Sys.Verbose=1;
@@ -536,6 +537,15 @@ classdef BreachProblem < BreachStatus
                 BrBest.SetParam(this.params, this.x_best, 'spec');
             end
             BrBest.Sys.Verbose=1;
+        end
+        
+        function SetupLogFolder(this, fname)
+            if nargin<2
+                this.BrSys.SetupLogFolder();
+            else
+                this.BrSys.SetupLogFolder(fname);
+            end
+            this.log_traces= false;
         end
         
         function display_status_header(this)
