@@ -187,7 +187,7 @@ switch Sys.type
         end
         
         if isfield(Sys, 'Parallel')&&Sys.Parallel
-            trajs = repmat(struct(), 1, numel(ipts));
+            trajs = cell(1, numel(ipts));
             parfor ii = ipts
                 if isfield(Sys,'init_u')
                     U = Sys.init_u(Sys.InputOpt, P0.pts(1:Sys.DimP,ii), tspan);
@@ -195,8 +195,8 @@ switch Sys.type
                     assignin('base', 'u__',U.u);
                 end
                 
-                [trajs(ii).time, trajs(ii).X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
-                trajs(ii).param = P0.pts(1:P0.DimP,ii)';
+                [trajs{ii}.time, trajs{ii}.X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
+                trajs{ii}.param = P0.pts(1:P0.DimP,ii)';
             end
             Pf.traj = trajs;
             for ii=ipts
