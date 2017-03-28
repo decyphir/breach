@@ -632,8 +632,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 end
             end
         end
-        
-        
+            
         function sig_log = FindLoggedSignals(this)
             %
             % converts a simulink output to a data structure Breach can handle

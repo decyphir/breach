@@ -1,24 +1,24 @@
 classdef MaxSatProblem < BreachProblem
-    % MaxSatProblem A variant of BreachProblem - maximize robustness and logs positive value 
-    %   
+    % MaxSatProblem A variant of BreachProblem - maximize robustness and logs positive value
+    %
     %  FalsificationProblem Properties
     %    BrSet_True -  BreachSet updated with falsifying parameter vectors
-    %                   and traces whenever some are found 
+    %                   and traces whenever some are found
     %    X_True     -  parameter values found falsifying the formula
-    %    StopAtTrue - (default: true) if true, will stop as soon as a falsifying 
-    %                   parameter is found. 
-    % 
+    %    StopAtTrue - (default: true) if true, will stop as soon as a falsifying
+    %                   parameter is found.
+    %
     %  FalsificationProblem Methods
-    %    GetBrSet_True - returns BrSet_True 
+    %    GetBrSet_True - returns BrSet_True
     %
     % See also BreachProblem
-
+    
     properties
         BrSet_True
         X_True
         StopAtTrue=false
     end
-
+    
     
     methods
         function this = MaxSatProblem(BrSys, phi, params, ranges)
@@ -40,7 +40,7 @@ classdef MaxSatProblem < BreachProblem
         end
         
         function obj = objective_fn(this,x)
-            obj = -min(this.robust_fn(x)); % maximizes the min robustness 
+            obj = -min(this.robust_fn(x)); % maximizes the min robustness
         end
         
         function ResetObjective(this)
@@ -48,7 +48,7 @@ classdef MaxSatProblem < BreachProblem
             this.X_True = [];
             this.BrSet_True = [];
         end
-
+        
         
         % Nothing fancy - calls parent solve then display falsifying params
         % if found.
@@ -59,10 +59,10 @@ classdef MaxSatProblem < BreachProblem
         
         % Logging
         function LogX(this, x, fval)
-  
+            
             % Logging default stuff
             this.LogX@BreachProblem(x, fval);
-
+            
             %  Logging satisfying parameters and traces
             if fval < 0
                 this.X_True = [this.X_True x];
@@ -76,13 +76,26 @@ classdef MaxSatProblem < BreachProblem
                     this.stopping = true;
                 end
             end
-           
+            
         end
-
+        
         function BrTrue = GetBrSet_True(this)
-            BrTrue = this.BrSet_True;
+            if this.log_traces
+                BrTrue = this.BrSet_False;
+            else
+                [~, i_true] = find(this.obj_log>=0);
+                if ~isempty(i_true)
+                    BrTrue = this.BrSys.copy();
+                    BrTrue.SetParam(this.params, this.X_log(:, i_true));
+                    if ~isempty(this.BrSys.log_folder)
+                        BrTrue.Sim();
+                    end
+                end
+                
+            end
         end
-
+        
+       
         function DispResultMsg(this)
             fprintf('\n ---- Best robustness value %g found at\n', -this.obj_best);
             param_values = this.x_best;

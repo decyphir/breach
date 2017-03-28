@@ -104,6 +104,9 @@ classdef BreachSet < BreachStatus
                     this.ParamDomain(idx) = type(ip);
                 else
                     this.ParamDomain(idx) = BreachDomain(type, domain);
+                    if ~isempty(domain)&&idx>this.P.DimX
+                    this.SetParamRanges(idx, [this.ParamDomain(idx).domain(1),this.ParamDomain(idx).domain(2)]);
+                    end
                 end
             end
         end
@@ -140,9 +143,9 @@ classdef BreachSet < BreachStatus
             end
             
             % Eliminate resulting duplicates
-            [pts, ipts]=unique(pts','rows');
-            pts= pts';
-            this.P = Sselect(this.P, ipts);
+            %[pts, ipts]=unique(pts','rows');
+            %pts= pts';
+            %this.P = Sselect(this.P, ipts');
             this.P.pts = pts;
             
         end
@@ -197,6 +200,7 @@ classdef BreachSet < BreachStatus
             this.P = Sselect(SPurge(this.P),1);
             this.P.pts = repmat(this.P.pts,1, size(values, 2));
             this.P.epsi= repmat(this.P.epsi,1, size(values, 2));
+            this.P.selected = zeros(1, size(values, 2));
             this.P = SetParam(this.P, ip, values);
             this.UpdateParamRanges();
         end
@@ -433,7 +437,7 @@ classdef BreachSet < BreachStatus
             %
             % B.SampleDomain({'p1','p2'},5,'grid') 5x5 grid
             %
-            % B.SampleDomain(...,...,..., 'replace') default: repla
+            % B.SampleDomain(...,...,..., 'replace') default
             %
             % B.SampleDomain(...,...,..., 'append')
             %
@@ -458,11 +462,13 @@ classdef BreachSet < BreachStatus
             
             % if all is selected, combine new samples
             combine_x=0;
-            if (isequal(num_samples, 'all') || ...
-                    isequal(method,'grid'))
-                combine_x = 1;
+            if iscell(num_samples)               
+                for is =1:numel(num_samples)
+                    combine_x = combine_x || isequal(num_samples{is}, 'all');  
+                end
             end
-            
+            combine_x= combine_x||isequal(num_samples, 'all')||isequal(method,'grid');
+                
             if ischar(method)||isscalar(method)
                 m = method;
                 method = cell(1, num_params);
@@ -531,12 +537,14 @@ classdef BreachSet < BreachStatus
                         this.ResetParam(params, x);
                     end
                     
-                case 'append'  % TODO
+                case 'append'  % FIXME deep copy here is not smartest   
+                    Btmp = this.copy();
                     if num_old==1
-                        this.P.SetParam(params, x)
+                        Btmp.SetParam(params, x)
                     else
-                        this.Reset();
-                        this.SetParam(params, x);
+                        Btmp.Reset();
+                        Btmp.ResetParam(params, x);
+                        this.Concat(Btmp);
                     end
                     
                 case 'combine'

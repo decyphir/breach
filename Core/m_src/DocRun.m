@@ -187,7 +187,7 @@ classdef DocRun < handle
                 if nargin>2
                     if open
                         cd(this.publish_dir);
-                        system(['open ' this.script_name '.pdf']);
+                        system(['"c:\Program Files\SumatraPDF\SumatraPDF.exe" ' this.script_name '.pdf']);
                         cd(this.current_dir);
                     end
                 end

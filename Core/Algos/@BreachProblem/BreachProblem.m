@@ -537,6 +537,9 @@ classdef BreachProblem < BreachStatus
             if isempty(BrBest)
                 BrBest = this.BrSys.copy();
                 BrBest.SetParam(this.params, this.x_best, 'spec');
+                if ~isempty(this.BrSys.log_folder)
+                   BrBest.Sim(); 
+                end
             end
             BrBest.Sys.Verbose=1;
         end

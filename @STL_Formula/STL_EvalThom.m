@@ -58,7 +58,7 @@ numTrajs = numel(trajs);
 val__ = cell(1, numTrajs);
 time_values__ = cell(1, numTrajs);
 
-if isstruct(trajs)
+if isstruct(trajs)||isa(trajs, 'matlab.io.MatFile')
     trajs = {trajs};
 end
 
@@ -100,7 +100,7 @@ for ii=1:numTrajs % we loop on every traj in case we check more than one
             val__{ii} = NaN(1,numel(t));
         end
     else
-        interval = [0 trajs{ii}.time(end)];
+        interval = [0 traj.time(1,end)];
         [val__ii, time_values__ii] = GetValues(Sys, phi, Pii, traj, interval);
         
         val__{ii} = val__ii(time_values__ii<=traj.time(1,end));

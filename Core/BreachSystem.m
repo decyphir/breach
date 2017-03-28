@@ -176,7 +176,7 @@ classdef BreachSystem < BreachSet
         end
         
         function [Bpos, Bneg] = FilterSpec(this, phi)
-            % FilterSpec Return parameters and trajectories violating a
+            % FilterSpec Separate parameters and trajectories satisfying and violating a
             % specification
             %
             
@@ -225,13 +225,7 @@ classdef BreachSystem < BreachSet
               values = [];
             end
             
-            %if ischar(phi)
-            %    this__phi__ = STL_Formula('this__phi__', phi);
-            %else
-            %    this__phi__ = phi;
-            %end
-            
-            if ~isempty(params)
+             if ~isempty(params)
                 this.P = SetParam(this.P, params, values);
             end
             
@@ -267,8 +261,10 @@ classdef BreachSystem < BreachSet
             
         end
         
-        % Plots satisfaction signal
         function PlotRobustSat(this, phi, depth, tau, ipts)
+            % Plots satisfaction signal
+
+            
             % check arguments
             if(~exist('ipts','var')||isempty(ipts))
                 ipts = 1:size(this.P.pts,2);
@@ -331,7 +327,7 @@ classdef BreachSystem < BreachSet
 
         
         function [h, t, X]  = PlotExpr(this, stl_expr, varargin)
-            % plots a signal expression
+            % Plots a signal expression
             
             if ~iscell(stl_expr)
                 stl_expr = {stl_expr};
@@ -363,9 +359,7 @@ classdef BreachSystem < BreachSet
             end
         end
 
-        
-             
-
+    
         %% Sensitivity analysis
         function [mu, mustar, sigma] = SensiSpec(this, phi, params, ranges, opt)
             % SensiSpec Sensitivity analysis of a formula to a set of parameters

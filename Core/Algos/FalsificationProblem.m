@@ -92,15 +92,19 @@ classdef FalsificationProblem < BreachProblem
         function BrFalse = GetBrSet_False(this)
             if this.log_traces
                 BrFalse = this.BrSet_False;
-            else      
+            else
                 [~, i_false] = find(this.obj_log<0);
                 if ~isempty(i_false)
                     BrFalse = this.BrSys.copy();
-                    BrFalse.Reset();
-                    BrFalse.SetParam(this.params, this.Xlog(:, i_false));     
+                    BrFalse.SetParam(this.params, this.X_log(:, i_false));
+                    if ~isempty(this.BrSys.log_folder)
+                        BrFalse.Sim();
+                    end
                 end
+                
             end
-       end
+        end
+        
         
         function DispResultMsg(this)
             this.DispResultMsg@BreachProblem();
