@@ -72,7 +72,6 @@ classdef BreachSet < BreachStatus
         end
         
         %% Domains
-        
         function SetDomain(this, params, type, domain)
             % SetDomain
             

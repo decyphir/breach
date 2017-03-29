@@ -78,13 +78,11 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         end
         
         function SetupLogFolder(this, folder_name)
-        % SetupLogFolder creates a 
+        % SetupLogFolder creates a folder to log traces
         
             mdl_checksum_hash = DataHash(this.mdl_checksum);
             if nargin<2
-                folder_name = [this.Sys.Dir filesep this.Sys.name filesep mdl_checksum_hash]; 
-            else
-                folder_name = [folder_name filesep mdl_checksum_hash];
+                folder_name = [this.Sys.Dir filesep this.Sys.name]; 
             end
             
             [success,msg,msg_id] = mkdir(folder_name);           
