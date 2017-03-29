@@ -158,15 +158,19 @@ classdef BreachProblem < BreachStatus
             
             if ~exist('ranges', 'var')
                 ranges = BrSet.GetParamRanges(params);
+                lb__ = ranges(:,1);
+                ub__ = ranges(:,2);
+
+                % if range is singular, assumes unconstrained - probably a
+                % bad idea
+                issame  = find(ub__-lb__==0);
+                lb__(issame) = -inf;
+                ub__(issame) = inf;
+            else
+                lb__ = ranges(:,1);
+                ub__ = ranges(:,2);
             end
-            lb__ = ranges(:,1);
-            ub__ = ranges(:,2);
-            
-            % if range is singular, assumes unconstrained
-            issame  = find(ub__-lb__==0);
-            lb__(issame) = -inf;
-            ub__(issame) = inf;
-            
+                       
             this.lb = lb__;
             this.ub = ub__;
             

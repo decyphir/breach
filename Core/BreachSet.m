@@ -260,7 +260,9 @@ classdef BreachSet < BreachStatus
             i_new_params = find(diff(this.ParamRanges'))+this.P.DimX;
             new_params = this.P.ParamList(i_new_params);
             new_ranges = this.ParamRanges(i_new_params-this.P.DimX,:);
-            this.P = CreateParamSet(this.P, new_params, new_ranges);
+            if ~isempty(new_params)
+                this.P = CreateParamSet(this.P, new_params, new_ranges);
+            end 
             
             if (save_traj)
                 this.P.traj = traj;
@@ -657,9 +659,10 @@ classdef BreachSet < BreachStatus
                 case 1
                     [cnt, grd1] = cover(X,delta1);
                     X = grd1+delta1/2; % centers of bins
-                    bar(cnt)
+                    bar(X,cnt)
                     set(gca, 'XTick', round([grd1 grd1(end)+delta1]))
-                    
+                    title('number of samples per bin')
+                    xlabel(sigs{1});
                 case 2
                     [cnt, grd1, grd2] = cover2d(X,delta1,delta2);
                     X = grd1+delta1/2; % centers of bins

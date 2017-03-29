@@ -229,7 +229,14 @@ classdef BreachOpenSystem < BreachSystem
             
             % Copy Domains of input generator
             IGdomains = IG.GetDomain(IG.P.ParamList);
-            this.SetDomain(IG.P.ParamList, IGdomains);
+            for ip = 1:numel(IG.P.ParamList)
+                parami = IG.P.ParamList{ip};
+                [~, found] = FindParam(this.P, parami);
+                if (found)
+                    this.SetDomain(parami, IGdomains(ip));
+                end
+            end
+            
         end
         
         function [params, idx] = GetParamsSysList(this)
