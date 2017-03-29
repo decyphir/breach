@@ -135,9 +135,8 @@ classdef BreachSet < BreachStatus
                 this.ParamDomain(size(pts,1)) = BreachDomain();
             end
             
-            % TODO? warning when out of domain
             for  i =this.P.DimX+1:size(pts,1)
-                if ~isempty(this.ParamDomain(i).domain)
+                if ~isequal(this.ParamDomain(i).type, 'double')||~isempty(this.ParamDomain(i).domain)
                     pts(i,:) = this.ParamDomain(i).checkin(pts(i,:));
                 end
             end
@@ -291,9 +290,9 @@ classdef BreachSet < BreachStatus
         end
         
         function UpdateParamRanges(this)
+        % Update ranges for variables from P
             
             this.CheckinDomain();
-            % Update ranges for variables from P
             i_params = (this.P.DimX+1):numel(this.P.ParamList);
             if numel(i_params)> size(this.ParamRanges,1)
                 dd = numel(i_params) - size(this.ParamRanges,1);

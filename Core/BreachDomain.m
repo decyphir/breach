@@ -59,7 +59,11 @@ classdef BreachDomain
         end
         
         function new_x = checkin_int(this,x)
-            new_x = min(max(round(x), ceil(this.domain(1))), floor(this.domain(2)));
+            if isempty(this.domain)
+                new_x =  round(x);
+            else
+                new_x = min(max(round(x), ceil(this.domain(1))), floor(this.domain(2)));
+            end
         end
         
         function x = checkin_double(this,x)
