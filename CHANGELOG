@@ -23,14 +23,14 @@
 
 * Release 1.0.0
 
-** Users 
+** Users
 
 - BrDemo subfolder Optim contains InitAFC_Falsif which creates falsification problems
 - BrDemo has a subfolder InputGen containing demo script for each type of generator (under construction)
 - New method FilterSpec return sets that satisfy and don't satisfy a spec  
 - SetParamRanges accepts a single interval for multiple parameters, 
     Example:
-B.SetParamRanges({'p1', 'p2','p3'}, [ -1 , 1] ) is equivalent to 
+B.SetParamRanges({'p1', 'p2','p3'}, [ -1 , 1] ) is equivalent to
 B.SetParamRanges({'p1', 'p2','p3'}, [ -1 , 1 ; -1 1 ;-1 1] ) 
 
 - BreachSimulinkSystem now has a field sim_args used to pass additional option arguments to the Simulink sim command
@@ -38,6 +38,6 @@ B.SetParamRanges({'p1', 'p2','p3'}, [ -1 , 1 ; -1 1 ;-1 1] )
 - BreachOpenSystem (hence BreachSimulinkSystem) has a AddInputSpec and SetInputSpec, calls AddSpec or SetSpec its InputGenerator
 - PrintSignals now says which signal is an input 
 - GetInputSignalsIdx returns indices of input signals in the list of signals of a system
-- Minor improvement on display status for BreachProblem 
+- Minor improvement on display status for BreachProblem
 - Input specs now are taken into account in Falsification problems
 - Breach now stores its model copy and GUI files in a unique folder in Ext/ModelsData
