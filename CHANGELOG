@@ -1,16 +1,15 @@
 * Release 1.1.0
+
 ** Users 
 - New menu in Simulink editor, can generate a Breach interface
 - Breach now supports/detects To Workspace blocks
 - Breach now supports/detects signal builders
 - GUI for specs now can change parameters of formulas
-
 - New GUI for creating input generator, accessible from main GUI 
 - Main GUI keyboard shortcuts
- - rightarrow from constant parameters to varying parameters,
-   equivalent to [add =>] 
- - leftarrow from varying parameters equivalent to button [<= rem]
- - return from varying parameters focus on min value
+- rightarrow from constant parameters to varying parameters, equivalent to [add =>]
+- leftarrow from varying parameters equivalent to button [<= rem]
+- return from varying parameters focus on min value
 - log to files via SetupLogFolder 
 - Support for different types via Domains
 - SampleDomain, more comprehensive sampling of domains
@@ -18,27 +17,23 @@
 ** BugFix
 - Fixed problem when resetting input generator with models with no inputs
 - Fixed problem when logging multi dimensional signals
-    
 - Fixed problem with empty tspan when interfacing model
 - Fixed problem Simulink models with no inputs
-** Devs
-- FindParam returns type in addition to indexes, 0 not found, 1 , 2 param, 3 prop
-- file logging - new toolbox in Ext DataHash
 
 
 * Release 1.0.0
-** For users 
-Changes affecting the API, behavior of functions, new features, etc.
+
+** Users 
+
 - BrDemo subfolder Optim contains InitAFC_Falsif which creates falsification problems
 - BrDemo has a subfolder InputGen containing demo script for each type of generator (under construction)
 - New method FilterSpec return sets that satisfy and don't satisfy a spec  
 - SetParamRanges accepts a single interval for multiple parameters, 
     Example:
-
 B.SetParamRanges({'p1', 'p2','p3'}, [ -1 , 1] ) is equivalent to 
 B.SetParamRanges({'p1', 'p2','p3'}, [ -1 , 1 ; -1 1 ;-1 1] ) 
-- BreachSimulinkSystem now has a field sim_args used to pass additional option arguments to the Simulink sim command
 
+- BreachSimulinkSystem now has a field sim_args used to pass additional option arguments to the Simulink sim command
 - BreachSystem has SetSpec method - same as AddSpec, but reset Specs before
 - BreachOpenSystem (hence BreachSimulinkSystem) has a AddInputSpec and SetInputSpec, calls AddSpec or SetSpec its InputGenerator
 - PrintSignals now says which signal is an input 
@@ -46,13 +41,3 @@ B.SetParamRanges({'p1', 'p2','p3'}, [ -1 , 1 ; -1 1 ;-1 1] )
 - Minor improvement on display status for BreachProblem 
 - Input specs now are taken into account in Falsification problems
 - Breach now stores its model copy and GUI files in a unique folder in Ext/ModelsData
-todo next: 
-- Simulink compilation files are still generated in current folder by default, see if we can change this 
-- Maybe create subfolders for each model 
-- Investigate Simulink projects
-
-** Bug fixes
-- basic solver had undefined variable nb_samples  
-- AddSpec when spec is given as a string now works
-- CheckSpec without argument now working, though only checking the first spec in map Specs
-
