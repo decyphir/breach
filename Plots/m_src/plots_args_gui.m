@@ -254,7 +254,7 @@ function listbox_all_variables_KeyPressFcn(hObject, eventdata, handles)
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
 
-if (isfield(eventdata,'Key'))
+if (isa(eventdata, 'matlab.ui.eventdata.UIClientComponentKeyEvent'))
     switch eventdata.Key
      case 'rightarrow'
      

@@ -59,7 +59,7 @@ function SplotBoxTraj(S,proj,dt,c,alph, t0)
    case 2
     for i = 1:nb_traj            
       
-      traj = S.traj(i);            
+      traj = S.traj{i};            
             
       if (numel(dt)==1)
         time = t0:dt:traj.time(end);
@@ -92,7 +92,7 @@ function SplotBoxTraj(S,proj,dt,c,alph, t0)
 
    otherwise
     for i = 1:nb_traj
-      traj = S.traj(i);
+      traj = S.traj{i};
       
       if (numel(dt)==1)
         time = t0:dt:traj.time(end);

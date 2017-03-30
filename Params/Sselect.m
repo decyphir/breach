@@ -92,6 +92,7 @@ field_list_traj_ref_select = {'traj', 'etraj'};
 field_list_traj_ref_select2 = {'XS0', 'Xf', 'ExpaMax', 'XSf'};
 
 Pn.traj_ref = zeros(1,numel(kn));
+
 if ~isfield(P, 'traj_ref')
     for ii = 1:numel(field_list_traj_ref_select)
         if isfield(P, field_list_traj_ref_select{ii})
@@ -102,7 +103,6 @@ if ~isfield(P, 'traj_ref')
         end
     end
     if isfield(Pn,'traj')
-        %TODO : update the two following lines, it is dirty
         idx_max = min(numel(Pn.traj),numel(kn));
         Pn.traj_ref(1:idx_max) = 1:idx_max;
     end

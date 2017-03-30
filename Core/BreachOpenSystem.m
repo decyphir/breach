@@ -18,16 +18,45 @@ classdef BreachOpenSystem < BreachSystem
         InputMap       % Maps input signals to idx in the input generator
         InputGenerator % BreachSystem responsible for generating inputs
     end
- 
+    
     methods
         
+        function  this = BreachOpenSystem(varargin)
+            this=this@BreachSystem(varargin{:});
+        end
+        
         function Sim(this,tspan,U)
+            
             if ~exist('tspan','var')
                 tspan = this.Sys.tspan;
             end
+            
+            % Checks wether we're logging to folder
+            do_compute = 1; 
+            if ~isempty(this.log_folder)
+               % See if this simulation was performed already
+               hash = DataHash({this.P.ParamList, this.P.pts, tspan});
+             %  log_Brfilename = [this.log_folder filesep 'Br' hash '.mat'];
+             %  log_Pfilename = [this.log_folder filesep 'P' hash '.mat'];
+               log_filename = [this.log_folder filesep 'Br' hash '.mat'];
+               
+               if exist(log_filename, 'file')
+                  % additional check? 
+                  load(log_filename);
+                  this.P = Br.P;
+                  this.disp_msg('Reading trace from log file.', 2);
+                  do_compute=0;
+               else
+                  % TODO figure out for each trace if a log file exist 
+               
+               end                 
+            end
+            
+            if (do_compute)
             Sys = this.Sys;
             if exist('U','var') % in this case, the InputGenerator becomes a trace object
-                % TODO: handles multiple input signals
+                % TODO: handles multiple input signals - or use an
+                % from_workspace_signal_gen?
                 
                 if isnumeric(U)
                     DimU = this.InputMap.Count();
@@ -47,7 +76,26 @@ classdef BreachOpenSystem < BreachSystem
             end
             
             this.P = ComputeTraj(Sys, this.P, tspan);
+            this.CheckinDomainTraj();
             
+            % Write log file 
+            if ~isempty(this.log_folder)
+               this.disp_msg('Writing to log file.', 2);
+               
+               for itraj = 1:numel(this.P.traj)
+                   hash_traj = DataHash({this.Sys.ParamList, this.P.traj{itraj}.param, this.P.traj{itraj}.time});
+                   log_traj_filename = [this.log_folder filesep 'traj_' hash_traj '.mat'];
+                   log_traj = matfile(log_traj_filename);
+                   log_traj.param = this.P.traj{itraj}.param;
+                   log_traj.time = this.P.traj{itraj}.time;
+                   log_traj.X = this.P.traj{itraj}.X;
+                   this.P.traj{itraj} = log_traj;
+                   this.P.traj{itraj}.Properties.Writable= false;
+               end
+               Br = this.copy();
+               save(log_filename,'Br');
+            end
+           end
         end
         
         % we merge parameters of the input generator with those of the
@@ -137,9 +185,7 @@ classdef BreachOpenSystem < BreachSystem
                         error('Input generator should be a struct, a signal_gen, a cell array of signal_gen, or a BreachSignalGen object');
                     end
                 end
-                              
             else
-                
                 mm = methods(IG);
                 if any(strcmp(mm,'computeSignals'))
                     IG = BreachSignalGen({IG});
@@ -148,7 +194,6 @@ classdef BreachOpenSystem < BreachSystem
                         error('Input generator should be a struct, a signal_gen derived object or a BreachSignalGen object');
                     end
                 end
-                
             end
             
             % Check Consistency - IG must construct signals for all signals in this.InputList
@@ -182,7 +227,28 @@ classdef BreachOpenSystem < BreachSystem
             % FIXME?: tilde?
             this.Sys.init_u = @(~, pts, tspan) (InitU(this,pts,tspan));
             
+            % Copy Domains of input generator
+            IGdomains = IG.GetDomain(IG.P.ParamList);
+            for ip = 1:numel(IG.P.ParamList)
+                parami = IG.P.ParamList{ip};
+                [~, found] = FindParam(this.P, parami);
+                if (found)
+                    this.SetDomain(parami, IGdomains(ip));
+                end
+            end
+            
         end
+        
+        function [params, idx] = GetParamsSysList(this)
+            idx_inputs = this.GetParamsInputIdx();
+            if isempty(idx_inputs)
+                idx = this.Sys.DimX+1:this.Sys.DimP;
+            else
+                idx = this.Sys.DimX+1:idx_inputs(1)-1;
+            end
+            params = this.Sys.ParamList(idx);
+        end
+        
         
         function idx = GetParamsInputIdx(this)
             if isempty(this.InputGenerator)
@@ -194,14 +260,14 @@ classdef BreachOpenSystem < BreachSystem
         end
         
         function AddInputSpec(this, varargin)
-            this.InputGenerator.AddSpec(varargin{:});            
+            this.InputGenerator.AddSpec(varargin{:});
         end
         
         function SetInputSpec(this, varargin)
             this.InputGenerator.SetSpec(varargin{:});
-            this.InputGenerator.AddSpec(varargin{:});            
+            this.InputGenerator.AddSpec(varargin{:});
         end
-                
+        
         % calling the Input generator -
         % there might be saving to do if inputs are pre-generated
         function U = InitU(this, pts, tspan)
@@ -211,39 +277,42 @@ classdef BreachOpenSystem < BreachSystem
             this.InputGenerator.P = SetParam(this.InputGenerator.P,ig_params,pts(idx_u));
             this.InputGenerator.Sim(tspan);
             
-            % if an inputspec is violated, sabotage U into NaN 
+            % if an inputspec is violated, sabotage U into NaN
             if ~isempty(this.InputGenerator.Specs)
-               rob = this.InputGenerator.CheckSpec(); 
-               if rob<0
-                  this.InputGenerator.addStatus(1,'input_spec_false', 'A specification on inputs is not satisfied.') 
-                  U.t=NaN;
-                  U.u=NaN;
-                  return;
-               end
+                rob = this.InputGenerator.CheckSpec();
+                if rob<0
+                    this.InputGenerator.addStatus(1,'input_spec_false', 'A specification on inputs is not satisfied.')
+                    U.t=NaN;
+                    U.u=NaN;
+                    return;
+                end
             end
             
-            U.t = this.InputGenerator.P.traj.time';
+            U.t = this.InputGenerator.P.traj{1}.time;
+            if size(U.t, 1)==1
+                U.t=U.t';
+            end
+            
             U.u = zeros(numel(U.t), this.InputGenerator.Sys.DimX);
             idx_mdl = 0;
             for input= this.Sys.InputList % Sys.InputList is in the same order as the model
                 idx_mdl = idx_mdl+1;
                 idx =  FindParam(this.InputGenerator.P, input{1});
-                U.u(:,idx_mdl) = this.InputGenerator.P.traj.X(idx,:)';
+                U.u(:,idx_mdl) = this.InputGenerator.P.traj{1}.X(idx,:)';
             end
-            
         end
         
-        % not sure why I need a special Concat operator here. 
+        % not sure why I need a special Concat operator here.
         function this = Concat(this,other)
             
             if isa(this.InputGenerator, 'BreachTraceSystem')
                 % TODO Concat other with more than one trace...
-                trace = [other.InputGenerator.P.traj(1).time' other.InputGenerator.P.traj(1).X'];
+                trace = [other.InputGenerator.P.traj{1}.time' other.InputGenerator.P.traj{1}.X'];
                 this.InputGenerator.AddTrace(trace);
                 % Using SetParam here erases the trajectory...
                 i_trace_id = FindParam(other.P, 'trace_id');
                 other.P.pts(i_trace_id,1) = numel(this.P.traj)+1;
-                other.P.traj(1).param(i_trace_id) = numel(this.P.traj)+1;               
+                other.P.traj{1}.param(i_trace_id) = numel(this.P.traj)+1;
                 this.P = SConcat(this.P, other.P);
             else
                 this.InputGenerator.P= SConcat(this.InputGenerator.P, other.InputGenerator.P);
@@ -252,7 +321,11 @@ classdef BreachOpenSystem < BreachSystem
             
         end
         
-        function idx = GetInputSignalsIdx(this)     
+        function SetInputGenGUI(this)
+            signal_gen_gui(this);
+        end
+        
+        function idx = GetInputSignalsIdx(this)
             idx0 = this.Sys.DimX - this.Sys.DimU+1;
             idx= idx0:this.Sys.DimX;
         end
@@ -268,7 +341,7 @@ classdef BreachOpenSystem < BreachSystem
                 for isig = this.Sys.DimX-this.Sys.DimU+1:this.Sys.DimX
                     fprintf('%s (Input)\n', this.Sys.ParamList{isig});
                 end
-    
+                
             else
                 
                 fprintf('Signals (in range estimated over %d simulations):\n', numel(this.P.traj))
@@ -282,7 +355,7 @@ classdef BreachOpenSystem < BreachSystem
             end
             disp(' ')
         end
-
+        
     end
     
 end

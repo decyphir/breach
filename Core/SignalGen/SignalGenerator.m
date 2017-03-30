@@ -1,5 +1,5 @@
-classdef SignalGenerator < BreachObject
-    
+classdef SignalGenerator < BreachSet
+% NOT USED, kept there for reference and eventual adaptation into proper signal_gen classes    
     properties
         signals
         configs

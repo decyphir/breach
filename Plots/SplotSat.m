@@ -92,7 +92,7 @@ for np = npb+1:nb_phis+npb
 %   iprog = 0;
     
     for ii = ipts
-        traj = P.traj(P.traj_ref(ii));
+        traj = P.traj{P.traj_ref(ii)};
         Ptmp.pts = P.pts(:,ii);
         if ~isempty(tau)
             P.props_values(iphi,ii).tau = tau;

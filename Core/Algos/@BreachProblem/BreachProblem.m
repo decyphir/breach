@@ -134,9 +134,9 @@ classdef BreachProblem < BreachStatus
         end
     end
     
+    %% Methods
     methods
-        
-        
+             
         %% Constructor
         function this = BreachProblem(BrSet, phi, params, ranges)
             
@@ -158,15 +158,19 @@ classdef BreachProblem < BreachStatus
             
             if ~exist('ranges', 'var')
                 ranges = BrSet.GetParamRanges(params);
+                lb__ = ranges(:,1);
+                ub__ = ranges(:,2);
+
+                % if range is singular, assumes unconstrained - probably a
+                % bad idea
+                issame  = find(ub__-lb__==0);
+                lb__(issame) = -inf;
+                ub__(issame) = inf;
+            else
+                lb__ = ranges(:,1);
+                ub__ = ranges(:,2);
             end
-            lb__ = ranges(:,1);
-            ub__ = ranges(:,2);
-            
-            % if range is singular, assumes unconstrained
-            issame  = find(ub__-lb__==0);
-            lb__(issame) = -inf;
-            ub__(issame) = inf;
-            
+                       
             this.lb = lb__;
             this.ub = ub__;
             
@@ -235,7 +239,6 @@ classdef BreachProblem < BreachStatus
             this.time_spent = 0;
             this.nb_obj_eval = 0;
         end
-        
         
         %% Options for various solvers
         function solver_opt = setup_solver(this, solver_name)
@@ -352,16 +355,17 @@ classdef BreachProblem < BreachStatus
                     optimtool(problem);
                     res = [];
                     return;
+
                 case 'binsearch'
                     res = solve_binsearch(this);
                     this.res = res;
+
                 otherwise
                     res = feval(this.solver, problem);
                     this.res = res;
             end
             this.DispResultMsg(); 
         end
-        
         
         %% Utility functions for solvers
         
@@ -400,8 +404,8 @@ classdef BreachProblem < BreachStatus
             
         end
         
-        function problem = get_problem(this) 
-                    problem =struct('objective', this.objective, ...
+        function problem = get_problem(this)
+            problem =struct('objective', this.objective, ...
                 'fitnessfcn', this.objective, ... % for ga
                 'x0', this.x0, ...
                 'nvars', size(this.x0, 1),... % for ga
@@ -416,6 +420,15 @@ classdef BreachProblem < BreachStatus
                 'intcon',[],...
                 'rngstate',[],...
                 'options', this.solver_options);
+            
+            % Checks whether some variables are integer
+            for ip = 1:numel(this.params)
+                dom = this.BrSys.GetDomain(this.params{ip});
+                if strcmp(dom.type, 'int')
+                    problem.intcon = [problem.intcon ip];
+                end
+            end
+            
         end
         
         %% Parallel 
@@ -458,8 +471,7 @@ classdef BreachProblem < BreachStatus
             b =  (this.time_spent > this.max_time) ||...
                     (this.nb_obj_eval> this.max_obj_eval) ;
         end
-        
-        
+              
         %% Misc methods
         function LogX(this, x, fval)
             % LogX logs values tried by the optimizer
@@ -513,8 +525,11 @@ classdef BreachProblem < BreachStatus
             % GetBrSet_Logged gets BreachSet object containing parameters and traces computed during optimization
             if this.log_traces
                 BrOut = this.BrSet_Logged;
+            elseif ~isempty(this.BrSys.log_folder)
+                BrOut = LoadLogFolder(this.BrSys.log_folder);
             else
                 BrOut = this.BrSys.copy();
+                BrOut.ResetSimulations();
                 BrOut.SetParam(this.params, this.X_log);
             end
             BrOut.Sys.Verbose=1;
@@ -526,8 +541,20 @@ classdef BreachProblem < BreachStatus
             if isempty(BrBest)
                 BrBest = this.BrSys.copy();
                 BrBest.SetParam(this.params, this.x_best, 'spec');
+                if ~isempty(this.BrSys.log_folder)
+                   BrBest.Sim(); 
+                end
             end
             BrBest.Sys.Verbose=1;
+        end
+        
+        function SetupLogFolder(this, fname)
+            if nargin<2
+                this.BrSys.SetupLogFolder();
+            else
+                this.BrSys.SetupLogFolder(fname);
+            end
+            this.log_traces= false;
         end
         
         function display_status_header(this)
@@ -592,7 +619,6 @@ classdef BreachProblem < BreachStatus
             objByteArray = getByteStreamFromArray(this);
             new = getArrayFromByteStream(objByteArray);
         end
-        
-        
+                
     end
 end

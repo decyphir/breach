@@ -14,7 +14,7 @@ classdef var_cp_signal_gen < signal_gen
     
     
     properties
-        cp       % number of control points for each signal
+        num_cp       % number of control points for each signal
         method   % interpolation method for each signal
     end
     
@@ -46,7 +46,7 @@ classdef var_cp_signal_gen < signal_gen
             end
             
             this.signals = signals;
-            this.cp = cp;
+            this.num_cp = cp;
             this.params = {};
             this.method = method;
             this.p0 = p0;
@@ -77,12 +77,12 @@ classdef var_cp_signal_gen < signal_gen
             end
             
             
-            X = zeros(numel(this.cp),numel(time));
+            X = zeros(numel(this.num_cp),numel(time));
             pts_x = p;
-            for i_cp = 1:numel(this.cp)
-                cp_values = pts_x(1:2*this.cp(i_cp)-1);
+            for i_cp = 1:numel(this.num_cp)
+                cp_values = pts_x(1:2*this.num_cp(i_cp)-1);
                 meth = this.method{i_cp};
-                pts_x = pts_x(2*this.cp(i_cp):end);
+                pts_x = pts_x(2*this.num_cp(i_cp):end);
                 
                 dt_cp = cp_values(2:2:end-1);
                 t_cp = unique( [0; cumsum(dt_cp)]);
@@ -101,5 +101,10 @@ classdef var_cp_signal_gen < signal_gen
         function type = getType(this)
             type = 'varstep';
         end
+        
+        function args = getSignalGenArgs(this)
+            args = {'num_cp','method'};         
+        end
+        
     end
 end

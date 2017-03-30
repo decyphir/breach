@@ -93,12 +93,12 @@ hplot = zeros(numel(i_var),numel(ipts)); % lines handles
 
 if(same_axe==1)
     for ii = ipts
-        time = P.traj(ii).time;
+        time = P.traj{ii}.time;
         grid on;
         %set(gca,'FontSize',12,'FontName','times');
         hold on;
         
-        X = P.traj(ii).X(i_var(:),:);
+        X = P.traj{ii}.X(i_var(:),:);
         hplot(:,ii) = plot(time*time_mult,X);
         
     end
@@ -115,7 +115,7 @@ if(same_axe==1)
     set(hl, 'Interpreter','none');
     hold off;
     xlabel('time')
-    
+    grid on;
 else % plots on multi axes
     
     for ii = 1:numel(i_var) % for each variable
@@ -132,8 +132,8 @@ else % plots on multi axes
         
         for jj = 1:numel(ipts)
             i_pt = ipts(jj);
-            time = P.traj(i_pt).time;
-            x = P.traj(i_pt).X(i_var(ii),:);
+            time = P.traj{i_pt}.time;
+            x = P.traj{i_pt}.X(i_var(ii),:);
             if isempty(opt)
                 %hplot(ii,jj) = plot(h,time*time_mult,x,'Color',colors(jj,:)); % plotting all in once with cell arrays is not faster
                 hplot(ii,jj) = line(time*time_mult,x,'Color',colors(jj,:));

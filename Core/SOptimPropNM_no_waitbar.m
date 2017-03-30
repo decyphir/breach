@@ -74,7 +74,7 @@ if isfield(opt, 'tspan')
 elseif isfield(Sys, 'tspan')
     tspan = Sys.tspan;
 elseif isfield(P, 'traj')                                                                                           
-    tspan = P.traj(1).time;
+    tspan = P.traj{1}.time;
 else
     error('SOptimeProp:noTspan','The field opt.tspan is not provided.');
 end
@@ -264,12 +264,12 @@ for ii = iv(1:Ninit)
     rfprintf_reset();
     x0 = Popt.pts(dim,ii);
     fopt = val(ii); % we initialize with the only truth value computed for this set of values
-    traj_opt = Popt.traj(Popt.traj_ref(ii));
+    traj_opt = Popt.traj{Popt.traj_ref(ii});
     xopt = Popt.pts(dim,ii);
     [~, val_opt(kk)] = optimize(fun,x0,lbound,ubound,[],[],[],[],[],[],options,'NelderMead');
     fprintf('\n');
     Popt.pts(dim,ii) = xopt;
-    Popt.traj(Popt.traj_ref(ii)) = traj_opt;
+    Popt.traj{Popt.traj_ref(ii}) = traj_opt;
     Popt.Xf(:,ii) = traj_opt.X(:,end);
     
     if((StopWhenFound)&&(~isempty(found)))
@@ -323,7 +323,7 @@ Ptmp.pts(Ptmp.dim,1) = x;
 try
     Ptmp = SPurge(Ptmp);
     Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-    val = STL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
+    val = STL_Eval(Sys, phi, Ptmp, Ptmp.traj{1}, tau);
 catch  %#ok<CTCH>
     warning('SOptimProp:ComputeTraj','Error during trajectory computation when optimizing. Keep going.')
     val = inf; % do not care of the exit condition -3 for nelder-mead algo, it only happens when using global optim
@@ -365,7 +365,7 @@ Ptmp.pts(Ptmp.dim,1) = x;
 try
     Ptmp = SPurge(Ptmp);
     Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-    val = STL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
+    val = STL_Eval(Sys, phi, Ptmp, Ptmp.traj{1}, tau);
 catch %#ok<CTCH>
     warning('SOptimProp:ComputeTraj','Error during trajectory computation when optimizing. Keep going.')
     val = inf; % do not care of the exit condition -3 for nelder-mead algo, it only happens when using global optim
@@ -401,7 +401,7 @@ try
 
     Ptmp = SPurge(Ptmp);
     Ptmp = ComputeTraj(Sys, Ptmp, tspan);
-    val = STL_Eval(Sys, phi, Ptmp, Ptmp.traj(1), tau);
+    val = STL_Eval(Sys, phi, Ptmp, Ptmp.traj{1}, tau);
 catch %#ok<CTCH>
     warning('SOptimProp:ComputeTraj','Error during trajectory computation when optimizing. Keep going.')
     val = inf; % do not care of the exit condition -3 for nelder-mead algo, it only happens when using global optim

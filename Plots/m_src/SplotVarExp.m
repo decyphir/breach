@@ -57,7 +57,7 @@ end
 
 % plot
 for ii = ipts
-    time = P.traj(ii).time;
+    time = P.traj{ii}.time;
     
     for jj = 1:numel(iX)
         subplot(numel(iX),1,jj)
@@ -69,8 +69,8 @@ for ii = ipts
             ylabel(['x_' num2str(iX(jj))]);
         end
 
-        x = P.traj(ii).X(iX(jj),:);
-        e = P.traj(ii).Expa(iX(jj),:);
+        x = P.traj{ii}.X(iX(jj),:);
+        e = P.traj{ii}.Expa(iX(jj),:);
         base = min(x-e-.1);
         
         area(time,x+e,base,'FaceColor',[.5 .9 .6],...

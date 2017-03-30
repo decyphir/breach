@@ -3,6 +3,7 @@
 *.mexmaci64
 *.mexw64
 *.o
+*.obj
 *_breach.slx
 *_param_sets.mat
 *_properties.mat
@@ -21,3 +22,6 @@ Ext/*
 !Ext/ModelsData/
 !Ext/Specs/
 !Ext/Toolboxes/
+toggleHighDPISupport.p
+*.bck
+*.bckup

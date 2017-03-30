@@ -16,7 +16,7 @@ function P = RefineEstim(P0, delta)
 
 if ~isfield(P0,'traj')
     error('RefineEstim:noTrajField','Compute trajectories first.')
-elseif ~isfield(P0.traj(1),'XS')
+elseif ~isfield(P0.traj{1},'XS')
     error('RefineEstim:noXSField','Compute sensitivities first.')
 end
 
@@ -66,7 +66,7 @@ for ii = 1:size(P0.pts,2)
 %        etraj = zeros(1,nb_new); % initialise etraj
         for jj = 1:nb_new
             dx = X(:,jj)-P0.pts(:,ii);
-            etraj(jj) = estim_traj(P0.traj(ii), dx(P0.dim));
+            etraj(jj) = estim_traj(P0.traj{ii}, dx(P0.dim));
         end
         
         P.etraj = [P.etraj etraj];

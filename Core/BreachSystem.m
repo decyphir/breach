@@ -84,7 +84,7 @@ classdef BreachSystem < BreachSet
                 this.P =P;
                 this.UpdateParamRanges();
             else
-                error('Argument should a Breach parameter structure.');
+                error('Argument should a Breach legacy parameter structure.');
             end
             
         end
@@ -100,8 +100,7 @@ classdef BreachSystem < BreachSet
                 this.P = CreateParamSet(this.P, this.P.ParamList(ipr+this.P.DimX),ranges);
             end
         end
-
-        
+     
         %% Signals plots and stuff
         function SetTime(this,tspan)
             this.Sys.tspan = tspan;
@@ -117,8 +116,7 @@ classdef BreachSystem < BreachSet
             end
             this.P = ComputeTraj(this.Sys, this.P, tspan);
         end
-        
-        
+               
         %% Specs
         function phi = AddSpec(this, varargin)
         % AddSpec Adds a specification
@@ -145,10 +143,8 @@ classdef BreachSystem < BreachSet
            this.Specs = containers.Map();
            this.AddSpec(varargin{:});
         end
-        
-        
-        
-        function val = CheckSpec(this, spec)
+  
+        function val = CheckSpec(this, spec,t_spec)
             if ~exist('spec','var')
                 spec = this.Specs.values;
                 spec = spec{1};
@@ -162,7 +158,11 @@ classdef BreachSystem < BreachSet
                 end
             end
             
-            if isfield(this.P, 'props_names')               
+            if ~exist('t_spec', 'var')
+               t_spec= 0; 
+            end
+            
+            if isfield(this.P, 'props_names')&&(nargin<=2)               
                 iprop = find(strcmp(get_id(spec), this.P.props_names));
             else
                 iprop = 0;
@@ -170,13 +170,13 @@ classdef BreachSystem < BreachSet
             if iprop
                 val = cat(1, this.P.props_values(iprop,:).val);
             else
-                [this.P, val] = SEvalProp(this.Sys,this.P,spec);
+                [this.P, val] = SEvalProp(this.Sys,this.P,spec,  t_spec);
                 this.addStatus(0, 'spec_evaluated', 'A specification has been evaluated.')
             end
         end
         
         function [Bpos, Bneg] = FilterSpec(this, phi)
-            % FilterSpec Return parameters and trajectories violating a
+            % FilterSpec Separate parameters and trajectories satisfying and violating a
             % specification
             %
             
@@ -219,25 +219,25 @@ classdef BreachSystem < BreachSet
                 values = [];
             end
             
-            if ischar(phi)
-                this__phi__ = STL_Formula('this__phi__', phi);
-            else
-                this__phi__ = phi;
+            if nargin==3
+              t_phi = params;
+              params = {};
+              values = [];
             end
             
-            if ~isempty(params)
+             if ~isempty(params)
                 this.P = SetParam(this.P, params, values);
             end
             
             Sim(this);
             % FIXME: this is going to break with multiple trajectories with
             % some of them containing NaN - 
-            if any(isnan(this.P.traj(1).X))
+            if any(isnan(this.P.traj{1}.X))
                 tau = t_phi;
                 rob = t_phi;
                 rob(:) = NaN;
             else
-            [rob, tau] = STL_Eval(this.Sys, this__phi__, this.P, this.P.traj,t_phi);
+            [rob, tau] = STL_Eval(this.Sys, phi, this.P, this.P.traj,t_phi);
             end
         end
         
@@ -261,8 +261,10 @@ classdef BreachSystem < BreachSet
             
         end
         
-        % Plots satisfaction signal
         function PlotRobustSat(this, phi, depth, tau, ipts)
+            % Plots satisfaction signal
+
+            
             % check arguments
             if(~exist('ipts','var')||isempty(ipts))
                 ipts = 1:size(this.P.pts,2);
@@ -325,7 +327,7 @@ classdef BreachSystem < BreachSet
 
         
         function [h, t, X]  = PlotExpr(this, stl_expr, varargin)
-            % plots a signal expression
+            % Plots a signal expression
             
             if ~iscell(stl_expr)
                 stl_expr = {stl_expr};
@@ -333,7 +335,7 @@ classdef BreachSystem < BreachSet
             
             for i_exp = 1:numel(stl_expr)
                 expr_tmp_ = STL_Formula('expr_tmp_', [stl_expr{i_exp} '> 0.']);
-                [X, t] = STL_Eval(this.Sys, expr_tmp_, this.P, this.P.traj, this.P.traj(1).time);
+                [X, t] = STL_Eval(this.Sys, expr_tmp_, this.P, this.P.traj, this.P.traj{1}.time);
                 if iscell(t)
                     for i_x = 1:numel(t)
                         h = plot(t{i_x},X{i_x}, varargin{:});
@@ -353,13 +355,11 @@ classdef BreachSystem < BreachSet
             
             for i_exp = 1:numel(stl_expr)
                 expr_tmp_ = STL_Formula('expr_tmp_', [stl_expr{i_exp} '> 0.']);
-                [X, t] = STL_Eval(this.Sys, expr_tmp_, this.P, this.P.traj, this.P.traj(1).time);
+                [X, t] = STL_Eval(this.Sys, expr_tmp_, this.P, this.P.traj, this.P.traj{1}.time);
             end
         end
 
-        
-        
-        
+    
         %% Sensitivity analysis
         function [mu, mustar, sigma] = SensiSpec(this, phi, params, ranges, opt)
             % SensiSpec Sensitivity analysis of a formula to a set of parameters
@@ -410,8 +410,8 @@ classdef BreachSystem < BreachSet
         
         function PrintAll(this)
             this.UpdateSignalRanges();
-            this.PrintParams();
             this.PrintSignals();
+            this.PrintParams();
             this.PrintSpecs();
         end
         
@@ -429,27 +429,26 @@ classdef BreachSystem < BreachSet
             end
         end
              
-        function gui = RunGUI(this)
+        function RunGUI(this)
             P.P = this.P;
             phis=  this.Specs.keys;
-            
-            Psave(this.Sys, 'Pthis', this.P);
             if (~isempty(phis))
                 Propsave(this.Sys, phis{:});
             end
-            gui = Breach(this);
+            BreachGui(this);
             
         end
   
         function TrajGUI(this) 
-            args = struct('working_sets', struct,'working_sets_file_name', '', 'Sys', this.Sys, 'TrajSet', this.P); 
+            args = struct('working_sets', struct,'working_sets_file_name',...
+                      '', 'Sys', this.Sys, 'TrajSet', this.P); 
             specs = this.Specs.keys;
             args.properties = struct;
             for ispec = 1:numel(specs)
                args.properties.(specs{ispec}) = this.Specs(specs{ispec});
             end
             
-            BreachTrajGui('varargin',args);          
+            BreachTrajGui(this,args);          
         end
         
         function ResetFiles(this)
@@ -457,7 +456,7 @@ classdef BreachSystem < BreachSet
             system(['rm -f ' this.Sys.name '_properties.mat']);
         end
         
-         %% Experimental
+        %% Experimental
         function report = Analysis(this)
             
             STL_ReadFile('stlib.stl');

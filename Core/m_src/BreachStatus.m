@@ -5,6 +5,9 @@ classdef BreachStatus < handle
     properties
         status = [] % unique integer id for the status 
         statusMap = containers.Map() % map with key and msg strings describing the status.
+        verbose = 1 
+        logged_msg
+        max_logged_msg=100
     end
     
     methods
@@ -51,6 +54,24 @@ classdef BreachStatus < handle
         
         function printStatus(this)
            fprintf(getStatus(this));
+        end
+      
+        function new = copy(this)
+            % copy operator, works with R2010b or newer.
+            objByteArray = getByteStreamFromArray(this);
+            new = getArrayFromByteStream(objByteArray);
+        end
+
+        function disp_msg(this, msg, verbose_min) 
+            if nargin<3
+                verbose_min = 1;
+            end
+            
+            if (this.verbose>=verbose_min)
+               disp(msg);                 
+            end
+            this.logged_msg = [this.logged_msg {msg}];
+            
         end
         
     end

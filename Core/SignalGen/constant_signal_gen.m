@@ -6,7 +6,7 @@ classdef constant_signal_gen < signal_gen
     %    names and optional values. Parameters have same names as signals with '_u0' suffix.
     %
     % See also signal_gen.
-    
+
     methods         
         function this = constant_signal_gen(signals, p0)
             nb_signals = numel(signals);
@@ -23,7 +23,6 @@ classdef constant_signal_gen < signal_gen
                 this.p0 = zeros(nb_signals,1);
             end
             
-            
         end
             
         function X = computeSignals(this,p, time) % compute the signals
@@ -39,6 +38,7 @@ classdef constant_signal_gen < signal_gen
         function type = getType(this)
             type = 'constant';
         end
+        
     end
             
 end

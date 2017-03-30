@@ -114,10 +114,10 @@ end
 for ii = 1:numel(iX) % then, we plot
     subplot(numel(iX),1,ii)
     for jj = 1:numel(ipts)
-        time = P.traj(ipts(jj)).time;
+        time = P.traj{ipts(jj}).time;
         for kk = 1:numel(iP)
-            is = (find(P.dim==iP(kk))-1)*size(P.traj(ipts(jj)).X,1)+iX(ii);
-            x = P.traj(ipts(jj)).XS(is,:);
+            is = (find(P.dim==iP(kk))-1)*size(P.traj{ipts(jj}).X,1)+iX(ii);
+            x = P.traj{ipts(jj}).XS(is,:);
             plot(time*time_mult, x, opt{:}, 'Color', colors(kk,:));
         end
         if(jj==1) % we plot the legend when only the sensitivity of first parameter vector is

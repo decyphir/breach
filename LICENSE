@@ -17,3 +17,4 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 - CMAES is distributed under GPL, see  ./Ext/Toolboxes/optimize/cmaes.m
 - OPTIMIZE is distributed under GPL, see  ./Ext/Toolboxes/optimize/license.txt
 - code for Niederreiter, Halton, Sobol sequences is distributed under LGPL license, see ./Params/m_src/niederreiter2/niederreiter2.m
+- code for DataHash function is licensed under BSD, see ./Ext/Toolboxes/DataHash/license.txt

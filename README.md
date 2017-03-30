@@ -16,10 +16,8 @@ Breach is a Matlab toolbox for simulation-based design of dynamical/CPS/Hybrid s
 
 Type 'BrDemo.' and Tab to get a list of available demo scripts.
 
-Corresponding documentation can be found online at https://decyphir.github.io
-
 Also consult Examples/README for some details about available examples.
 
 ## Contact/Support
 
-Contact alex at decyphir dot com to report bugs, for help, complaints, support, etc.
+Contact info at decyphir dot com to report bugs, for help, complaints, support, etc.

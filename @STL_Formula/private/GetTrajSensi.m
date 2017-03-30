@@ -63,12 +63,12 @@ Ptmp.pts = traj.param';
 Ptmp = ComputeTrajSensi(Sys, Ptmp, time); % compute the sensitivity of variables to i_params
 
 traj.sensis = [sensis i_params];
-XS = Ptmp.traj.XS;
+XS = Ptmp.traj{1}.XS;
 XS = interp1(time, XS', traj.time, 'linear', 0);
 if(Sys.DimX~=1) % if we have more than one variable, we have to transpose XS
     XS = XS';
 end
-traj.XS = [traj.XS; XS];  %NM: whould it be better to do: if any(traj.time>1e90) traj.XS = [traj.XS; [Ptmp.traj.XS(:,1) Ptmp.traj.XS Ptmp.traj.XS(:,end)]]; end
+traj.XS = [traj.XS; XS];  %NM: whould it be better to do: if any(traj.time>1e90) traj.XS = [traj.XS; [Ptmp.traj{1}.XS(:,1) Ptmp.traj{1}.XS Ptmp.traj{1}.XS(:,end)]]; end
 xs = XS(i_vars,:);
 
 end
