@@ -41,7 +41,7 @@ classdef DocRun < handle
                     this.run_as_ref();
                 else
                     this= this.run_and_cmp();
-                end         
+                end
             end
             
             this.report.status = BreachStatus();
@@ -57,25 +57,25 @@ classdef DocRun < handle
             evalin('base',this.script_name);
             evalin('base', 'save(''_tmp_docrun_save_'')');
             result = load('_tmp_docrun_save_');
-            delete('_tmp_docrun_save_.mat'); 
+            delete('_tmp_docrun_save_.mat');
             this.post_run();
         end
         
         function run_as_ref(this)
             % run_as_ref run and save the resulting workspace
-            this.pre_run()            
+            this.pre_run()
             evalin('base',this.script_name);
             fprintf('Saving %s...\n', this.ref_result);
             evalin('base', ['save(''' this.ref_result ''');']);
             this.post_run()
         end
-
+        
         
         function run_and_cmp(this)
-                            
+            
             % run script
-            result= this.run(); 
-      
+            result= this.run();
+            
             % Compare with reference results
             this.cmp_to_ref(result);
             
@@ -87,30 +87,30 @@ classdef DocRun < handle
             try
                 ref = load(this.ref_result);
             catch
-                this.post_run();     
+                this.post_run();
                 error('Reference results failed to load. Run run_as_ref to create.' )
             end
-
+            
             fn_ref = fieldnames(ref);
             
             % go through results in ref, and make sure they are consistent
             for i_f = 1:numel(fn_ref)
                 f = fn_ref{i_f};
                 v_ref = ref.(f);
-                if ~isfield(test_res,f)  
-                  this.report.status.addStatus(-1, ['Variable ' f ' missing']); 
-                elseif ~isequal(ref.(f), test_res.(f))  
-                   v_test = test_res.(f); 
-                   if any(strcmp('compare',methods(v_ref))) 
-                       cmp = v_ref.compare(v_test);
-                       if (cmp.status ~= 0)  
-                           this.report.status.addStatus(-1,['Variable ' f ' is different']);
-                           this.report.diffs.(f) = cmp;
-                       end                   
-                   else
-                       this.report.status.addStatus(-1,['Variable ' f ' is different']);
-                   end 
-                end        
+                if ~isfield(test_res,f)
+                    this.report.status.addStatus(-1, ['Variable ' f ' missing']);
+                elseif ~isequal(ref.(f), test_res.(f))
+                    v_test = test_res.(f);
+                    if any(strcmp('compare',methods(v_ref)))
+                        cmp = v_ref.compare(v_test);
+                        if (cmp.status ~= 0)
+                            this.report.status.addStatus(-1,['Variable ' f ' is different']);
+                            this.report.diffs.(f) = cmp;
+                        end
+                    else
+                        this.report.status.addStatus(-1,['Variable ' f ' is different']);
+                    end
+                end
             end
         end
         
@@ -131,13 +131,19 @@ classdef DocRun < handle
         end
         
         function pre_run(this)
-            % saves workspace 
+            % saves workspace
             evalin('base','save docrun_backup.mat');
             evalin('base','clear');
+            
             cd(this.script_dir);
         end
         
-        function post_run(this)
+        function [success, msg, msg_id] = post_run(this)
+            % checks error status 
+            success = 1; 
+            [msg, msg_id] = lasterr;
+            
+            
             % get back to current folder, and load back workspace
             cd(this.current_dir);
             evalin('base','load docrun_backup.mat');
@@ -145,7 +151,7 @@ classdef DocRun < handle
         end
         
         %% Publish
-        function publish_beamer(this, compile, open)
+        function success = publish_beamer(this, compile, open)
             % publish_beamer run and create beamer
             global BreachGlobOpt;
             this.pre_run()
@@ -157,7 +163,7 @@ classdef DocRun < handle
             breach_publish_stuff_dir = [BreachGlobOpt.breach_dir filesep 'Core' filesep 'm_src' filesep 'publish_stuff' filesep];
             
             % run publish command
-            res = evalin('base', ['publish(''' this.script_name ''',' 'struct(''format'',''latex'',''stylesheet'',''' breach_publish_stuff_dir  'matlab2beamer.xsl'', ''outputDir'',''' this.publish_src_dir ''')' ');']);
+            res = evalin('base', ['publish(''' this.script_name ''',' 'struct(''format'',''latex'',''catchError'',false,''stylesheet'',''' breach_publish_stuff_dir  'matlab2beamer.xsl'', ''outputDir'',''' this.publish_src_dir ''')' ');']);
             
             % get resulting file
             [tex_src_path, tex_src]= fileparts(res);
@@ -167,7 +173,7 @@ classdef DocRun < handle
             % clean up
             this.post_run()
             
-            % FIXME the following only works on macOS
+            % FIXME the following only works on m
             if nargin>1
                 
                 if ~(exist(this.publish_dir,'dir'))
@@ -176,7 +182,7 @@ classdef DocRun < handle
                 
                 if compile
                     cd(tex_src_path);
-                    [status] = system(['pdflatex ' tex_file]);
+                    [status, result] = system(['pdflatex ' tex_file]);
                     if (status)
                         error('Couldn''t compile Beamer presentation.');
                     else
@@ -184,13 +190,20 @@ classdef DocRun < handle
                     end
                     cd(this.current_dir);
                 end
+                
                 if nargin>2
                     if open
                         cd(this.publish_dir);
-                        system(['"c:\Program Files\SumatraPDF\SumatraPDF.exe" ' this.script_name '.pdf']);
+                        if ispc
+                            system(['"c:\Program Files\SumatraPDF\SumatraPDF.exe" ' this.script_name '.pdf']);
+                        else
+                            system(['open ' this.script_name '.pdf']);
+                        end
+                        
                         cd(this.current_dir);
                     end
                 end
+                
             end
             
         end
@@ -203,7 +216,7 @@ classdef DocRun < handle
             end
             
             % run publish command
-            res = evalin('base', ['publish(''' this.script_name ''',' 'struct(''format'',''html'', ''outputDir'',''' this.publish_html_dir ''')' ');']);
+            res = evalin('base', ['publish(''' this.script_name ''',' 'struct(''format'',''html'', ''catchError'',false,''outputDir'',''' this.publish_html_dir ''')' ');']);
             
             % open
             if exist('op','var')
