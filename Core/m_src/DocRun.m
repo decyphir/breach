@@ -171,7 +171,7 @@ classdef DocRun < handle
             tex_file = [tex_src '.tex'];
             
             % clean up
-            this.post_run()
+            this.post_run();
             
             % FIXME the following only works on m
             if nargin>1
