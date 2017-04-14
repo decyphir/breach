@@ -8,6 +8,7 @@
 #include "tools.h"
 #include <exception>
 #include "signal_expr.h"
+#include <minmax.h>
 
 namespace CPSGrader {
 
