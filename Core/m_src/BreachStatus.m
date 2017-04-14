@@ -12,6 +12,15 @@ classdef BreachStatus < handle
     
     methods
         
+        function  my_name = whoamI(this)
+            S = evalin('caller', 'who');
+            for iv = 1:numel(S)
+              if isequal(evalin('caller', S{iv}), this)
+                  my_name = S{iv};
+              end
+            end
+        end
+        
         function addStatus(this, status, key, msg)
             % Add new active status
             this.status = [this.status status];
@@ -63,6 +72,8 @@ classdef BreachStatus < handle
         end
 
         function disp_msg(this, msg, verbose_min) 
+            % disp_msg display a message if this.verbose is more than
+            % second arg
             if nargin<3
                 verbose_min = 1;
             end

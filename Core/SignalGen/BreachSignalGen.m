@@ -34,8 +34,7 @@ classdef BreachSignalGen < BreachSystem
                signalGenerators = {signalGenerators}; 
             end
             
-            this.SignalDomain= [];
-            this.ParamDomain = [];
+            this.Domains = [];
             % we need to declare parameters, signals, p0, and simfn           
             this.InitSignalGen(signalGenerators);
             
@@ -46,6 +45,9 @@ classdef BreachSignalGen < BreachSystem
             signals ={}; 
             params = {};
             p0=[];
+
+            ParamDomains = []; 
+            SignalDomains = []; 
             for isg = 1:numel(signalGenerators)
                 sg=  signalGenerators{isg};
                 signals = {signals{:}, signalGenerators{isg}.signals{:}};
@@ -54,16 +56,16 @@ classdef BreachSignalGen < BreachSystem
                 % domains 
                 num_sig = numel(sg.signals);
                 if isempty(sg.signals_domain)
-                    this.SignalDomain = [this.SignalDomain repmat(BreachDomain(),1, num_sig)];
+                    SignalDomains = [SignalDomains repmat(BreachDomain(),1, num_sig)];
                 else
-                    this.SignalDomain = [this.SignalDomain sg.signals_domain];
+                    SignalDomains = [SignalDomains sg.signals_domain];
                 end
                 
                 num_par = numel(sg.params);
                 if isempty(sg.params_domain)
-                    this.ParamDomain = [this.ParamDomain repmat(BreachDomain(),1, num_par)];
+                    ParamDomains = [ParamDomains repmat(BreachDomain(),1, num_par)];
                 else
-                    this.ParamDomain = [this.ParamDomain sg.params_domain];
+                    ParamDomains = [ParamDomains sg.params_domain];
                 end
                 
                 % default values
@@ -73,6 +75,7 @@ classdef BreachSignalGen < BreachSystem
                 end
                 p0 = [p0; p0sg ];
             end
+            this.Domains = [SignalDomains ParamDomains];
             
             p0 = [zeros(numel(signals),1) ; p0 ];
             this.Sys = CreateExternSystem('BreachSignalGen', signals, params, p0, @(Sys, tspan, p)breachSimWrapper(this, Sys, tspan, p));

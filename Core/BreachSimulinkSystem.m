@@ -42,6 +42,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
     methods
         
         function this = BreachSimulinkSystem(mdl_name, params, p0, signals, inputfn)
+            InitBreach();
             
             if nargin==0
                 return;
@@ -122,8 +123,11 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             load_system(mdl);
 
             % Get checksum of the model
+            try
             this.mdl_checksum = Simulink.BlockDiagram.getChecksum(mdl);
-
+            catch
+                warning('BreachSimulinkSystem:get_checksum_failed', 'Simulink couldn''t compute a checksum for the model.');
+            end
             close_system(mdl_breach,0);
             save_system(mdl,[breach_data_dir filesep mdl_breach]);
             close_system(mdl,0);
@@ -322,7 +326,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 % adds in signal_builder params
                 params = [params sig_build_params];
                 p0 = [p0 sig_build_p0];
-            elseif ~isempty(params)&&isempty(p0)
+            elseif ~isempty(params)&&(~exist('p0','var') || isempty(p0))
                 p0 = zeros(1,numel(params));                
                 
                 for ip = 1:numel(params)
@@ -393,7 +397,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
             
          %% setup param domains
-         this.ParamDomain = repmat(BreachDomain('double'),[1 this.Sys.DimP]);
+         this.Domains = repmat(BreachDomain('double'),[1 this.Sys.DimP]);
          
          % Parameters for signalbuilder
          for isb = 1:numel(sb_list)
@@ -401,7 +405,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                  idx= FindParam(this.Sys, sig_build_params{isb});
                  [~,~,~,groupnames] = signalbuilder(sb);
                  num_groups = numel(groupnames);
-                 this.ParamDomain(idx) = BreachDomain('int',[1 num_groups]);     
+                 this.Domains(idx) = BreachDomain('int',[1 num_groups]);     
          end
          %% Closing 
          save_system(mdl_breach);
@@ -718,9 +722,19 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 
             end
         end
-        function disp(this)
-            disp(['BreachSimulinkSystem intefacing model ' this.mdl_name '.']);
+        function  st = disp(this)
+           if isfield(this.P, 'traj')
+               nb_traj = numel(this.P.traj);
+           else
+               nb_traj = 0;
+           end
+           
+           st = ['BreachSimulinkSystem interfacing model ' this.mdl_name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' traces.'];
+           if nargout ==0
+           disp(st);
+           end
         end
+        
         
         
         

@@ -67,6 +67,8 @@ classdef random_signal_gen < signal_gen
            
             % domains 
             
+           this.signals_domain = repmat(BreachDomain(), 1, numel(this.signals));
+ 
             
         end
         

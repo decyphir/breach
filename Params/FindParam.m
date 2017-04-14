@@ -2,8 +2,8 @@ function [index, type] =  FindParam(S, param)
 % FINDPARAM (Legacy) Finds the indices of parameters given by their name for a given
 % system or parameter set.
 %
-% Syntax: index = FindParam(Sys, param)
-%     or  index = FindParam(P, param)
+% Syntax: [index, status] = FindParam(Sys, param)
+%     or  [index, status] = FindParam(P, param)
 %
 % Inputs:
 %  - S     : is the system or a parameter set
@@ -18,7 +18,7 @@ function [index, type] =  FindParam(S, param)
 %           parameter(s) not found. (for unfound parameters, the returned
 %           indexes is compact, different for each parameter and the
 %           smaller index is equal to the higher known parameter index + 1)
-%  - type array of same size as index, contains 0 if not found, 1 if
+%  - status array of same size as index, contains 0 if not found, 1 if
 %           signal, 2 if param, 3 if other
 %
 

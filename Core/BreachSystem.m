@@ -70,14 +70,17 @@ classdef BreachSystem < BreachSet
             
         %% Parameters
         % Get and set default parameter values (defined in Sys)
+        
         function values = GetDefaultParam(this, params)
         % Get default parameter values (defined in Sys)
             values = GetParam(this.Sys,params);
         end
+        
         function SetDefaultParam(this, params, values)
         % Set default parameter values (defined in Sys)
             this.Sys = SetParam(this.Sys,params, values);
         end
+        
         function SetP(this,P)
             
             if isaP(P)
@@ -127,6 +130,11 @@ classdef BreachSystem < BreachSet
                 phi_id = MakeUniqueID([this.Sys.name '_spec'],  BreachGlobOpt.STLDB.keys);
                 phi = STL_Formula(phi_id, varargin{1});   
             end
+          
+            % checks whether spec is in there already or not
+            if this.Specs.isKey(get_id(phi))
+                return;
+            end 
             
             % checks signal compatibility
             [~,sig]= STL_ExtractPredicates(phi);
@@ -137,6 +145,12 @@ classdef BreachSystem < BreachSet
             end
             
             this.Specs(get_id(phi)) = phi;
+         
+          
+            % Add property params
+            params_prop = get_params(phi);
+            this.SetParamSpec(fieldnames(params_prop)', cellfun(@(c) (params_prop.(c)), fieldnames(params_prop))); 
+            
         end
         
         function SetSpec(this,varargin)
@@ -161,18 +175,21 @@ classdef BreachSystem < BreachSet
             if ~exist('t_spec', 'var')
                t_spec= 0; 
             end
-            
-            if isfield(this.P, 'props_names')&&(nargin<=2)               
-                iprop = find(strcmp(get_id(spec), this.P.props_names));
-            else
-                iprop = 0;
-            end
-            if iprop
-                val = cat(1, this.P.props_values(iprop,:).val);
-            else
+      
+             %  TODO better check if property has been evaluated already
+             %  (check parameter changes) 
+             %
+%            if isfield(this.P, 'props_names')&&(nargin<=2)               
+%              iprop = find(strcmp(get_id(spec), this.P.props_names));
+%            else
+%                iprop = 0;
+%           end
+%            if iprop
+%                val = cat(1, this.P.props_values(iprop,:).val);
+%            else
                 [this.P, val] = SEvalProp(this.Sys,this.P,spec,  t_spec);
-                this.addStatus(0, 'spec_evaluated', 'A specification has been evaluated.')
-            end
+%                this.addStatus(0, 'spec_evaluated', 'A specification has been evaluated.')
+%            end
         end
         
         function [Bpos, Bneg] = FilterSpec(this, phi)
@@ -278,7 +295,7 @@ classdef BreachSystem < BreachSet
                 depth = inf;
             end
             
-            figure;
+            gca;
             SplotSat(this.Sys,this.P, phi, depth, tau, ipts);
         end
         
@@ -328,7 +345,7 @@ classdef BreachSystem < BreachSet
         
         function [h, t, X]  = PlotExpr(this, stl_expr, varargin)
             % Plots a signal expression
-            
+            gca;
             if ~iscell(stl_expr)
                 stl_expr = {stl_expr};
             end
@@ -427,14 +444,15 @@ classdef BreachSystem < BreachSet
             if isa(new_phi, 'STL_Formula')
                 this.Specs(get_id(new_phi)) = new_phi;
             end
+            
+            % Add property params
+            params_prop = get_params(new_phi);
+            this.SetParamSpec(fieldnames(params_prop)', cellfun(@(c) (params_prop.(c)), fieldnames(params_prop))); 
+ 
         end
              
         function RunGUI(this)
-            P.P = this.P;
-            phis=  this.Specs.keys;
-            if (~isempty(phis))
-                Propsave(this.Sys, phis{:});
-            end
+                        
             BreachGui(this);
             
         end

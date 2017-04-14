@@ -56,8 +56,6 @@ function BreachTrajGui_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.BrSys = varargin{1};
 handles_main = varargin{2};
 handles.protected_names = fieldnames(handles_main.working_sets);
-handles.working_sets_filename = handles_main.working_sets_file_name;
-handles.Sys= handles_main.Sys;
 handles.properties= handles_main.properties;
 
 if isfield(handles_main, 'TrajSet')
@@ -74,16 +72,16 @@ if (isfield(handles.BrSys.P, 'traj'))
 end
 
 %%  init things
-if (isfield(handles.Sys,'time_mult'))
-    time_mult = handles.Sys.time_mult;
+if (isfield(handles.BrSys.Sys,'time_mult'))
+    time_mult = handles.BrSys.Sys.time_mult;
 else
     time_mult=1;
 end
 handles.BrSys.P.time_mult = time_mult;
 
 handles.has_dynamics=1;
-if(isfield(handles.Sys, 'type'))
-    if (strcmp(handles.Sys.type,'traces'))
+if(isfield(handles.BrSys.Sys, 'type'))
+    if (strcmp(handles.BrSys.Sys.type,'traces'))
         handles.has_dynamics = 0;
     end
 end
@@ -914,48 +912,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in button_save_pts.
-function button_save_pts_Callback(hObject, eventdata, handles)
-% hObject    handle to button_save_pts (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-try
-    
-    Ptmp = select(handles.BrSys.P,handles.current_pts);
-    Ptmp = SPurge(Ptmp);
-    
-    name = handles.traj_set_name;
-    new_name = genvarname(name, handles.protected_names);
-    eval([new_name '= Ptmp']);
-    save(handles.working_sets_filename,'-append', new_name);
-    guidata(hObject,handles);
-    
-end
-
-
-% --- Executes on button press in button_save_all.
-function button_save_all_Callback(hObject, eventdata, handles)
-% hObject    handle to button_save_all (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-try
-    Ptmp = SPurge(handles.BrSys.P);
-    name = handles.traj_set_name;
-    new_name = genvarname(name, handles.protected_names);
-    eval([new_name '= Ptmp']);
-    save(handles.working_sets_filename,'-append', new_name);
-    
-    guidata(hObject,handles);
-catch
-    s = lasterror;
-    warndlg(['Problem saving: ' s.message] );
-    error(s);
-    return
-end
-
-
 function edit_change_tspan_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_change_tspan (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -1185,8 +1141,8 @@ end
 
 function new_plot= plot_param(handles,ax)
 
-if (isfield(handles.Sys,'time_mult'))
-    time_mult = handles.Sys.time_mult;
+if (isfield(handles.BrSys.Sys,'time_mult'))
+    time_mult = handles.BrSys.Sys.time_mult;
 else
     time_mult=1;
 end
@@ -1239,7 +1195,7 @@ if (nprop)  % plot values for a property
     
     Ptmp = Sselect(handles.BrSys.P, ipts);
     
-    phi_val = STL_Eval(handles.Sys,prop,Ptmp,handles.BrSys.P.traj{handles.traj_ref(ipts)},phi_tspan);
+    phi_val = STL_Eval(handles.BrSys.Sys,prop,Ptmp,handles.BrSys.P.traj{handles.traj_ref(ipts)},phi_tspan);
     ylabel(get_id(prop),'Interpreter','none');
     xlabel(['time']);
     
@@ -1528,7 +1484,7 @@ if (get(handles.for_all_checkbox,'Value')||~isfield(handles.BrSys.P,'traj'))
                 traj = handles.BrSys.P.traj{traj_ref(j)};
                 P = Sselect(handles.BrSys.P,j);
                 handles.BrSys.P.props_values(i,j).val = ...
-                    STL_Eval(handles.Sys,props, P, traj,handles.BrSys.P.props_values(i,j).tspan);
+                    STL_Eval(handles.BrSys.Sys,props, P, traj,handles.BrSys.P.props_values(i,j).tspan);
             end
         end
     end

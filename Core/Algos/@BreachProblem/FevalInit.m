@@ -32,7 +32,11 @@ if this.use_parallel
     end
     
     if ~this.stopping()
-        i_range = fq*iter:nb_init;
+        if isempty(iter) %  nb_init was less than fq
+            i_range = 1:nb_init;
+        else
+            i_range = fq*iter:nb_init;
+        end
         parfor isample = i_range
             fval(isample) = fun(X0(:,isample));
         end

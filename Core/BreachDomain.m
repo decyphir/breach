@@ -1,7 +1,6 @@
 classdef BreachDomain
     % Instead of having switch everywhere, should probably consider derived
     % classes
-    % checkin does not take into account enum and tabu_list yet ..
     properties
         type='double'
         domain
@@ -10,6 +9,7 @@ classdef BreachDomain
     
     methods
         function this = BreachDomain(type, domain)
+            
             if nargin>1 && isempty(domain)
                 domain=[];
             end
@@ -19,19 +19,39 @@ classdef BreachDomain
                     this.type  = 'double';
                     this.domain = [];
                 case 1
-                    this.type  = type;
-                    this.domain = [];
+                    if isnumeric(type)
+                        if numel(type)==2
+                            this.type = 'double';
+                            this.domain = type;
+                        else
+                            error('BreachDomain:wrong_type', 'BreachDomain first argument should be the string ''double'', ''int'', ''enum'' or ''bool'', or an interval.')
+                        end
+                    else
+                        this.type  = type;
+                        this.domain = [];
+                    end
                 case 2
-                    this.type  = type;
-                    this.domain = domain;
-             end
+                    
+                    if isnumeric(type)
+                        if size(type,2)==2
+                            this.type = 'double';
+                            this.domain = type;
+                        else
+                            error('BreachDomain:wrong_type', 'BreachDomain first argument should be the string ''double'', ''int'', ''enum'' or ''bool'', or an interval.')
+                        end
+                    else
+                        
+                        this.type  = type;
+                        this.domain = domain;
+                    end
+            end
             
             % init enum (I feel this will explode on me some day)
             switch this.type
                 case 'int'
                     if numel(this.domain)~=2
-                       this.enum = round(this.domain);
-                       this.domain  = [min(this.enum), max(this.enum)];
+                        this.enum = round(this.domain);
+                        this.domain  = [min(this.enum), max(this.enum)];
                     else
                         this.enum = this.domain(1):this.domain(2);
                     end
@@ -41,7 +61,14 @@ classdef BreachDomain
                 case 'bool'
                     this.domain = [0 1];
                     this.enum = [0 1];
+                case 'double'
+                otherwise
+                    error('BreachDomain:wrong_type', 'BreachDomain first argument should the string ''double'', ''int'', ''enum'' or ''bool'', or an interval.');
             end
+        end
+        
+        function bool = is_default(this)
+            bool = isequal(this.type, 'double') && isempty(this.domain);
         end
         
         function new_x = checkin(this,x)
@@ -76,20 +103,20 @@ classdef BreachDomain
             x = (x~=0);
         end
         
-        function x = checkin_enum(this,x)            
+        function x = checkin_enum(this,x)
             for ix= 1:numel(x)
-                [~ , imin] = min(abs(this.enum-x(ix))); 
+                [~ , imin] = min(abs(this.enum-x(ix)));
                 x(ix) = this.enum(imin);
             end
-          end
+        end
         
-        
+       
         function all_x = sample_all(this)
             all_x = this.enum;
         end
-        
+                
         function new_x = sample_rand(this, num_samples)
-        % assumes bounded domain 
+            % assumes bounded domain
             switch this.type
                 case {'enum', 'int'}
                     new_x = this.enum(randi(numel(this.enum),1,num_samples));
@@ -98,11 +125,117 @@ classdef BreachDomain
             end
         end
         
+        function st = short_disp(this, not_if_default)
+            % short disp
+            if this.is_default()&& exist('not_if_default', 'var')&&not_if_default
+                st= '';
+                return;
+            end
+            
+            if isempty(this.domain)
+                st = ['of type ' this.type];
+            else
+                st = ['of type ' this.type ' in [' num2str(this.domain(1)) ', ' num2str(this.domain(2)) ']' ];
+            end
+            
+        end
+        
         function new_x = sample_grid(this, num_samples)
             new_x = linspace(this.domain(1),this.domain(2), num_samples);
             new_x = this.checkin(new_x);
-        
         end
+        
+        
+        function x = sample(varargin)
+        % sample multi domain sampling
+            
+            %% process parameters
+            
+            % first arguments are domains
+           i =2; 
+            while isa(varargin{i}, 'BreachDomain')
+                i = i+1;
+            end
+            domains = varargin(1:i-1);
+            num_dom = i-1;
+            
+            % next ones are num_samples and then method
+            num_samples = varargin{i};
+            
+            try
+                method = varargin{i+1};
+            end
+            
+            if ~exist('method')||isempty(method)
+                method = 'rand';
+            end
+            
+            if ~exist('opt_multi')
+                opt_multi='replace'; %
+            end
+            
+            % if all is selected, combine new samples
+            combine_x=0;
+            if iscell(num_samples)               
+                for is =1:numel(num_samples)
+                    combine_x = combine_x || isequal(num_samples{is}, 'all');  
+                end
+            end
+            combine_x= combine_x||isequal(num_samples, 'all')||isequal(method,'grid');
+                
+            if ischar(method)||isscalar(method)
+                m = method;
+                method = cell(1, num_dom);
+                for ic = 1:num_dom
+                    method{ic} = m;
+                end
+            end
+            
+            if ischar(num_samples)||isscalar(num_samples)
+                ns = num_samples;
+                num_samples = cell(1, num_dom);
+                for ic = 1:num_dom
+                    num_samples{ic} = ns;
+                end
+            end
+            
+            if isnumeric(num_samples)
+                num_samples = num2cell(num_samples);
+            end
+            
+            % creates new samples
+            for ip = 1:numel(domains)
+                dom = domains{ip};
+                if isequal(num_samples{ip}, 'all')
+                    x{ip} = dom.sample_all();
+                else
+                    if isequal(method{ip}, 'grid')
+                        x{ip} = dom.sample_grid(num_samples{ip});
+                    elseif isequal(method{ip}, 'rand')
+                        x{ip} = dom.sample_rand(num_samples{ip});
+                    end
+                end
+                num_x(ip) = numel(x{ip});
+            end
+            
+            % Combine new samples
+            if num_dom>1
+                if combine_x
+                    idx = N2Nn(num_dom, num_x);
+                    for ip = 1:num_dom
+                        new_x(ip,:) = x{ip}(1, idx(ip,:));
+                    end
+                    x = new_x;
+                else
+                    x = cell2mat(x');
+                end
+            else
+                x= x{1};
+            end
+            
+            
+         end
+        
         
     end
 end

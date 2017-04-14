@@ -9,6 +9,11 @@ classdef constant_signal_gen < signal_gen
 
     methods         
         function this = constant_signal_gen(signals, p0)
+            
+            if ischar(signals)
+                signals = {signals};
+            end
+            
             nb_signals = numel(signals);
             this.signals = signals;
             
@@ -16,6 +21,9 @@ classdef constant_signal_gen < signal_gen
             for i_s = 1:nb_signals
                 this.params = { this.params{:} [this.signals{i_s} '_u0']};
             end
+            
+            this.params_domain = repmat(BreachDomain(), 1, nb_signals); 
+            this.signals_domain = repmat(BreachDomain(), 1, nb_signals); 
             
             if nargin == 2
                 this.p0 = p0;

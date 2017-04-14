@@ -54,6 +54,10 @@ classdef fixed_cp_signal_gen < signal_gen
             else
                 this.p0= zeros(numel(this.params),1);
             end
+                   
+           this.params_domain = repmat(BreachDomain(), 1, numel(this.params));
+           this.signals_domain = repmat(BreachDomain(), 1, numel(this.signals));
+     
         end
         
         function X = computeSignals(this,p,time) % compute the signals
@@ -104,5 +108,35 @@ classdef fixed_cp_signal_gen < signal_gen
             args = {'num_cp','method'};         
         end
         
+        function [t_cp, cp_values] = get_cp(this, time)
+            % works for first signal only
+            i_cp = 1;
+            
+            cp_values = this.p0(1:this.num_cp(i_cp));
+            if ischar(this.method)
+                meth = this.method;
+            elseif numel(this.method)==1
+                meth = this.method{1};
+            else
+                meth = this.method{i_cp};
+            end
+            switch meth
+                case 'previous'
+                    t_cp = linspace(time(1), time(end), this.num_cp(i_cp)+1)';
+                    t_cp = t_cp(1:end-1);
+                otherwise
+                    t_cp = linspace(time(1), time(end), this.num_cp(i_cp))';
+            end
+            
+        end
+        
+        function plot(this, time)
+            plot@signal_gen(this,time);
+            % plot control points
+            [t_cp, x_cp] = this.get_cp(time);
+            hold on;
+            plot(t_cp,x_cp, 'or');
+            hold off;
+        end
     end
 end

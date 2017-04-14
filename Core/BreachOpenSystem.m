@@ -335,11 +335,11 @@ classdef BreachOpenSystem < BreachSystem
                 disp( 'Signals:')
                 disp( '-------')
                 for isig = 1:this.Sys.DimX-this.Sys.DimU
-                    fprintf('%s\n', this.Sys.ParamList{isig});
+                    fprintf('%s %s\n', this.Sys.ParamList{isig}, this.Domains(isig).short_disp(1));
                 end
                 
                 for isig = this.Sys.DimX-this.Sys.DimU+1:this.Sys.DimX
-                    fprintf('%s (Input)\n', this.Sys.ParamList{isig});
+                    fprintf('%s %s (Input)\n', this.Sys.ParamList{isig}, this.Domains(isig).short_disp(1));
                 end
                 
             else

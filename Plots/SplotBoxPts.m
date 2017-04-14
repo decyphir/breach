@@ -64,7 +64,6 @@ if ~exist('alph','var')
     alph = .1;
 end
 
-
 hold on;
 
 switch(numel(proj))
