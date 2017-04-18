@@ -22,7 +22,7 @@ function varargout = signal_gen_gui(varargin)
 
 % Edit the above text to modify the response to help signal_gen_gui
 
-% Last Modified by GUIDE v2.5 14-Apr-2017 15:18:17
+% Last Modified by GUIDE v2.5 18-Apr-2017 14:54:51
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -50,6 +50,27 @@ function signal_gen_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to signal_gen_gui (see VARARGIN)
+
+% Set fonts and size depending on system
+if ismac
+    FONT=12;
+    POS = [50 10 200 50];
+    handles.TBL_SZ = {200 120 120 150 80} ;
+else
+    FONT=10;
+    POS = [50 10 200 50];
+    handles.TBL_SZ = {400 150 150 150 150 150};
+end
+
+hfn = fieldnames(handles);
+for ifn = 1:numel(hfn)
+    try 
+        set(handles.(hfn{ifn}), 'FontSize', FONT);
+    end
+end
+set(handles.main, 'Position',POS);
+
+
 
 % get signal names
 
@@ -342,7 +363,7 @@ update_uitable(handles);
 function update_uitable(handles)
 sg = get_current_sg(handles);   
 fill_uitable_params(handles.uitable_params, sg.params, sg.p0, sg.params_domain);
-set(handles.uitable_params, 'ColumnWidth', {400 150 150 150 150 150});
+set(handles.uitable_params, 'ColumnWidth', handles.TBL_SZ);
 
 %% helpers
 function sig_name = get_current_signal(handles)
@@ -369,7 +390,3 @@ function uitable_params_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-
-
-
-

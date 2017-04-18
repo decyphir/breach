@@ -60,6 +60,8 @@ if ismac
     POS = [50 10 200 50];
     handles.TBL_SZ = {200 120 120 150 80} ;
 else
+    FONT=10;
+    POS = [50 10 200 50];
     handles.TBL_SZ = {300 120 150 200 120} ;
 end
 
@@ -124,6 +126,7 @@ handles = update_working_sets_panel(handles);
 
 %% Init properties panel
 handles.idx_prop= 1;
+handles.current_prop = ''; 
 handles = update_properties_panel(handles);
 
 %% Init modif panel
@@ -1055,6 +1058,8 @@ handles =  plot_pts(handles);
 function handles= plot_pts(handles)
 Br = handles.working_sets.(handles.current_set);
 
+select_style = {'sk', 'MarkerSize', 20};
+
 if ~isfield(Br.P,'selected')
     Br.P.selected = zeros(size(Br.P.pts,2))
 end
@@ -1064,7 +1069,6 @@ hold off;
 cla;
 legend off;
 set(gca,'YLimMode','auto');
-
 
 param_to_plot = handles.current_plot_pts{1};
 ipts = [handles.current_pts find(Br.P.selected)];
@@ -1092,6 +1096,7 @@ end
 
 i0=0;
 
+% Plot domain
 try 
     Br.PlotDomain(param_to_plot);
 end
@@ -1153,6 +1158,16 @@ else
         S = DiscrimPropValues(Br.P);
         SplotPts(S,param_to_plot);
     end
+    % Plot selected
+    
+    if any(Br.P.selected)
+        hold on;
+        kn = find(Br.P.selected);
+        SplotPts(Br.P, param_to_plot,kn,select_style);
+    end    
+    
+    
+    
 end
 
 % --------------------------------------------------------------------
@@ -1270,7 +1285,8 @@ try
 end
 handles.figp = figure;
 hold on;
-SplotProp(Br.P, handles.properties.(handles.current_prop));
+num_params = numel(handles.selected_params);
+Br.PlotRobustMap(handles.properties.(handles.current_prop), handles.selected_params{1:max(num_params,2)});
 guidata(hObject,handles);
 
 % --------------------------------------------------------------------
@@ -1317,15 +1333,13 @@ if isempty(BrFalse)
     handles = info(handles, 'No falsifying input found');
 else
     handles = info(handles, 'Done.');
-    PFalse = BrFalse.P;
-    PFalse.epsi = 0*PFalse.epsi;
-    new_name = ['PFalse_' get_id(prop)];
-    handles.working_sets = setfield(handles.working_sets, new_name, PFalse);
+    new_name = ['BrFalse_' get_id(prop)];
+    handles.working_sets = setfield(handles.working_sets, new_name, BrFalse);
+    assignin('base', new_name, BrFalse);
 end
-PLog =  BrLogged.P;
-PLog.epsi = 0*PLog.epsi;
-new_name2 = ['PLog_' get_id(prop)];
-handles.working_sets = setfield(handles.working_sets, new_name2, PLog);
+new_name2 = ['BrLog_' get_id(prop)];
+handles.working_sets = setfield(handles.working_sets, new_name2, BrLogged);
+assignin('base', new_name, BrFalse);
 
 handles = update_working_sets_panel(handles);
 handles = update_modif_panel(handles);
@@ -1543,8 +1557,10 @@ try
     end
     
     handles.properties = rmfield(handles.properties,st);
-    props = handles.properties;
-    save(handles.properties_file_name,'-struct','props');
+    
+    Br = handles.working_sets.(handles.current_set);
+    Br.P = SPurge_Props(Br.P);
+    Br.Specs.remove(st);
     
     handles = update_properties_panel(handles);
     guidata(hObject, handles);
@@ -1922,6 +1938,7 @@ function button_break_prop_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+Br = handles.working_sets.(handles.current_set);
 prop = handles.properties.(handles.current_prop);
 props = STL_Break(prop);
 
@@ -1929,8 +1946,8 @@ for i = 1:numel(props)
     PHI_ = props(i);
     eval([get_id(PHI_) '=PHI_']);
     handles.properties.(get_id(props(i))) = props(i);
+    Br.AddSpec(props(i));
 end
-save(handles.properties_file_name, '-append', get_id(props(i)));
 
 handles = update_properties_panel(handles);
 
@@ -2004,8 +2021,7 @@ function menu_select_satisfied_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-try
-    
+    Br = handles.working_sets.(handles.current_set);
     iprop = find_prop(handles.current_prop,Br.P);
     val_threshold = 0;
     if iprop
@@ -2017,13 +2033,6 @@ try
     handles = update_modif_panel(handles);
     guidata(hObject,handles);
     
-catch
-    s = lasterror;
-    warndlg(['Problem selection: ' s.message] );
-    error(s);
-    return
-end
-
 function edit_param_name_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_param_name (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -2068,21 +2077,6 @@ handles.working_sets = setfield(handles.working_sets, new_name, Pnew);
 handles = update_working_sets_panel(handles);
 guidata(hObject,handles);
 
-% --------------------------------------------------------------------
-function create_prop_param_set_Callback(hObject, eventdata, handles)
-% hObject    handle to create_prop_param_set (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-prop = handles.properties.(handles.current_prop);
-param_prop = fieldnames(get_params(prop))';
-Pnew = CreateParamSet(Br.Sys, param_prop);
-names = fieldnames(handles.working_sets);
-new_name = genvarname(['Br' get_id(prop)],names);
-handles.working_sets = setfield(handles.working_sets, new_name, Pnew);
-%set(handles.working_sets_listbox,'Value', numel(names)+1);
-handles = update_working_sets_panel(handles);
-guidata(hObject,handles);
 
 % --------------------------------------------------------------------
 function menu_param_synth_Callback(hObject, eventdata, handles)
@@ -2391,6 +2385,7 @@ function button_reset_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 Br = handles.working_sets.(handles.current_set);
 Br.ResetParamSet();
+handles = update_working_sets_panel(handles);
 handles = update_modif_panel(handles);
 guidata(hObject,handles);
 

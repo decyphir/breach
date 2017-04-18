@@ -54,10 +54,10 @@ function select_cell_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 
 if ismac
     FONT=12;
-    POS = [50 10 200 50];
+    POS = [60 10 120 40];
 else
-    FONT=12;
-    POS = [50 10 200 50];
+    FONT=10;
+    POS = [60 10 120 40];
 end
 
 hfn = fieldnames(handles);
@@ -68,7 +68,7 @@ for ifn = 1:numel(hfn)
 end
 set(handles.main, 'Position',POS);
  
-  set(hObject, 'Name', ['Choose from list']);
+set(hObject, 'Name', ['Choose from list']);
   
 % gui takes two arguments : a parameter set and default options
   content_all = varargin{1};

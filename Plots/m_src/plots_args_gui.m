@@ -22,7 +22,7 @@ function varargout = plots_args_gui(varargin)
 
 % Edit the above text to modify the response to help plots_args_gui
 
-% Last Modified by GUIDE v2.5 13-Dec-2011 11:19:40
+% Last Modified by GUIDE v2.5 18-Apr-2017 16:32:44
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -52,7 +52,24 @@ function plots_args_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to plots_args_gui (see VARARGIN)
 
-  
+
+% Set fonts and size depending on system
+if ismac
+    FONT=12;
+    POS = [50 10 200 50];
+else
+    FONT=10;
+    POS = [50 10 200 50];
+end
+
+hfn = fieldnames(handles);
+for ifn = 1:numel(hfn)
+    try 
+        set(handles.(hfn{ifn}), 'FontSize', FONT);
+    end
+end
+set(handles.main, 'Position',POS);
+
   set(hObject, 'Name', ['Choose variables to plot and options']);
   
 % gui takes two arguments : a parameter set and default options
@@ -228,8 +245,8 @@ end
   
 
 % --- Executes during object deletion, before destroying properties.
-function uipanel1_DeleteFcn(hObject, eventdata, handles)
-% hObject    handle to uipanel1 (see GCBO)
+function main_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to main (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 

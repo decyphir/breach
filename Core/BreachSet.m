@@ -246,7 +246,8 @@ classdef BreachSet < BreachStatus
         
         function ResetParamSet(this)
             % ResetParamSet remove samples and keeps one in the domain  
-            
+        
+            this.P = SPurge(this.P);
             % find non empty domains
             ipr = cellfun(@(c)(~isempty(c)), {this.Domains.domain});            
             if (isempty(find(ipr,1)))
@@ -774,7 +775,7 @@ classdef BreachSet < BreachStatus
                      rect(start, sz, col, alpha);
                  else
                      x = dom.sample_all(); 
-                     plot(x, 0*x+y0, 'ok');
+                     plot(x, 0*x+y0, pts_style);
                  end                
             end
             
@@ -786,7 +787,7 @@ classdef BreachSet < BreachStatus
                      rect(start, sz, col, alpha);
                  else
                      y = dom.sample_all(); 
-                     plot(0*y+x0, y, 'ok');
+                     plot(0*y+x0, y, pts_style);
                  end                
             end
         end

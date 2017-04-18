@@ -14,23 +14,23 @@ for irow = 1:size(data,1)
     domain = str2num(data{irow,3});
 
     type = data{irow,5};
+    
     enum  = data{irow, 4};
     
-    domains(irow) = BreachDomain(type, domain);
     
-%     if ~isempty(domain)
-%         if isempty(enum)
-%             if domain(2)-domain(1) >0
-%                 domains(irow) = BreachDomain(type, [doml domu]);
-%             else
-%                 domains(irow) = BreachDomain(type);
-%             end
-%         else
-%             enum = str2num(enum);
-%             domains(irow) = BreachDomain(type, enum);
-%             p0(irow,1) = domains(irow).checkin(p0(irow,1));
-%         end
-%     end
+   
+    switch type
+        case 'enum'
+            if isempty(enum)
+                enum = data{irow,2};
+            else
+                enum = str2num(enum);
+            end
+            
+            domains(irow) = BreachDomain(type, enum);
+        otherwise 
+            domains(irow) = BreachDomain(type, domain);
+    end
     
 end
 end

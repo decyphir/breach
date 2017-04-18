@@ -312,7 +312,7 @@ classdef BreachSystem < BreachSet
                 return
             end
             
-            out = figure;
+            out = gcf;
             
             % no option, use defaults
             if ~exist('options_in','var')
@@ -336,11 +336,13 @@ classdef BreachSystem < BreachSet
                     delta = 10;
             end
             
-            this.P = CreateParamSet(this.P, params, ranges);
-            this.P = Refine(this.P, delta,1);
+            if this.GetNbParamVectors()==1
+                this.P = CreateParamSet(this.P, params, ranges);
+                this.P = Refine(this.P, delta,1);
+            end
+            
             this.Sim();
             this.CheckSpec(phi);
-            
             SplotProp(this.P, phi, options);
             
         end
@@ -454,18 +456,20 @@ classdef BreachSystem < BreachSet
         function new_phi  = AddSpecGUI(this)
             signals = this.Sys.ParamList(1:this.Sys.DimX);
             new_phi = STL_TemplateGUI('varargin', signals);
-            if isa(new_phi, 'STL_Formula')
-                this.Specs(get_id(new_phi)) = new_phi;
-            end
-            
-            % Add property params with default values if they're not
-            % defined yet
-            params_prop = get_params(new_phi);
-            names_params_prop = fieldnames(params_prop);
-            [~,  idx_status ] = FindParam(this.P, names_params_prop);
-            params_not_found = names_params_prop(idx_status==0);
-            if ~isempty(params_not_found)
-                this.SetParamSpec(params_not_found, cellfun(@(c) (params_prop.(c)), params_not_found));
+            if ~isempty(new_phi)
+                if isa(new_phi, 'STL_Formula')
+                    this.Specs(get_id(new_phi)) = new_phi;
+                end
+                
+                % Add property params with default values if they're not
+                % defined yet
+                params_prop = get_params(new_phi);
+                names_params_prop = fieldnames(params_prop);
+                [~,  idx_status ] = FindParam(this.P, names_params_prop);
+                params_not_found = names_params_prop(idx_status==0);
+                if ~isempty(params_not_found)
+                    this.SetParamSpec(params_not_found, cellfun(@(c) (params_prop.(c)), params_not_found));
+                end
             end
         end
              

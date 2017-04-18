@@ -22,7 +22,7 @@ function varargout = BreachTrajGui(varargin)
 
 % Edit the above text to modify the response to help BreachTrajGui
 
-% Last Modified by GUIDE v2.5 08-Aug-2012 16:56:10
+% Last Modified by GUIDE v2.5 18-Apr-2017 15:20:36
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -51,6 +51,26 @@ function BreachTrajGui_OpeningFcn(hObject, eventdata, handles, varargin)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to BreachTrajGui (see VARARGIN)
+
+% Set fonts and size depending on system
+if ismac
+    FONT=12;
+    POS = [50 10 200 50];
+    handles.TBL_SZ = {200 120 120 150 80} ;
+else
+    FONT=10;
+    POS = [50 10 200 50];
+    handles.TBL_SZ = {300 120 150 200 120} ;
+end
+
+hfn = fieldnames(handles);
+for ifn = 1:numel(hfn)
+    try 
+        set(handles.(hfn{ifn}), 'FontSize', FONT);
+    end
+end
+set(handles.main, 'Position',POS);
+
 
 %% load parameter set
 handles.BrSys = varargin{1};
@@ -239,7 +259,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % UIWAIT makes BreachTrajGui wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.main);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = BreachTrajGui_OutputFcn(hObject, eventdata, handles)
