@@ -54,13 +54,23 @@ function BreachGui_OpeningFcn(hObject, eventdata, handles, varargin)
 
 handles = info(handles, 'Starting Breach.... (Memory tip: his first name is Millard)');
 
-% Set fonts
+% Set fonts and size depending on system
+if ismac
+    FONT=12;
+    POS = [50 10 200 50];
+    handles.TBL_SZ = {200 120 120 150 80} ;
+else
+    handles.TBL_SZ = {300 120 150 200 120} ;
+end
+
 hfn = fieldnames(handles);
 for ifn = 1:numel(hfn)
     try 
-        set(handles.(hfn), 'FontSize', 12);
+        set(handles.(hfn{ifn}), 'FontSize', FONT);
     end
 end
+set(handles.breach, 'Position',POS);
+
 
 crd = pwd;
 set(hObject, 'Name', ['Breach (' crd  ')']);
@@ -973,7 +983,7 @@ is_signal = find(idx<=DimX);
 
 fill_uitable_params(h_tb, handles.show_params, current_pts, domains, is_signal); % last argument tells which is a signal 
 set(h_tb, 'ColumnEditable', [false, true, true, true, true]);
-set(h_tb, 'ColumnWidth', {300 120 150 200 120});
+set(h_tb, 'ColumnWidth', handles.TBL_SZ);
 
 handles = update_selected_domain(handles);
 
