@@ -8,6 +8,8 @@
 - new warning when breach can't get checksum of model from Simulink. Only affects the Log to file features.
 - GetBoundedDomains returns domains with bounds/ranges
 - GUI work with all BreachSet in the workspace, regardles of system interfaced
+- AddSpec now add property parameters automatically
+- PlotParams, PlotSignals, etc, now re-use the current figure if there is one (gcf)
 
 ## Bugs fixed
 - compilation issue with VS 2015 for online monitoring (added include minmax and algorithm) 
@@ -21,6 +23,8 @@
 - BreachSet now has only one field Domains for signal and parameter domains 
 - SetParamRanges errors when param does not exist (before would create it)
 - ResetParamSet uses Domains instead of ParamRanges field
+- SetParamSpec has an additional argument to ignore if param is a system parameter, if not set, return an error
+- got rid of ParamRanges field, useless since we use domains
 
 # Release 1.1.0
 

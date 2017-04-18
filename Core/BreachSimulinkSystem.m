@@ -69,7 +69,6 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
             
             if isaSys(this.Sys) % Basically if interface was successfully created
-                this.ParamRanges = [this.Sys.p(this.Sys.DimX+1:end) this.Sys.p(this.Sys.DimX+1:end)];
                 this.SignalRanges = [];
                 this.P = CreateParamSet(this.Sys);
                 this.P.epsi(:,:) = 0;

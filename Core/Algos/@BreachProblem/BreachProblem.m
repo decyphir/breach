@@ -148,11 +148,12 @@ classdef BreachProblem < BreachStatus
         
             % Parameter ranges
             if ~exist('params','var')
-                params = BrSet.P.ParamList(BrSet.P.dim);
+                params = BrSet.GetBoundedDomains();
             else
                 if ischar(params)
                     params = {params};
                 end
+                
             end
             this.params= params;
             
@@ -169,6 +170,8 @@ classdef BreachProblem < BreachStatus
             else
                 lb__ = ranges(:,1);
                 ub__ = ranges(:,2);
+                this.BrSet.SetParam(params, 0.5*(ranges(:,2)-ranges(:,1)), true); % adds parameters they don't exist 
+                this.BrSet.SetDomain(params, 'double', ranges);
             end
                        
             this.lb = lb__;

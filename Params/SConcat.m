@@ -215,6 +215,7 @@ end
 % epsi, dim
 % %%%%
 
+try % keeps backward compat. to some extent
 if(isfield(P,'epsi') && isfield(P2,'epsi'))
     
     % Add new uncertain parameter in P
@@ -234,6 +235,9 @@ if(isfield(P,'epsi') && isfield(P2,'epsi'))
     P.epsi = [P.epsi, P2.epsi(iP2,:)];
 end
 
+catch % don't sweat it
+    P.epsi = zeros(numel(P.dim), size(P.pts, 2)); 
+end
 
 % %%%%
 % traj_to_compute

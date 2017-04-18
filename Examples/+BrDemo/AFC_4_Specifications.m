@@ -46,7 +46,7 @@ AFC_w_Specs.CheckSpec(AF_alw_ok)
 
 %% Checking a Simple Specification on a Simulation (Plot)
 % We can plot the satisfaction function with 
-AFC_w_Specs.PlotRobustSat(AF_alw_ok);
+figure; AFC_w_Specs.PlotRobustSat(AF_alw_ok);
 
 %% Checking Another Formula
 % The reason we are not interested in AF between 0 and 10s is because the 
@@ -64,7 +64,7 @@ AFC_w_Specs.CheckSpec(AF_alw_ok2)
 
 %% Plotting Satisfaction for Debugging Formula 
 % At time t=0, controller_mode is briefly 0, which causes the negative results, but this is only an initialization glitch.  
-AFC_w_Specs.PlotRobustSat(AF_alw_ok2);
+figure; AFC_w_Specs.PlotRobustSat(AF_alw_ok2);
 
 %% Reading a formula from an STL File
 % STL formulas can be defined in a file. This makes it much easier to write
@@ -81,13 +81,13 @@ AFC_w_Specs.CheckSpec(AF_alw_ok)
 
 %% Plotting Satisfaction    
 % We can plot the satisfaction function again to interpret the result.  
-AFC_w_Specs.PlotRobustSat(AF_alw_ok);
+figure; AFC_w_Specs.PlotRobustSat(AF_alw_ok);
 
 %% Specifying Depth for Satisfaction Plots
 % PlotRobustSat decomposes the formula into subformulas. We can specify the
 % depth of decomposition, e.g.,
 
-AFC_w_Specs.PlotRobustSat(AF_alw_ok,3); % shows satisfaction of top formula and 2 subformulas.
+figure; AFC_w_Specs.PlotRobustSat(AF_alw_ok,3); % shows satisfaction of top formula and 2 subformulas.
 
 %% Formula Parameters with set_params/get_params
 % Parameters for formulas can be accessed and changed using get_params and set_params functions: 
@@ -129,7 +129,7 @@ AFC_Rand_w_Specs = BrAFC.copy();
 AFC_Rand_w_Specs.SetParamRanges({'Pedal_Angle_base_value', 'Pedal_Angle_pulse_period', 'Pedal_Angle_pulse_amp'}, [0 20; 10 15; 0 40]);
 AFC_Rand_w_Specs.QuasiRandomSample(10);
 AFC_Rand_w_Specs.Sim(Time);
-% Set specification parameter
+%% Set specification parameter
 AFC_Rand_w_Specs.SetParam({'ti', 'tf', 'tol'}, [10 30 .003], 'spec'); 
 % Checks Specification for all simulations
 AFC_Rand_w_Specs.CheckSpec(AF_alw_ok)
@@ -154,11 +154,11 @@ bad_param = Brneg.GetParam({'Pedal_Angle_base_value', 'Pedal_Angle_pulse_period'
 time = 0:.05:10; x = cos(time); y = sin(time);
 trace = [time' x' y']; % trace is in column format, first column is time
 BrTrace = BreachTraceSystem({'x','y'}, trace); 
-BrTrace.PlotSignals();
+figure; BrTrace.PlotSignals();
 
 %% Monitoring a Formula on a Trace (ct'd)
 % Checks (plots) some formula on imported trace:
-BrTrace.PlotRobustSat('alw (x[t] > 0) or alw (y[t]>0)');
+figure; BrTrace.PlotRobustSat('alw (x[t] > 0) or alw (y[t]>0)');
 
 
 

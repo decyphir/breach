@@ -1,6 +1,8 @@
 classdef BreachDomain
-    % Instead of having switch everywhere, should probably consider derived
-    % classes
+    % BreachDomain Implements types and fundamental sets
+    %  Instead of having switch everywhere, should probably consider derived
+    %  classes
+  
     properties
         type='double'
         domain
@@ -9,7 +11,8 @@ classdef BreachDomain
     
     methods
         function this = BreachDomain(type, domain)
-            
+        % BreachDomain(type, domain) 
+        
             if nargin>1 && isempty(domain)
                 domain=[];
             end
@@ -68,10 +71,11 @@ classdef BreachDomain
         end
         
         function bool = is_default(this)
+        % BreachDomain.is_default()
             bool = isequal(this.type, 'double') && isempty(this.domain);
         end
         
-        function new_x = checkin(this,x)
+        function new_x  = checkin(this,x)
             switch this.type
                 case 'int'
                     new_x = this.checkin_int(x);
@@ -79,7 +83,6 @@ classdef BreachDomain
                     new_x = this.checkin_bool(x);
                 case 'enum'
                     new_x = this.checkin_enum(x);
-                    
                 case 'double'
                     new_x =   this.checkin_double(x); % mostly out of bounds
             end
@@ -109,7 +112,6 @@ classdef BreachDomain
                 x(ix) = this.enum(imin);
             end
         end
-        
        
         function all_x = sample_all(this)
             all_x = this.enum;
@@ -147,7 +149,7 @@ classdef BreachDomain
         
         
         function x = sample(varargin)
-        % sample multi domain sampling
+        % sample multi domain sampling. See BreachSet.SampleDomain
             
             %% process parameters
             
@@ -166,13 +168,13 @@ classdef BreachDomain
                 method = varargin{i+1};
             end
             
-            if ~exist('method')||isempty(method)
+            if ~exist('method','var')||isempty(method)
                 method = 'rand';
             end
+         
             
-            if ~exist('opt_multi')
-                opt_multi='replace'; %
-            end
+            
+            
             
             % if all is selected, combine new samples
             combine_x=0;
@@ -213,6 +215,8 @@ classdef BreachDomain
                         x{ip} = dom.sample_grid(num_samples{ip});
                     elseif isequal(method{ip}, 'rand')
                         x{ip} = dom.sample_rand(num_samples{ip});
+                    elseif isequal(method{ip}, 'corners')
+                        x{ip} = [dom.domain(1) dom.domain(2)]; 
                     end
                 end
                 num_x(ip) = numel(x{ip});

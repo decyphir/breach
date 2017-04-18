@@ -41,7 +41,7 @@ AFC_UniStep3.PrintParams();
 AFC_UniStep3.SetParam({'Engine_Speed_u0','Engine_Speed_u1','Engine_Speed_u2'}, [ 1000 900 1100]);
 AFC_UniStep3.SetParam({'Pedal_Angle_u0','Pedal_Angle_u1','Pedal_Angle_u2'}, [ 20 60 30]);
 AFC_UniStep3.Sim(0:.05:40);
-AFC_UniStep3.PlotSignals({'Pedal_Angle','Engine_Speed','cyl_air', 'cyl_fuel', 'AF'});
+figure; AFC_UniStep3.PlotSignals({'Pedal_Angle','Engine_Speed','cyl_air', 'cyl_fuel', 'AF'});
 
 %% Variable Steps Input Generation
 % We can have variable step inputs and also different numbers of control 
@@ -64,7 +64,7 @@ AFC_VarStep.SetParam({'Engine_Speed_u0','Engine_Speed_dt0','Engine_Speed_u1', 'E
                      [ 1000 10 900 30 1100]);
 AFC_VarStep.SetParam({'Pedal_Angle_u0','Pedal_Angle_dt0','Pedal_Angle_u1'}, [20 15 60]);
 AFC_VarStep.Sim(0:.05:40);
-AFC_VarStep.PlotSignals({'Pedal_Angle','Engine_Speed','cyl_air', 'cyl_fuel', 'AF'});
+figure; AFC_VarStep.PlotSignals({'Pedal_Angle','Engine_Speed','cyl_air', 'cyl_fuel', 'AF'});
 
 %% Mixing Signal Generators for Inputs
 % It is possible to mix different ways to generate signals for the
@@ -96,7 +96,7 @@ InputGen.PrintParams();
 
 BrAFC.SetInputGen(InputGen);
 BrAFC.Sim(0:.05:40);
-BrAFC.PlotSignals({'Pedal_Angle', 'Engine_Speed','cyl_fuel', 'AF'});
+figure; BrAFC.PlotSignals({'Pedal_Angle', 'Engine_Speed','cyl_fuel', 'AF'});
 
 %% Writing a New Signal Generator
 % If the available signal generators are not enough, it is easy to write a
@@ -118,7 +118,7 @@ BrAFC_MyGen.PrintParams();  % Makes sure the new parameters are visible
 %% Writing a New Signal Generator
 % And simulate to see what happens.
 BrAFC_MyGen.Sim(0:.05:40);
-BrAFC_MyGen.PlotSignals({'Pedal_Angle', 'Engine_Speed','cyl_fuel', 'AF'});
+figure; BrAFC_MyGen.PlotSignals({'Pedal_Angle', 'Engine_Speed','cyl_fuel', 'AF'});
 
 %% Setting Time for Simulation
 % If only the end time is specified, Breach collects signals at time

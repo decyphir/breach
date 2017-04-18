@@ -85,7 +85,6 @@ classdef BreachSignalGen < BreachSystem
             
             if isaSys(this.Sys) % Note: we ignore initial conditions for now in ParamRanges
                                 % OK for Simulink, less so for ODEs...
-                this.ParamRanges = [this.Sys.p(this.Sys.DimX+1:end) this.Sys.p(this.Sys.DimX+1:end)];
                 this.SignalRanges = [];
             end
             

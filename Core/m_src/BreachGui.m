@@ -22,7 +22,7 @@ function varargout = BreachGui(varargin)
 
 % Edit the above text to modify the response to help BreachGui
 
-% Last Modified by GUIDE v2.5 13-Apr-2017 13:57:26
+% Last Modified by GUIDE v2.5 17-Apr-2017 11:54:25
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -53,6 +53,15 @@ function BreachGui_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to BreachGui (see VARARGIN)
 
 handles = info(handles, 'Starting Breach.... (Memory tip: his first name is Millard)');
+
+% Set fonts
+hfn = fieldnames(handles);
+for ifn = 1:numel(hfn)
+    try 
+        set(handles.(hfn), 'FontSize', 12);
+    end
+end
+
 crd = pwd;
 set(hObject, 'Name', ['Breach (' crd  ')']);
 
@@ -96,7 +105,6 @@ for iv= 1:numel(ws_var)
         end
     end    
 end
-
 
 fnames = fieldnames(handles.working_sets);
 igui = find(strcmp(fnames, handles.current_set)); 
@@ -438,12 +446,14 @@ function test_memory_Callback(hObject, eventdata, handles)
 msgbox('Who was the 13th president of the United States of America ?', ...
     'Memory Test')
 
+
 % --------------------------------------------------------------------
 function menu_load_working_set_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_load_working_set (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+  Br = handles.working_sets.(handles.current_set);
 [FileName,PathName] = uigetfile('*.mat','Load Parameter Set...');
 if(FileName==0)
     return;
@@ -451,11 +461,25 @@ end
 
 handles.working_sets_file_name = [PathName, FileName];
 try
-    handles.working_sets = load(handles.working_sets_file_name);
-    handles.current_pts = 1;
-    set(handles.working_sets_listbox, 'Value', 1);
-    fn = fieldnames(handles.working_sets);
-    handles.current_set = fn{1};
+    handles.working_sets = evalin('base', ['load(''' handles.working_sets_file_name ''')']);
+    
+    % Find out who's in the workspace
+    ws_var = evalin('base', 'who');
+    for iv= 1:numel(ws_var)
+        % is this a BreachSet
+        BB__ = evalin('base', ws_var{iv});
+        if isa(BB__, 'BreachSet') % found one, keep it
+            handles.working_sets.(ws_var{iv}) = BB__;
+            if Br== BB__ % this is the caller
+                handles.current_set = ws_var{iv};
+            end
+        end
+    end
+    
+    fnames = fieldnames(handles.working_sets);
+    igui = find(strcmp(fnames, handles.current_set));
+    set(handles.working_sets_listbox, 'Value', igui);
+
     handles = update_working_sets_panel(handles);
     guidata(hObject,handles);
 catch err
@@ -666,12 +690,23 @@ function menu_save_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-handles = info(handles, 'Saving parameter set...\n');
-fprintf('Saving parameter set...');
-ws = handles.working_sets; %#ok<NASGU>
-save(handles.working_sets_file_name, '-struct', 'ws');
-handles = info(handles, 'Saving parameter set... Done');
-fprintf('Done.\n');
+ws = handles.working_sets; 
+    
+try
+    handles = info(handles, ['Saving parameter set to ' handles.working_sets_file_name '...']);
+    save(handles.working_sets_file_name, '-struct', 'ws');
+catch
+    [FileName,PathName] = uiputfile('*.mat','Save Parameter Set As...');
+    if(FileName==0)
+        return;
+    end
+    handles.working_sets_file_name = [PathName  FileName];
+    handles = info(handles, ['Saving parameter set to ' handles.working_sets_file_name '...']);
+    save(handles.working_sets_file_name, '-struct', 'ws');
+    handles = update_working_sets_panel(handles);
+    
+end
+handles = info(handles, ['Saving parameter set to ' handles.working_sets_file_name '... Done']);
 guidata(hObject, handles);
 
 % --- Executes on button press in button_make_pts_set.
@@ -806,7 +841,6 @@ guidata(hObject, handles);
 function handles = update_working_sets_panel(handles)
 
 %% Set title
-
 str_name = sprintf('Workspace');
 if(numel(str_name)>35)
     str_name = [str_name(1:26) '...' str_name(end-5:end)];
@@ -893,7 +927,11 @@ function handles = update_modif_panel(handles)
 Br = handles.working_sets.(handles.current_set);
 
 %% Current system panel title
-str_name = ['Model: ' Br.mdl_name];
+if isfield(Br, 'mdl_name')
+    str_name = ['Model: ' Br.mdl_name];
+else
+  str_name =   Br.Sys.name;
+end
 if (numel(str_name)>35)
     str_name= [str_name(1:30) '...' str_name(end-5:end)];
 end
@@ -2334,3 +2372,16 @@ st_sample = ['Sample domain {' get_domain_string(handles) '}'];
 
 function st_dom = get_domain_string(handles)
 st_dom =  cell2mat(cellfun(@(c) ( [c ' ' ] ) , handles.selected_params, 'UniformOutput', false ));
+
+
+% --- Executes on button press in button_reset.
+function button_reset_Callback(hObject, eventdata, handles)
+% hObject    handle to button_reset (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+Br = handles.working_sets.(handles.current_set);
+Br.ResetParamSet();
+handles = update_modif_panel(handles);
+guidata(hObject,handles);
+
+

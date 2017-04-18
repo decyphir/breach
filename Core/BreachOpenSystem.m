@@ -104,7 +104,7 @@ classdef BreachOpenSystem < BreachSystem
             % SetInputGen Attach a BreachSystem as input generator.
             
             % Warnings about current P
-            this.WarningResetP('SetInputGen');
+%           this.WarningResetP('SetInputGen');
             
             % look for property parameters and save them
             PropParams={};
@@ -214,7 +214,6 @@ classdef BreachOpenSystem < BreachSystem
             this.Sys.DimP = numel(this.Sys.ParamList);
             
             % Resets P and ranges
-            this.ParamRanges = [this.Sys.p this.Sys.p];
             this.SignalRanges = [];
             this.P = CreateParamSet(this.Sys);
             this.P.epsi(:,:) = 0;

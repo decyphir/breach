@@ -90,6 +90,7 @@ classdef FalsificationProblem < BreachProblem
         end
         
         function BrFalse = GetBrSet_False(this)
+            BrFalse = [];
             if this.log_traces
                 BrFalse = this.BrSet_False;
             else
