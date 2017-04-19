@@ -1,4 +1,18 @@
-# Next release
+# Release 1.2.1
+
+## Users
+- GUI: set input now updates main GUI when done
+- InitNNDemo in simple ML model example
+- GUI allows multiple cell edition with shift-return
+- GUI: set input does not reset signal generators
+
+## Bugfixes
+- GUI copy select button works again
+
+## Developpers
+
+
+# Release 1.2.0
 
 ## Users
 - New PlotDomain method

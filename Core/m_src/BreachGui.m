@@ -22,7 +22,7 @@ function varargout = BreachGui(varargin)
 
 % Edit the above text to modify the response to help BreachGui
 
-% Last Modified by GUIDE v2.5 17-Apr-2017 11:54:25
+% Last Modified by GUIDE v2.5 19-Apr-2017 16:08:05
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -137,9 +137,9 @@ handles.refine_all = 0;
 handles.halton = 0;
 handles.refine_args = 0;
 handles.show_params = BrGUI.P.ParamList;
-
-handles.selected_param=1;
-handles.selected_varying_param = 1;
+handles.select_cells = [];
+%handles.selected_param=1;
+%handles.selected_varying_param = 1;
 
 % Init param pts plot
 handles.current_plot{1} =[];
@@ -404,9 +404,7 @@ function handles = update_sample_args(handles)
          case 3
              handles.sample_arg_method = 'rand';
          case 4
-             handles.sample_arg_method = 'quasi';
-         case 5
-             handles.sample_arg_method = 'all';           
+             handles.sample_arg_method = 'quasi-random';
      end
      
      
@@ -730,15 +728,17 @@ function button_make_pts_set_Callback(hObject, eventdata, handles)
 Br = handles.working_sets.(handles.current_set);
 
 names = fieldnames(handles.working_sets);
-new_name = genvarname('P',names);
+new_name = genvarname(handles.current_set,names);
+
 ipts = find(Br.P.selected);
 if isempty(ipts)
     return
 end
+Br_new = Br.copy();
+Br_new.P = Sselect(Br.P, ipts);
 
-Ptmp = Sselect(Br.P,ipts);
-
-handles.working_sets = setfield(handles.working_sets, new_name, Ptmp);
+handles.working_sets.(new_name) =  Br_new;
+assignin('base', new_name, Br_new);
 handles = update_working_sets_panel(handles);
 guidata(hObject,handles);
 
@@ -2027,7 +2027,7 @@ function menu_select_satisfied_Callback(hObject, eventdata, handles)
     if iprop
         val = cat(1,Br.P.props_values(iprop,:).val);
         val = val(:,1);
-        Br.P.selected = (val>=val_threshold)';
+        Br.P.selected = (val<val_threshold)';
     end
     
     handles = update_modif_panel(handles);
@@ -2165,7 +2165,12 @@ function pushbutton_input_gen_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 Br = handles.working_sets.(handles.current_set);
-Br.SetInputGenGUI;
+hsi = Br.SetInputGenGUI;
+waitfor(hsi);
+idx = Br.GetParamsInputIdx();
+handles.show_params = Br.P.ParamList(idx);
+handles = update_modif_panel(handles);
+guidata(hObject,handles);
 
 
 % --- Executes on button press in checkbox_input_only.
@@ -2194,15 +2199,16 @@ function uitable_params_CellEditCallback(hObject, eventdata, handles)
 Br = handles.working_sets.(handles.current_set);
 
 [params, p0, domains] = read_uitable_params(hObject); 
-idx_params = find(strcmp(params, handles.selected_params) );
+idx_params = find(strcmp(params, handles.selected_params(1)) );
 Br.SetDomain( handles.selected_params,domains(idx_params));
 
-idx = FindParam(Br.P, handles.selected_params);
+idx = FindParam(Br.P, handles.selected_params(1));
 if isempty(domains(idx_params).domain)  
     Br.P.pts(idx, : ) = p0(idx_params);
 else
     Br.P.pts(idx, handles.current_pts ) = p0(idx_params);
 end
+Br.CheckinDomain();
 handles = update_modif_panel(handles);
 guidata(hObject,handles);
 
@@ -2363,11 +2369,14 @@ function uitable_params_CellSelectionCallback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 idx = eventdata.Indices;
+handles.select_cells = idx;
 if ~isempty(idx)
     handles.selected_params = handles.show_params(idx(:,1));
     st_sample= get_sample_string(handles);
     handles = info(handles, st_sample);
+    
     guidata(hObject,handles);
+    
 end
 
 function st_sample = get_sample_string(handles)
@@ -2388,5 +2397,62 @@ Br.ResetParamSet();
 handles = update_working_sets_panel(handles);
 handles = update_modif_panel(handles);
 guidata(hObject,handles);
+
+
+
+
+% --- Executes on key press with focus on uitable_params and none of its controls.
+function uitable_params_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to uitable_params (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.TABLE)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+if (isa(eventdata, 'matlab.ui.eventdata.UIClientComponentKeyEvent'))
+    switch eventdata.Key
+        case 'return'
+            if strcmp(eventdata.Modifier, 'shift') 
+            val = inputdlg('Enter value');
+            if ~isempty(val)&&~isempty(handles.select_cells)
+                 tdata = get(hObject,'Data');
+                for irow = 1:size(handles.select_cells)
+                    num_val = str2num(val{1});
+                    if numel(num_val)>1
+                        tdata{handles.select_cells(irow, 1),handles.select_cells(irow, 2)} = val{1};
+                    else
+                        tdata{handles.select_cells(irow, 1),handles.select_cells(irow, 2)} = num_val;
+                    end
+                end
+                set(hObject,'Data',tdata);
+
+                Br = handles.working_sets.(handles.current_set);
+                [params, p0, domains] = read_uitable_params(hObject);
+                idx_params = find(strcmp(params, handles.selected_params) );
+                Br.SetDomain( handles.selected_params,domains(idx_params));
+                
+                idx = FindParam(Br.P, handles.selected_params);
+                for ii = idx_params
+                    if isempty(domains(ii).domain)
+                        Br.P.pts(idx, : ) = p0(ii);
+                    else
+                        Br.P.pts(idx, handles.current_pts ) = p0(ii);
+                    end
+                end
+                Br.CheckinDomain();
+                handles = update_modif_panel(handles);
+                guidata(hObject,handles);
+
+                
+                guidata(hObject, handles);
+            end
+            end
+            
+            
+    end
+end
+
 
 

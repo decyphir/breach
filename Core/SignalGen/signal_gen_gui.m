@@ -22,7 +22,7 @@ function varargout = signal_gen_gui(varargin)
 
 % Edit the above text to modify the response to help signal_gen_gui
 
-% Last Modified by GUIDE v2.5 18-Apr-2017 14:54:51
+% Last Modified by GUIDE v2.5 19-Apr-2017 14:26:27
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -70,10 +70,9 @@ for ifn = 1:numel(hfn)
 end
 set(handles.main, 'Position',POS);
 
-
+handles.select_cells = []; 
 
 % get signal names
-
 if isa(varargin{1}, 'BreachOpenSystem')
   handles.B = varargin{1};
   signal_names = handles.B.Sys.InputList; 
@@ -83,12 +82,6 @@ else
 end
 set(handles.popupmenu_signal_name, 'String', signal_names);
 
-% Assign default signal gen 
-handles.signal_gen_map = containers.Map();
-for isig= 1:numel(signal_names)
-    c = signal_names{isig};
-    handles.signal_gen_map(c)=constant_signal_gen({c}); 
-end
 
 %  
 signal_types= {
@@ -101,6 +94,32 @@ signal_types= {
  'from_file_signal_gen',...
  };
 set(handles.popupmenu_signal_gen_type, 'String', signal_types);
+
+% Assign default signal gen 
+handles.signal_gen_map = containers.Map();
+for isig= 1:numel(signal_names)
+    c = signal_names{isig};
+
+    % try to import from B - works when one sg for one signal (TODO: generalize) 
+    try 
+        sg = handles.B.InputGenerator.GetSignalGenFromSignalName(c);
+        if numel(sg.signals)==1
+            handles.signal_gen_map(c)=sg;
+            sg_class = class(sg);
+            classes = get(handles.popupmenu_signal_gen_type, 'String');
+            idx = find(strcmp(signal_types, sg_class));
+            set(handles.popupmenu_signal_gen_type,'Value', idx);
+        else
+           handles.signal_gen_map(c)=constant_signal_gen({c});
+        end
+    catch
+        handles.signal_gen_map(c)=constant_signal_gen({c});
+    end
+      
+end
+
+
+
 
 % Init time
 handles.time = 0:.01:10;
@@ -118,7 +137,7 @@ update_plot(handles);
 
 % Update handles structure
 guidata(hObject, handles);
-
+%uiwait(handles.main);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -128,8 +147,8 @@ function varargout = signal_gen_gui_OutputFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Get default command line output from handles structure
-varargout{1} = handles.output;
+varargout{1} = handles.main;
+
 
 % --- Executes on selection change in popupmenu_signal_gen_type.
 function popupmenu_signal_gen_type_Callback(hObject, eventdata, handles)
@@ -211,7 +230,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
 function edit_time_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_time (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -243,7 +261,6 @@ sgs = handles.signal_gen_map.values;
 handles.output.InitSignalGen(sgs);
 if ~isempty(handles.B)
     handles.B.SetInputGen(handles.output);
-%    handles.B.RunGUI;
 end
 close(handles.main);
 
@@ -335,8 +352,6 @@ end
 set(h_uitable, 'Data', content);
 
 
-
-
 function update_plot(handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -374,13 +389,11 @@ function sg = get_current_sg(handles)
 sig_name = get_current_signal(handles);
 sg = handles.signal_gen_map(sig_name);
 
-
 % --- Executes on mouse press over axes background.
 function axes1_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to axes1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
 
 % --- Executes on key press with focus on uitable_params and none of its controls.
 function uitable_params_KeyPressFcn(hObject, eventdata, handles)
@@ -390,3 +403,43 @@ function uitable_params_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
+
+if (isa(eventdata, 'matlab.ui.eventdata.UIClientComponentKeyEvent'))
+    switch eventdata.Key
+        case 'return'
+            if strcmp(eventdata.Modifier, 'shift') 
+            val = inputdlg('Enter value');
+            if ~isempty(val)&&~isempty(handles.select_cells)
+                 tdata = get(hObject,'Data');
+                for irow = 1:size(handles.select_cells)
+                    num_val = str2num(val{1});
+                    if numel(num_val)>1
+                        tdata{handles.select_cells(irow, 1),handles.select_cells(irow, 2)} = val{1};
+                    else
+                        tdata{handles.select_cells(irow, 1),handles.select_cells(irow, 2)} = num_val;
+                    end
+                end
+                set(hObject,'Data',tdata);
+                
+                sg = get_current_sg(handles);
+                [sg.params, sg.p0, sg.params_domain] = read_uitable_params(hObject);
+                
+                update_plot(handles);
+                guidata(hObject, handles);
+            end
+            end
+            
+            
+    end
+end
+
+
+% --- Executes when selected cell(s) is changed in uitable_params.
+function uitable_params_CellSelectionCallback(hObject, eventdata, handles)
+% hObject    handle to uitable_params (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.TABLE)
+%	Indices: row and column indices of the cell(s) currently selecteds
+% handles    structure with handles and user data (see GUIDATA)
+
+handles.select_cells = eventdata.Indices;
+guidata(hObject,handles);

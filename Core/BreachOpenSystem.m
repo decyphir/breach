@@ -320,8 +320,8 @@ classdef BreachOpenSystem < BreachSystem
             
         end
         
-        function SetInputGenGUI(this)
-            signal_gen_gui(this);
+        function hsi = SetInputGenGUI(this)
+            hsi=  signal_gen_gui(this);
         end
         
         function idx = GetInputSignalsIdx(this)
