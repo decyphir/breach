@@ -42,12 +42,26 @@ classdef signal_gen <handle
               this.p0(pidx)=pval;  
            end
         end
-        
     end
     
     methods (Abstract)
-        computeSignals(this,p,time) % compute the signals
+        computeSignals(this,p,time) % compute the signals        
     end
+    
+   methods
+        function new = copy(this)
+            % copy operator, works with R2010b or newer.
+            objByteArray = getByteStreamFromArray(this);
+            new = getArrayFromByteStream(objByteArray);
+        end
+        
+        function plot(this, time)
+        % plot default signal  
+            x =  computeSignals(this, this.p0, time);
+            plot(time, x); 
+        end
+        
+   end
     
 end
 

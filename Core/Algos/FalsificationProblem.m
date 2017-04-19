@@ -84,12 +84,13 @@ classdef FalsificationProblem < BreachProblem
         end
         
         function b = stopping(this)
-            b =  (this.time_spent > this.max_time) ||...
-                (this.nb_obj_eval> this.max_obj_eval) ||...
+            b =  (this.time_spent >= this.max_time) ||...
+                (this.nb_obj_eval>= this.max_obj_eval) ||...
                 (this.StopAtFalse&&this.obj_best<0);
         end
         
         function BrFalse = GetBrSet_False(this)
+            BrFalse = [];
             if this.log_traces
                 BrFalse = this.BrSet_False;
             else

@@ -52,7 +52,23 @@ function select_cell_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to select_cell_gui (see VARARGIN)
 
-  set(hObject, 'Name', ['Choose from list']);
+if ismac
+    FONT=12;
+    POS = [60 10 120 40];
+else
+    FONT=10;
+    POS = [60 10 120 40];
+end
+
+hfn = fieldnames(handles);
+for ifn = 1:numel(hfn)
+    try
+        set(handles.(hfn{ifn}), 'FontSize', FONT);
+    end
+end
+set(handles.main, 'Position',POS);
+ 
+set(hObject, 'Name', ['Choose from list']);
   
 % gui takes two arguments : a parameter set and default options
   content_all = varargin{1};

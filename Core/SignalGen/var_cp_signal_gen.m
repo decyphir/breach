@@ -68,6 +68,11 @@ classdef var_cp_signal_gen < signal_gen
             if isempty(this.p0)
                 this.p0=p0;
             end
+        
+           this.params_domain = repmat(BreachDomain(), 1, numel(this.params));
+           this.signals_domain = repmat(BreachDomain(), 1, numel(this.signals));
+     
+            
         end
         
         function X = computeSignals(this,p, time) % compute the signals

@@ -52,7 +52,6 @@ classdef BreachTraceSystem < BreachSystem
             % assumes now that we have signal names
             this.Sys = CreateExternSystem('TraceObject', signal_names, {'trace_id'},1);
             this.P = CreateParamSet(this.Sys);
-            this.UpdateParamRanges();
             
             if exist('trace', 'var')
                 this.AddTrace(trace);
@@ -108,7 +107,6 @@ classdef BreachTraceSystem < BreachSystem
             this.P.traj_ref = 1:nb_traces+1;
             this.P.traj_to_compute =  [];
             this.P.pts(this.P.DimX+1,:) = 1:nb_traces+1; % index traces
-            this.UpdateParamRanges();
             this.Sys.tspan = traj.time;
         end
         

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "robustness.h"
 #include <list>
+#include <algorithm>
 
 // needed sometimes when compiling under windows 
 #undef min

@@ -67,6 +67,11 @@ if debug_level>0
 end    
 
 if ispc
+ cxxflags = '-DIS_PC';
+end    
+
+
+if ispc
     obj_ext = 'obj';
 else
     obj_ext = 'o';

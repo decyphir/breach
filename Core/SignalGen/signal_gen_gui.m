@@ -22,7 +22,7 @@ function varargout = signal_gen_gui(varargin)
 
 % Edit the above text to modify the response to help signal_gen_gui
 
-% Last Modified by GUIDE v2.5 21-Feb-2017 11:54:35
+% Last Modified by GUIDE v2.5 18-Apr-2017 14:54:51
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -51,6 +51,27 @@ function signal_gen_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to signal_gen_gui (see VARARGIN)
 
+% Set fonts and size depending on system
+if ismac
+    FONT=12;
+    POS = [50 10 200 50];
+    handles.TBL_SZ = {200 120 120 150 80} ;
+else
+    FONT=10;
+    POS = [50 10 200 50];
+    handles.TBL_SZ = {400 150 150 150 150 150};
+end
+
+hfn = fieldnames(handles);
+for ifn = 1:numel(hfn)
+    try 
+        set(handles.(hfn{ifn}), 'FontSize', FONT);
+    end
+end
+set(handles.main, 'Position',POS);
+
+
+
 % get signal names
 
 if isa(varargin{1}, 'BreachOpenSystem')
@@ -69,7 +90,7 @@ for isig= 1:numel(signal_names)
     handles.signal_gen_map(c)=constant_signal_gen({c}); 
 end
 
-% 
+%  
 signal_types= {
  'constant_signal_gen',...
  'step_signal_gen',...
@@ -77,11 +98,12 @@ signal_types= {
  'var_cp_signal_gen',...
  'pulse_signal_gen',...
  'random_signal_gen',...
+ 'from_file_signal_gen',...
  };
 set(handles.popupmenu_signal_gen_type, 'String', signal_types);
 
 % Init time
-handles.time = 0:.1:10;
+handles.time = 0:.01:10;
 
 % Choose default command line output for signal_gen_gui
 signal_gens= handles.signal_gen_map.values;
@@ -90,14 +112,13 @@ handles.output = BreachSignalGen(signal_gens);
 % update config and params
 update_config(handles);
 
+% Init plot
+update_plot(handles);
+%fill_uitable_params(handles.uitable_params, signal_gens{1}.params, signal_gens{1}.p0, signal_gens{1}.params_domain);
+
 % Update handles structure
 guidata(hObject, handles);
 
-% Init plot
-update_plot(handles);
-
-% UIWAIT makes signal_gen_gui wait for user response (see UIRESUME)
-% uiwait(handles.main);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -129,11 +150,11 @@ handles.signal_gen_map(sig_name) = eval([class_name '({sig_name});']);
 % update config and params
 update_config(handles);
 
-% update stuff
-guidata(hObject,handles);
-
 % update plot 
 update_plot(handles);
+
+% update stuff
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function popupmenu_signal_gen_type_CreateFcn(hObject, eventdata, handles)
@@ -171,10 +192,11 @@ set(handles.popupmenu_signal_gen_type,'Value', idx);
 % update config and params
 update_config(handles);
 
-guidata(hObject,handles);
-
 % update plot
 update_plot(handles);
+
+guidata(hObject,handles);
+
 
 % --- Executes during object creation, after setting all properties.
 function popupmenu_signal_name_CreateFcn(hObject, eventdata, handles)
@@ -189,140 +211,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on selection change in popupmenu_config_param.
-function popupmenu_config_param_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenu_config_param (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-[~, cfg_val]= get_current_cfg(handles);
-if isnumeric(cfg_val)
-   cfg_val = num2str(cfg_val); 
-end
-set(handles.edit_cfg_val, 'String', cfg_val);
-guidata(hObject,handles);
-
-
-
-% --- Executes during object creation, after setting all properties.
-function popupmenu_config_param_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenu_config_param (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on selection change in popupmenu_param.
-function popupmenu_param_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenu_param (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-[~, pval]= get_current_param(handles);
-set(handles.edit_param_val, 'String', num2str(pval));
-guidata(hObject,handles); 
-
-
-% --- Executes during object creation, after setting all properties.
-function popupmenu_param_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenu_param (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-function edit_cfg_val_Callback(hObject, eventdata, handles)
-% hObject    handle to edit_cfg_val (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% get list of arguments 
-args = get(handles.popupmenu_config_param, 'String');
-idx_arg = get(handles.popupmenu_config_param,'Value');
-if isempty(args{1})
-    return 
-else
- sg = get_current_sg(handles);   
- args_val = cell(1, numel(args));
- for ia = 1:numel(args)
-    args_val{ia} = sg.(args{ia});
- end
- niou_arg_val = get(hObject,'String');   
- if isnumeric(args_val{idx_arg})
-    niou_arg_val =  str2num(niou_arg_val);   
- end
- args_val{idx_arg} = niou_arg_val;
- 
- sg_name = class(sg);
- sig_name = get_current_signal(handles);
- niou_sg = eval([sg_name '(sig_name, args_val{:});']);
- if isequal(size(sg.p0),size(niou_sg.p0))
-    niou_sg.p0 = sg.p0;
- end
- 
- handles.signal_gen_map(sig_name)= niou_sg;
- 
- % update 
- update_config(handles);
- guidata(hObject,handles);
- update_plot(handles);  
- 
-end
-
-
-% Hints: get(hObject,'String') returns contents of edit_cfg_val as text
-%        str2double(get(hObject,'String')) returns contents of edit_cfg_val as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function edit_cfg_val_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit_cfg_val (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function edit_param_val_Callback(hObject, eventdata, handles)
-% hObject    handle to edit_param_val (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-sg = get_current_sg(handles);
-pname =get_current_param(handles);
-pval = str2num(get(hObject,'String'));
-sg.set_param(pname,pval);
-
-update_config(handles);
-guidata(hObject,handles);
-update_plot(handles);
-uicontrol(handles.popupmenu_param);
-
-
-% --- Executes during object creation, after setting all properties.
-function edit_param_val_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit_param_val (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 function edit_time_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_time (see GCBO)
@@ -355,48 +243,99 @@ sgs = handles.signal_gen_map.values;
 handles.output.InitSignalGen(sgs);
 if ~isempty(handles.B)
     handles.B.SetInputGen(handles.output);
-    handles.B.RunGUI;
+%    handles.B.RunGUI;
 end
 close(handles.main);
 
 
+% --- Executes when entered data in editable cell(s) in uitable_params.
+function uitable_params_CellEditCallback(hObject, eventdata, handles)
+% hObject    handle to uitable_params (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.TABLE)
+%	Indices: row and column indices of the cell(s) edited
+%	PreviousData: previous data for the cell(s) edited
+%	EditData: string(s) entered by the user
+%	NewData: EditData or its converted form set on the Data property. Empty if Data was not changed
+%	Error: error string when failed to convert EditData to appropriate value for Data
+% handles    structure with handles and user data (see GUIDATA)
+
+sg = get_current_sg(handles);
+[sg.params, sg.p0, sg.params_domain] = read_uitable_params(hObject);
+
+update_plot(handles);
+guidata(hObject, handles);
+
+% --- Executes when entered data in editable cell(s) in uitable_config.
+function uitable_config_CellEditCallback(hObject, eventdata, handles)
+% hObject    handle to uitable_config (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.TABLE)
+
+sg = get_current_sg(handles);
+content = get(hObject, 'Data');
+
+cfg_params = sg.getSignalGenArgs();
+
+% update param struct
+if  ~isempty(cfg_params)
+    for ip = 1:numel(cfg_params)
+        content{ip, 1} = cfg_params{ip};
+        old_val = sg.(cfg_params{ip});
+        if iscell(old_val)
+            val = cell(1,1);
+            val{1} = content{ip,2};
+        else
+            val= content{ip,2};
+        end
+         args_val{ip}= val;
+    end
+end
+
+% create new signal gen
+sg_name = class(sg);
+ sig_name = get_current_signal(handles);
+ niou_sg = eval([sg_name '(sig_name, args_val{:});']);
+ if isequal(size(sg.p0),size(niou_sg.p0))
+    niou_sg.p0 = sg.p0;
+ end
+ 
+ handles.signal_gen_map(sig_name)= niou_sg;
+ 
+update_config(handles);
+update_plot(handles);
+guidata(hObject, handles);
 
 %% update functions
 function update_config(handles)
-
 % update config parameters
-pop_cfg = handles.popupmenu_config_param;
+
 sg = get_current_sg(handles);
-cfg_param = sg.getSignalGenArgs();
-if  isempty(cfg_param)
-cfg_param =  {''};
+
+handles.uitable_config= update_cfg_uitable(sg, handles.uitable_config);
+set(handles.uitable_config, 'ColumnWidth', {250 250});
+
+function h_uitable = update_cfg_uitable(sg, h_uitable)
+set(h_uitable,'RowName',{});
+set(h_uitable,'ColumnName',{'Name','Value'});
+set(h_uitable,'ColumnEditable', [false true]);
+
+cfg_params = sg.getSignalGenArgs();
+content = {'',''};
+if  ~isempty(cfg_params)
+    content = cell(1,1);
+    for ip = 1:numel(cfg_params)
+        content{ip, 1} = cfg_params{ip};
+        val = sg.(cfg_params{ip});
+        if iscell(val)
+            content{ip,2} = val{1} ;
+        else
+            content{ip,2} = val;
+        end
+    end
 end
-set(pop_cfg, 'String', cfg_param);
-set(pop_cfg, 'Value', 1);
+set(h_uitable, 'Data', content);
 
-% update parameters
-pop_param = handles.popupmenu_param;
-params = sg.params;
-if  isempty(params)
-    params =  {''};
-end
 
-% display pname: pval 
-for ip = 1:numel(params)
-    pname = params{ip};
-    pval  = sg.get_param(pname); 
-    params{ip}= [pname ': ' num2str(pval)];
-end
 
-set(pop_param, 'String', params);
-set(pop_param, 'Value', 1);
-
-% update cfg and param values
-[~, cfg_val] = get_current_cfg(handles);
-set(handles.edit_cfg_val, 'String', cfg_val);
-
-[~, param_val] = get_current_param(handles);
-set(handles.edit_param_val, 'String', param_val);
 
 function update_plot(handles)
 % hObject    handle to pushbutton1 (see GCBO)
@@ -413,11 +352,18 @@ sig_name = sig_names{popup_sel_index};
 sg = handles.signal_gen_map(sig_name);
 
 % compute and plot signal
-X = sg.computeSignals(sg.p0, handles.time);
-plot(handles.time, X );        
+sg.plot(handles.time);
+
 title(sig_name, 'Interpreter', 'None');    
 grid on;
 set(gca, 'FontSize',8)
+
+update_uitable(handles);
+
+function update_uitable(handles)
+sg = get_current_sg(handles);   
+fill_uitable_params(handles.uitable_params, sg.params, sg.p0, sg.params_domain);
+set(handles.uitable_params, 'ColumnWidth', handles.TBL_SZ);
 
 %% helpers
 function sig_name = get_current_signal(handles)
@@ -428,40 +374,19 @@ function sg = get_current_sg(handles)
 sig_name = get_current_signal(handles);
 sg = handles.signal_gen_map(sig_name);
 
-function [cfg_name, cfg_val] = get_current_cfg(handles)
-sg = get_current_sg(handles);
-cfg_content = get(handles.popupmenu_config_param, 'String');
-cfg_idx = get(handles.popupmenu_config_param, 'Value');
-cfg_name = cfg_content{cfg_idx};
-if ~isempty(cfg_name)
-    cfg_val = sg.(cfg_name);
-else
-    cfg_val = [];
-end
 
-function [param_name, param_val] = get_current_param(handles)
-sg = get_current_sg(handles);
-param_content = get(handles.popupmenu_param, 'String');
-param_idx = get(handles.popupmenu_param, 'Value');
-
-param_name = param_content{param_idx};
-sp = strsplit(param_name,':');
-param_name = sp{1};
-param_val = sg.get_param(param_name);
+% --- Executes on mouse press over axes background.
+function axes1_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
 
 
-% --- Executes on key press with focus on popupmenu_param and none of its controls.
-function popupmenu_param_KeyPressFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenu_param (see GCBO)
-% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.UICONTROL)
+% --- Executes on key press with focus on uitable_params and none of its controls.
+function uitable_params_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to uitable_params (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.TABLE)
 %	Key: name of the key that was pressed, in lower case
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-
-if (isa(eventdata, 'matlab.ui.eventdata.UIClientComponentKeyEvent'))
-    switch eventdata.Key
-     case 'return'
-      uicontrol(handles.edit_param_val);
-    end
-end

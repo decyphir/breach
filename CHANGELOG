@@ -1,6 +1,34 @@
-* Release 1.1.0
+# Release 1.2.0
 
-** Users 
+## Users
+- New PlotDomain method
+- domains can be set with the syntax SetDomain([4 5.1]), will infer double type
+- error is returned when wrong type is given in SetDomain
+- default behavior of legacy sampling functions is to reset and replace, this is changed by AppendWhenSample flag
+- new warning when breach can't get checksum of model from Simulink. Only affects the Log to file features.
+- GetBoundedDomains returns domains with bounds/ranges
+- GUI work with all BreachSet in the workspace, regardles of system interfaced
+- AddSpec now add property parameters automatically
+- PlotParams, PlotSignals, etc, now re-use the current figure if there is one (gcf)
+
+## Bugs fixed
+- compilation issue with VS 2015 for online monitoring (added include minmax and algorithm) 
+- from_file_signal_gen not working for files in current folder 
+- AppendWhenSample now works with legacy sampling functions, i.e., concat new param vectors when true 
+- Parallel with less initial parameters than freq_update now works as intended
+- AddSpec now checks whether formula is already present (prevent overwrite param values)
+
+## Developpers  
+- SampleDomain now calls sample method of BreachDomain
+- BreachSet now has only one field Domains for signal and parameter domains 
+- SetParamRanges errors when param does not exist (before would create it)
+- ResetParamSet uses Domains instead of ParamRanges field
+- SetParamSpec has an additional argument to ignore if param is a system parameter, if not set, return an error
+- got rid of ParamRanges field, useless since we use domains
+
+# Release 1.1.0
+
+## Users 
 - New menu in Simulink editor, can generate a Breach interface
 - Breach now supports/detects To Workspace blocks
 - Breach now supports/detects signal builders
@@ -14,16 +42,16 @@
 - Support for different types via Domains
 - SampleDomain, more comprehensive sampling of domains
 
-** BugFix
+## BugFix
 - Fixed problem when resetting input generator with models with no inputs
 - Fixed problem when logging multi dimensional signals
 - Fixed problem with empty tspan when interfacing model
 - Fixed problem Simulink models with no inputs
 
 
-* Release 1.0.0
+# Release 1.0.0
 
-** Users
+## Users
 
 - BrDemo subfolder Optim contains InitAFC_Falsif which creates falsification problems
 - BrDemo has a subfolder InputGen containing demo script for each type of generator (under construction)

@@ -42,7 +42,7 @@ classdef BreachSystem < BreachSet
                     inSys = varargin{1};
                     if isaSys(inSys)
                         this.Sys = inSys;
-                        this.ResetParamSet();
+                        this.P = CreateParamSet(this.Sys);
                     else
                         error('BreachObject with one argument assumes that the argument is a system structure.')
                     end
@@ -54,12 +54,10 @@ classdef BreachSystem < BreachSet
                     end
             end
             
-            if isaSys(this.Sys) % Note: we ignore initial conditions for now in ParamRanges
-                % OK for Simulink, less so for ODEs...
-                this.ParamRanges = [this.Sys.p(this.Sys.DimX+1:end) this.Sys.p(this.Sys.DimX+1:end)];
                 this.SignalRanges = [];
-                this.ResetParamSet();
-            end
+                if (isaSys(this.Sys))
+                    this.P = CreateParamSet(this.Sys);
+                end
         end
         
         function SetupParallel(this)
@@ -70,35 +68,36 @@ classdef BreachSystem < BreachSet
             
         %% Parameters
         % Get and set default parameter values (defined in Sys)
+        
         function values = GetDefaultParam(this, params)
         % Get default parameter values (defined in Sys)
             values = GetParam(this.Sys,params);
         end
+        
         function SetDefaultParam(this, params, values)
         % Set default parameter values (defined in Sys)
             this.Sys = SetParam(this.Sys,params, values);
         end
+        
         function SetP(this,P)
-            
+        % SetP Sets legacy parameter structure 
+        
             if isaP(P)
                 this.P =P;
-                this.UpdateParamRanges();
             else
                 error('Argument should a Breach legacy parameter structure.');
             end
             
         end
         
-        function ResetParamSet(this)
-            % ResetParamSet Reset parameter set based on ParamRanges
-            ipr = find(diff(this.ParamRanges'));
-            ranges =this.ParamRanges(ipr,:);
-            if (isempty(ipr))
-                this.P = CreateParamSet(this.Sys);
-                this.P.epsi(:,:)=0;
-            else
-                this.P = CreateParamSet(this.P, this.P.ParamList(ipr+this.P.DimX),ranges);
-            end
+        function ResetSampling(this)
+            % ResetSampling 
+            this.P = CreateParamSet(this.Sys);
+            
+            
+            this.CheckinDomain();
+            
+            
         end
      
         %% Signals plots and stuff
@@ -127,6 +126,11 @@ classdef BreachSystem < BreachSet
                 phi_id = MakeUniqueID([this.Sys.name '_spec'],  BreachGlobOpt.STLDB.keys);
                 phi = STL_Formula(phi_id, varargin{1});   
             end
+          
+            % checks whether spec is in there already or not
+            if this.Specs.isKey(get_id(phi))
+                return;
+            end 
             
             % checks signal compatibility
             [~,sig]= STL_ExtractPredicates(phi);
@@ -137,6 +141,15 @@ classdef BreachSystem < BreachSet
             end
             
             this.Specs(get_id(phi)) = phi;
+         
+            % Add property params
+            params_prop = get_params(phi);
+            params_names =  fieldnames(params_prop);
+            if ~isempty(params_names)
+                [~, stat] = FindParam(this.P, params_names);
+                p_not_found = params_names( stat==0 )';
+                this.SetParamSpec(p_not_found, cellfun(@(c) (params_prop.(c)), p_not_found),1);
+            end
         end
         
         function SetSpec(this,varargin)
@@ -161,18 +174,25 @@ classdef BreachSystem < BreachSet
             if ~exist('t_spec', 'var')
                t_spec= 0; 
             end
-            
-            if isfield(this.P, 'props_names')&&(nargin<=2)               
+      
+             %  TODO better check if property has been evaluated already
+             %  (check parameter changes) 
+             %
+            if isfield(this.P, 'props_names')&&(nargin<=2) && size(this.P.props_values,2) == size(this.P.pts,2)              
                 iprop = find(strcmp(get_id(spec), this.P.props_names));
             else
                 iprop = 0;
+           end
+            if iprop % if values exists, get rid of it (we'll reuse another time)
+                idx_wo_iprop = 1:size(this.P.props_values,1)~=iprop; 
+                this.P.props_values = this.P.props_values(  idx_wo_iprop,: );
+                this.P.props_names = this.P.props_names(  idx_wo_iprop );
+                this.P.props  = this.P.props(  idx_wo_iprop );
+            else % Simply purge prop 
+                this.P= SPurge_props(this.P);
             end
-            if iprop
-                val = cat(1, this.P.props_values(iprop,:).val);
-            else
-                [this.P, val] = SEvalProp(this.Sys,this.P,spec,  t_spec);
-                this.addStatus(0, 'spec_evaluated', 'A specification has been evaluated.')
-            end
+            [this.P, val] = SEvalProp(this.Sys,this.P,spec,  t_spec);
+            this.addStatus(0, 'spec_evaluated', 'A specification has been evaluated.')
         end
         
         function [Bpos, Bneg] = FilterSpec(this, phi)
@@ -278,7 +298,7 @@ classdef BreachSystem < BreachSet
                 depth = inf;
             end
             
-            figure;
+            gca;
             SplotSat(this.Sys,this.P, phi, depth, tau, ipts);
         end
         
@@ -292,7 +312,7 @@ classdef BreachSystem < BreachSet
                 return
             end
             
-            out = figure;
+            out = gcf;
             
             % no option, use defaults
             if ~exist('options_in','var')
@@ -316,11 +336,13 @@ classdef BreachSystem < BreachSet
                     delta = 10;
             end
             
-            this.P = CreateParamSet(this.P, params, ranges);
-            this.P = Refine(this.P, delta,1);
+            if this.GetNbParamVectors()==1
+                this.P = CreateParamSet(this.P, params, ranges);
+                this.P = Refine(this.P, delta,1);
+            end
+            
             this.Sim();
             this.CheckSpec(phi);
-            
             SplotProp(this.P, phi, options);
             
         end
@@ -328,7 +350,7 @@ classdef BreachSystem < BreachSet
         
         function [h, t, X]  = PlotExpr(this, stl_expr, varargin)
             % Plots a signal expression
-            
+            gca;
             if ~iscell(stl_expr)
                 stl_expr = {stl_expr};
             end
@@ -415,8 +437,18 @@ classdef BreachSystem < BreachSet
             this.PrintSpecs();
         end
         
-        function disp(this)
-            disp(['BreachSystem with name ' this.Sys.name '.']);
+        function st = disp(this)
+            if isfield(this.P, 'traj')
+               nb_traj = numel(this.P.traj);
+           else
+               nb_traj = 0;
+           end
+
+            st = ['BreachSystem ' this.Sys.name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' traces.'];
+   
+            if nargout ==0
+                disp(st);
+            end
         end
         
         %% GUI
@@ -424,19 +456,25 @@ classdef BreachSystem < BreachSet
         function new_phi  = AddSpecGUI(this)
             signals = this.Sys.ParamList(1:this.Sys.DimX);
             new_phi = STL_TemplateGUI('varargin', signals);
-            if isa(new_phi, 'STL_Formula')
-                this.Specs(get_id(new_phi)) = new_phi;
+            if ~isempty(new_phi)
+                if isa(new_phi, 'STL_Formula')
+                    this.Specs(get_id(new_phi)) = new_phi;
+                end
+                
+                % Add property params with default values if they're not
+                % defined yet
+                params_prop = get_params(new_phi);
+                names_params_prop = fieldnames(params_prop);
+                [~,  idx_status ] = FindParam(this.P, names_params_prop);
+                params_not_found = names_params_prop(idx_status==0);
+                if ~isempty(params_not_found)
+                    this.SetParamSpec(params_not_found, cellfun(@(c) (params_prop.(c)), params_not_found));
+                end
             end
         end
              
         function RunGUI(this)
-            P.P = this.P;
-            phis=  this.Specs.keys;
-            if (~isempty(phis))
-                Propsave(this.Sys, phis{:});
-            end
             BreachGui(this);
-            
         end
   
         function TrajGUI(this) 

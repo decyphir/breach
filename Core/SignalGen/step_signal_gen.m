@@ -26,6 +26,10 @@ classdef step_signal_gen < signal_gen
            if nargin == 2
                this.p0 = p0;
            end
+
+           this.params_domain = repmat(BreachDomain(), 1, numel(this.params));
+           this.signals_domain = repmat(BreachDomain(), 1, numel(this.signals));
+ 
            
         end
         

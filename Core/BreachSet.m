@@ -15,6 +15,9 @@ classdef BreachSet < BreachStatus
     %   SetParam            - set values for parameters, given their names
     %   GetParamRanges      - get ranges for parameters, given their names and ranges
     %   SetParamRanges      - set ranges for parameters, given their names and ranges
+    %   GetDomain
+    %   SetDomain   
+    %   SampleDomain 
     %   GridSample          - creates parameter vectors in ParamRanges on a regularly spaced grid
     %   CornerSample        - creates parameter vectors from the corners of ParamRanges
     %   QuasiRandomSample   - uniformly samples n parameter vectors in ParamRanges
@@ -27,13 +30,9 @@ classdef BreachSet < BreachStatus
     
     properties
         P % legacy parameter structure - contains points data (in P.pts) and traces (P.traj) and many other fields whose purpose is slowly falling into oblivion
-        ParamDomain = BreachDomain('double', [])
-        % will replace ParamRanges eventually (?)
-        SignalDomain = BreachDomain('double', [])
+        Domains = BreachDomain('double', [])
         % will replace SignalRanges eventually (?)
-        ParamRanges  % ranges of possible values for each parameter - determines the parameter sampling domain
-        SignalRanges % ranges of values taken by each signal variable
-        
+        SignalRanges % ranges of values taken by each signal variable      
         AppendWhenSample=false % when true, sampling appends new param vectors, otherwise replace.
     end
     
@@ -66,8 +65,6 @@ classdef BreachSet < BreachStatus
                     this.P = CreateParamSet(Sys, params, ranges);
             end
             this.CheckinDomain();
-            this.UpdateParamRanges();
-            
             
         end
         
@@ -76,7 +73,7 @@ classdef BreachSet < BreachStatus
             % SetDomain
             
             if nargin<4
-                domain =[];
+                domain =ones(numel(params),0);
             end
             
             if ischar(params)
@@ -90,35 +87,55 @@ classdef BreachSet < BreachStatus
                 if numel(type) ~= numel(params)
                     error('number of types and parameters or signals mismatch.')
                 end
-            end
-            
-            for ip = 1:numel(params)
-                param = params{ip};
-                [idx, found] = FindParam(this.P, param);
-                if any(found==0)
-                    error('Parameter or signal not found.');
+            elseif ischar(type)
+                com_type = type; 
+                type = repmat(BreachDomain(), 1, numel(params));
+                for ip = 1:numel(params)
+                    type(ip) = BreachDomain(com_type, domain(ip,:));  
                 end
-                
-                if isa(type,'BreachDomain')
-                    this.ParamDomain(idx) = type(ip);
-                else
-                    this.ParamDomain(idx) = BreachDomain(type, domain);
-                    if ~isempty(domain)&&idx>this.P.DimX
-                    this.SetParamRanges(idx, [this.ParamDomain(idx).domain(1),this.ParamDomain(idx).domain(2)]);
+            elseif iscell(type)
+                cell_type = type;
+                type = repmat(BreachDomain(), 1, numel(params));
+                for ip = 1:numel(params)
+                    if isa(cell_type{ip}, 'BreachDomain')
+                        type(ip) = type{ip};
+                    else 
+                        type(ip) = BreachDomain(cell_type{ip}, domain(ip,:));
                     end
-                end
-            end
+               end
+             end
+             
+             for ip = 1:numel(params)
+                 param = params{ip};
+                 [idx, found] = FindParam(this.P, param);
+                 if any(found==0)
+                     error('Parameter or signal not found.');
+                 end
+                 
+                 if isa(type(ip),'BreachDomain')
+                     this.Domains(idx) = type(ip);
+                 else
+                     this.Domains(idx) = BreachDomain(type{ip,:}, domain(ip,:));
+                     if ~isempty(domain(ip,:))&&idx>this.P.DimX&&~isequal(type(ip,:), 'enum')
+                         this.SetParamRanges(idx, [this.Domains(idx).domain(1),this.Domains(idx).domain(2)]);
+                     end
+                 end
+             end
+               this.CheckinDomain();
         end
         
         function dom = GetDomain(this, param)
             % GetDomain
             idx = FindParam(this.P, param);
             for i=1:numel(idx)
-                if numel(this.ParamDomain)<idx(i)
+                if numel(this.Domains)<idx(i)
                     dom(i)= BreachDomain();
                 else
-                    dom(i) = this.ParamDomain(idx(i));
+                    dom(i) = this.Domains(idx(i));
                 end
+            end
+            if ~exist('dom','var')
+                dom = [];
             end
         end
         
@@ -130,20 +147,15 @@ classdef BreachSet < BreachStatus
         
         function CheckinDomainParam(this)
             pts = this.P.pts;
-            if numel(this.ParamDomain)< size(pts,1)
-                this.ParamDomain(size(pts,1)) = BreachDomain();
+            if numel(this.Domains)< size(pts,1)
+                this.Domains(size(pts,1)) = BreachDomain();
             end
-            
             for  i =this.P.DimX+1:size(pts,1)
-                if ~isequal(this.ParamDomain(i).type, 'double')||~isempty(this.ParamDomain(i).domain)
-                    pts(i,:) = this.ParamDomain(i).checkin(pts(i,:));
+                if ~isequal(this.Domains(i).type, 'double')||~isempty(this.Domains(i).domain)
+                    pts(i,:) = this.Domains(i).checkin(pts(i,:));
                 end
             end
             
-            % Eliminate resulting duplicates
-            %[pts, ipts]=unique(pts','rows');
-            %pts= pts';
-            %this.P = Sselect(this.P, ipts');
             this.P.pts = pts;
             
         end
@@ -154,16 +166,22 @@ classdef BreachSet < BreachStatus
             if this.hasTraj()
                 for itraj = 1:numel(this.P.traj)
                     for  i=1:this.P.DimX
-                        if ~isempty(this.ParamDomain(i).domain)
-                            this.P.traj{itraj}.X(i,:) = this.ParamDomain(i).checkin(this.P.traj{itraj}.X(i,:));
+                        if ~isempty(this.Domains(i).domain)
+                            this.P.traj{itraj}.X(i,:) = this.Domains(i).checkin(this.P.traj{itraj}.X(i,:));
                         end
                     end
                 end
             end
         end
         
-        %%  Param
-        function SetParam(this, params, values, opt)
+        %%  Param 
+        function SetParam(this, params, values, is_spec_param)
+        % BreachSet.SetParam(params, values,  is_spec_param) sets values to
+        % parameters listed in params. If the set contains only one sample,
+        % creates as many sample as there are values. If the set has
+        % several samples and there is only one value, set this value to
+        % all samples. Otherwise, returns an error. 
+            
             ip = FindParam(this.P, params);
             i_not_sys = find(ip>this.P.DimP);
             if ~isempty(i_not_sys)
@@ -172,43 +190,49 @@ classdef BreachSet < BreachStatus
                 else
                     nparam = params;
                 end
-                if ~exist('opt','var')
+                if ~exist('is_spec_param','var')||isequal(is_spec_param,false)
                     warning('SetParam:param_not_in_list',['Parameter ' nparam ' was set but is not a system parameter.' ...
                         ' If this is intended to be a spec. parameter, consider using SetParamSpec instead.']);
                 end
             end
-            this.P = SetParam(this.P, params, values);
-            this.UpdateParamRanges();
-        end
-        
-        function ResetParam(this, params, values,opt)
-            ip = FindParam(this.P, params);
-            i_not_sys = find(ip>this.P.DimP);
-            if ~isempty(i_not_sys)
-                if iscell(params)
-                    nparam = params{i_not_sys(1)};
+            
+            num_params = numel(ip);
+            
+            if size(values, 1)~= num_params
+                if size(values,1) == 1 && size(values,2 ) == num_params
+                    values = values';
                 else
-                    nparam = params;
-                end
-                if ~exist('opt','var')
-                    warning('SetParam:param_not_in_list',['Parameter ' nparam ' was set but is not a system parameter.' ...
-                        ' If this is intended to be a spec. parameter, consider using SetParamSpec instead.']);
+                    error('SetParam:wrong_arguments_size', 'Dimension mismatch between values and parameters.');
                 end
             end
-            this.P = Sselect(SPurge(this.P),1);
-            this.P.pts = repmat(this.P.pts,1, size(values, 2));
-            this.P.epsi= repmat(this.P.epsi,1, size(values, 2));
-            this.P.selected = zeros(1, size(values, 2));
-            this.P = SetParam(this.P, ip, values);
-            this.UpdateParamRanges();
+            
+            num_pts  =  size(this.P.pts,2);
+            num_values = size(values, 2); 
+            
+            if num_values==1 || num_values == num_pts
+                this.P = SetParam(this.P, params, values);
+            elseif num_pts==1    % note in this case, we have to remove traces ( or see if maybe not, ) 
+                this.P = Sselect(SPurge(this.P),1);
+                this.P.pts = repmat(this.P.pts,1, size(values, 2));
+                this.P.epsi= repmat(this.P.epsi,1, size(values, 2));
+                this.P.selected = zeros(1, size(values, 2));
+                this.P = SetParam(this.P, ip, values);
+            else
+                error('SetParam:wrong_arguments_size', 'Dimension mismatch between values and parameters.');
+            end
         end
-        
-        function SetParamSpec(this, params, values)
+                
+        function SetParamSpec(this, params, values, ignore_sys_param)
             ip = FindParam(this.P, params);
             if all(ip>this.P.DimP)
                 this.P = SetParam(this.P, params, values);
-                this.UpdateParamRanges();
-            else
+                % adds Domains 
+                for i = ip
+                    if size(this.Domains, 2)<i
+                        this.Domains(i) = BreachDomain();
+                    end
+                end
+            elseif ~exist('ignore_sys_param', 'var')||ignore_sys_param==false 
                 error('Attempt to modify a system parameter - use SetParam instead.');
             end
         end
@@ -221,96 +245,81 @@ classdef BreachSet < BreachStatus
         end
         
         function ResetParamSet(this)
-            % ResetParamSet Reset parameter set based on ParamRanges
-            ipr = find(diff(this.ParamRanges'));
-            ranges =this.ParamRanges(ipr,:);
-            if (isempty(ipr))
+            % ResetParamSet remove samples and keeps one in the domain  
+        
+            this.P = SPurge(this.P);
+            % find non empty domains
+            ipr = cellfun(@(c)(~isempty(c)), {this.Domains.domain});            
+            if (isempty(find(ipr,1)))
                 this.P = CreateParamSet(this.P);
                 this.P.epsi(:,:)=0;
-            else
-                this.P = CreateParamSet(this.P, this.P.ParamList(ipr+this.P.DimX),ranges);
+            else 
+                ranges = cat( 1 , this.Domains.domain );
+                this.P = CreateParamSet( this.P , this.P.ParamList(ipr) , ranges);
+                this.CheckinDomain();
             end
         end
         
         
         %% Get and Set param ranges
         function SetParamRanges(this, params, ranges)
+        % SetParamRanges set intervals for parameters (set domains as
+        % bounded 'double' or 'int' if it is already an 'int') 
+            i_not_found= [];
             if ~isnumeric(params)
-                i_params = FindParam(this.P, params);
+                [i_params, res]= FindParam(this.P, params);
+                i_not_found = find(res==0);
             else
                 i_params=params;
             end
-            % if we have trajectories and only set a range on property parameters, then
-            % we must keep the trajectories
-            save_traj = 0;
-            if (isfield(this.P,'traj')&&(all(i_params>this.P.DimP)))
-                save_traj=1;
-                traj = this.P.traj;
-                traj_ref = this.P.traj_ref;
-                traj_to_compute = this.P.traj_to_compute;
-                Xf = this.P.Xf;
+            
+            if size(ranges,1) == 1
+                ranges = repmat(ranges, numel(i_params),1);
             end
             
-            if (numel(i_params)>1) && (size(ranges,1)==1)
-                ranges = repmat(ranges, [numel(params) 1]);
+            if ~isempty(i_not_found)
+                if iscell(params)
+                    param_not_found = params{i_not_found(1)};
+                else
+                    param_not_found = params;
+                end
+                error('SetParamRanges:param_not_found', ['Parameter ' param_not_found ' not found.']);
             end
             
-            this.P = SetParam(this.P,params, ranges(:,1) + (ranges(:,2)-ranges(:,1))/2); % adds new parameter name if needs be
-            this.ParamRanges(i_params-this.P.DimX, :) = ranges;
-            i_new_params = find(diff(this.ParamRanges'))+this.P.DimX;
-            new_params = this.P.ParamList(i_new_params);
-            new_ranges = this.ParamRanges(i_new_params-this.P.DimX,:);
-            if ~isempty(new_params)
-                this.P = CreateParamSet(this.P, new_params, new_ranges);
-            end 
-            
-            if (save_traj)
-                this.P.traj = traj;
-                this.P.traj_ref = traj_ref;
-                this.P.traj_to_compute = traj_to_compute;
-                this.P.Xf = Xf;
+            % Set domain 
+            for ip = 1:numel(i_params)
+                   type = this.Domains(i_params(ip)).type;
+                   if isequal(type, 'enum')||isequal(type,'bool')
+                      warning('SetParamRanges:enum_or_bool', 'Use SetDomain for enum or bool types.' );
+                   else
+                       this.Domains(i_params(ip)) = BreachDomain(type, ranges(ip,:));
+                   end
             end
+            
+            this.P.dim = i_params;
+            
         end
         
         function ranges = GetParamRanges(this, params)
+        % GetParamRanges 
             i_params = FindParam(this.P, params);
             ranges= zeros(numel(params),2);
             ranges(:,1) = -inf;
             ranges(:,2) = inf;
+
             for ip = 1:numel(i_params)
-                if (i_params(ip)-this.P.DimX) <= size(this.ParamRanges,1)
-                    ranges(ip,:) = this.ParamRanges(i_params(ip)-this.P.DimX, :);
+                if (~isempty(this.Domains(i_params(ip)).domain))
+                    ranges(ip,:) =  this.Domains(i_params(ip)).domain;
                 end
             end
+            
         end
         
         function ResetEpsi(this)
             % Set Param ranges around individual parameter vectors to zero
             this.P.epsi(:,:) = 0;
-            this.UpdateParamRanges();
         end
-        
-        function UpdateParamRanges(this)
-        % Update ranges for variables from P
-            
-            this.CheckinDomain();
-            i_params = (this.P.DimX+1):numel(this.P.ParamList);
-            if numel(i_params)> size(this.ParamRanges,1)
-                dd = numel(i_params) - size(this.ParamRanges,1);
-                mpr = size(this.ParamRanges,1);
-                this.ParamRanges(mpr+1:mpr+dd,1) = inf;
-                this.ParamRanges(mpr+1:mpr+dd,2) = -inf;
-            end
-            
-            epsis = 0*this.P.pts;
-            epsis(this.P.dim,:) = this.P.epsi;
-            minP = min(this.P.pts-epsis, [], 2);
-            maxP = max(this.P.pts+epsis, [], 2);
-            this.ParamRanges(i_params-this.P.DimX,:) = [minP(i_params,:), maxP(i_params,:)];
-            
-        end
-        
-        % Get computed trajectories
+                
         function traces = GetTraces(this)
             % Get computed trajectories
             traces= [];
@@ -407,7 +416,7 @@ classdef BreachSet < BreachStatus
                 error('No signal to plot. Use Sim command first.')
             end
             
-            figure;
+            gca;
             h = SplotVar(this.P, varargin{:});
             
         end
@@ -418,13 +427,13 @@ classdef BreachSet < BreachStatus
                 error('No signal to plot. Use Sim command first.')
             end
             
-            figure;
+            gca;
             SplotTraj(this.P, varargin{:});
         end
         
         %% Sampling
         function SampleDomain(this, params, num_samples, method, opt_multi)
-            % SampleDomain generic sampling function TODO
+            % BreachSet.SampleDomain generic sampling function 
             %
             % B.SampleDomain('p', 5) creates 5 samples drawn randomly
             % from the domain of parameter p. Do nothing if domain is
@@ -445,13 +454,22 @@ classdef BreachSet < BreachStatus
             %
             
             % process parameters
-            
             if ischar(params)
                 params = {params};
             end
             
-            num_params =numel(params);
+            idx_param = FindParam(this.P, params);
             
+            % if we have traces, we'll need to save and restore them 
+            saved_traj = false; 
+            if this.hasTraj()
+                saved_traj = true;
+                P0 = this.P;
+            end
+            
+            domains = this.Domains(idx_param);
+            domains =  num2cell(domains); % convert array to cell
+
             if ~exist('method')||isempty(method)
                 method = 'rand';
             end
@@ -460,90 +478,39 @@ classdef BreachSet < BreachStatus
                 opt_multi='replace'; %
             end
             
-            % if all is selected, combine new samples
-            combine_x=0;
-            if iscell(num_samples)               
-                for is =1:numel(num_samples)
-                    combine_x = combine_x || isequal(num_samples{is}, 'all');  
-                end
-            end
-            combine_x= combine_x||isequal(num_samples, 'all')||isequal(method,'grid');
-                
-            if ischar(method)||isscalar(method)
-                m = method;
-                method = cell(1, num_params);
-                for ic = 1:num_params
-                    method{ic} = m;
-                end
-            end
-            
-            if ischar(num_samples)||isscalar(num_samples)
-                ns = num_samples;
-                num_samples = cell(1, num_params);
-                for ic = 1:num_params
-                    num_samples{ic} = ns;
-                end
-            end
-            
-            if isnumeric(num_samples)
-                num_samples = num2cell(num_samples);
-            end
-            
-            % creates new samples
-            idx_param = FindParam(this.Sys, params);
-            x = cell(1, num_params);
-            num_x = zeros(1, num_params);
-            for ip = 1:num_params
-                domain = this.ParamDomain(idx_param(ip));
-                if isequal(num_samples{ip}, 'all')
-                    x{ip} = domain.sample_all();
-                else
-                    if isequal(method{ip}, 'grid')
-                        x{ip} = domain.sample_grid(num_samples{ip});
-                    elseif isequal(method{ip}, 'rand')
-                        x{ip} = domain.sample_rand(num_samples{ip});
-                    end
-                end
-                num_x(ip) = numel(x{ip});
-            end
-            
-            % Combine new samples
-            if num_params>1
-                if combine_x
-                    idx = N2Nn(num_params, num_x);
-                    for ip = 1:num_params
-                        new_x(ip,:) = x{ip}(1, idx(ip,:));
-                    end
-                    x = new_x;
-                    
-                else
-                    x = cell2mat(x');
-                end
+            if isequal(method, 'quasi-random')&&(~isequal(num_samples, 'all')|| (iscell(num_samples)&&any(strcmp(num_samples, 'all'))))
+            % FIXME can do better
+                Pold = this.P;
+                Appold = this.AppendWhenSample;
+                this.P.dim = idx_param;
+                this.AppendWhenSample =0;
+                this.QuasiRandomSample(prod(num_samples));
+                x = this.GetParam(idx_params);
+                this.P = Pold;
             else
-                x= x{1};
+                x = sample(domains{:}, num_samples, method);
             end
-            
+          
             % combine (or not) with others
-            
             num_old = this.GetNbParamVectors();
             switch opt_multi
                 case 'replace'
                     % if there are multiple samples already, discard them
                     % and use default p
                     if num_old==1
-                        this.ResetParam(params, x)
+                        this.SetParam(params, x, true)
                     else
-                        this.Reset();
-                        this.ResetParam(params, x);
+                        this.ResetParamSet();
+                        this.SetParam(params, x, true);
                     end
                     
-                case 'append'  % FIXME deep copy here is not smartest   
+                case 'append'  % FIXME deep copy here maybe not smartest   
                     Btmp = this.copy();
                     if num_old==1
-                        Btmp.SetParam(params, x)
+                        Btmp.SetParam(params, x, true)
                     else
-                        Btmp.Reset();
-                        Btmp.ResetParam(params, x);
+                        Btmp.ResetParamSet();
+                        Btmp.SetParam(params, x, true);
                         this.Concat(Btmp);
                     end
                     
@@ -552,43 +519,47 @@ classdef BreachSet < BreachStatus
                     idx = N2Nn(2, [num_old num_new]);
                     pts = this.P.pts(:, idx(1,:));
                     pts(idx_param,:) = x(:, idx(2,:));
-                    this.ResetParam(1:size(pts,1),pts, 'force');
+                    this.ResetParamSet();
+                    this.SetParam(1:size(pts,1),pts, true);
             end
+            
+            % restore traj if needed 
+            if saved_traj
+                this.P = Pfix_traj_ref(this.P, P0);
+            end
+            
         end
         
-        function SampleAll(this, param)
-            % returns all values when possible (type == int and bounded)
-            % domain
-            idx = FindParam(this.P, param);
-            all = this.ParamDomain(idx).sample_all();
-            if ~isempty(all)
-                this.SetParam(param, all);
-            else
-                warning(['Domain is empty.'])
-            end
-        end
-        
+    
         %% Legacy sampling
         function GridSample(this, delta)
-            % Grid Sample
-            newP = Refine(this.P,delta, 1);
+            % BreachSet.GridSample(num_samples) sample all bounded domain
+            % with a grid of num_samples elements. num_samples may be a
+            % scalar or an array of same dimension as the number of bounded
+            % domains.
+            bnd_params = this.GetBoundedDomains();
             if this.AppendWhenSample
-                this.P = SConcat(this.P, newP);
+               this.SampleDomain(bnd_params, delta, 'grid', 'append');
             else
-                this.P = newP;
+               this.SampleDomain(bnd_params, delta, 'grid');
             end
-            this.CheckinDomainParam();
             
         end
         
         % Get corners of parameter domain
         function CornerSample(this)
+            if this.AppendWhenSample
+                Pold = this.P;
+            end
+            
+            this.ResetParamSet();
             newP = this.P;
             newP.epsi = 2*newP.epsi;
             newP = Refine(newP,2);
             newP.epsi = newP.epsi/2;
+            
             if this.AppendWhenSample
-                this.P = SConcat(this.P, newP);
+                this.P = SConcat(Pold, newP);
             else
                 this.P = newP;
             end
@@ -598,6 +569,12 @@ classdef BreachSet < BreachStatus
         
         function QuasiRandomSample(this, nb_sample, step)
             % Quasi-Random Sampling
+                     
+            if this.AppendWhenSample
+                Pold = this.P;
+            end
+            
+            this.ResetParamSet();
             if nargin==3
                 newP = QuasiRefine(this.P,nb_sample, step);
             else
@@ -605,13 +582,11 @@ classdef BreachSet < BreachStatus
             end
             
             if this.AppendWhenSample
-                this.P = SConcat(this.P, newP);
+                this.P = SConcat(Pold, newP);
             else
                 this.P = newP;
             end
-            
             this.CheckinDomainParam();
-            
         end
         
         % Get the number of param vectors - -1 means P is empty
@@ -631,11 +606,10 @@ classdef BreachSet < BreachStatus
         %% Plot parameters
         function PlotParams(this, varargin)
             % Plot parameters
-            figure;
+            gca;
             P = DiscrimPropValues(this.P);
             SplotPts(P, varargin{:});
         end
-        
         
         %% Coverage
         function [cnt, grd1, grd2] = GetSignalCoverage(this,sigs, delta1,delta2)
@@ -688,6 +662,141 @@ classdef BreachSet < BreachStatus
             end
         end
         
+        function PlotDomain(this, params)
+        % PlotDomain 
+        
+        % default style
+        col = [0 0 1];
+        alpha = 0.03;
+        pts_style = 'sb';
+       
+        
+        % default params
+         if ~exist('params', 'var') || isempty('params')
+              params =this.GetBoundedDomains(); 
+         end
+         
+         if ischar(params)
+             params = {params};
+         end
+         
+         switch numel(params)
+             case 1 % one domain
+                  
+                domain1 = this.GetDomain(params);
+                plotxdomain(domain1,0); 
+                %  Labels 
+                 xlabel(params{1}, 'Interpreter', 'none');
+                set(gca, 'YTick', []);
+                grid on;
+                xlim = get(gca, 'XLim');
+                dxlim = xlim(2) - xlim(1);
+                set(gca, 'XLim', [xlim(1)-dxlim/10, xlim(2)+dxlim/10]);
+                
+             case 2 % two domains 
+                 domain1 = this.GetDomain(params{1});
+                 domain2 = this.GetDomain(params{2});
+                 if isempty(domain1.enum)    % domain1 is dense   
+        
+                     if isempty(domain2.enum)  % domain2 is dense
+                       start = [domain1.domain(1), domain2.domain(1)];
+                       sz = [domain1.domain(2) - domain1.domain(1),domain2.domain(2) - domain2.domain(1)];
+                       rect(start, sz, col,alpha);
+                   else % domain1 dense and domain2 not dense    
+                        y = domain2.sample_all();
+                        hold on;
+                        for i_y = 1:numel(y)
+                              plotxdomain( domain1, y(i_y) );                   
+                        end
+                     end
+                     
+                 else  % domain1 not dense
+                   
+                     if isempty(domain2.enum)  % domain2 is dense
+                        x = domain1.sample_all();
+                        hold on;
+                        for i_x = 1:numel(x)
+                              plotydomain( domain1, x(i_x) );                   
+                        end
+                     else % domain1 and domain2 not dense    
+                        X = sample( domain1, domain2, 'all');
+                        plot(X(1,:), X(2,:), pts_style);
+                     end
+                 end
+                 
+                 xlabel(params{1}, 'Interpreter', 'none');
+                 ylabel(params{2}, 'Interpreter', 'none');
+                 grid on;
+                xlim = get(gca, 'XLim');
+                dxlim = xlim(2) - xlim(1);
+                set(gca, 'XLim', [xlim(1)-dxlim/10, xlim(2)+dxlim/10]);
+                ylim = get(gca, 'YLim');
+                dylim = ylim(2) - ylim(1);
+                set(gca, 'YLim', [ylim(1)-dylim/10, ylim(2)+dylim/10]);
+                 
+             case 3
+                 
+                 domain1 = this.GetDomain(params{1});
+                 domain2 = this.GetDomain(params{2});
+                 domain3 = this.GetDomain(params{3});
+                 
+                     if ~isempty(domain1.enum)&&~isempty(domain2.enum)&&~isempty(domain3.enum)  
+                         X = sample( domain1, domain2, domain3, 'all');
+                        plot3(X(1,:), X(2,:), X(3,:),  pts_style);
+                 
+                     else
+                       start = [domain1.domain(1), domain2.domain(1), domain3.domain(1)];
+                       sz = [domain1.domain(2) - domain1.domain(1),domain2.domain(2) - domain2.domain(1),domain3.domain(2) - domain3.domain(1)];
+                       voxel(start, sz, col, alpha);    
+                     end
+                     % TODO missing cases combining enum and dense
+                         
+                 xlabel(params{1}, 'Interpreter', 'none');
+                 ylabel(params{2}, 'Interpreter', 'none');
+                 zlabel(params{3}, 'Interpreter', 'none');
+                 grid on;
+                xlim = get(gca, 'XLim');
+                dxlim = xlim(2) - xlim(1);
+                set(gca, 'XLim', [xlim(1)-dxlim/10, xlim(2)+dxlim/10]);
+                ylim = get(gca, 'YLim');
+                dylim = ylim(2) - ylim(1);
+                set(gca, 'YLim', [ylim(1)-dylim/10, ylim(2)+dylim/10]);
+                zlim = get(gca, 'ZLim');
+                dzlim = zlim(2) - zlim(1);
+                set(gca, 'ZLim', [zlim(1)-dzlim/10, zlim(2)+dzlim/10]);
+                view([ 45 45 ]);
+         end
+         
+            % 1d x direction
+            function  plotxdomain(dom, y0)
+                 if isempty(dom.enum) %  it's a dense box
+                     start = [dom.domain(1), y0];
+                     sz = [dom.domain(2) - dom.domain(1), 0];
+                     rect(start, sz, col, alpha);
+                 else
+                     x = dom.sample_all(); 
+                     plot(x, 0*x+y0, pts_style);
+                 end                
+            end
+            
+            % 1d y-direction
+            function  plotydomain(dom, x0)
+                 if isempty(dom.enum) %  it's a dense box
+                     start = [x0, dom.domain(1)];
+                     sz = [0, dom.domain(2) - dom.domain(1)];
+                     rect(start, sz, col, alpha);
+                 else
+                     y = dom.sample_all(); 
+                     plot(0*y+x0, y, pts_style);
+                 end                
+            end
+        end
+        
+        function [ params, ipr]  = GetBoundedDomains(this)
+            % GetNonEmptyDomains
+            ipr = cellfun(@(c)(~isempty(c)), {this.Domains.domain});
+            params =   this.P.ParamList(ipr);
+        end
         
         %% Printing
         function PrintSignals(this)
@@ -701,7 +810,7 @@ classdef BreachSet < BreachStatus
                 
                 disp('-------')
                 for isig = 1:this.P.DimX
-                    fprintf('%s in  [%g, %g]\n', this.P.ParamList{isig}, this.SignalRanges(isig,1),this.SignalRanges(isig,2));
+                    fprintf('%s %s\n', this.P.ParamList{isig}, this.Domains(isig).short_disp());
                 end
             end
             disp(' ')
@@ -713,24 +822,14 @@ classdef BreachSet < BreachStatus
                 disp('Parameters:')
                 disp('----------')
                 for ip = this.P.DimX+1:numel(this.P.ParamList)
-                    fprintf('%s=%g',this.P.ParamList{ip},this.P.pts(ip,1));
-                    rg = this.ParamRanges(ip-this.P.DimX,2)-this.ParamRanges(ip-this.P.DimX,1);
-                    if rg>0
-                        fprintf(', can vary in [%g, %g]',this.ParamRanges(ip-this.P.DimX,1),this.ParamRanges(ip-this.Sys.DimX,2));
-                    end
+                    fprintf('%s=%g       %s',this.P.ParamList{ip},this.P.pts(ip,1), this.Domains(ip).short_disp(1));
                     fprintf('\n');
                 end
             else
                 fprintf('Parameters (%d vectors):\n',nb_pts);
                 disp('-------------------------');
                 for ip = this.P.DimX+1:numel(this.P.ParamList)
-                    rg = this.ParamRanges(ip-this.P.DimX,2)-this.ParamRanges(ip-this.P.DimX,1);
-                    if rg>0
-                        fprintf('%s',this.P.ParamList{ip});
-                        fprintf(' varying in [%g, %g]\n',this.ParamRanges(ip-this.P.DimX,1),this.ParamRanges(ip-this.P.DimX,2));
-                    else
-                        fprintf('%s=%g\n',this.P.ParamList{ip},this.P.pts(ip,1));
-                    end
+                        fprintf('%s     %s\n',this.P.ParamList{ip}, this.Domains(ip).short_disp(1));
                 end
             end
             
@@ -751,9 +850,23 @@ classdef BreachSet < BreachStatus
             bl=isfield(this.P, 'traj');
         end
         
-        function Reset(this)
-            % Resets the system to nominal parameters
-            this.P = CreateParamSet(this.Sys);
+        function Reset(this) 
+            % Resets 
+            this.P = Sselect(this.P,1);
+            this.P = CreateParamSet(this.P);
+            try 
+                this.P.pts = this.Sys.p;
+                % Add property params
+                props = this.Specs.values;
+                for i=1:numel(props)
+                    phi = props{i}
+                    params_prop = get_params(phi);
+                    this.SetParamSpec(fieldnames(params_prop)', cellfun(@(c) (params_prop.(c)), fieldnames(params_prop)),1);
+                end
+            end
+            for ip = 1:numel(this.P.ParamList)
+                this.Domains(ip).domain=[];  
+            end
             this.resetStatus();
         end
         
@@ -764,7 +877,12 @@ classdef BreachSet < BreachStatus
             this.SignalRanges = [];
         end
         
+        function ResetSelected(this)
+            nb_pts = this.GetNbParamVectors();
+            this.P.selected = zeros(1,nb_pts);
+        end
         
+        %%  Compare (FIXME)
         function cmp = compare(this, other)
             % Compares two BreachSet. Goes through a series of tests, logs
             % results and returns when an outstanding difference result is

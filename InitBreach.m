@@ -1,17 +1,17 @@
 function InitBreach(br_dir)
 % InitBreach This script initializes Breach, in particular adding paths to Breach directories
 
-if ~exist('br_dir', 'var')
-    br_dir = which('InstallBreach');
-    br_dir = fileparts(br_dir);
-end
-
 % checks if global configuration variable is defined
 global BreachGlobOpt
 if isfield(BreachGlobOpt, 'breach_dir')
-    if isequal(BreachGlobOpt.breach_dir, br_dir)
+    if ~exist('br_dir', 'var') || isequal(BreachGlobOpt.breach_dir, br_dir)
         return; % OK InitBreach has been run before
     end
+end
+
+if ~exist('br_dir', 'var')
+    br_dir = which('InstallBreach');
+    br_dir = fileparts(br_dir);
 end
 
 % remove old path, if any

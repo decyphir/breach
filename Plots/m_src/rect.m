@@ -26,8 +26,10 @@ switch(nargin),
     case 1
         l=1;    %default length of side of rectangle is 1
         c='b';  %default color of voxel is blue
+        alpha =1;
     case 2,
         c='b';
+        alpha=1;
     case 3,
         alpha=1;
     case 4,

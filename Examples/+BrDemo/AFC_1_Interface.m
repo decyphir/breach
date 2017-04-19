@@ -105,6 +105,6 @@ AFC_Nominal.PlotSignals(); % plots the signals collected after the simulation
 % The plotting methods accepts a number of arguments. The first one and
 % most useful simply allows to select which signals to plot. 
 
-AFC_Nominal.PlotSignals({'Pedal_Angle','Engine_Speed','cyl_air', 'cyl_fuel', 'AF'}); 
+figure; AFC_Nominal.PlotSignals({'Pedal_Angle','Engine_Speed','cyl_air', 'cyl_fuel', 'AF'}); 
 
 

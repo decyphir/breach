@@ -39,10 +39,10 @@ classdef BreachCEGIS < handle
                 %% Falsification step
                 fprintf('Counter-Example step\n');
                 fprintf('--------------------\n');
-                this.falsif_pb.BrSet = BrSynth;
+                this.falsif_pb.BrSet.SetParam(this.synth_pb.params, this.synth_pb.x_best, true);
                 this.falsif_pb.ResetObjective();
                 this.falsif_pb.solve();
-                BrFalse = this.falsif_pb .BrSet_False;
+                BrFalse = this.falsif_pb.BrSet_False;
                 if isempty(BrFalse)
                     return
                 end
