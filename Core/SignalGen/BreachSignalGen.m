@@ -104,7 +104,7 @@ classdef BreachSignalGen < BreachSystem
             cur_is =1;
             for isg = 1:numel(this.signalGenerators)
                np = numel(this.signalGenerators{isg}.params);
-               p_isg = p(cur_ip:cur_ip+np-1);
+               p_isg = p(cur_ip:cur_ip+np-1);  % 
                ns = numel(this.signalGenerators{isg}.signals);
                X(cur_is:cur_is+ns-1, :) = this.signalGenerators{isg}.computeSignals(p_isg, tspan); 
                cur_ip = cur_ip+ np;
@@ -113,6 +113,16 @@ classdef BreachSignalGen < BreachSystem
                 
         end
         
-         
+        function sg = GetSignalGenFromSignalName(this, sig_name)
+        % GetSignalGenFromSignalName(this, sig_name) only works for one
+        % dimensional signal generators so far
+            for  is = 1:numel(this.Sys.DimX) 
+                if strcmp(this.signalGenerators{is}.signals{1}, sig_name)  
+                   sg = this.signalGenerators{is};
+                   return;
+                end
+            end  
+            error('signal not found.');
+        end
     end
 end

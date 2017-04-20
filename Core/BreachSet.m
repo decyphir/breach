@@ -485,7 +485,7 @@ classdef BreachSet < BreachStatus
                 this.P.dim = idx_param;
                 this.AppendWhenSample =0;
                 this.QuasiRandomSample(prod(num_samples));
-                x = this.GetParam(idx_params);
+                x = this.GetParam(idx_param);
                 this.P = Pold;
             else
                 x = sample(domains{:}, num_samples, method);

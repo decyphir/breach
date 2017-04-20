@@ -171,10 +171,6 @@ classdef BreachDomain
             if ~exist('method','var')||isempty(method)
                 method = 'rand';
             end
-         
-            
-            
-            
             
             % if all is selected, combine new samples
             combine_x=0;
@@ -183,7 +179,7 @@ classdef BreachDomain
                     combine_x = combine_x || isequal(num_samples{is}, 'all');  
                 end
             end
-            combine_x= combine_x||isequal(num_samples, 'all')||isequal(method,'grid');
+            combine_x= combine_x||isequal(num_samples, 'all')||isequal(method,'grid')||isequal(method,'corners');
                 
             if ischar(method)||isscalar(method)
                 m = method;
@@ -208,7 +204,7 @@ classdef BreachDomain
             % creates new samples
             for ip = 1:numel(domains)
                 dom = domains{ip};
-                if isequal(num_samples{ip}, 'all')
+                if isequal(num_samples{ip}, 'all')&&~isequal(method{ip}, 'corners')
                     x{ip} = dom.sample_all();
                 else
                     if isequal(method{ip}, 'grid')
@@ -221,6 +217,7 @@ classdef BreachDomain
                 end
                 num_x(ip) = numel(x{ip});
             end
+            
             
             % Combine new samples
             if num_dom>1
