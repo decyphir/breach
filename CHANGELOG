@@ -1,4 +1,4 @@
-# Next release
+# Release 1.2.2
 
 ## Users
 - ReqMiningProblem constructor with two argument (synth_pb and falsif_pb, e.g.) now works no matter the order of argument, but will error if it cannot identify a synthesis problem and a falsification problem
