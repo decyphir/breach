@@ -11,21 +11,21 @@ using namespace CPSGrader;
 void mexFunction(int nlhs, mxArray *plhs[],
                  int nrhs, const mxArray *prhs[] ) {
 
+
     stringstream fcout;
     
     if (nrhs<=1)
-        mexErrMsgTxt("Three inputs are expected: a formula (string), data (array), time interval (array of size 2).");
+        mexErrMsgTxt("four inputs are expected: signal names, a formula (string), data (array), time interval (array of size 2).");
     
     /* read inputs: a string and data */
+    char *signal_buf = mxArrayToString(prhs[0]);
+    char *stl_buf = mxArrayToString(prhs[1]);   
+    string phi_st = "signal "+ string(signal_buf) + "\n" + "phi:=" + string(stl_buf);
     
-    char *input_buf = mxArrayToString(prhs[0]);
-    string phi_st = string(input_buf);
-    
-    int m = mxGetM(prhs[1]);
-    int n=  mxGetN(prhs[1]);
+    size_t m = mxGetM(prhs[1]);
+    size_t n=  mxGetN(prhs[1]);
     
     double *data_in = (double *) mxGetPr(prhs[1]);
-
     double *time_in = (double *) mxGetPr(prhs[2]);
     
     STLDriver stl_driver = STLDriver();
@@ -40,26 +40,12 @@ void mexFunction(int nlhs, mxArray *plhs[],
         //cout << endl;
     }
     
-    /* setup stl_driver with basic signal names */
-    stl_driver.signal_map["x1"]=1;
-	stl_driver.signal_map["x2"]=2;
-    stl_driver.signal_map["x3"]=3;
-	stl_driver.signal_map["x4"]=4;
-    stl_driver.signal_map["x5"]=5;
-	stl_driver.signal_map["x6"]=6;
-    stl_driver.signal_map["x7"]=7;
-	stl_driver.signal_map["x8"]=8;
-    stl_driver.signal_map["x9"]=9;
-	stl_driver.signal_map["x10"]=10;
-    stl_driver.signal_map["x11"]=11;
-	stl_driver.signal_map["x12"]=12;
-
     transducer * phi; 
     double rob, rob_up, rob_low;
     rob = rob_up = rob_low = 0;
      
     Signal z, z_up, z_low;
-	bool parse_success = stl_driver.parse_string("phi:="+phi_st);
+	bool parse_success = stl_driver.parse_string(phi_st);
 
     if (parse_success) {
 		phi = stl_driver.formula_map["phi"]->clone();
@@ -124,7 +110,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     	pos++;
     }
 
-    int l_low =  z_low.size();
+    size_t l_low =  z_low.size();
     plhs[2] = mxCreateDoubleMatrix(1,l_low, mxREAL);
     plhs[3] = mxCreateDoubleMatrix(1,l_low, mxREAL);
 
@@ -138,7 +124,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     	pos++;
     }
 
-    int l_up =  z_up.size();
+    size_t l_up =  z_up.size();
     plhs[4] = mxCreateDoubleMatrix(1,l_up, mxREAL);
     plhs[5] = mxCreateDoubleMatrix(1,l_up, mxREAL);
 
@@ -153,7 +139,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
     }
 
     // clean
-    mxFree(input_buf);
+    mxFree(signal_buf);
+    mxFree(stl_buf);
     delete phi;
 }
 

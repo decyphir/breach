@@ -81,23 +81,18 @@ classdef BreachSystem < BreachSet
         
         function SetP(this,P)
         % SetP Sets legacy parameter structure 
-        
-            if isaP(P)
-                this.P =P;
-            else
-                error('Argument should a Breach legacy parameter structure.');
-            end
+        if isaP(P)
+            this.P =P;
+        else
+            error('Argument should a Breach legacy parameter structure.');
+        end
             
         end
         
         function ResetSampling(this)
             % ResetSampling 
             this.P = CreateParamSet(this.Sys);
-            
-            
             this.CheckinDomain();
-            
-            
         end
      
         %% Signals plots and stuff
@@ -108,12 +103,15 @@ classdef BreachSystem < BreachSet
             time = this.Sys.tspan;
         end
         
-        % Performs a simulation from the parameter vector(s) defined in P
         function Sim(this,tspan)
+        % BreachSystem.Sim(time) Performs a simulation from the parameter
+        % vector(s) defined in P 
+            this.CheckinDomainParam();
             if nargin==1
                 tspan = this.Sys.tspan;
             end
             this.P = ComputeTraj(this.Sys, this.P, tspan);
+            this.CheckinDomainTraj();
         end
                
         %% Specs
@@ -182,7 +180,8 @@ classdef BreachSystem < BreachSet
                 iprop = find(strcmp(get_id(spec), this.P.props_names));
             else
                 iprop = 0;
-           end
+            end
+           
             if iprop % if values exists, get rid of it (we'll reuse another time)
                 idx_wo_iprop = 1:size(this.P.props_values,1)~=iprop; 
                 this.P.props_values = this.P.props_values(  idx_wo_iprop,: );
@@ -247,9 +246,12 @@ classdef BreachSystem < BreachSet
             
              if ~isempty(params)
                 this.P = SetParam(this.P, params, values);
-            end
+             end
             
+            this.CheckinDomainParam();
             Sim(this);
+            this.CheckinDomainTraj();
+            
             % FIXME: this is going to break with multiple trajectories with
             % some of them containing NaN - 
             if any(isnan(this.P.traj{1}.X))

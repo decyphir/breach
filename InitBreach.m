@@ -104,6 +104,9 @@ end
 %% Store path_list for when we want to remove it
 BreachGlobOpt.list_path = list_path;
 
+%% Force refreshing sl_customization menu
+sl_refresh_customizations;
+
 warning('on',id);
 
 end

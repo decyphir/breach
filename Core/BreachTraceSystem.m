@@ -1,16 +1,16 @@
 classdef BreachTraceSystem < BreachSystem
     % BreachTraceSystem  a BreachSystem class to handle traces with no
     % simulator
-       
+    
     methods
         % constructor - takes signal names and an optional trace
         function this = BreachTraceSystem(signals, trace)
-            
+            InitBreach;
             if (nargin==0)
                 return;
             end
-                   
-            if isscalar(signals) && isnumeric(signals)              
+            
+            if isscalar(signals) && isnumeric(signals)
                 ndim =  signals;
                 signal_names = cell(1,ndim);
                 for is = 1:ndim
@@ -30,8 +30,8 @@ classdef BreachTraceSystem < BreachSystem
                             signal_names = strsplit(tline,',');
                             signal_names= signal_names(2:end);
                             for i_sig = 1:numel(signal_names)
-                               sig =strtrim(signal_names{i_sig});
-                               signal_names{i_sig} = regexprep(sig,'\W','_');
+                                sig =strtrim(signal_names{i_sig});
+                                signal_names{i_sig} = regexprep(sig,'\W','_');
                             end
                             
                             fclose(fid);
@@ -39,12 +39,12 @@ classdef BreachTraceSystem < BreachSystem
                     end
                 end
                 
-            % simout data
+                % simout data
             elseif isa(signals,'Simulink.SimulationOutput')
                 [time, X, signal_names] = simout2X(signals);
                 trace = [time' X'];
-            
-            % default signals should be a cell array of strings
+                
+                % default signals should be a cell array of strings
             else
                 signal_names = signals;
             end
@@ -55,6 +55,11 @@ classdef BreachTraceSystem < BreachSystem
             
             if exist('trace', 'var')
                 this.AddTrace(trace);
+            end
+            
+            %  Default domains
+            for ip = this.P.DimP
+                this.Domains(ip) = BreachDomain();
             end
             
         end
@@ -78,11 +83,21 @@ classdef BreachTraceSystem < BreachSystem
                 [time, X] = simout2X(signals);
                 traj.X = X;
                 traj.time = time;
-                traj.param = trace(1,2:end);
+                if size(trace,1) >=1
+                    traj.param = trace(1,2:end);
+                else
+                    traj.param = zeros(1, size(trace,2)+1);
+                end
+                
+                
             elseif isnumeric(trace)
                 traj.X = trace(:, 2:end)';
                 traj.time = trace(:,1)';
-                traj.param = trace(1,2:end);
+                if size(trace,1) >=1
+                    traj.param = trace(1,2:end);
+                else
+                    traj.param = zeros(1, size(trace,2)-1);
+                end
             elseif isstruct(trace)
                 traj = trace;
                 traj.param=traj.param(1:end-1);
@@ -94,7 +109,6 @@ classdef BreachTraceSystem < BreachSystem
             nb_traces =this.CountTraces();
             
             traj.param(end+1) = nb_traces+1;
-            Pnew.Xf = traj.X(:,end);
             Pnew.traj={traj};
             Pnew.traj_ref = 1;
             Pnew.traj_to_compute =  [];
@@ -111,18 +125,18 @@ classdef BreachTraceSystem < BreachSystem
         end
         
         function AddRandomTraces(this,n_traces, n_samples, amp, end_time)
-     
+            
             if ~exist('n_traces', 'var')
-                n_traces= 1; 
+                n_traces= 1;
             end
             if ~exist('n_samples', 'var')
-                n_samples = 100; 
+                n_samples = 100;
             end
             if ~exist('amp', 'var')
-                amp = 4; 
+                amp = 4;
             end
             if ~exist('end_time', 'var')
-                end_time = 100; 
+                end_time = 100;
             end
             
             dimx = this.Sys.DimX;
@@ -140,7 +154,7 @@ classdef BreachTraceSystem < BreachSystem
         function disp(this)
             disp(['BreachTraceSystem with ' num2str(this.CountTraces()) ' traces.']);
         end
-
+        
     end
     
 end

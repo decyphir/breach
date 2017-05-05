@@ -1,5 +1,5 @@
 function [signals, params] = STL_ExtractSignals(phi)
-%STL_EXTRACTSignals extracts names of signals and parameters involved in phi
+%STL_ExtractSignals extracts names of signals and parameters involved in phi
 %
 % Synopsis: signals = STL_ExtractSignals(phi)
 %
@@ -24,8 +24,10 @@ signals = setdiff(signals, sreserved);
 params = {};
 [~,~, ~, matches, tokens] = regexp(st_phi, '(\<\w+\>)');
 for im=1:numel(matches)
-    %tokens{im}{1}
-    if isvarname(tokens{im}{1})
+    varname = tokens{im}{1};
+    if isvarname(varname)&& ...
+       ~exist(varname, 'builtin') && ...
+       exist(varname, 'file')~=2
        params{end+1} = tokens{im}{1};
     end
 end
@@ -33,5 +35,4 @@ end
 reserved = [ sreserved signals  {'alw', 'ev', 'and', 'or', '=>', 'not', 'until', 't', ...
                                  'abs', 'sin', 'cos', 'exp','tan', 'norm','sqrt'}];
 params = setdiff(params, reserved);
-
 params = unique(params);

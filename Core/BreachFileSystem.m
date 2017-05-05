@@ -1,7 +1,7 @@
-classdef BreachFileSystem < BreachObject
+classdef BreachFileSystem < BreachSystem
     % BreachFileSystem specializes BreachObject to monitoring traces
     % defined in files.
-    % TODO Documentation
+    % TODO Documentation 
     
     
     properties
