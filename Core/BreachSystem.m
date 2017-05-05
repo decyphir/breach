@@ -180,6 +180,9 @@ classdef BreachSystem < BreachSet
                 iprop = find(strcmp(get_id(spec), this.P.props_names));
             else
                 iprop = 0;
+                if isfield(this.P, 'props_names')
+                    this.P= SPurge_props(this.P);
+                end
             end
            
             if iprop % if values exists, get rid of it (we'll reuse another time)
@@ -187,8 +190,6 @@ classdef BreachSystem < BreachSet
                 this.P.props_values = this.P.props_values(  idx_wo_iprop,: );
                 this.P.props_names = this.P.props_names(  idx_wo_iprop );
                 this.P.props  = this.P.props(  idx_wo_iprop );
-            else % Simply purge prop 
-                this.P= SPurge_props(this.P);
             end
             [this.P, val] = SEvalProp(this.Sys,this.P,spec,  t_spec);
             this.addStatus(0, 'spec_evaluated', 'A specification has been evaluated.')

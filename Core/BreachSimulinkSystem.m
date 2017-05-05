@@ -82,7 +82,8 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         
             mdl_checksum_hash = DataHash(this.mdl_checksum);
             if nargin<2
-                folder_name = [this.Sys.Dir filesep this.Sys.name]; 
+                st = datestr(now,'ddmmyy-HHMM');
+                folder_name = [this.Sys.Dir filesep this.mdl_name '-' st]; 
             end
             
             [success,msg,msg_id] = mkdir(folder_name);           
