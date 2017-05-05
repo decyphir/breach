@@ -469,7 +469,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 this.InputGenerator.Reset();
             end
             % save system - hopefully do nothing if nothing is to be done
-            save_system(this.Sys.mdl);
+ %           save_system(this.Sys.mdl,[], 'OverwriteIfChangedOnDisk',true);
         end
         
         function [tout, X] = GetXFrom_simout(this, simout)

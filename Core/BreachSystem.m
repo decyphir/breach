@@ -345,8 +345,8 @@ classdef BreachSystem < BreachSet
             end
             
             this.Sim();
-            this.CheckSpec(phi);
-            SplotProp(this.P, phi, options);
+            this.CheckSpec(phi); 
+            SplotProp(P, phi, options);
             
         end
 

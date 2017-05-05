@@ -1288,7 +1288,7 @@ end
 handles.figp = figure;
 hold on;
 num_params = numel(handles.selected_params);
-Br.PlotRobustMap(handles.properties.(handles.current_prop), handles.selected_params{1:min(num_params,2)});
+Br.PlotRobustMap(handles.properties.(handles.current_prop), handles.selected_params(1:min(num_params,2)));
 guidata(hObject,handles);
 
 % --------------------------------------------------------------------
