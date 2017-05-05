@@ -192,9 +192,7 @@ end
 
 % --- Executes on button press in button_remove_set.
 function button_remove_set_Callback(hObject, eventdata, handles)
-try
     old_name = handles.current_set;
-    ind = handles.selected_varying_param;
     fn = fieldnames(handles.working_sets);
     st = fn{get(handles.working_sets_listbox,'Value')};
     val = get(handles.working_sets_listbox,'Value');
@@ -209,12 +207,15 @@ try
     
     handles.working_sets = rmfield(handles.working_sets,st);
     evalin('base', ['clear ' old_name]);
+    
+    Br = handles.working_sets.(handles.current_set);
+    handles.show_params = Br.P.ParamList;
+    
     handles =update_working_sets_panel(handles);
     handles= update_properties_panel(handles);
     handles =update_modif_panel(handles);
     guidata(hObject,handles);
     
-end
 % hObject    handle to button_remove_set (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -569,6 +570,7 @@ function edit_rename_Callback(hObject, eventdata, handles)
     handles = update_modif_panel(handles);
     handles= update_properties_panel(handles);
     evalin('base', ['clear ' old_name]);
+    assignin('base', new_name, Br);
     guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
@@ -1138,8 +1140,8 @@ else
         
         stats = sprintf(['val:' dbl2str(val(handles.current_pts)) ...
             '\n#True:' dbl2str(numel(find(val>0))) '/' dbl2str(numel(val))  ...
-%            '\nMean:' dbl2str(mean(val)) ...
-%          '\nstd:' dbl2str(std(val)) ...
+%         '\nMean:' dbl2str(mean(val)) ...
+%        '\nstd:' dbl2str(std(val)) ...
 %        '\nMax:' dbl2str(max(val)) ...
 %        '\nMin:' dbl2str(min(val))
           ]);
@@ -1286,7 +1288,7 @@ end
 handles.figp = figure;
 hold on;
 num_params = numel(handles.selected_params);
-Br.PlotRobustMap(handles.properties.(handles.current_prop), handles.selected_params{1:max(num_params,2)});
+Br.PlotRobustMap(handles.properties.(handles.current_prop), handles.selected_params(1:min(num_params,2)));
 guidata(hObject,handles);
 
 % --------------------------------------------------------------------
@@ -2430,15 +2432,16 @@ if (isa(eventdata, 'matlab.ui.eventdata.UIClientComponentKeyEvent'))
 
                 Br = handles.working_sets.(handles.current_set);
                 [params, p0, domains] = read_uitable_params(hObject);
-                idx_params = find(strcmp(params, handles.selected_params) );
-                Br.SetDomain( handles.selected_params,domains(idx_params));
+               
                 
-                idx = FindParam(Br.P, handles.selected_params);
-                for ii = idx_params
-                    if isempty(domains(ii).domain)
-                        Br.P.pts(idx, : ) = p0(ii);
+                for ip = 1:numel(handles.selected_params)
+                    idx_param = find(strcmp(params, handles.selected_params(ip)) );
+                    Br.SetDomain(handles.selected_params,domains(idx_param));
+                    idx_P = FindParam(Br.P, handles.selected_params);
+                    if isempty(domains(idx_param).domain)
+                        Br.P.pts(idx_P, : ) = p0(ip);
                     else
-                        Br.P.pts(idx, handles.current_pts ) = p0(ii);
+                        Br.P.pts(idx_P, handles.current_pts ) = p0(ip);
                     end
                 end
                 Br.CheckinDomain();

@@ -29,7 +29,7 @@ falsif_pb.solve();
 %% Getting and Plotting the Falsifying Trace
 
 AFC_False = falsif_pb.GetBrSet_False(); % AFC_False contains the falsifying trace
-AFC_False.PlotSignals({'Pedal_Angle','Engine_Speed','AF'}, [], {'LineWidth', 2});
+figure;AFC_False.PlotSignals({'Pedal_Angle','Engine_Speed','AF'}, [], {'LineWidth', 2});
 % Some figure cosmetics
 subplot(3,1,1); set(gca, 'XLim', [10 40], 'FontSize',14, 'LineWidth', 2);
 subplot(3,1,2); set(gca, 'XLim', [10 40], 'FontSize',14, 'LineWidth', 2);
@@ -40,7 +40,7 @@ plot([0 41], (1-0.005)*[14.7 14.7],'r');
 %% Getting and Plotting the Falsifying Trace (ct'd)
 % We can also examine more closely at the violation by plotting the
 % robust satisfaction function for the formula and its subformulas:
-AFC_False.PlotRobustSat(AF_alw_ok,3); % second argument is depth of formula decomposition
+figure;AFC_False.PlotRobustSat(AF_alw_ok,3); % second argument is depth of formula decomposition
 
 %% Trying a Harder Falsification Instance
 % We were able to falsify AF_alw_ok which says that AF should stay within 1% of
@@ -80,7 +80,7 @@ falsif_pb.max_obj_eval
 % We can examine which parameter value was tested as follows: 
 
 BrLogged = falsif_pb2.GetBrSet_Logged(); 
-BrLogged.PlotParams();
+figure;BrLogged.PlotParams();
 
 %% Understanding the Solver Behavior (ct'd)
 % To control the default solver behavior, the following options can be set: 
@@ -107,7 +107,7 @@ falsif_pb2.solve(); % resume falsification - will run at most 2 minutes
 %% Understanding the Solver Behavior (ct'd) 
 % We can check that more values have been explored:  
 BrLogged = falsif_pb2.GetBrSet_Logged(); 
-BrLogged.PlotParams();
+figure;BrLogged.PlotParams();
 
 %% Other Solvers 
 % We can get a list of available solvers by

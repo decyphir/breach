@@ -1,8 +1,8 @@
 function [val__, tau__] = STL_EvalClassicOnline(Sys, phi, P, trajs, t,dt__)
-%STL_EVALCLASSIC computes the satisfaction function interval (lower bound, upper bound) of a property for one
+%STL_EVALCLASSICONLINE computes the satisfaction function interval (lower bound, upper bound) of a property for one
 % or several trajectory(ies). This function uses a fixed time step robust monitoring algorithm.
 %
-% Synopsis: [val__, tau__] = STL_Eval(Sys, phi, P, trajs[, t])
+% Synopsis: [val__, tau__] = STL_EvalClassicOnline(Sys, phi, P, trajs[, t])
 % 
 % Inputs:
 %  - Sys   : the system
@@ -48,25 +48,25 @@ exist_dt = exist('dt__','var');
 
 for ii=1:numTrajs
     if ~exist_t
-        t = trajs(ii).time;
+        t = trajs{ii}.time;
     elseif isempty(t)
-        t = trajs(ii).time;
+        t = trajs{ii}.time;
     end
     
     if exist_dt % we resample - assumes t exists 
-        new_time = trajs(ii).time(1):dt__:trajs(ii).time(end);
-        new_X = interp1(trajs(ii).time, trajs(ii).X', new_time, 'linear',inf)';
-        trajs(ii).time=new_time;
-        trajs(ii).X = new_X;
+        new_time = trajs{ii}.time(1):dt__:trajs{ii}.time(end);
+        new_X = interp1(trajs{ii}.time, trajs{ii}.X', new_time, 'linear',inf)';
+        trajs{ii}.time=new_time;
+        trajs{ii}.X = new_X;
         if (size(new_X, 2)==1)
-            trajs(ii).X = trajs(ii).X';
+            trajs{ii}.X = trajs{ii}.X';
         end
     else
-        dt__ = trajs(ii).time(2)-trajs(ii).time(1);
+        dt__ = trajs{ii}.time(2)-trajs{ii}.time(1);
     end
     
     interval = [t(1), t(end)];
-    [valarray, time_values] = GetValues(Sys, phi, P, trajs(ii), interval,dt__);
+    [valarray, time_values] = GetValues(Sys, phi, P, trajs{ii}, interval,dt__);
     
     if isscalar(valarray)
         val__{ii} = valarray*ones(1, numel(time_values)); 

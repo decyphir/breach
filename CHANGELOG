@@ -1,3 +1,20 @@
+# Release 1.2.2
+
+## Users
+- ReqMiningProblem constructor with two argument (synth_pb and falsif_pb, e.g.) now works no matter the order of argument, but will error if it cannot identify a synthesis problem and a falsification problem
+- SetupLogFolder default now has date of creation in name in format mdl_name_ddmmyy-HHMM 
+- Predicates accept builtin and custom  user defined functions 
+
+## Bugfixes
+- fixed problem when shift-selecting multiple parameters in main GUI  
+- fixed falsification (and all types of problems) not enforcing domains properly 
+- fixed renaming in GUI not renaming in base workspace
+- fixed GUI allows multiple cell edition with shift-return
+
+## Developpers
+- BreachProblem now stores domains for params  
+- BreachProblem has a CheckinDomain method 
+
 # Release 1.2.1
 
 ## Users

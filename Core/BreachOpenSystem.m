@@ -26,7 +26,8 @@ classdef BreachOpenSystem < BreachSystem
         end
         
         function Sim(this,tspan,U)
-            
+
+            this.CheckinDomainParam();
             if ~exist('tspan','var')
                 tspan = this.Sys.tspan;
             end
@@ -36,8 +37,6 @@ classdef BreachOpenSystem < BreachSystem
             if ~isempty(this.log_folder)
                % See if this simulation was performed already
                hash = DataHash({this.P.ParamList, this.P.pts, tspan});
-             %  log_Brfilename = [this.log_folder filesep 'Br' hash '.mat'];
-             %  log_Pfilename = [this.log_folder filesep 'P' hash '.mat'];
                log_filename = [this.log_folder filesep 'Br' hash '.mat'];
                
                if exist(log_filename, 'file')
@@ -95,7 +94,9 @@ classdef BreachOpenSystem < BreachSystem
                Br = this.copy();
                save(log_filename,'Br');
             end
-           end
+            
+            this.CheckinDomainTraj();
+            end
         end
         
         % we merge parameters of the input generator with those of the

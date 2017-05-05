@@ -82,7 +82,8 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         
             mdl_checksum_hash = DataHash(this.mdl_checksum);
             if nargin<2
-                folder_name = [this.Sys.Dir filesep this.Sys.name]; 
+                st = datestr(now,'ddmmyy-HHMM');
+                folder_name = [this.Sys.Dir filesep this.mdl_name '-' st]; 
             end
             
             [success,msg,msg_id] = mkdir(folder_name);           
@@ -125,7 +126,8 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             try
             this.mdl_checksum = Simulink.BlockDiagram.getChecksum(mdl);
             catch
-                warning('BreachSimulinkSystem:get_checksum_failed', 'Simulink couldn''t compute a checksum for the model.');
+            %    warning('BreachSimulinkSystem:get_checksum_failed', 'Simulink couldn''t compute a checksum for the model.');
+                this.addStatus(0, 'BreachSimulinkSystem:get_checksum_failed', 'Simulink couldn''t compute a checksum for the model.')
             end
             close_system(mdl_breach,0);
             save_system(mdl,[breach_data_dir filesep mdl_breach]);
@@ -249,40 +251,6 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             this.InputSrc = zeros(1,numel(this.Sys.InputList));
             this.InputSrc(1:numel(sig_in)) = 1:numel(sig_in);
            
-            %% Signal builders
-            
-            % Find them
-            sb_potential = find_system(mdl_breach, 'BlockType', 'SubSystem');
-            sb_list={};
-            for ib = 1:numel(sb_potential)
-                try 
-                    signalbuilder(sb_potential{ib}); % will error if not a signalbuilder - would be nice to find a better test
-                    sb_list = [sb_list sb_potential{ib} ];
-                end
-            end
-            
-            % Name them and collect parameters 
-            sig_build_params = {};
-            sig_build_p0 = [];
-            for isb = 1:numel(sb_list)
-                sb = sb_list{isb};
-                line_out = get_param(sb, 'LineHandles');
-                [~, ~,signames] = signalbuilder(sb);
-                
-                for il = 1:numel(signames)
-                    set(line_out.Outport(il),'Name',signames{il});
-                end
-                set(line_out.Outport,'DataLoggingName', 'Use signal name', 'DataLogging',1 );
-                
-                % Get parameters for signal group
-               sb_name = get_param(sb,'Name');
-               sb_idx = signalbuilder(sb, 'activegroup');
-               
-               sb_param = [sb_name '_group_idx'];
-               sig_build_params = [sig_build_params sb_param];
-               sig_build_p0(end+1) = sb_idx; 
-               this.ParamSrc(sb_param) = sb;
-            end
             
             %% Find outputs
             o = find_system(mdl_breach,'SearchDepth',1, 'BlockType', 'Outport');
@@ -315,7 +283,37 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             if this.lookfor_scopes
                 sig_scopes = find_scope_signals(mdl_breach);
             end
+
+            %% Signal builders
             
+            % collect signal names so far 
+            
+            % Find them
+            sb_potential = find_system(mdl_breach, 'BlockType', 'SubSystem');
+            sb_list={};
+            for ib = 1:numel(sb_potential)
+                try 
+                    signalbuilder(sb_potential{ib}); % will error if not a signalbuilder - would be nice to find a better test
+                    sb_list = [sb_list sb_potential{ib} ];
+                end
+            end
+            
+            % Name them and collect parameters 
+            sig_build_params = {};
+            sig_build_p0 = [];
+            for isb = 1:numel(sb_list)
+                sb = sb_list{isb};
+                line_out = get_param(sb, 'LineHandles');
+               sb_name = get_param(sb,'Name');
+               set(line_out.Outport,'Name',sb_name);  % can a signal builder have multiple output port? do we care? 
+               set(line_out.Outport,'DataLoggingName', 'Use signal name', 'DataLogging',1 );
+               sb_idx = signalbuilder(sb, 'activegroup');
+               sb_param = [sb_name '_group_idx'];
+               sig_build_params = [sig_build_params sb_param];
+               sig_build_p0(end+1) = sb_idx; 
+               this.ParamSrc(sb_param) = sb;
+            end
+
             %% define parameters
             exclude = {'tspan','u__','t__'};
             assignin('base','tspan', 0:1);
@@ -470,6 +468,8 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             if ~isempty(this.InputGenerator)
                 this.InputGenerator.Reset();
             end
+            % save system - hopefully do nothing if nothing is to be done
+ %           save_system(this.Sys.mdl,[], 'OverwriteIfChangedOnDisk',true);
         end
         
         function [tout, X] = GetXFrom_simout(this, simout)

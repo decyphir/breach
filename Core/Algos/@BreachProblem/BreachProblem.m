@@ -74,6 +74,7 @@ classdef BreachProblem < BreachStatus
         BrSet_Best
         BrSet_Logged
         params
+        domains
         lb
         ub
         Aineq
@@ -99,6 +100,7 @@ classdef BreachProblem < BreachStatus
         nb_obj_eval = 0
         max_obj_eval = inf
     end
+    
     %% Static Methods
     methods (Static)
         function solvers = list_solvers()
@@ -153,9 +155,9 @@ classdef BreachProblem < BreachStatus
                 if ischar(params)
                     params = {params};
                 end
-                
             end
             this.params= params;
+            this.domains = BrSet.GetDomain(params);
             
             if ~exist('ranges', 'var')
                 ranges = BrSet.GetParamRanges(params);
@@ -170,7 +172,7 @@ classdef BreachProblem < BreachStatus
             else
                 lb__ = ranges(:,1);
                 ub__ = ranges(:,2);
-                this.BrSet.SetParam(params, 0.5*(ranges(:,2)-ranges(:,1)), true); % adds parameters they don't exist 
+                this.BrSet.SetParam(params, 0.5*(ranges(:,2)-ranges(:,1)), true); % adds parameters if they don't exist 
                 this.BrSet.SetDomain(params, 'double', ranges);
             end
                        
@@ -476,9 +478,17 @@ classdef BreachProblem < BreachStatus
         end
               
         %% Misc methods
+
+        function x = CheckinDomain(this,x)
+          for ip = 1:numel(this.params)
+                x(ip) = this.domains(ip).checkin(x(ip));  
+          end
+        end
+        
         function LogX(this, x, fval)
             % LogX logs values tried by the optimizer
 
+            x = this.CheckinDomain(x);
             this.X_log = [this.X_log x];
             this.obj_log = [this.obj_log fval];
             

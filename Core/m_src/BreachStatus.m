@@ -25,8 +25,8 @@ classdef BreachStatus < handle
             % Add new active status
             this.status = [this.status status];
             
-            if (~ischar(key) && numel(key)>20)
-               error('key should be a string of max. 20 characters.'); 
+            if (~ischar(key) && numel(key)>200)
+               error('key should be a string of max. 200 characters.'); 
             end
             
             this.statusMap(key) = msg;

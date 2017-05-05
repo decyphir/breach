@@ -7,6 +7,6 @@ AF_below_ref := AF[t]- AFref[t] < -tol*af_ref
 AF_ok := not (AF_above_ref or AF_below_ref) 
 
 # Top formula, using time parameters
-param ti=10, tf=40 
-AF_alw_ok := alw_[ti,tf] (AF_ok)
+param t_start=10, t_end=40
+AF_alw_ok := alw_[t_start, t_end] (AF_ok)
 

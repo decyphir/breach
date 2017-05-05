@@ -4,9 +4,24 @@ classdef ReqMiningProblem < BreachCEGIS
        function this = ReqMiningProblem(varargin)
            switch nargin
                case 2
-                   % syntax: ReqMiningProblem(synth_pb, falsif_pb) 
-                   this.synth_pb  = varargin{1};
-                   this.falsif_pb = varargin{2};
+                   % syntax: ReqMiningProblem(synth_pb, falsif_pb) or
+                   % ReqMiningProblem(falsif_pb, synth_pb)
+                   
+                   pb1 = varargin{1}; 
+                   pb2 = varargin{2};
+                   
+                   if isa(pb1, 'FalsificationProblem')&&isa(pb2, 'ParamSynthProblem')
+                       this.synth_pb  = pb2;
+                       this.falsif_pb = pb1;
+                   elseif  isa(pb2, 'FalsificationProblem')&&isa(pb1, 'ParamSynthProblem')
+                       this.synth_pb  = pb1;
+                       this.falsif_pb = pb2;
+                   else
+                       this.synth_pb  = pb1;
+                       this.falsif_pb = pb2;
+                       error('ReqMiningProblem:unknown_arg_type', 'Arguments should be of class FalsificationProblem and ParamSynthProblem.');
+                   end
+                   
                    
                case 4
                    % syntax: ReqMiningProblem(BrSet, phi,input_params, prop_params)

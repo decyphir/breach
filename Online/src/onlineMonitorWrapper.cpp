@@ -234,8 +234,7 @@ static void mdlStart(SimStruct *S)
 {
     
     char *signal_buf = mxArrayToString(SIGNAL_STRING(S));
-    char *stl_buf = mxArrayToString(STL_STRING(S));
-    
+    char *stl_buf = mxArrayToString(STL_STRING(S));   
     string phi_st = "signal "+ string(signal_buf) + "\n" + "phi:=" + string(stl_buf);
     
     mxFree(signal_buf);

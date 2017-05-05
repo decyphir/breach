@@ -48,6 +48,9 @@ classdef ParamSynthProblem < BreachProblem
             this = this@BreachProblem(super_args{:});
             this.constraints_fn = @(x) tight_constraints(this,x);
             this.tightness = (this.ub-this.lb)/100;  % arbitrary
+            if ~isfield(this.BrSet.P, 'traj') 
+                this.BrSet.Sim(); % ensures that we have trajectory to infer parameter from 
+            end
             this.setup_binsearch();
         end
         
@@ -116,8 +119,6 @@ classdef ParamSynthProblem < BreachProblem
             end
             fprintf('\n');
             
-            %const = this.constraints_fn(param_values);
-            %fprintf('Constraint value: %g\n\n', const);
         end
         
     end
