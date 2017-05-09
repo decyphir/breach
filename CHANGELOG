@@ -1,3 +1,9 @@
+# Next Release 
+
+## Users
+- New method PlotSatParams to implement red-green dot maps available in GUI
+- New method GetSetValues to get satifaction values of a previously monitored requirement
+
 # Release 1.2.2
 
 ## Users

@@ -27,7 +27,7 @@ classdef BreachSet < BreachStatus
     %   PlotParams          - plots parameter vectors
     %   PlotSignals         - plots signals vs time
     %   PlotSigPortrait     - plots signals portrait
-    
+     
     properties
         P % legacy parameter structure - contains points data (in P.pts) and traces (P.traj) and many other fields whose purpose is slowly falling into oblivion
         Domains = BreachDomain('double', [])
@@ -125,7 +125,7 @@ classdef BreachSet < BreachStatus
         end
         
         function dom = GetDomain(this, param)
-            % GetDomain
+            % BreachSet.GetDomain
             idx = FindParam(this.P, param);
             for i=1:numel(idx)
                 if numel(this.Domains)<idx(i)
@@ -140,7 +140,8 @@ classdef BreachSet < BreachStatus
         end
         
         function CheckinDomain(this)
-            % CheckinDomain
+            % BreachSet.CheckinDomain() Enforce parameters and signals to
+            % adhere to their domains
             this.CheckinDomainParam();
             this.CheckinDomainTraj();
         end
@@ -161,8 +162,8 @@ classdef BreachSet < BreachStatus
         end
         
         function CheckinDomainTraj(this)
-            % CheckinDomainTraj
-            % checks trajectories
+            % BreachSet.CheckinDomainTraj()  Enforce signals to adhere to their domains
+    
             if this.hasTraj()
                 for itraj = 1:numel(this.P.traj)
                     for  i=1:this.P.DimX
@@ -223,6 +224,7 @@ classdef BreachSet < BreachStatus
         end
                 
         function SetParamSpec(this, params, values, ignore_sys_param)
+        % BreachSet.SetParamSpec  
             ip = FindParam(this.P, params);
             if all(ip>this.P.DimP)
                 this.P = SetParam(this.P, params, values);
@@ -245,7 +247,7 @@ classdef BreachSet < BreachStatus
         end
         
         function ResetParamSet(this)
-            % ResetParamSet remove samples and keeps one in the domain  
+        % ResetParamSet remove samples and keeps one in the domain  
         
             this.P = SPurge(this.P);
             % find non empty domains
@@ -263,7 +265,7 @@ classdef BreachSet < BreachStatus
         
         %% Get and Set param ranges
         function SetParamRanges(this, params, ranges)
-        % SetParamRanges set intervals for parameters (set domains as
+        % BreachSet.SetParamRanges set intervals for parameters (set domains as
         % bounded 'double' or 'int' if it is already an 'int') 
             i_not_found= [];
             if ~isnumeric(params)
@@ -301,7 +303,7 @@ classdef BreachSet < BreachStatus
         end
         
         function ranges = GetParamRanges(this, params)
-        % GetParamRanges 
+        % BreachSet.GetParamRanges 
             i_params = FindParam(this.P, params);
             ranges= zeros(numel(params),2);
             ranges(:,1) = -inf;
@@ -315,11 +317,30 @@ classdef BreachSet < BreachStatus
             
         end
         
+        function params = GetParamList(this)
+            % GetParamList returns parameter names
+            params = this.P.ParamList(this.P.DimX+1:end);
+        end
+        
+        function sys_params = GetSysParamList(this)
+            % GetSysParamList returns system parameter names
+            sys_params = this.P.ParamList(this.P.DimX+1:this.P.DimP);
+        end
+        
+        function prop_params = GetPropParamList(this)
+            % GetSysParamList returns system parameter names
+            prop_params = this.P.ParamList(this.P.DimP+1:end);
+        end
+        
+        
+        
+        
         function ResetEpsi(this)
-            % Set Param ranges around individual parameter vectors to zero
+            % (Legacy) Set param ranges around individual parameter vectors to zero
             this.P.epsi(:,:) = 0;
         end
-                
+        
+        %% Signals
         function traces = GetTraces(this)
             % Get computed trajectories
             traces= [];
@@ -364,21 +385,6 @@ classdef BreachSet < BreachStatus
         function signals = GetSignalList(this)
             % GetSignalList returns signal names
             signals = this.P.ParamList(1:this.P.DimX);
-        end
-        
-        function params = GetParamList(this)
-            % GetParamList returns parameter names
-            params = this.P.ParamList(this.P.DimX+1:end);
-        end
-        
-        function sys_params = GetSysParamList(this)
-            % GetSysParamList returns system parameter names
-            sys_params = this.P.ParamList(this.P.DimX+1:this.P.DimP);
-        end
-        
-        function prop_params = GetPropParamList(this)
-            % GetSysParamList returns system parameter names
-            prop_params = this.P.ParamList(this.P.DimP+1:end);
         end
         
         
@@ -610,67 +616,18 @@ classdef BreachSet < BreachStatus
             P = DiscrimPropValues(this.P);
             SplotPts(P, varargin{:});
         end
-        
-        %% Coverage
-        function [cnt, grd1, grd2] = GetSignalCoverage(this,sigs, delta1,delta2)
-            % 1d or 2d
-            X = this.GetSignalValues(sigs);
-            
-            switch (numel(sigs))
-                case 1
-                    [cnt, grd1] = cover(X,delta1);
-                case 2
-                    [cnt, grd1, grd2] = cover2d(X,delta1,delta2);
-                otherwise
-                    error('Coverage for more than 2 signals is not supported');
-            end
-        end
-        
-        function [cnt, grd1, grd2] = PlotSignalCoverage(this,sigs, delta1,delta2)
-            % 1d or 2d
-            X = this.GetSignalValues(sigs);
-            switch (numel(sigs))
-                case 1
-                    [cnt, grd1] = cover(X,delta1);
-                    X = grd1+delta1/2; % centers of bins
-                    bar(X,cnt)
-                    set(gca, 'XTick', round([grd1 grd1(end)+delta1]))
-                    title('number of samples per bin')
-                    xlabel(sigs{1});
-                case 2
-                    [cnt, grd1, grd2] = cover2d(X,delta1,delta2);
-                    X = grd1+delta1/2; % centers of bins
-                    Y = grd2+delta2/2; % centers of bins
-                    figure;
-                    b= bar3(cnt');
-                    set(gca,'XTickLabel', round([X X(end)+delta1]) )
-                    set(gca,'YTickLabel', round([Y Y(end)+delta2]) )
-                    %surface(grd2, grd1, cnt);
-                    xlabel(sigs{1});
-                    ylabel(sigs{2});
-                    colormap(jet);
-                    colorbar;
-                    
-                    for k = 1:length(b)
-                        zdata = b(k).ZData;
-                        b(k).CData = zdata;
-                        b(k).FaceColor = 'interp';
-                    end
-                    title('num. samples per grid element')
-                otherwise
-                    error('Coverage for more than 2 signals is not supported');
-            end
-        end
-        
+      
+          
         function PlotDomain(this, params)
-        % PlotDomain 
+        % BreachSet.PlotDomain 
+        
+        gca;
         
         % default style
         col = [0 0 1];
         alpha = 0.03;
         pts_style = 'sb';
        
-        
         % default params
          if ~exist('params', 'var') || isempty('params')
               params =this.GetBoundedDomains(); 
@@ -792,6 +749,56 @@ classdef BreachSet < BreachStatus
             end
         end
         
+        %% Coverage
+        function [cnt, grd1, grd2] = GetSignalCoverage(this,sigs, delta1,delta2)
+            % 1d or 2d
+            X = this.GetSignalValues(sigs);
+            
+            switch (numel(sigs))
+                case 1
+                    [cnt, grd1] = cover(X,delta1);
+                case 2
+                    [cnt, grd1, grd2] = cover2d(X,delta1,delta2);
+                otherwise
+                    error('Coverage for more than 2 signals is not supported');
+            end
+        end
+        
+        function [cnt, grd1, grd2] = PlotSignalCoverage(this,sigs, delta1,delta2)
+            % 1d or 2d
+            X = this.GetSignalValues(sigs);
+            switch (numel(sigs))
+                case 1
+                    [cnt, grd1] = cover(X,delta1);
+                    X = grd1+delta1/2; % centers of bins
+                    bar(X,cnt)
+                    set(gca, 'XTick', round([grd1 grd1(end)+delta1]))
+                    title('number of samples per bin')
+                    xlabel(sigs{1});
+                case 2
+                    [cnt, grd1, grd2] = cover2d(X,delta1,delta2);
+                    X = grd1+delta1/2; % centers of bins
+                    Y = grd2+delta2/2; % centers of bins
+                    figure;
+                    b= bar3(cnt');
+                    set(gca,'XTickLabel', round([X X(end)+delta1]) )
+                    set(gca,'YTickLabel', round([Y Y(end)+delta2]) )
+                    %surface(grd2, grd1, cnt);
+                    xlabel(sigs{1});
+                    ylabel(sigs{2});
+                    colormap(jet);
+                    colorbar;
+                    
+                    for k = 1:length(b)
+                        zdata = b(k).ZData;
+                        b(k).CData = zdata;
+                        b(k).FaceColor = 'interp';
+                    end
+                    title('num. samples per grid element')
+                otherwise
+                    error('Coverage for more than 2 signals is not supported');
+            end
+        end
         function [ params, ipr]  = GetBoundedDomains(this)
             % GetNonEmptyDomains
             ipr = cellfun(@(c)(~isempty(c)), {this.Domains.domain});

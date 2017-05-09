@@ -105,9 +105,8 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             gcp;
             this.Sys.Parallel = 1;
             spmd
-                InitBreach;
                 gcs;   % loads simulink
-                warning('off', 'Simulink:Commands:MdlFileChangedCloseManually'); % FIXME find out where the model is changed and not saved...
+                %warning('off', 'Simulink:Commands:MdlFileChangedCloseManually'); % FIXME find out where the model is changed and not saved...
             end
         end
         
@@ -377,7 +376,6 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             Sys.tspan = 0:t_step:t_end;
             Sys.name = Sys.mdl;  % not great..
             
-            
             this.Sys = Sys;
             
             % Initializes InputMap and input generator
@@ -406,13 +404,12 @@ classdef BreachSimulinkSystem < BreachOpenSystem
          end
          %% Closing 
          save_system(mdl_breach);
-         close_system(mdl_breach);
-         
+         %close_system(mdl_breach);
         end
         
         function [tout, X] = sim_breach(this, Sys, tspan, pts)
             %
-            % Generic wrapper function that runs a Simulink model and collect signal
+            % BreachSimulinkSystem.sim_breach Generic wrapper function that runs a Simulink model and collect signal
             % data in Breach format (called by ComputeTraj)
             %
             
@@ -721,6 +718,19 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 
             end
         end
+        
+        function Sim(this, tspan, U)
+            switch nargin
+                case 1
+                    Sim@BreachOpenSystem(this);
+                case 2
+                    Sim@BreachOpenSystem(this, tspan);
+                case 3
+                    Sim@BreachOpenSystem(this, tspan, U);
+            end
+            save_system(this.Sys.mdl);
+        end
+        
         function  st = disp(this)
            if isfield(this.P, 'traj')
                nb_traj = numel(this.P.traj);
