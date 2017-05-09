@@ -1268,7 +1268,7 @@ nb_iter = eval(ins{4});
 S = rmfield(S,'selected');
 Sf = SFindPropBoundary(Br.Sys,S, prop, tspan,tprop, nb_iter);
 
-% TOFIX: hasty patch
+% FIXME, that's a hasty patch
 Sf = rmfield(Sf,'selected');
 
 Br.P = Sf;

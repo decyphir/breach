@@ -95,7 +95,7 @@ classdef BreachSystem < BreachSet
             this.CheckinDomain();
         end
      
-        %% Signals plots and stuff
+        %% Simulation
         function SetTime(this,tspan)
             this.Sys.tspan = tspan;
         end
@@ -305,6 +305,68 @@ classdef BreachSystem < BreachSet
             SplotSat(this.Sys,this.P, phi, depth, tau, ipts);
         end
         
+        function PlotSatParams(this, phi, params)
+            % BreachSet.PlotSatParams(req, params)
+            
+            val = this.GetSatValues(phi);
+            iparam = FindParam(this.P, params);
+            switch numel(params)
+                case 1
+                    x = this.P.pts(iparam(1),:);
+                    y = zeros(size(x));
+                    scatter(x,y, 30, val, 'filled');
+                    xlabel(params{1}, 'Interpreter', 'None');
+                    grid on;
+                    set(gca, 'YTick', []);
+                case 2
+                    x = this.P.pts(iparam(1),:);
+                    y = this.P.pts(iparam(2),:);
+                    scatter(x,y, 30, val, 'filled');
+                    xlabel(params{1}, 'Interpreter', 'None');
+                    ylabel(params{2}, 'Interpreter', 'None');
+                    grid on;
+                    
+                case 3
+                    x = this.P.pts(iparam(1),:);
+                    y = this.P.pts(iparam(2),:);
+                    z = this.P.pts(iparam(3),:);
+                    scatter3(x,y, z, 30, val, 'filled');
+                    xlabel(params{1}, 'Interpreter', 'None');
+                    ylabel(params{2}, 'Interpreter', 'None');
+                    ylabel(params{3}, 'Interpreter', 'None');
+                    grid on;
+            
+            end
+            title_st = [get_id(phi) ' satisfied by '...
+                num2str(numel(find(val>0))) '/' num2str(numel(val)) ' tests'
+                ];
+            title(title_st, 'Interpreter', 'None');
+            clim = sym_clim(val);
+            if diff(clim)>0
+                set(gca, 'CLim',clim );
+            end
+            colormap([ 1 0 0; 0 1 0 ]);
+            
+        end
+        
+        function val = GetSatValues(this, spec)
+            spec_monitored = isfield(this.P, 'props_values');
+            
+            if spec_monitored
+                iprop = find(strcmp(get_id(spec), this.P.props_names));
+                spec_monitored = ~isempty(iprop);
+            end
+           
+            if spec_monitored
+                prop_values = this.P.props_values(iprop,:);
+                val  = cat(1, prop_values.val);
+                val = val(:,1)';
+            else
+                val = [];
+            end
+        
+        end
+        
         
         function [out] = PlotRobustMap(this, phi, params, ranges, delta, options_in)
             % Plot robust satisfaction vs 1 or 2 parameters.
@@ -315,8 +377,10 @@ classdef BreachSystem < BreachSet
                 return
             end
             
-            out = gcf;
-            
+            if nargout >=1 
+                out = gcf;
+            end
+              
             % no option, use defaults
             if ~exist('options_in','var')
                 options_in = struct();
@@ -346,7 +410,11 @@ classdef BreachSystem < BreachSet
             
             this.Sim();
             this.CheckSpec(phi); 
-            SplotProp(P, phi, options);
+            
+            Pf = this.P; 
+            iparams = FindParam(this.P, params);
+            Pf.dim = iparams;
+            SplotProp(Pf, phi, options);
             
         end
 
@@ -454,8 +522,7 @@ classdef BreachSystem < BreachSet
             end
         end
         
-        %% GUI
-            
+        %% GUI  
         function new_phi  = AddSpecGUI(this)
             signals = this.Sys.ParamList(1:this.Sys.DimX);
             new_phi = STL_TemplateGUI('varargin', signals);
@@ -491,17 +558,12 @@ classdef BreachSystem < BreachSet
             
             BreachTrajGui(this,args);          
         end
-        
-        function ResetFiles(this)
-            system(['rm -f ' this.Sys.name '_param_sets.mat']);
-            system(['rm -f ' this.Sys.name '_properties.mat']);
-        end
-        
+                
         %% Experimental
         function report = Analysis(this)
             
             STL_ReadFile('stlib.stl');
-            
+ 
             % Simple analysis
             % Checks zero signals
             req_zero = STL_Formula('phi', 'req_zero');
