@@ -410,7 +410,11 @@ classdef BreachSystem < BreachSet
             
             this.Sim();
             this.CheckSpec(phi); 
-            SplotProp(P, phi, options);
+            
+            Pf = this.P; 
+            iparams = FindParam(this.P, params);
+            Pf.dim = iparams;
+            SplotProp(Pf, phi, options);
             
         end
 

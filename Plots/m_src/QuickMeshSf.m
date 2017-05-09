@@ -1,4 +1,4 @@
-function [XI YI ZI] = QuickMeshSf(S,f,opt)
+function [XI, YI, ZI] = QuickMeshSf(S,f,opt)
 
 X = S.pts;
 XI=[];
@@ -24,8 +24,9 @@ switch numel(S.dim)
   
   x= S.pts(S.dim(1),:);
   y= S.pts(S.dim(2),:)';
-  epsi = [min(S.epsi(1,:)) ; min(S.epsi(2,:))];
-  [XI YI ZI] = QuickMesh(x,y,Z,epsi);
+  
+  epsi = [min(diff(unique(sort(x)))); min(diff(unique(sort(y))))];
+  [XI, YI, ZI] = QuickMesh(x,y,Z,epsi);
   
  otherwise
   disp(['we should now enter the forth dimension, tin din tin din' ...

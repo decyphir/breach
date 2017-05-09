@@ -11,8 +11,11 @@ for irow = 1:size(data,1)
         p0(irow,1)  =0;
     end
     
-    domain = str2num(data{irow,3});
-
+    if ~isempty(data{irow,3}) 
+        domain = str2num(data{irow,3});
+    else
+        domain=[];
+    end
     type = data{irow,5};
     
     enum  = data{irow, 4};
