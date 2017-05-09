@@ -4,6 +4,10 @@
 - New method PlotSatParams to implement red-green dot maps available in GUI
 - New method GetSetValues to get satifaction values of a previously monitored requirement
 
+## Bugfixes
+- fixed plot satisfaction map in GUI
+- fixed PlotRobustMap method
+
 # Release 1.2.2
 
 ## Users

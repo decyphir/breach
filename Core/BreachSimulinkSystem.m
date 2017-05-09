@@ -106,7 +106,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             this.Sys.Parallel = 1;
             spmd
                 gcs;   % loads simulink
-                %warning('off', 'Simulink:Commands:MdlFileChangedCloseManually'); % FIXME find out where the model is changed and not saved...
+                warning('off', 'Simulink:Commands:MdlFileChangedCloseManually'); % FIXME find out where the model is changed and not saved...
             end
         end
         
@@ -728,7 +728,9 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 case 3
                     Sim@BreachOpenSystem(this, tspan, U);
             end
-            save_system(this.Sys.mdl);
+            if this.use_parallel == 0 % don't autosave in parallel mode
+                save_system(this.Sys.mdl);
+            end
         end
         
         function  st = disp(this)

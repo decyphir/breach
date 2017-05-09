@@ -305,10 +305,10 @@ classdef BreachSystem < BreachSet
             SplotSat(this.Sys,this.P, phi, depth, tau, ipts);
         end
         
-        function PlotSatParams(this, params, req)
-            % BreachSet.PlotSatParams(params, req)
+        function PlotSatParams(this, phi, params)
+            % BreachSet.PlotSatParams(req, params)
             
-            val = this.GetSatValues(req);
+            val = this.GetSatValues(phi);
             iparam = FindParam(this.P, params);
             switch numel(params)
                 case 1
@@ -337,7 +337,7 @@ classdef BreachSystem < BreachSet
                     grid on;
             
             end
-            title_st = [get_id(req) ' satisfied by '...
+            title_st = [get_id(phi) ' satisfied by '...
                 num2str(numel(find(val>0))) '/' num2str(numel(val)) ' tests'
                 ];
             title(title_st, 'Interpreter', 'None');
