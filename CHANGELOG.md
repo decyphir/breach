@@ -1,3 +1,23 @@
+# New Release
+
+## Users 
+- Changed CHANGELOG to CHANGELOG.md
+- ExportTraces method for Simulink 
+- SaveResults method creates a folder with  breach_system and summary files  and traces subfolder with trace files
+- LoadResults reads a folder created with SaveResults
+
+## Bugfixes
+- Fixed bug in ComputeTraj (Issue 13)
+- STL formulas now can use custom p-file, m-file, mex and builtin, though parameters with same name get shadowed   
+- Issue with z-axis label in PlotSatParams
+- GUI creating new set updates display
+- Traj GUI: fixed bug preventing recomputation of trajectory when modifying a parameter 
+
+## Developpers
+- get_checksum method computes the checksum of Simulink mdl, and returned boolean true if it changed wrt creation
+- mdl BreachSimulinkSystem property is a struct with model name, original path and date of creation
+- varargin2struct function can be used to setup basic optional argument with syntax optionName, optionValue
+
 # Release 1.2.3
 
 ## Users
