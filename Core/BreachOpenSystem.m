@@ -102,11 +102,8 @@ classdef BreachOpenSystem < BreachSystem
         % we merge parameters of the input generator with those of the
         % system, but keep both BreachObjects
         function SetInputGen(this, IG)
-            % SetInputGen Attach a BreachSystem as input generator.
-            
-            % Warnings about current P
-%           this.WarningResetP('SetInputGen');
-            
+            % BreachOpenSystem.SetInputGen Attach a BreachSystem as input generator.
+                        
             % look for property parameters and save them
             PropParams={};
             if ~isempty(this.P)

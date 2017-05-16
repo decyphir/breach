@@ -858,7 +858,7 @@ classdef BreachSet < BreachStatus
         end
         
         function Reset(this) 
-            % Resets 
+            % BreachSet.Reset()   
             this.P = Sselect(this.P,1);
             this.P = CreateParamSet(this.P);
             try 
@@ -866,7 +866,7 @@ classdef BreachSet < BreachStatus
                 % Add property params
                 props = this.Specs.values;
                 for i=1:numel(props)
-                    phi = props{i}
+                    phi = props{i};
                     params_prop = get_params(phi);
                     this.SetParamSpec(fieldnames(params_prop)', cellfun(@(c) (params_prop.(c)), fieldnames(params_prop)),1);
                 end
@@ -874,6 +874,7 @@ classdef BreachSet < BreachStatus
             for ip = 1:numel(this.P.ParamList)
                 this.Domains(ip).domain=[];  
             end
+            
             this.resetStatus();
         end
         
@@ -888,6 +889,8 @@ classdef BreachSet < BreachStatus
             nb_pts = this.GetNbParamVectors();
             this.P.selected = zeros(1,nb_pts);
         end
+        
+        
         
         %%  Compare (FIXME)
         function cmp = compare(this, other)

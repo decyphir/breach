@@ -333,7 +333,7 @@ classdef BreachSystem < BreachSet
                     scatter3(x,y, z, 30, val, 'filled');
                     xlabel(params{1}, 'Interpreter', 'None');
                     ylabel(params{2}, 'Interpreter', 'None');
-                    ylabel(params{3}, 'Interpreter', 'None');
+                    zlabel(params{3}, 'Interpreter', 'None');
                     grid on;
             
             end
@@ -350,21 +350,27 @@ classdef BreachSystem < BreachSet
         end
         
         function val = GetSatValues(this, spec)
-            spec_monitored = isfield(this.P, 'props_values');
-            
+            spec_monitored = isfield(this.P, 'props');
             if spec_monitored
-                iprop = find(strcmp(get_id(spec), this.P.props_names));
+                if nargin ==2
+                    iprop = find(strcmp(get_id(spec), this.P.props_names));
+                elseif nargin==1
+                    iprop = 1:numel(this.P.props);
+                end
                 spec_monitored = ~isempty(iprop);
             end
-           
+            
+            
             if spec_monitored
-                prop_values = this.P.props_values(iprop,:);
-                val  = cat(1, prop_values.val);
-                val = val(:,1)';
+                for ip = iprop
+                    prop_values = this.P.props_values(ip,:);
+                    vali  = cat(1, prop_values.val);
+                    val(ip,:) = vali(:,1);
+                end
             else
                 val = [];
             end
-        
+            
         end
         
         
@@ -417,7 +423,6 @@ classdef BreachSystem < BreachSet
             SplotProp(Pf, phi, options);
             
         end
-
         
         function [h, t, X]  = PlotExpr(this, stl_expr, varargin)
             % Plots a signal expression
@@ -452,7 +457,19 @@ classdef BreachSystem < BreachSet
             end
         end
 
-    
+        function  SortbyRob(this)
+            sat_values = this.GetSatValues();
+            [ ~, order_rob] = sort(sum(sat_values,1));
+            this.P = Sselect(this.P, order_rob);
+         end
+        
+        function  SortbySat(this)
+            sat_values = this.GetSatValues();
+            [ ~, order_rob] = sort(sum(sat_values>=0,1));
+            this.P = Sselect(this.P, order_rob);
+        end
+        
+         
         %% Sensitivity analysis
         function [mu, mustar, sigma] = SensiSpec(this, phi, params, ranges, opt)
             % SensiSpec Sensitivity analysis of a formula to a set of parameters
@@ -521,6 +538,8 @@ classdef BreachSystem < BreachSet
                 disp(st);
             end
         end
+        
+        
         
         %% GUI  
         function new_phi  = AddSpecGUI(this)

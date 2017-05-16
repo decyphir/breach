@@ -26,9 +26,8 @@ params = {};
 for im=1:numel(matches)
     varname = tokens{im}{1};
     if isvarname(varname)&& ...
-       ~exist(varname, 'builtin') && ...
-       exist(varname, 'file')~=2
-       params{end+1} = tokens{im}{1};
+            all(exist('varname') ~= [2 3 5 6])  % checks for m-files, mex files, builtin, p-files
+        params{end+1} = tokens{im}{1};
     end
 end
 

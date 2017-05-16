@@ -1,12 +1,12 @@
 classdef BreachSimulinkSystem < BreachOpenSystem
     % BreachSimulinkSystem Main class to interface Breach with Simulink systems
     %
-    %   BrSys = BreachSimulinkSystem(mdl_name [,params, p0, signals, inputfn])
+    %   BrSys = BreachSimulinkSystem(mdl.name [,params, p0, signals, inputfn])
     %
     %   Creates a BreachSystem interface to a Simulink model.
     %
     %   Arguments:
-    %   mdl_name  -  a string naming a Simulink model.
+    %   mdl.name  -  a string naming a Simulink model.
     %   params    -  cell array of strings | 'all'
     %   p0        -  (optional) default values for parameters
     %   signals   -  specifies signals to interface
@@ -34,8 +34,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         InputSrc          % for each input, we match an input port or base workspace (0)
         ParamSrc 
         SimInputsOnly=false % if true, will not run Simulink model    
-        mdl_name
-        mdl_checksum    
+        mdl   
         log_folder
     end
     
@@ -51,7 +50,9 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             if ~exist(mdl_name)==4  %  create Simulink system with default options
                 error('BreachSimulinkSystem first argument must be the name of a Simulink model.');
             end
-            this.mdl_name = mdl_name;
+            this.mdl.name = mdl_name;
+            this.mdl.path = which(mdl_name);
+            this.mdl.date =  datestr(now,'ddmmyy-HHMM');
             this.ParamSrc = containers.Map();
             
             switch nargin
@@ -80,10 +81,10 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         function SetupLogFolder(this, folder_name)
         % SetupLogFolder creates a folder to log traces
         
-            mdl_checksum_hash = DataHash(this.mdl_checksum);
+            mdl.checksum_hash = DataHash(this.mdl.checksum);
             if nargin<2
                 st = datestr(now,'ddmmyy-HHMM');
-                folder_name = [this.Sys.Dir filesep this.mdl_name '-' st]; 
+                folder_name = [this.Sys.Dir filesep this.mdl.name '-' st]; 
             end
             
             [success,msg,msg_id] = mkdir(folder_name);           
@@ -123,11 +124,14 @@ classdef BreachSimulinkSystem < BreachOpenSystem
 
             % Get checksum of the model
             try
-            this.mdl_checksum = Simulink.BlockDiagram.getChecksum(mdl);
+                chs = Simulink.BlockDiagram.getChecksum(mdl);
+                this.mdl.checksum = chs;
             catch
-            %    warning('BreachSimulinkSystem:get_checksum_failed', 'Simulink couldn''t compute a checksum for the model.');
+                warning('BreachSimulinkSystem:get_checksum_failed', 'Simulink couldn''t compute a checksum for the model.');
                 this.addStatus(0, 'BreachSimulinkSystem:get_checksum_failed', 'Simulink couldn''t compute a checksum for the model.')
+                this.mdl.checksum = [];
             end
+            
             close_system(mdl_breach,0);
             save_system(mdl,[breach_data_dir filesep mdl_breach]);
             close_system(mdl,0);
@@ -740,14 +744,199 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                nb_traj = 0;
            end
            
-           st = ['BreachSimulinkSystem interfacing model ' this.mdl_name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' traces.'];
+           st = ['BreachSimulinkSystem interfacing model ' this.mdl.name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' traces.'];
            if nargout ==0
-           disp(st);
+               disp(st);
            end
         end
+         
+        function changed = get_checksum(this)
+            try
+                load_system(this.mdl.name);
+                chs = Simulink.BlockDiagram.getChecksum(this.mdl.name);
+                close_system(this.mdl.name);
+                changed  = ~isequal(this.mdl.checksum, chs); 
+                this.mdl.checksum = chs;
+            catch
+                warning('BreachSimulinkSystem:get_checksum_failed', 'Simulink couldn''t compute a checksum for the model.');
+                this.addStatus(0, 'BreachSimulinkSystem:get_checksum_failed', 'Simulink couldn''t compute a checksum for the model.')
+            end
+        end
         
+        function disable_checksum_warn(this)
+            warning('off', 'BreachSimulinkSystem:get_checksum_failed');
+        end
+                   
+        %% Export result
+        function [summary, traces] = ExportTracesToStruct(this,i_traces, varargin)
+            % BreachSimulinkSystem.ExportTracesToStruct
+            
+            summary = [];
+            traces = [];
+            if ~this.hasTraj()
+                warning('Breach:ExportTrace:no_trace', 'No trace to export - run Sim command first');
+                return;
+            end
+            
+            num_traces = numel(this.P.traj);
+            if nargin==1
+                i_traces = 1:num_traces;
+            end
+            
+            % Additional options
+            options = struct('FolderName', []);
+            options = varargin2struct(options, varargin{:});
+            
+            if isempty(options.FolderName)
+                options.FolderName = [this.mdl.name '_Results_' datestr(now, 'dd_mm_yyyy_HHMM')];
+            end
+            
+            %% Common stuff
+            % model information
+            model_info = this.mdl;
+            
+            % parameter names
+            param_names = this.GetSysParamList();
+            
+            % input signal names
+            signal_names= this.GetSignalNames();
+            idx =  this.GetInputSignalsIdx();
+            input_names = signal_names(idx);
+            
+            % input param names
+            idxp = this.GetParamsInputIdx();
+            input_params = this.P.ParamList(idxp);
+            
+            % signal generators
+            for is  = 1:numel(input_names)
+                   signal_gen_types{is} = class(this.InputGenerator.GetSignalGenFromSignalName(input_names{is}));
+            end
+            
+            % signal names
+            signal_names = setdiff(signal_names, input_names);
+            
+            if isfield(this.P,'props_names')
+                spec_names = this.P.props_names;
+            end
+            
+            %% traces
+            for it = i_traces
+                
+                % model info
+                traces(it).model_info = model_info;
+                
+                % params
+                traces(it).params.names = param_names;
+                traces(it).params.values = this.GetParam(param_names,it)';
+                
+                % time
+                traces(it).time = this.P.traj{it}.time;
+                
+                % input signals
+                traces(it).inputs.names = input_names;
+                traces(it).signal_generators = signal_gen_types;
+                traces(it).inputs.param.names = input_params;
+                traces(it).inputs.param.values = this.GetParam(input_params, it);
+                traces(it).inputs.values =  this.GetSignalValues(input_names, it);
+                
+                % signals
+                traces(it).signals.names =signal_names;
+                traces(it).signals.time = this.P.traj{it}.time;
+                traces(it).signals.values = this.GetSignalValues(signal_names, it);
+                
+                % specifications
+                if isfield(this.P,'props_names')
+                    traces(it).specs.ids = spec_names;
+                    for ip = 1:numel(this.P.props_names)
+                        traces(it).specs.stl_formula{ip} = disp(this.P.props(ip));
+                        traces(it).specs.stl_formula_full{ip} = disp(this.P.props(ip),0);
+                        params = get_params(this.P.props(ip));
+                        traces(it).specs.params(ip).names = fieldnames(params);
+                        traces(it).specs.params(ip).values = this.GetParam(fieldnames(params), it)';
+                        
+                        traces(it).specs.rob(ip).time =this.P.props_values(ip, it).tau;
+                        traces(it).specs.rob(ip).values =  this.P.props_values(ip, it).val;
+                        traces(it).specs.status(ip) =  this.P.props_values(ip, it).val(1)>=0;
+                    end
+                end
+                
+            end
+            summary.model_info = model_info;
+            summary.date = datestr(now);
+            summary.num_traces = num_traces;
+            summary.test_params.names = this.GetBoundedDomains();
+            summary.input_generators = signal_gen_types;
+            summary.test_params.values = this.GetParam(summary.test_params.names);
+
+            summary.const_params.names = setdiff( this.P.ParamList(this.P.DimX+1:end), this.GetBoundedDomains())';
+            summary.const_params.values = this.GetParam(summary.const_params.names,1)';
+
+            
+            if isfield(this.P, 'props')
+                summary.specs.names = spec_names;
+                this.SortbyRob();
+                this.SortbySat();
+                summary.specs.rob = this.GetSatValues();
+                summary.specs.sat = summary.specs.rob>=0;
+                summary.num_sat = - sum( ~summary.specs.sat, 1  );
+            end
+            
+            
+        end
+   
         
-        
+        function [success, msg, msg_id] = SaveResults(this, folder_name, varargin) 
+            % Additional options
+            options = struct('FolderName', folder_name, 'SaveBreachSystem', true, 'ExportToExcel', false, 'ExcelFileName', 'Results.xlsx');
+            options = varargin2struct(options, varargin{:});
+            
+            if isempty(options.FolderName)
+                options.FolderName = [this.mdl.name '_Results_' datestr(now, 'dd_mm_yyyy_HHMM')];
+            end
+            
+            folder_name = options.FolderName;
+            [success,msg,msg_id] = mkdir(folder_name);
+            trace_folder_name = [folder_name filesep 'traces']; 
+            [success,msg,msg_id] = mkdir(trace_folder_name);
+
+            if success == 1
+                if isequal(msg_id, 'MATLAB:MKDIR:DirectoryExists')
+                    this.disp_msg(['Using existing result folder at ' folder_name]);
+                else
+                    this.disp_msg(['Created result folder at ' folder_name]);
+                end
+                this.log_folder = folder_name;
+            else
+                error(['Couldn''t create folder'  folder_name '.']);
+            end
+   
+            [summary, traces] = this.ExportTracesToStruct();
+            %saving summary
+            summary_filename = [folder_name filesep 'summary'];
+            save(summary_filename,'-struct', 'summary'); 
+   
+            if  options.SaveBreachSystem
+                breachsys_filename  = [folder_name filesep 'breach_system'];
+                breachsys_name = this.whoamI;
+                evalin('base', ['save(''' breachsys_filename ''', ''' breachsys_name  ''');'] );
+            end
+            
+            for it=1:numel(traces)
+                trace_filename = [trace_folder_name filesep num2str(it) '.mat'];
+                trace = traces(it);
+                save(trace_filename,'-struct', 'trace');
+            end
+            
+            if options.ExportToExcel
+                excel_file = [folder_name filesep options.ExcelFileName];
+                copyfile('../../Toolboxes/ExportResults/BreachResults_template.xlsx', excel_file);
+                xlswrite(excel_file, summary.num_sat', 1, 'A2');
+                xlswrite(excel_file, [summary.specs.names summary.test_params.names], 1, 'B1');
+                xlswrite(excel_file, [summary.specs.rob' summary.test_params.values'], 1, 'B2');
+                this.disp_msg(['Summary written into ' excel_file]);
+            end
+            
+        end     
         
     end
     
