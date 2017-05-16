@@ -1,4 +1,4 @@
-# New Release
+# Release 1.2.4
 
 ## Users 
 - Changed CHANGELOG to CHANGELOG.md
