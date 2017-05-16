@@ -114,15 +114,19 @@ classdef BreachSignalGen < BreachSystem
         end
         
         function sg = GetSignalGenFromSignalName(this, sig_name)
-        % GetSignalGenFromSignalName(this, sig_name) only works for one
-        % dimensional signal generators so far
-            for  is = 1:numel(this.Sys.DimX) 
-                if strcmp(this.signalGenerators{is}.signals{1}, sig_name)  
-                   sg = this.signalGenerators{is};
-                   return;
+            % GetSignalGenFromSignalName(this, sig_name) only works for one
+            % dimensional signal generators so far
+            for  is = 1:numel(this.Sys.DimX)
+                
+                for isg = 1:numel(this.signalGenerators)
+                    ll = strcmp(this.signalGenerators{isg}.signals, sig_name);
+                    if any(ll)
+                        sg = this.signalGenerators{isg};
+                        return;
+                    end
                 end
-            end  
-            error('signal not found.');
+                error('GetSignalGenFromSignalName:signal_not_found.', 'No signal generator generates this signal.');
+            end
         end
     end
 end

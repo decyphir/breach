@@ -104,7 +104,7 @@ if strcmp(Sys.type,'traces') % No model
     end
 elseif(isfield(P0,'traj_to_compute') &&...    
         ~isempty(P0.traj_to_compute) && ~isequal(P0.traj_to_compute,1:size(P0.pts,2))&&... % some traces have already be computed
-         isfield(P0, 'traj')&&~isempty(P0.traj)&&isequal(P0.traj(1).time, tspan))     %  some traces have been computed on the same tspan
+         isfield(P0, 'traj')&&~isempty(P0.traj)&&isequal(P0.traj{1}.time, tspan))     %  some traces have been computed on the same tspan
     % Here, we assume:
     % 1/ that the index of a param vector is not in traj_to_compute if
     % there is a valid simulation for this param vector

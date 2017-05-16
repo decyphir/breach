@@ -1525,7 +1525,7 @@ else % only one traj needs to be computed
     Btmp.Sim(tspan);
     
     traj_ref = handles.BrSys.P.traj_ref;
-    handles.BrSys.P.traj{traj_ref(handles.current_pts)} = Btmp.P.traj;
+    handles.BrSys.P.traj{traj_ref(handles.current_pts)} = Btmp.P.traj{1};
     handles.BrSys.P.Xf(:,traj_ref(handles.current_pts)) = Btmp.P.traj{1}.X(:,end);
     
     % This is needed if, e.g., ComputeTraj called an init_fun which changed

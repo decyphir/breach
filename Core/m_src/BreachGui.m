@@ -407,13 +407,6 @@ function handles = update_sample_args(handles)
          case 4
              handles.sample_arg_method = 'quasi-random';
      end
-     
-     
-     
-
-
-
-
 
 % --- Executes during object creation, after setting all properties.
 function edit_num_samples_CreateFcn(hObject, eventdata, handles)
@@ -441,6 +434,9 @@ function button_new_set_Callback(hObject, eventdata, handles)
     assignin('base', new_name, handles.working_sets.(new_name));
 
     handles = update_working_sets_panel(handles);
+    handles = update_properties_panel(handles);
+    handles = update_modif_panel(handles);
+
     guidata(hObject,handles);
 
 % --------------------------------------------------------------------
@@ -1561,7 +1557,7 @@ try
     handles.properties = rmfield(handles.properties,st);
     
     Br = handles.working_sets.(handles.current_set);
-    Br.P = SPurge_Props(Br.P);
+    Br.P = SPurge_props(Br.P);
     Br.Specs.remove(st);
     
     handles = update_properties_panel(handles);
@@ -2397,6 +2393,7 @@ function button_reset_Callback(hObject, eventdata, handles)
 Br = handles.working_sets.(handles.current_set);
 Br.ResetParamSet();
 handles = update_working_sets_panel(handles);
+handles = update_properties_panel(handles);
 handles = update_modif_panel(handles);
 guidata(hObject,handles);
 
