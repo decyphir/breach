@@ -401,7 +401,9 @@ classdef BreachSystem < BreachSet
                      
             switch(nargin)
                 case 2
-                    this.CheckSpec(phi);
+                    if isempty(this.GetSatValues(phi))
+                        this.CheckSpec(phi);
+                    end
                     figure;
                     SplotProp(this.P, phi, options);
                     return;

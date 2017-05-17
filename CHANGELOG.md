@@ -1,3 +1,10 @@
+# Release 1.2.5
+
+## Bugfixes
+- Fixed bug in STL_ExtractSignal (quotes around varname)
+- Fixed PlotRobusMap changing order of props_names (Issue 14)
+ 
+
 # Release 1.2.4
 
 ## Users 
