@@ -1,10 +1,19 @@
+# Release 1.2.6
+
+## Users 
+- GetSignalValues can collect values from one or a subset of traces instead of all available
+
+## Bugfixes
+- Fixed ExportTracesToStruct  output (time series for data)
+- Fixed Excel template path 
+- Fixed PlotParam
+
 # Release 1.2.5
 
 ## Bugfixes
 - Fixed bug in STL_ExtractSignal (quotes around varname)
 - Fixed PlotRobusMap changing order of props_names (Issue 14)
  
-
 # Release 1.2.4
 
 ## Users 

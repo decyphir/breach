@@ -388,28 +388,33 @@ classdef BreachSet < BreachStatus
         end
         
         
-        function X = GetSignalValues(this, iX, t)
-            % Get signal values - in case of several trajectories, return cell array
+        function X = GetSignalValues(this, signals, itraj, t)
+            % BreachSet.GetSignalValues(signals, idx_traces, time) - in case of several trajectories, return cell array
             if (~isfield(this.P,'traj'))
                 error('GetTrajValues:NoTrajField','Compute/import trajectories first.')
             end
             
-            if ischar(iX) || iscell(iX)
-                iX = FindParam(this.P, iX);
+            if ischar(signals) || iscell(signals)
+                signals = FindParam(this.P, signals);
             end
             
-            nb_traj = numel(this.P.traj);
+            if ~exist('itraj','var')
+              itraj= 1:numel(this.P.traj);
+            end
+            
+            nb_traj = numel(itraj);
+            
             X = cell(nb_traj,1);
             for i_traj = 1:nb_traj
                 if (~exist('t','var'))
-                    X{i_traj} = this.P.traj{i_traj}.X(iX,:);
+                    X{i_traj} = this.P.traj{i_traj}.X(signals,:);
                 else
-                    X{i_traj} = interp1(this.P.traj{i_traj}.time, this.P.traj{i_traj}.X(iX,:)',t)';
-                    if numel(iX)==1
+                    X{i_traj} = interp1(this.P.traj{i_traj}.time, this.P.traj{i_traj}.X(signals,:)',t)';
+                    if numel(signals)==1
                         X{i_traj} = X{i_traj}';
                     end
                 end
-                
+       
             end
             if nb_traj==1
                 X = X{1};
