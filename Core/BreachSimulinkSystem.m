@@ -815,6 +815,9 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             % signal names
             signal_names = setdiff(signal_names, input_names);
             
+            % system parameters (non-input)
+            sysparams_names = setdiff(param_names, input_params);
+            
             if isfield(this.P,'props_names')
                 spec_names = this.P.props_names;
             end
@@ -826,23 +829,23 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 traces(it).model_info = model_info;
                 
                 % params
-                traces(it).params.names = param_names;
-                traces(it).params.values = this.GetParam(param_names,it)';
+                traces(it).params.names = sysparams_names;
+                traces(it).params.values = this.GetParam(sysparams_names,it)';
                 
                 % time
                 traces(it).time = this.P.traj{it}.time;
                 
                 % input signals
                 traces(it).inputs.names = input_names;
-                traces(it).signal_generators = signal_gen_types;
-                traces(it).inputs.param.names = input_params;
-                traces(it).inputs.param.values = this.GetParam(input_params, it);
+                traces(it).inputs.signal_generators = signal_gen_types;
+                traces(it).inputs.params.names = input_params;
+                traces(it).inputs.params.values = this.GetParam(input_params, it);
                 traces(it).inputs.values =  this.GetSignalValues(input_names, it);
                 
                 % signals
-                traces(it).signals.names =signal_names;
-                traces(it).signals.time = this.P.traj{it}.time;
-                traces(it).signals.values = this.GetSignalValues(signal_names, it);
+                traces(it).outputs.names =signal_names;
+                %traces(it).outputs.time = this.P.traj{it}.time;
+                traces(it).outputs.values = this.GetSignalValues(signal_names, it);
                 
                 % specifications
                 if isfield(this.P,'props_names')
@@ -929,7 +932,10 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             
             if options.ExportToExcel
                 excel_file = [folder_name filesep options.ExcelFileName];
-                copyfile('../../Toolboxes/ExportResults/BreachResults_template.xlsx', excel_file);
+                global BreachGlobOpt
+                breach_dir = BreachGlobOpt.breach_dir;
+                template_file_path = [breach_dir filesep 'Ext' filesep 'Toolboxes' filesep 'ExportResults' filesep 'BreachResults_template.xlsx'];
+                copyfile(template_file_path, excel_file);
                 xlswrite(excel_file, summary.num_sat', 1, 'A2');
                 xlswrite(excel_file, [summary.specs.names summary.test_params.names], 1, 'B1');
                 xlswrite(excel_file, [summary.specs.rob' summary.test_params.values'], 1, 'B2');

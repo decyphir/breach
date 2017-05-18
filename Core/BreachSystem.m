@@ -286,7 +286,6 @@ classdef BreachSystem < BreachSet
         
         function PlotRobustSat(this, phi, depth, tau, ipts)
             % Plots satisfaction signal
-
             
             % check arguments
             if(~exist('ipts','var')||isempty(ipts))
@@ -335,7 +334,6 @@ classdef BreachSystem < BreachSet
                     ylabel(params{2}, 'Interpreter', 'None');
                     zlabel(params{3}, 'Interpreter', 'None');
                     grid on;
-            
             end
             title_st = [get_id(phi) ' satisfied by '...
                 num2str(numel(find(val>0))) '/' num2str(numel(val)) ' tests'
@@ -359,7 +357,6 @@ classdef BreachSystem < BreachSet
                 end
                 spec_monitored = ~isempty(iprop);
             end
-            
             
             if spec_monitored
                 for ip = iprop
@@ -401,7 +398,9 @@ classdef BreachSystem < BreachSet
                      
             switch(nargin)
                 case 2
-                    this.CheckSpec(phi);
+                    if isempty(this.GetSatValues(phi))
+                        this.CheckSpec(phi);
+                    end
                     figure;
                     SplotProp(this.P, phi, options);
                     return;
@@ -413,9 +412,11 @@ classdef BreachSystem < BreachSet
                 this.P = CreateParamSet(this.P, params, ranges);
                 this.P = Refine(this.P, delta,1);
             end
-            
-            this.Sim();
-            this.CheckSpec(phi); 
+
+            if isempty(this.GetSatValues(phi))
+                this.Sim();
+                this.CheckSpec(phi);
+            end
             
             Pf = this.P; 
             iparams = FindParam(this.P, params);
