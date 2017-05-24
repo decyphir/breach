@@ -1,5 +1,5 @@
 function res = FevalInit(this,X0)
-% FEvaliInit Eval objective function on parameters in BrSys
+% FEvalInit Eval objective function on parameters in BrSys
 
 if ~exist('X0', 'var')
     X0 = this.BrSet.GetParam(this.params);
@@ -54,8 +54,10 @@ end
 [fopt,iopt] = min(fval);
 xopt = X0(:,iopt);
 
-this.x_best = xopt;
-this.obj_best = fopt;
+if fopt < this.obj_best
+    this.x_best = xopt;
+    this.obj_best = fopt;
+end
 
 %           res = struct('x',this.x_best,'f', this.obj_best,'fval', this.obj_log);
 res = struct('x',xopt,'f', fopt, 'fval', fval);

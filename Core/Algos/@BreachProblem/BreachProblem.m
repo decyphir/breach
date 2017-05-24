@@ -165,17 +165,21 @@ classdef BreachProblem < BreachStatus
                 ub__ = ranges(:,2);
 
                 % if range is singular, assumes unconstrained - probably a
-                % bad idea
-                issame  = find(ub__-lb__==0);
-                lb__(issame) = -inf;
-                ub__(issame) = inf;
+                % bad idea. Yep. Let's stop this nonsense. Shouldn't be
+                % needed anymore with domains. 
+
+                %issame  = find(ub__-lb__==0);
+                %lb__(issame) = -inf;
+                %ub__(issame) = inf;
             else
                 lb__ = ranges(:,1);
                 ub__ = ranges(:,2);
                 this.BrSet.SetParam(params, 0.5*(ranges(:,2)-ranges(:,1)), true); % adds parameters if they don't exist 
+                this.BrSet.ResetDomains();
                 this.BrSet.SetDomain(params, 'double', ranges);
+            
             end
-                       
+           
             this.lb = lb__;
             this.ub = ub__;
             

@@ -332,14 +332,7 @@ classdef BreachSet < BreachStatus
             prop_params = this.P.ParamList(this.P.DimP+1:end);
         end
         
-        
-        
-        
-        function ResetEpsi(this)
-            % (Legacy) Set param ranges around individual parameter vectors to zero
-            this.P.epsi(:,:) = 0;
-        end
-        
+          
         %% Signals
         function traces = GetTraces(this)
             % Get computed trajectories
@@ -862,8 +855,12 @@ classdef BreachSet < BreachStatus
             bl=isfield(this.P, 'traj');
         end
         
+        
+        %% Reset functions - will need some cleaning and rationalizing eventually
+        
         function Reset(this) 
             % BreachSet.Reset()   
+            
             this.P = Sselect(this.P,1);
             this.P = CreateParamSet(this.P);
             try 
@@ -883,6 +880,17 @@ classdef BreachSet < BreachStatus
             this.resetStatus();
         end
         
+        function ResetEpsi(this)
+            % (Legacy) Set param ranges around individual parameter vectors to zero
+            this.P.epsi(:,:) = 0;
+        end
+        
+        function ResetDomains(this)
+        %      
+            for id = 1:numel(this.Domains)
+                this.Domains(id).domain = [];
+            end
+        end
         
         function ResetSimulations(this)
             % Removes computed trajectories

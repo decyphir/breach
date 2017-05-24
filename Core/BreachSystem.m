@@ -359,8 +359,8 @@ classdef BreachSystem < BreachSet
             end
             
             if spec_monitored
-                for ip = iprop
-                    prop_values = this.P.props_values(ip,:);
+                for ip =1:numel(iprop)
+                    prop_values = this.P.props_values(iprop(ip),:);
                     vali  = cat(1, prop_values.val);
                     val(ip,:) = vali(:,1);
                 end

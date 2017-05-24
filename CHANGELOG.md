@@ -1,3 +1,14 @@
+# Release 1.2.7
+
+## Bugfixes
+- GetSatValues not returning the proper values (caused issue #14)
+- BreachProblem with 4 arguments not properly setting  domains (issue #19)
+- Fixed issue with signal builder parameters that should be ignored in sim_breach (issue #19) 
+- Fixed bug in BreachProblem that was converting singular domains into unbounded ones (issue #18)
+
+## Developper
+- FEvalInit now updates obj_best and x_best fields rather than setting it
+
 # Release 1.2.6
 
 ## Users 
