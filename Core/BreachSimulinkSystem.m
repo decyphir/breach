@@ -23,8 +23,6 @@ classdef BreachSimulinkSystem < BreachOpenSystem
     %   generation. By default, a constant input generator is created for
     %   each input of the model. Use SetInputGen method to set a different input.
     %
-    %
-    %
     
     %See also BreachOpenSystem, signal_gen
     
@@ -105,10 +103,6 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             this.use_parallel = 1;
             gcp;
             this.Sys.Parallel = 1;
-            spmd
-                gcs;   % loads simulink
-                warning('off', 'Simulink:Commands:MdlFileChangedCloseManually'); % FIXME find out where the model is changed and not saved...
-            end
         end
         
         function [sig_in, sig_out, sig_fw, params, sig_build_params] = CreateInterface(this, mdl, params, p0, signals)
@@ -430,9 +424,11 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             % builders, and map to the corresponding block
             keys = this.ParamSrc.keys();
             for ik = 1:numel(keys)
-                ipts = FindParam(this.Sys, keys{ik});
-                sb = this.ParamSrc(keys{ik});
-                signalbuilder(sb, 'activegroup', pts(ipts));             
+                [ipts, p_found] = FindParam(this.Sys, keys{ik});
+                if p_found 
+                    sb = this.ParamSrc(keys{ik});
+                    signalbuilder(sb, 'activegroup', pts(ipts));
+                end
             end
             
             assignin('base','tspan',tspan);
