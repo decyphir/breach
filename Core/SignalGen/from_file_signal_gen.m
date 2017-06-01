@@ -7,7 +7,7 @@ classdef from_file_signal_gen < signal_gen
     end
     methods
         function this = from_file_signal_gen(signals, fname, varname, data_fmt)
-            
+          
             if ~exist('fname', 'var')
                 fname=  '*.mat';
             end
@@ -25,10 +25,6 @@ classdef from_file_signal_gen < signal_gen
                 varname = signals{1};
             end
             
-            if (nargin >= 4)  
-                this.data_fmt = data_fmt;
-            end
-            
             this.file_name = fname;
             this.var_name= varname;
             
@@ -37,7 +33,7 @@ classdef from_file_signal_gen < signal_gen
                 pathstr = fileparts(fname{ifn}); % dir does not keep the path...
                 for ifnl = 1:numel(dir_file_list)
                     if ~isempty(pathstr)
-                        dir_file_list(ifnl).name = [pathstr filesep dir_file_list(ifnl).name];
+                    dir_file_list(ifnl).name = [pathstr filesep dir_file_list(ifnl).name];
                     end
                 end
                 if isempty(this.file_list)
@@ -49,8 +45,10 @@ classdef from_file_signal_gen < signal_gen
             
             this.params = {'file_idx'};
             this.p0 = 1;
-            this.params_domain = BreachDomain('int', [1 numel(this.file_list)]);
-            if nargin==3 
+            this.params_domain = BreachDomain('enum', [1 numel(this.file_list)]);
+            this.params_domain.domain=[]; 
+            
+            if nargin==3
                 this.data_fmt = 'timed_array';
                 this.var_name = varname;
             end
@@ -73,17 +71,16 @@ classdef from_file_signal_gen < signal_gen
                     for isig = 1:numel(this.signals)
                         % assumes that signals are in variable with [time  values]
                         try
-                            sig = st.(this.var_name{isig});
-                            t_sig =  sig(:,1);
-                            v_sig = sig(:,2);
-                            x = interp1(t_sig, v_sig, time', 'linear', 'extrap');
-                            X(isig, :) = x';
+                        sig = st.(this.signals{isig});
+                        t_sig =  sig(:,1);
+                        v_sig = sig(:,2);
+                        x = interp1(t_sig, v_sig, time', 'linear', 'extrap');
+                        X(isig, :) = x';
                         catch
                             warning(['Could not read variable ' this.signals{isig} '. Returning NaN'] )
                             X(isig, :) = NaN;
                         end
                     end
-                    
                 case 'timed_array'
                     
                     for isig = 1:numel(this.signals)
@@ -97,13 +94,13 @@ classdef from_file_signal_gen < signal_gen
                     
                     
             end
-            
+           
             
         end
         
-        
-        function args = getSignalGenArgs(this)
-            args = {'file_name','var_name'};
+     
+       function args = getSignalGenArgs(this)
+            args = {'file_name','var_name'};         
         end
         
         

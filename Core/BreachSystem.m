@@ -347,7 +347,7 @@ classdef BreachSystem < BreachSet
             
         end
         
-        function val = GetSatValues(this, spec)
+        function val = GetSatValues(this, spec, params)
             spec_monitored = isfield(this.P, 'props');
             if spec_monitored
                 if nargin ==2

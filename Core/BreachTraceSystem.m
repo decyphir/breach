@@ -151,8 +151,11 @@ classdef BreachTraceSystem < BreachSystem
         end
         
         
-        function disp(this)
-            disp(['BreachTraceSystem with ' num2str(this.CountTraces()) ' traces.']);
+        function st = disp(this)
+            st = ['BreachTraceSystem with ' num2str(this.CountTraces()) ' traces.'];
+            if nargout<1
+                disp(st);
+            end
         end
         
     end
