@@ -1,10 +1,16 @@
 # Release 1.2.8
 
 ## Users
+- Minor changes in Excel exported from SaveResults  
 - GenDoc function to generate html documentation from a set of script
+
+## Bugfix
+ - SaveResults now uses v7.3 format for large files
+- Fixed issue in Autotrans_tutorial  
 
 ## Developpers
 - new function get_breach_path 
+- CleanModelsData erase stuff in Ext/ModelsData folder 
 
 # Release 1.2.7
 

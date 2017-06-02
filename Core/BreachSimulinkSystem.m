@@ -84,8 +84,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 st = datestr(now,'ddmmyy-HHMM');
                 folder_name = [this.Sys.Dir filesep this.mdl.name '-' st]; 
             end
-            
-            [success,msg,msg_id] = mkdir(folder_name);           
+            [success,msg,msg_id] = mkdir(folder_name);
             if success == 1
                 if isequal(msg_id, 'MATLAB:MKDIR:DirectoryExists')
                     this.disp_msg(['Using existing logging folder at ' folder_name]);
@@ -917,7 +916,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             if  options.SaveBreachSystem
                 breachsys_filename  = [folder_name filesep 'breach_system'];
                 breachsys_name = this.whoamI;
-                evalin('base', ['save(''' breachsys_filename ''', ''' breachsys_name  ''');'] );
+                evalin('base', ['save(''' breachsys_filename ''', ''' breachsys_name  ''', ''-v7.3'');'] );
             end
             
             for it=1:numel(traces)
@@ -932,9 +931,21 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 breach_dir = BreachGlobOpt.breach_dir;
                 template_file_path = [breach_dir filesep 'Ext' filesep 'Toolboxes' filesep 'ExportResults' filesep 'BreachResults_template.xlsx'];
                 copyfile(template_file_path, excel_file);
-                xlswrite(excel_file, summary.num_sat', 1, 'A2');
-                xlswrite(excel_file, [summary.specs.names summary.test_params.names], 1, 'B1');
-                xlswrite(excel_file, [summary.specs.rob' summary.test_params.values'], 1, 'B2');
+               
+                % Write header
+                for ispec = 1:numel(summary.specs.names)
+                      hdr{ispec} = ['Req. ' num2str(ispec)];
+                end 
+                for iparam = ispec+1:ispec+numel(summary.test_params.names)
+                     hdr{iparam} = ['param. ' num2str(iparam-ispec) ];
+                end
+                xlswrite(excel_file, hdr, 1, 'B1');
+                xlswrite(excel_file, [summary.specs.names summary.test_params.names], 1, 'B2');
+                xlswrite(excel_file, [summary.specs.names summary.test_params.names], 1, 'B2');
+
+                % Write data
+                xlswrite(excel_file, [ summary.num_sat' summary.specs.rob' summary.test_params.values'] , 1, 'A3');
+               
                 this.disp_msg(['Summary written into ' excel_file]);
             end
             

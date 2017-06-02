@@ -1,4 +1,4 @@
-function [index_path, success, msg, msg_id, log] = GenDoc(list_scripts, log_file, varargin)
+function [index_path, success, msg, msg_id, log] = GenDoc(list_scripts, varargin)
 %  GenDoc takes a list of scripts and create html documentation
 
 InitBreach;
@@ -13,11 +13,12 @@ publish_dir = [get_breach_path( ) filesep 'Doc' ];
 
 options = struct('format', 'html', 'PublishDir', publish_dir);
 if ~isempty(varargin)
-    options = varargin2struct(options, varargin);
+    options = varargin2struct(options, varargin{:});
 end
 
 docrun_map = CreateDocRunMap(list_scripts, options.PublishDir);
 
+% Not sure we need the following
 if exist('log_file','var')
     [fid, msg] = fopen( log_file, 'w');
     if isequal(fid,-1)
@@ -28,7 +29,7 @@ else
 end
 
 if ischar(list_scripts)
-    list_scripts = { list_script};
+    list_scripts = { list_script };
 end
 
 %% if html, create index
@@ -115,7 +116,7 @@ for i_sc = 1:num_flds
 end
 log = [log '--------------------------------------------------------------------\n'];
 
-fprintf(log);
+fprintf('--------------------------------------------------------------------\n');
 if ~isempty(fid)
     fclose(fid);
 end
