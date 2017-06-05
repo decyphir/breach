@@ -84,6 +84,7 @@ classdef BreachOpenSystem < BreachSystem
                for itraj = 1:numel(this.P.traj)
                    hash_traj = DataHash({this.Sys.ParamList, this.P.traj{itraj}.param, this.P.traj{itraj}.time});
                    log_traj_filename = [this.log_folder filesep 'traj_' hash_traj '.mat'];
+                   pwd
                    log_traj = matfile(log_traj_filename);
                    log_traj.param = this.P.traj{itraj}.param;
                    log_traj.time = this.P.traj{itraj}.time;

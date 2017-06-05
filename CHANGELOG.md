@@ -1,3 +1,17 @@
+# Release 1.2.8
+
+## Users
+- Minor changes in Excel exported from SaveResults  
+- GenDoc function to generate html documentation from a set of script
+
+## Bugfix
+ - SaveResults now uses v7.3 format for large files
+- Fixed issue in Autotrans_tutorial  
+
+## Developpers
+- new function get_breach_path 
+- CleanModelsData erase stuff in Ext/ModelsData folder 
+
 # Release 1.2.7
 
 ## Bugfixes
@@ -6,7 +20,7 @@
 - Fixed issue with signal builder parameters that should be ignored in sim_breach (issue #19) 
 - Fixed bug in BreachProblem that was converting singular domains into unbounded ones (issue #18)
 
-## Developper
+## Developpers
 - FEvalInit now updates obj_best and x_best fields rather than setting it
 
 # Release 1.2.6

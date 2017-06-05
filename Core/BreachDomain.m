@@ -1,17 +1,18 @@
 classdef BreachDomain
-    % BreachDomain Implements types and fundamental sets
-    %  Instead of having switch everywhere, should probably consider derived
-    %  classes
-  
+    % BreachDomain Implements types and fundamental sets. 
+    %
+    %  TODO error handling when intersection of domain and enum is empty 
+    
     properties
-        type='double'
-        domain
-        enum
+        type='double' % can be 'int', 'bool', 'enum', 'double'
+        domain            % TODO should always be an interval, empty means singleton
+        enum               % TODO should only be used with type enum
     end
     
     methods
-        function this = BreachDomain(type, domain)
+        function this = BreachDomain(type, domain,enum)
         % BreachDomain(type, domain) 
+        % 
         
             if nargin>1 && isempty(domain)
                 domain=[];
@@ -43,10 +44,10 @@ classdef BreachDomain
                             error('BreachDomain:wrong_type', 'BreachDomain first argument should be the string ''double'', ''int'', ''enum'' or ''bool'', or an interval.')
                         end
                     else
-                        
                         this.type  = type;
                         this.domain = domain;
                     end
+                case 3 % only used for enum: define a dom
             end
             
             % init enum (I feel this will explode on me some day)
@@ -75,7 +76,8 @@ classdef BreachDomain
             bool = isequal(this.type, 'double') && isempty(this.domain);
         end
         
-        function new_x  = checkin(this,x)
+        function [new_x, is_in, dist]   = checkin(this,x)
+        % BreachDomain.checkin(x) checks      
             switch this.type
                 case 'int'
                     new_x = this.checkin_int(x);
@@ -86,7 +88,20 @@ classdef BreachDomain
                 case 'double'
                     new_x =   this.checkin_double(x); % mostly out of bounds
             end
-        end
+            
+            if nargout >= 2
+                    is_in = isequal(x,new_x);
+            end
+            if nargout>= 3
+                if is_in % signed distance
+                    
+                else
+                    
+                end
+                dist =d;
+                    
+            end
+         end
         
         function new_x = checkin_int(this,x)
             if isempty(this.domain)
