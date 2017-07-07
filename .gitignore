@@ -26,3 +26,4 @@ toggleHighDPISupport.p
 *.bck
 *.bckup
 html
+standard-release.sh

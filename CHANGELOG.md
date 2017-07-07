@@ -1,10 +1,27 @@
+# Release 1.2.9
+
+## Users
+- STL_ReadFile now supports parameters overriding existing functions, mex-files, etc (e.g., x[t]>eps) 
+- PlotSatParams now shows superposed samples with different satisfaction values
+- GUI can be opened by BreachGUI command, without argument
+- GUI Check formula button sorts results by satisfaction and robustness
+- PlotSatParams has datacursormode on by default, shows parameter values and robustness 
+- SaveSignals method saves signals in a format that from_files_signal_gen can read easily 
+- Many changes in GUI
+
+## Bugfixes
+- GetSignalsValues with itraj would assume itraj=1 
+
+## Developpers
+- GetSatValues returns unique values and params as well as all values and non-unique params
+
 # Release 1.2.8
 
 ## Users
 - Minor changes in Excel exported from SaveResults  
 - GenDoc function to generate html documentation from a set of script
 
-## Bugfix
+## Bugfixes
  - SaveResults now uses v7.3 format for large files
 - Fixed issue in Autotrans_tutorial  
 
