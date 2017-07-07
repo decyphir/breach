@@ -1,4 +1,4 @@
-function voxel(i,d,c,alpha)
+function H = voxel(i,d,c,alpha)
 %VOXEL function to draw a 3-D voxel in a 3-D plot
 %
 % Synopsis: voxel(start,size,color,alpha);
@@ -42,7 +42,7 @@ end;
 x=[i(1)+[0 0 0 0 d(1) d(1) d(1) d(1)]; ...
     i(2)+[0 0 d(2) d(2) 0 0 d(2) d(2)]; ...
     i(3)+[0 d(3) 0 d(3) 0 d(3) 0 d(3)]]';
-
+H = [];
 for n=1:3
     if n==3,
         x=sortrows(x,[n,1]);
@@ -55,6 +55,7 @@ for n=1:3
     try
         h=patch(x(1:4,1),x(1:4,2),x(1:4,3),c);
         set(h,'FaceAlpha',alpha);
+        H = [H h];
     end
     temp=x(7,:);
     x(7,:)=x(8,:);
@@ -62,6 +63,7 @@ for n=1:3
     try
         h=patch(x(5:8,1),x(5:8,2),x(5:8,3),c);
         set(h,'FaceAlpha',alpha);
+        H = [H h];
     end
     
 end
