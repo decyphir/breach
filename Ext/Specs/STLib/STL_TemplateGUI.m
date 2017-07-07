@@ -75,14 +75,15 @@ handles.custom_phi=0;
 
 % Initialize listbox_stlib
 stlib = STL_ReadFile('stlib.stl');
-set(handles.listbox_stlib, 'String', stlib);
+
+set(handles.listbox_stlib, 'String', sort(stlib));
 
 % update template
 handles = update_tmp(handles);
 
 % Initialize formula
 handles.STL_Formula = handles.STL_Template; 
-set(handles.edit_STL_Formula,'String', disp(handles.STL_Formula));
+set(handles.edit_STL_Formula,'String', disp(handles.STL_Formula,1));
 handles.phi_id = 'phi_new';
 handles.auto_naming =1;
 handles= update_phi(handles);
@@ -385,7 +386,7 @@ if handles.auto_naming == 1
 else
     handles.STL_Formula=set_id(phi, handles.phi_id);
 end
-set(handles.edit_STL_Formula,'String', disp(phi,0));
+set(handles.edit_STL_Formula,'String', disp(phi,1));
 
 
 function handles = update_tmp(handles)
@@ -410,7 +411,7 @@ for sig = sig_templates
     handles.sigmap(sig{1}) = 1;
 end
 set(handles.popup_signame_template,'String', sig_templates);
-set(handles.edit_STL_Template,'String', disp(handles.STL_Template,0));
+set(handles.edit_STL_Template,'String', disp(handles.STL_Template,1));
 
 % Parameters
 params = get_params(phi_tmp);

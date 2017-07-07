@@ -177,11 +177,19 @@ end
 function phi = wrap_up(current_id, current_formula, new_params)
 phi = STL_Formula(current_id, current_formula);
 
-[~, params] = STL_ExtractSignals(phi);
+% looks for potential parameters in the formula that could be overriden by
+% new_params
+% Note: will let function names, mex-files etc be overriden  
+
+params = {};
+[~,~, ~, matches, tokens] = regexp(disp(phi,0), '(\<\w+\>)');
+for im=1:numel(matches)
+        params{end+1} = tokens{im}{1};
+end
 
 fn = fieldnames(new_params)';
 for np = fn
-   if ~any(strcmp(np{1},params))   
+   if ~any(strcmp(np{1},params))
        new_params = rmfield(new_params, np{1});
    else
        phi= set_params(phi, np{1}, new_params.(np{1}));

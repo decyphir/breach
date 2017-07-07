@@ -19,16 +19,6 @@ end
 
 if strcmp(phi.type, 'predicate')
     st = phi.st;
-%     
-%     if(opt) % ??
-%         fnames = fieldnames(phi.params);
-%         for i = 1:numel(fnames)
-%             if ~(strcmp(fnames{i}, 'pre_pred')||strcmp(fnames{i}, 'default_params')  ) 
-%                 st = regexprep(st,['\<' fnames{i} '\>'],num2str(phi.params.(fnames{i})));
-%             end
-%         end
-%     end
-    
 else
     st = form_string(phi,opt);
 end

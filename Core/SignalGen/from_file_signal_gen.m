@@ -45,8 +45,8 @@ classdef from_file_signal_gen < signal_gen
             
             this.params = {'file_idx'};
             this.p0 = 1;
-            this.params_domain = BreachDomain('enum', [1 numel(this.file_list)]);
-            this.params_domain.domain=[]; 
+            this.params_domain = BreachDomain('int', [1 numel(this.file_list)]);
+            %this.params_domain.domain=[]; 
             
             if nargin==3
                 this.data_fmt = 'timed_array';

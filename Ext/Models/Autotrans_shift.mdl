@@ -2,7 +2,7 @@ Model {
   Name			  "Autotrans_shift"
   Version		  8.5
   MdlSubVersion		  0
-  SavedCharacterEncoding  "ISO-8859-1"
+  SavedCharacterEncoding  "windows-1252"
   GraphicalInterface {
     NumRootInports	    2
     Inport {
@@ -32,7 +32,7 @@ Model {
       BusOutputAsStruct	      "off"
     }
     ParameterArgumentNames  ""
-    ComputedModelVersion    "1.275"
+    ComputedModelVersion    "1.276"
     NumModelReferences	    0
     NumTestPointedSignals   4
     TestPointedSignal {
@@ -87,7 +87,7 @@ Model {
       $ObjectID		      2
       $ClassName	      "Simulink.WindowInfo"
       IsActive		      [1]
-      Location		      [0.0, 23.0, 1920.0, 1053.0]
+      Location		      [781.0, 578.0, 2062.0, 1232.0]
       Object {
 	$PropName		"ModelBrowserInfo"
 	$ObjectID		3
@@ -111,9 +111,9 @@ Model {
 	IsActive		[1]
 	ViewObjType		"SimulinkTopLevel"
 	LoadSaveID		"0"
-	Extents			[1886.0, 883.0]
+	Extents			[2002.0, 949.0]
 	ZoomFactor		[1.9574665975066625]
-	Offset			[-97.897473501462059, 41.058835891812862]
+	Offset			[-97.897473501462059, 40.847898391812862]
       }
     }
   }
@@ -121,11 +121,11 @@ Model {
   Creator		  "The MathWorks Inc."
   UpdateHistory		  "UpdateHistoryNever"
   ModifiedByFormat	  "%<Auto>"
-  LastModifiedBy	  "alex"
+  LastModifiedBy	  "donze"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "Sun Jun 19 19:39:11 2016"
-  RTWModifiedTimeStamp	  388265943
-  ModelVersionFormat	  "1.%<AutoIncrement:275>"
+  LastModifiedDate	  "Fri Jul 07 09:59:05 2017"
+  RTWModifiedTimeStamp	  421322322
+  ModelVersionFormat	  "1.%<AutoIncrement:276>"
   ConfigurationManager	  "none"
   SampleTimeColors	  on
   SampleTimeAnnotations	  off
@@ -280,7 +280,7 @@ Model {
 	  InitialState		  "xInitial"
 	  LimitDataPoints	  off
 	  MaxDataPoints		  "1000"
-	  LoadExternalInput	  on
+	  LoadExternalInput	  off
 	  LoadInitialState	  off
 	  SaveFinalState	  off
 	  SaveCompleteFinalSimState off
@@ -722,7 +722,7 @@ Model {
       }
       Name		      "Configuration"
       CurrentDlgPage	      "Data Import//Export"
-      ConfigPrmDlgPosition     [ 182, 22, 1262, 723 ] 
+      ConfigPrmDlgPosition     [ 969, 740, 2075, 1512 ] 
     }
     PropName		    "ConfigurationSets"
   }
@@ -1030,7 +1030,7 @@ Model {
   }
   System {
     Name		    "Autotrans_shift"
-    Location		    [0, 23, 1920, 1076]
+    Location		    [781, 578, 2843, 1810]
     Open		    on
     ModelBrowserVisibility  off
     ModelBrowserWidth	    200
@@ -1221,7 +1221,7 @@ Model {
 	Annotation {
 	  SID			  "116"
 	  Name			  "Engine"
-	  Position		  [225, 152, 273, 170]
+	  Position		  [225, 152, 276, 170]
 	  InternalMargins	  [0, 0, 0, 0]
 	  FixedHeight		  off
 	  FixedWidth		  off
@@ -1362,6 +1362,7 @@ Model {
 	  FunctionName		  "sf_sfun"
 	  Parameters		  "TWAIT"
 	  PortCounts		  "[3 2]"
+	  EnableBusSupport	  on
 	  Port {
 	    PortNumber		    2
 	    Name		    "gear"
@@ -1586,7 +1587,7 @@ Model {
 	Annotation {
 	  SID			  "117"
 	  Name			  "Threshold Calculation"
-	  Position		  [212, 196, 360, 214]
+	  Position		  [212, 196, 367, 214]
 	  InternalMargins	  [0, 0, 0, 0]
 	  FixedHeight		  off
 	  FixedWidth		  off
@@ -1912,7 +1913,7 @@ Model {
 	    Annotation {
 	      SID		      "118"
 	      Name		      "Torque Converter"
-	      Position		      [297, 217, 415, 235]
+	      Position		      [297, 217, 424, 235]
 	      InternalMargins	      [0, 0, 0, 0]
 	      FixedHeight	      off
 	      FixedWidth	      off
@@ -2080,7 +2081,7 @@ Model {
 	    Annotation {
 	      SID		      "119"
 	      Name		      "Transmission Gear Ratio"
-	      Position		      [205, 213, 371, 231]
+	      Position		      [205, 213, 378, 231]
 	      InternalMargins	      [0, 0, 0, 0]
 	      FixedHeight	      off
 	      FixedWidth	      off
@@ -2166,7 +2167,7 @@ Model {
 	Annotation {
 	  SID			  "120"
 	  Name			  "Transmission"
-	  Position		  [237, 209, 329, 227]
+	  Position		  [237, 209, 332, 227]
 	  InternalMargins	  [0, 0, 0, 0]
 	  FixedHeight		  off
 	  FixedWidth		  off
@@ -2544,7 +2545,7 @@ Model {
 	Annotation {
 	  SID			  "121"
 	  Name			  "Vehicle"
-	  Position		  [447, 352, 504, 370]
+	  Position		  [447, 352, 505, 374]
 	  InternalMargins	  [0, 0, 0, 0]
 	  FixedHeight		  off
 	  FixedWidth		  off
@@ -2801,7 +2802,7 @@ Model {
     Annotation {
       SID		      "122"
       Name		      "Modeling an Automatic Transmission Controller"
-      Position		      [431, 60, 842, 83]
+      Position		      [431, 60, 850, 84]
       InternalMargins	      [0, 0, 0, 0]
       FixedHeight	      off
       FixedWidth	      off
@@ -2812,7 +2813,7 @@ Model {
     }
     Annotation {
       SID		      "123"
-      Position		      [653, 121, 655, 133]
+      Position		      [653, 121, 655, 136]
       InternalMargins	      [0, 0, 0, 0]
       FixedHeight	      off
       FixedWidth	      off
@@ -3257,31 +3258,6 @@ Stateflow {
   }
   transition {
     id			    24
-    labelString		    "[speed > down_th]"
-    labelPosition	    [131.216 211.56 81.301 13.363]
-    fontSize		    10
-    arrowSize		    10
-    src {
-      id		      3
-      intersection	      [2 1 0 0.2511 174.7018 230.694 0 0]
-    }
-    dst {
-      id		      11
-      intersection	      [3 0 1 0.8059 271.5466 184.3405 0 0]
-    }
-    midPoint		    [235.8157 224.6063]
-    chart		    2
-    linkNode		    [9 23 25]
-    dataLimits		    [174.702 274.547 184.34 230.82]
-    subviewer		    2
-    slide {
-      sticky		      BOTH_STICK
-    }
-    executionOrder	    2
-    ssIdNumber		    21
-  }
-  transition {
-    id			    25
     labelString		    "after(TWAIT,tick)\n[speed <= down_th]\n{gear_state.DOWN}"
     labelPosition	    [196.136 254.598 88.631 37.417]
     fontSize		    10
@@ -3296,7 +3272,7 @@ Stateflow {
     }
     midPoint		    [244.9922 233.2938]
     chart		    2
-    linkNode		    [9 24 26]
+    linkNode		    [9 23 25]
     dataLimits		    [174.702 286.803 184.34 244.658]
     subviewer		    2
     slide {
@@ -3304,6 +3280,31 @@ Stateflow {
     }
     executionOrder	    1
     ssIdNumber		    22
+  }
+  transition {
+    id			    25
+    labelString		    "[speed > down_th]"
+    labelPosition	    [131.216 211.56 81.301 13.363]
+    fontSize		    10
+    arrowSize		    10
+    src {
+      id		      3
+      intersection	      [2 1 0 0.2511 174.7018 230.694 0 0]
+    }
+    dst {
+      id		      11
+      intersection	      [3 0 1 0.8059 271.5466 184.3405 0 0]
+    }
+    midPoint		    [235.8157 224.6063]
+    chart		    2
+    linkNode		    [9 24 26]
+    dataLimits		    [174.702 274.547 184.34 230.82]
+    subviewer		    2
+    slide {
+      sticky		      BOTH_STICK
+    }
+    executionOrder	    2
+    ssIdNumber		    21
   }
   transition {
     id			    26

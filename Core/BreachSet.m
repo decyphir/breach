@@ -28,8 +28,11 @@ classdef BreachSet < BreachStatus
     %   PlotSignals         - plots signals vs time
     %   PlotSigPortrait     - plots signals portrait
      
-    properties
+    properties (SetObservable)
         P % legacy parameter structure - contains points data (in P.pts) and traces (P.traj) and many other fields whose purpose is slowly falling into oblivion
+    end
+    
+    properties
         Domains = BreachDomain('double', [])
         % will replace SignalRanges eventually (?)
         SignalRanges % ranges of values taken by each signal variable      
@@ -379,9 +382,8 @@ classdef BreachSet < BreachStatus
             % GetSignalList returns signal names
             signals = this.P.ParamList(1:this.P.DimX);
         end
-        
-        
-        function X = GetSignalValues(this, signals, itraj, t)
+          
+        function X = GetSignalValues(this, signals, itrajs, t)
             % BreachSet.GetSignalValues(signals, idx_traces, time) - in case of several trajectories, return cell array
             if (~isfield(this.P,'traj'))
                 error('GetTrajValues:NoTrajField','Compute/import trajectories first.')
@@ -391,18 +393,18 @@ classdef BreachSet < BreachStatus
                 signals = FindParam(this.P, signals);
             end
             
-            if ~exist('itraj','var')
-              itraj= 1:numel(this.P.traj);
+            if ~exist('itrajs','var')
+              itrajs= 1:numel(this.P.traj);
             end
             
-            nb_traj = numel(itraj);
+            nb_traj = numel(itrajs);
             
             X = cell(nb_traj,1);
-            for i_traj = 1:nb_traj
+            for i_traj = 1:numel(itrajs)
                 if (~exist('t','var'))
-                    X{i_traj} = this.P.traj{i_traj}.X(signals,:);
+                    X{i_traj} = this.P.traj{itrajs(i_traj)}.X(signals,:);
                 else
-                    X{i_traj} = interp1(this.P.traj{i_traj}.time, this.P.traj{i_traj}.X(signals,:)',t)';
+                    X{i_traj} = interp1(this.P.traj{itrajs(i_traj)}.time, this.P.traj{itrajs(i_traj)}.X(signals,:)',t)';
                     if numel(signals)==1
                         X{i_traj} = X{i_traj}';
                     end
@@ -413,6 +415,57 @@ classdef BreachSet < BreachStatus
                 X = X{1};
             end
         end
+        
+        function SaveSignals(this, signals, folder, name,i_trajs)
+        % SaveSignals Save signals in mat files as simple time series
+        
+        if ~this.hasTraj()
+            error('No signals computed for this set.' );
+        end
+        
+        % arguments
+        if ~exist('signals','var')||isempty(signals)
+            signals = this.GetSignalList();
+        end
+        if ~exist('folder','var')||isempty(folder)
+            folder =  [this.whoamI '_Signals_' datestr(now, 'dd_mm_yyyy_HHMM')];
+        end
+        if ~exist('name','var')||isempty(name)
+            name= 'Signals_';
+        end
+        if ~exist('i_trajs','var')||isempty(i_trajs)
+            i_trajs = 1:numel(this.P.traj);
+        end
+        
+        [success,msg,msg_id] = mkdir(folder);
+            
+        if success == 1
+            if isequal(msg_id, 'MATLAB:MKDIR:DirectoryExists')
+                this.disp_msg(['Saving in existing folder ' folder]);
+            else
+                this.disp_msg(['Saving in new folder ' folder]);
+            end
+        else
+            error(['Couldn''t create folder'  folder '. mkdir returned error: ' msg]);
+        end
+        
+        for ip = 1:numel(i_trajs)
+            fname = [folder filesep name num2str(ip) '.mat'];
+            sig = [this.P.traj{ip}.time' this.GetSignalValues(signals{1}, ip)'];
+            eval([ signals{1} '= sig;']); 
+            save(fname, signals{1});
+            for is = 2:numel(signals)
+                sig = [this.P.traj{ip}.time' this.GetSignalValues(signals{is}, ip)'];
+                eval([ signals{is} '= sig;']);
+                save(fname,'-append',  signals{is});
+            end            
+            
+        end
+        
+        end
+        
+        
+       
         
         function h = PlotSignals(this, varargin)
             % Plot signals
@@ -614,10 +667,105 @@ classdef BreachSet < BreachStatus
             P = DiscrimPropValues(this.P);
             SplotPts(P, varargin{:});
         end
-      
-          
+        
+        %% Plot domains
         function PlotDomain(this, params)
-        % BreachSet.PlotDomain 
+            % BreachSet.PlotMixedDomain UNFINISHED, tries to plot enum/int
+            % domain differently from dense domains
+            
+            gca;
+            set(gca, 'XLimMode', 'auto', 'YLimMode', 'auto', 'ZLimMode', 'auto')
+            
+            % default style
+            col = [0 0 1];
+            alpha = 0.05;
+            
+            % default params
+            if ~exist('params', 'var') || isempty('params')
+                params =this.GetBoundedDomains();
+            end
+            
+            if ischar(params)
+                params = {params};
+            end
+            
+            switch numel(params)
+                case 1 % one domain
+                    domain1 = this.GetDomain(params);
+                    plotxdomain(domain1,0);
+                    %  Labels
+                    xlabel(params{1}, 'Interpreter', 'none');
+                    set(gca, 'YTick', []);
+                    grid on;
+                    
+                    %% unzoom
+                    xlim = get(gca, 'XLim');
+                    dxlim = xlim(2) - xlim(1);
+                    set(gca, 'XLim', [xlim(1)-dxlim/30, xlim(2)+dxlim/30]);
+                case 2 % two domains
+                    domain1 = this.GetDomain(params{1});
+                    domain2 = this.GetDomain(params{2});
+                    
+                    start = [domain1.domain(1), domain2.domain(1)];
+                    sz = [domain1.domain(2) - domain1.domain(1),domain2.domain(2) - domain2.domain(1)];
+                    d= rect(start, sz, col,alpha);
+                    
+                    xlabel(params{1}, 'Interpreter', 'none');
+                    ylabel(params{2}, 'Interpreter', 'none');
+                    grid on;
+                    
+                    %% Unzoom slightly
+                    xlim = get(gca, 'XLim');
+                    dxlim = xlim(2) - xlim(1);
+                    set(gca, 'XLim', [xlim(1)-dxlim/30, xlim(2)+dxlim/30]);
+                    ylim = get(gca, 'YLim');
+                    dylim = ylim(2) - ylim(1);
+                    set(gca, 'YLim', [ylim(1)-dylim/30, ylim(2)+dylim/30]);
+                    
+                case 3
+                    
+                    domain1 = this.GetDomain(params{1});
+                    domain2 = this.GetDomain(params{2});
+                    domain3 = this.GetDomain(params{3});
+                    
+                    start = [domain1.domain(1), domain2.domain(1), domain3.domain(1)];
+                    sz = [domain1.domain(2) - domain1.domain(1),domain2.domain(2) - domain2.domain(1),domain3.domain(2) - domain3.domain(1)];
+                    d= voxel(start, sz, col, alpha);
+                    
+                    xlabel(params{1}, 'Interpreter', 'none');
+                    ylabel(params{2}, 'Interpreter', 'none');
+                    zlabel(params{3}, 'Interpreter', 'none');
+                    grid on;
+                    
+                    xlim = get(gca, 'XLim');
+                    dxlim = xlim(2) - xlim(1);
+                    set(gca, 'XLim', [xlim(1)-dxlim/30, xlim(2)+dxlim/30]);
+                    ylim = get(gca, 'YLim');
+                    dylim = ylim(2) - ylim(1);
+                    set(gca, 'YLim', [ylim(1)-dylim/30, ylim(2)+dylim/30]);
+                    zlim = get(gca, 'ZLim');
+                    dzlim = zlim(2) - zlim(1);
+                    set(gca, 'ZLim', [zlim(1)-dzlim/30, zlim(2)+dzlim/30]);
+                    view(-37.5, 30);
+            end
+            set(d,'EdgeAlpha',0.1);
+           
+            
+            % 1d x direction
+            function  plotxdomain(dom, y0)
+                width_y = .1;
+                start = [dom.domain(1), y0-width_y/2];
+                sz = [dom.domain(2) - dom.domain(1), width_y];
+                d= rect(start, sz, col, alpha);
+                set(gca, 'YLim', [y0-10*width_y, y0+10*width_y]);
+            end
+            
+        end
+
+          
+        function PlotMixedDomain(this, params)
+        % BreachSet.PlotMixedDomain UNFINISHED, tries to plot enum/int
+        % domain differently from dense domains
         
         gca;
         
@@ -634,7 +782,7 @@ classdef BreachSet < BreachStatus
          if ischar(params)
              params = {params};
          end
-         
+     
          switch numel(params)
              case 1 % one domain
                   
@@ -719,7 +867,7 @@ classdef BreachSet < BreachStatus
                 zlim = get(gca, 'ZLim');
                 dzlim = zlim(2) - zlim(1);
                 set(gca, 'ZLim', [zlim(1)-dzlim/10, zlim(2)+dzlim/10]);
-                view([ 45 45 ]);
+                view(-37.5, 30);
          end
          
             % 1d x direction
@@ -797,6 +945,7 @@ classdef BreachSet < BreachStatus
                     error('Coverage for more than 2 signals is not supported');
             end
         end
+        
         function [ params, ipr]  = GetBoundedDomains(this)
             % GetNonEmptyDomains
             ipr = cellfun(@(c)(~isempty(c)), {this.Domains.domain});

@@ -504,7 +504,7 @@ classdef BreachProblem < BreachStatus
                 end
             end
             
-            [ fmin , imin] = min(fval);
+            [fmin , imin] = min(fval);
             x_min =x(:, imin);
             if fmin < this.obj_best
                 this.x_best = x_min;

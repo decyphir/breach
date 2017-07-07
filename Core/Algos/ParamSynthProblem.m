@@ -97,6 +97,7 @@ classdef ParamSynthProblem < BreachProblem
             ResetObjective@BreachProblem(this);
             this.X_Synth = [];
             this.BrSet_Synth = [];
+            this.x0 = this.x0(:,1); % need double checking... 
         end
         
         

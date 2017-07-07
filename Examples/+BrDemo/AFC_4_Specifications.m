@@ -129,8 +129,9 @@ AFC_Rand_w_Specs = BrAFC.copy();
 AFC_Rand_w_Specs.SetParamRanges({'Pedal_Angle_base_value', 'Pedal_Angle_pulse_period', 'Pedal_Angle_pulse_amp'}, [0 20; 10 15; 0 40]);
 AFC_Rand_w_Specs.QuasiRandomSample(10);
 AFC_Rand_w_Specs.Sim(Time);
+
 %% Set specification parameter
-AFC_Rand_w_Specs.SetParam({'ti', 'tf', 'tol'}, [10 30 .003], 'spec'); 
+AFC_Rand_w_Specs.SetParam({'t_start', 't_end', 'tol'}, [10 30 .003], 'spec'); 
 % Checks Specification for all simulations
 AFC_Rand_w_Specs.CheckSpec(AF_alw_ok)
 %%
