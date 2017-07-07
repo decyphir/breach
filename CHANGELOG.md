@@ -11,9 +11,11 @@
 
 ## Bugfixes
 - GetSignalsValues with itraj would assume itraj=1 
+- ParamSynth/ReqMining works when changing the solver of param synth problem (Issue #10)
 
 ## Developpers
 - GetSatValues returns unique values and params as well as all values and non-unique params
+- BreachPlot and BreachPlotSat, new classes for listening plots
 
 # Release 1.2.8
 
