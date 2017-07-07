@@ -19,14 +19,14 @@ classdef BreachSystem < BreachSet
     %   CheckSpec     - Checks (return robust satisfaction of) a given specification or all added specs
     %   PlotRobustSat - Plots robust satisfaction of a given STL formula against time
     %   PlotRobustMap - Plots (1d or 2d) robust satisfaction against parameter values
-    %   RunGUI        - Open Breach legacy GUI, allowing for interactively exploring parameters, traces and specifications
+    %   RunGUI        - Open Breach GUI, allowing for interactive exploration of parameters, traces and specifications
     %
-    % See also BreachSet.
+    %   See also BreachSet.
     
     properties
-        Sys            % Legacy Breach system structure
-        Specs          % A set (map) of STL formulas
-        use_parallel=0 %  
+        Sys                   % Legacy Breach system structure
+        Specs               % A set (map) of STL formulas
+        use_parallel=0 % 
     end
     
     methods
@@ -54,58 +54,59 @@ classdef BreachSystem < BreachSet
                     end
             end
             
-                this.SignalRanges = [];
-                if (isaSys(this.Sys))
-                    this.P = CreateParamSet(this.Sys);
-                end
+            this.SignalRanges = [];
+            if (isaSys(this.Sys))
+                this.P = CreateParamSet(this.Sys);
+            end
         end
         
         function SetupParallel(this)
-           this.use_parallel = 1;
-           this.Sys.Parallel =1;
-           gcp;
-       end    
-            
+            this.use_parallel = 1;
+            this.Sys.Parallel =1;
+            gcp;
+        end
+        
         %% Parameters
         % Get and set default parameter values (defined in Sys)
         
         function values = GetDefaultParam(this, params)
-        % Get default parameter values (defined in Sys)
+            % Get default parameter values (defined in Sys)
             values = GetParam(this.Sys,params);
         end
         
         function SetDefaultParam(this, params, values)
-        % Set default parameter values (defined in Sys)
+            % Set default parameter values (defined in Sys)
             this.Sys = SetParam(this.Sys,params, values);
         end
         
         function SetP(this,P)
-        % SetP Sets legacy parameter structure 
-        if isaP(P)
-            this.P =P;
-        else
-            error('Argument should a Breach legacy parameter structure.');
-        end
+            % SetP Sets legacy parameter structure
+            if isaP(P)
+                this.P =P;
+            else
+                error('Argument should a Breach legacy parameter structure.');
+            end
             
         end
         
         function ResetSampling(this)
-            % ResetSampling 
+            % ResetSampling
             this.P = CreateParamSet(this.Sys);
             this.CheckinDomain();
         end
-     
+        
         %% Simulation
         function SetTime(this,tspan)
             this.Sys.tspan = tspan;
         end
+        
         function time = GetTime(this)
             time = this.Sys.tspan;
         end
         
         function Sim(this,tspan)
-        % BreachSystem.Sim(time) Performs a simulation from the parameter
-        % vector(s) defined in P 
+            % BreachSystem.Sim(time) Performs a simulation from the parameter
+            % vector(s) defined in P
             this.CheckinDomainParam();
             if nargin==1
                 tspan = this.Sys.tspan;
@@ -113,22 +114,22 @@ classdef BreachSystem < BreachSet
             this.P = ComputeTraj(this.Sys, this.P, tspan);
             this.CheckinDomainTraj();
         end
-               
+        
         %% Specs
         function phi = AddSpec(this, varargin)
-        % AddSpec Adds a specification
+            % AddSpec Adds a specification
             global BreachGlobOpt
             if isa(varargin{1},'STL_Formula')
                 phi = varargin{1};
             elseif ischar(varargin{1})
                 phi_id = MakeUniqueID([this.Sys.name '_spec'],  BreachGlobOpt.STLDB.keys);
-                phi = STL_Formula(phi_id, varargin{1});   
+                phi = STL_Formula(phi_id, varargin{1});
             end
-          
+            
             % checks whether spec is in there already or not
             if this.Specs.isKey(get_id(phi))
                 return;
-            end 
+            end
             
             % checks signal compatibility
             [~,sig]= STL_ExtractPredicates(phi);
@@ -139,7 +140,7 @@ classdef BreachSystem < BreachSet
             end
             
             this.Specs(get_id(phi)) = phi;
-         
+            
             % Add property params
             params_prop = get_params(phi);
             params_names =  fieldnames(params_prop);
@@ -151,10 +152,10 @@ classdef BreachSystem < BreachSet
         end
         
         function SetSpec(this,varargin)
-           this.Specs = containers.Map();
-           this.AddSpec(varargin{:});
+            this.Specs = containers.Map();
+            this.AddSpec(varargin{:});
         end
-  
+        
         function val = CheckSpec(this, spec,t_spec)
             if ~exist('spec','var')
                 spec = this.Specs.values;
@@ -170,13 +171,13 @@ classdef BreachSystem < BreachSet
             end
             
             if ~exist('t_spec', 'var')
-               t_spec= 0; 
+                t_spec= 0;
             end
-      
-             %  TODO better check if property has been evaluated already
-             %  (check parameter changes) 
-             %
-            if isfield(this.P, 'props_names')&&(nargin<=2) && size(this.P.props_values,2) == size(this.P.pts,2)              
+            
+            %  TODO better check if property has been evaluated already
+            %  (check parameter changes)
+            %
+            if isfield(this.P, 'props_names')&&(nargin<=2) && size(this.P.props_values,2) == size(this.P.pts,2)
                 iprop = find(strcmp(get_id(spec), this.P.props_names));
             else
                 iprop = 0;
@@ -184,15 +185,17 @@ classdef BreachSystem < BreachSet
                     this.P= SPurge_props(this.P);
                 end
             end
-           
+            
             if iprop % if values exists, get rid of it (we'll reuse another time)
-                idx_wo_iprop = 1:size(this.P.props_values,1)~=iprop; 
+                idx_wo_iprop = 1:size(this.P.props_values,1)~=iprop;
                 this.P.props_values = this.P.props_values(  idx_wo_iprop,: );
                 this.P.props_names = this.P.props_names(  idx_wo_iprop );
                 this.P.props  = this.P.props(  idx_wo_iprop );
             end
             [this.P, val] = SEvalProp(this.Sys,this.P,spec,  t_spec);
             this.addStatus(0, 'spec_evaluated', 'A specification has been evaluated.')
+       
+            % TODO? option somewhere to  sort satisfaction values? 
         end
         
         function [Bpos, Bneg] = FilterSpec(this, phi)
@@ -223,7 +226,7 @@ classdef BreachSystem < BreachSet
         end
         
         function [rob, tau] = GetRobustSat(this, phi, params, values, t_phi)
-        % Monitor spec on trajectories - run simulations if not done before
+            % Monitor spec on trajectories - run simulations if not done before
             
             if nargin < 5
                 t_phi = 0;
@@ -240,34 +243,34 @@ classdef BreachSystem < BreachSet
             end
             
             if nargin==3
-              t_phi = params;
-              params = {};
-              values = [];
+                t_phi = params;
+                params = {};
+                values = [];
             end
             
-             if ~isempty(params)
+            if ~isempty(params)
                 this.P = SetParam(this.P, params, values);
-             end
+            end
             
             this.CheckinDomainParam();
             Sim(this);
             this.CheckinDomainTraj();
             
             % FIXME: this is going to break with multiple trajectories with
-            % some of them containing NaN - 
+            % some of them containing NaN -
             if any(isnan(this.P.traj{1}.X))
                 tau = t_phi;
                 rob = t_phi;
                 rob(:) = NaN;
             else
-            [rob, tau] = STL_Eval(this.Sys, phi, this.P, this.P.traj,t_phi);
+                [rob, tau] = STL_Eval(this.Sys, phi, this.P, this.P.traj,t_phi);
             end
         end
         
         function [robfn, BrSys] = GetRobustSatFn(this, phi, params, t_phi)
-        % Return a function of the form robfn: p -> rob such that p is a
-        % vector of values for parameters and robfn(p) is the
-        % corresponding robust satisfaction
+            % Return a function of the form robfn: p -> rob such that p is a
+            % vector of values for parameters and robfn(p) is the
+            % corresponding robust satisfaction
             
             if ~exist('t_phi', 'var')
                 t_phi =0;
@@ -278,7 +281,7 @@ classdef BreachSystem < BreachSet
             if ischar(phi)
                 this__phi__ = STL_Formula('this__phi__', phi);
                 robfn = @(values) GetRobustSat(BrSys, this__phi__, params, values, t_phi);
-            else                
+            else
                 robfn = @(values) GetRobustSat(BrSys, phi, params, values,t_phi);
             end
             
@@ -289,7 +292,7 @@ classdef BreachSystem < BreachSet
             
             % check arguments
             if(~exist('ipts','var')||isempty(ipts))
-                ipts = 1:size(this.P.pts,2);
+                ipts = 1;
             end
             
             if(~exist('tau','var')||isempty(tau)) % also manage empty cell
@@ -302,74 +305,234 @@ classdef BreachSystem < BreachSet
             
             gca;
             SplotSat(this.Sys,this.P, phi, depth, tau, ipts);
+            
         end
         
-        function PlotSatParams(this, phi, params)
+        function PlotSatParams(this, phi, params, varargin)
             % BreachSet.PlotSatParams(req, params)
             
-            val = this.GetSatValues(phi);
+            % default options
+            opt.DispTitle = true;  
+            opt = varargin2struct(opt, varargin{:});
+            params_values = this.GetParam(params);
+            
+            [valu, pvalu, val, pval] = this.GetSatValues(phi, params);
+            if isempty(valu)
+               warning('PlotSatParams:SpecNotEval','The specification has not yet been evaluated - use CheckSpec');
+            end
+            
             iparam = FindParam(this.P, params);
             switch numel(params)
                 case 1
-                    x = this.P.pts(iparam(1),:);
+                    x = pvalu(1,:) ;   % this.P.pts(iparam(1),:);
                     y = zeros(size(x));
-                    scatter(x,y, 30, val, 'filled');
+                    scatter2dPlot(x,y,valu);
                     xlabel(params{1}, 'Interpreter', 'None');
                     grid on;
                     set(gca, 'YTick', []);
                 case 2
-                    x = this.P.pts(iparam(1),:);
-                    y = this.P.pts(iparam(2),:);
-                    scatter(x,y, 30, val, 'filled');
+                    x = pvalu(1,:);
+                    y = pvalu(2,:);
+                    
+                    scatter2dPlot(x,y,valu);
                     xlabel(params{1}, 'Interpreter', 'None');
                     ylabel(params{2}, 'Interpreter', 'None');
-                    grid on;
                     
                 case 3
-                    x = this.P.pts(iparam(1),:);
-                    y = this.P.pts(iparam(2),:);
-                    z = this.P.pts(iparam(3),:);
-                    scatter3(x,y, z, 30, val, 'filled');
+                    x = pvalu(1,:);
+                    y = pvalu(2,:);
+                    z = pvalu(3,:);
+                    
+                    scatter3dPlot(x,y,z,valu);
                     xlabel(params{1}, 'Interpreter', 'None');
                     ylabel(params{2}, 'Interpreter', 'None');
                     zlabel(params{3}, 'Interpreter', 'None');
                     grid on;
             end
-            title_st = [get_id(phi) ' satisfied by '...
-                num2str(numel(find(val>0))) '/' num2str(numel(val)) ' tests'
-                ];
-            title(title_st, 'Interpreter', 'None');
-            clim = sym_clim(val);
-            if diff(clim)>0
-                set(gca, 'CLim',clim );
+            
+            if ~isempty(valu)
+                title_st = [get_id(phi) ' satisfied by '...
+                    num2str(numel(find(valu>0))) '/' num2str(numel(valu))
+                    ];
+                title(title_st, 'Interpreter', 'None');
             end
-            colormap([ 1 0 0; 0 1 0 ]);
+            
+            %% Datacursor mode customization
+            h = datacursormode(gcf);
+            h.UpdateFcn = @myupdatefcn;
+            h.SnapToDataVertex = 'on';
+            datacursormode on
+            
+            cm = uicontextmenu;
+            m1 = uimenu(cm, 'Label', 'Plot signals', 'Callback', @ctxtfn_plot_signals);
+            m2 = uimenu(cm, 'Label', ['Plot ' get_id(phi)], 'Callback', @(o,e)ctxtfn_plot_robust(phi,o,e));
+            m_top = uimenu(cm, 'Label', 'Sub-formulas');
+            
+            subs = STL_Break(phi,2); 
+            stack = subs(1:end-1);
+            next_stack = [];
+           while ~isempty(stack) 
+              % pop 
+              subphi = stack(1);
+              stack = stack(2:end); 
+              uimenu(m_top, 'Label', ['Plot ' get_id(subphi)], 'Callback', @(o,e)ctxtfn_plot_robust(subphi,o,e));
+              subs = STL_Break(subphi,2); 
+              next_stack = [next_stack subs(1:end-1)];
+              if isempty(stack)&&~isempty(next_stack)
+                  m_top = uimenu(m_top, 'Label', 'Sub-formulas');
+                  stack = next_stack;
+                  next_stack = [];
+              end
+            end
+            
+            % sub-menus
+            set(h, 'UIContextMenu', cm);
+            signals = STL_ExtractSignals(phi);
+            
+            function ctxtfn_plot_signals(o,e)
+                if isfield(this.P,'idx_tipped')
+                    ipts = this.P.idx_tipped(1);
+                    figure;
+                    this.PlotSignals( signals, ipts, [], true); % plots signals involved in formula on the same axe
+                end
+            end
+
+            function ctxtfn_plot_robust(spec, o,e)
+                if isfield(this.P,'idx_tipped')
+                    ipts = this.P.idx_tipped(1);
+                    BreachPlotSat(this, spec, inf , [], ipts); % plots signals involved in formula on the same axe
+                end
+            end
+            
+            function [txt] = myupdatefcn(obj,event_obj)
+                
+                pos = event_obj.Position;
+                
+                switch numel(params)
+                    case 1 
+                    idx = ismember(pval', pos(1),'rows')';
+                    txt = {[params{1} ':' num2str(pos(1))],...
+                              ['Rob: ',num2str(val(idx))] ...
+                              };
+                    case 2
+                    idx = ismember(pval', pos(1:2),'rows')';
+                    txt = {[params{1} ':' num2str(pos(1))],...
+                              [params{2} ': ',num2str(pos(2))],...
+                              ['Rob: ',num2str(val(idx))] ...
+                              };
+                    
+                    case 3
+                    idx = ismember(pval', pos(1:3),'rows')';
+                    txt = {[params{1} ':' num2str(pos(1))],...
+                              [params{2} ': ',num2str(pos(2))],...
+                              [params{3} ': ',num2str(pos(3))],...
+                              ['Rob: ',num2str(val(idx))] ...
+                              };
+                end
+                this.P.idx_tipped = find(idx);
+                
+          end  
+            
+            function scatter2dPlot(x,y,val)
+                
+                hold on
+                grid on;
+                if isempty(val)
+                        scatter(x,y);
+                else
+                    vali = val(1,:)';
+                    clim = sym_clim(vali);
+                    if diff(clim)>0
+                        set(gca, 'CLim',clim );
+                    end
+                    colormap([ 1 0 0; 0 1 0 ]);
+                    %colormap(clim);
+                    scatter(x,y, 40, vali, 'filled');
+                    
+                    if size(val,1)>1
+                        for il = 2:size(val,1)
+                            vali = val(il, :)';
+                            scatter(x,y, 20, vali, 'filled');
+                        end
+                    end
+                end
+            end
+            function scatter3dPlot(x,y,z,val)
+                
+                hold on
+                grid on;
+                if isempty(val)
+                    scatter3(x,y,z);
+                else
+                    
+                    vali = val(1,:)';
+                    clim = sym_clim(vali);
+                    if diff(clim)>0
+                        set(gca, 'CLim',clim );
+                    end
+                    colormap([ 1 0 0; 0 1 0 ]);
+                    scatter3(x,y,z, 40, vali, 'filled');
+                    
+                    if size(val,1)>1
+                        for il = 2:size(val,1)
+                            vali = val(il, :)';
+                            scatter3(x,y,z, 20, vali, 'filled');
+                        end
+                    end
+                end
+                view(-37.5, 30);
+            end
             
         end
         
-        function val = GetSatValues(this, spec, params)
+        
+        function [val, pval, valm, pvalm] = GetSatValues(this, spec, params, varargin)
+            % [val, pval, valm, pvalm] = GetSatValues(this, spec, params) returns satisfaction values for spec computed
+            % for parameters params. pval is a set of unique column vectors, and for each vector, val can have multiple values. 
+            % pvalm can have repeated vectors. 
+            
             spec_monitored = isfield(this.P, 'props');
             if spec_monitored
-                if nargin ==2
+                if nargin >= 2
                     iprop = find(strcmp(get_id(spec), this.P.props_names));
                 elseif nargin==1
                     iprop = 1:numel(this.P.props);
                 end
                 spec_monitored = ~isempty(iprop);
+            else
+                 val = [];
+                pval = [];
             end
-            
-            if spec_monitored
+ 
+            if (~spec_monitored)||(isempty(iprop)) % spec not found, returns empty values
+                 val = [];
+                pval = [];
+            else
                 for ip =1:numel(iprop)
                     prop_values = this.P.props_values(iprop(ip),:);
                     vali  = cat(1, prop_values.val);
                     val(ip,:) = vali(:,1);
                 end
-            else
-                val = [];
             end
             
+            if exist('params', 'var')
+                pvalm = this.GetParam(params);
+                valm = val;
+                [pval, idxu, idx  ] = unique(pvalm', 'rows');
+                val = nan(1, numel(idxu));
+                for iu = 1:numel(idxu)
+                    new_val = valm( idx==iu);
+                    if numel(new_val)>size(val, 1)
+                        val(end+1:numel(new_val),:) = NaN;
+                    end
+                    val(:, iu) = new_val';
+                end
+            else
+                pval = this.P.pts(this.P.DimX:end,:);
+            end
+            pval = pval';
+            
         end
-        
         
         function [out] = PlotRobustMap(this, phi, params, ranges, delta, options_in)
             % Plot robust satisfaction vs 1 or 2 parameters.
@@ -380,10 +543,10 @@ classdef BreachSystem < BreachSet
                 return
             end
             
-            if nargout >=1 
+            if nargout >=1
                 out = gcf;
             end
-              
+            
             % no option, use defaults
             if ~exist('options_in','var')
                 options_in = struct();
@@ -395,7 +558,7 @@ classdef BreachSystem < BreachSet
             for  ifld=1:numel(opt_in_fields)
                 options.(opt_in_fields{ifld}) = options_in.(opt_in_fields{ifld});
             end
-                     
+            
             switch(nargin)
                 case 2
                     if isempty(this.GetSatValues(phi))
@@ -412,13 +575,13 @@ classdef BreachSystem < BreachSet
                 this.P = CreateParamSet(this.P, params, ranges);
                 this.P = Refine(this.P, delta,1);
             end
-
+            
             if isempty(this.GetSatValues(phi))
                 this.Sim();
                 this.CheckSpec(phi);
             end
             
-            Pf = this.P; 
+            Pf = this.P;
             iparams = FindParam(this.P, params);
             Pf.dim = iparams;
             SplotProp(Pf, phi, options);
@@ -457,12 +620,12 @@ classdef BreachSystem < BreachSet
                 [X, t] = STL_Eval(this.Sys, expr_tmp_, this.P, this.P.traj, this.P.traj{1}.time);
             end
         end
-
+        
         function  SortbyRob(this)
             sat_values = this.GetSatValues();
             [ ~, order_rob] = sort(sum(sat_values,1));
             this.P = Sselect(this.P, order_rob);
-         end
+        end
         
         function  SortbySat(this)
             sat_values = this.GetSatValues();
@@ -470,7 +633,7 @@ classdef BreachSystem < BreachSet
             this.P = Sselect(this.P, order_rob);
         end
         
-         
+        
         %% Sensitivity analysis
         function [mu, mustar, sigma] = SensiSpec(this, phi, params, ranges, opt)
             % SensiSpec Sensitivity analysis of a formula to a set of parameters
@@ -507,12 +670,12 @@ classdef BreachSystem < BreachSet
                 prop_name = keys{is};
                 fprintf('%s',prop_name);
                 if isfield(this.P, 'props_names')
-                   ip = strcmp(this.P.props_names, prop_name);
-                   idx_prop = find(ip);
-                   if idx_prop
-                      val = cat(1, this.P.props_values(idx_prop,:).val);
-                       fprintf(': %d/%d satisfied.', numel(find(val>=0)),numel(val));
-                   end
+                    ip = strcmp(this.P.props_names, prop_name);
+                    idx_prop = find(ip);
+                    if idx_prop
+                        val = cat(1, this.P.props_values(idx_prop,:).val);
+                        fprintf(': %d/%d satisfied.', numel(find(val>=0)),numel(val));
+                    end
                 end
                 fprintf('\n');
             end
@@ -528,21 +691,20 @@ classdef BreachSystem < BreachSet
         
         function st = disp(this)
             if isfield(this.P, 'traj')
-               nb_traj = numel(this.P.traj);
-           else
-               nb_traj = 0;
-           end
-
+                nb_traj = numel(this.P.traj);
+            else
+                nb_traj = 0;
+            end
+            
             st = ['BreachSystem ' this.Sys.name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' traces.'];
-   
+            
             if nargout ==0
                 disp(st);
             end
         end
         
         
-        
-        %% GUI  
+        %% GUI
         function new_phi  = AddSpecGUI(this)
             signals = this.Sys.ParamList(1:this.Sys.DimX);
             new_phi = STL_TemplateGUI('varargin', signals);
@@ -554,7 +716,7 @@ classdef BreachSystem < BreachSet
                 % Add property params with default values if they're not
                 % defined yet
                 params_prop = get_params(new_phi);
-                names_params_prop = fieldnames(params_prop);
+                names_params_prop = fieldnames(params_prop)';
                 [~,  idx_status ] = FindParam(this.P, names_params_prop);
                 params_not_found = names_params_prop(idx_status==0);
                 if ~isempty(params_not_found)
@@ -562,28 +724,28 @@ classdef BreachSystem < BreachSet
                 end
             end
         end
-             
+        
         function RunGUI(this)
             BreachGui(this);
         end
-  
-        function TrajGUI(this) 
+        
+        function TrajGUI(this)
             args = struct('working_sets', struct,'working_sets_file_name',...
-                      '', 'Sys', this.Sys, 'TrajSet', this.P); 
+                '', 'Sys', this.Sys, 'TrajSet', this.P);
             specs = this.Specs.keys;
             args.properties = struct;
             for ispec = 1:numel(specs)
-               args.properties.(specs{ispec}) = this.Specs(specs{ispec});
+                args.properties.(specs{ispec}) = this.Specs(specs{ispec});
             end
             
-            BreachTrajGui(this,args);          
+            BreachTrajGui(this,args);
         end
-                
+        
         %% Experimental
         function report = Analysis(this)
             
             STL_ReadFile('stlib.stl');
- 
+            
             % Simple analysis
             % Checks zero signals
             req_zero = STL_Formula('phi', 'req_zero');
@@ -662,7 +824,7 @@ classdef BreachSystem < BreachSet
             
             
             % Dual analysis
-            % Correlation between steps and spikes          
+            % Correlation between steps and spikes
             if ~isempty(report.res_spike.all)
                 
                 req_steps_and_spikes = STL_Formula('phi', 'req_steps_and_spikes');

@@ -899,7 +899,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
 
             if success == 1
                 if isequal(msg_id, 'MATLAB:MKDIR:DirectoryExists')
-                    this.disp_msg(['Using existing result folder at ' folder_name]);
+                    this.disp_msg(['Saving in existing result folder at ' folder_name]);
                 else
                     this.disp_msg(['Created result folder at ' folder_name]);
                 end
