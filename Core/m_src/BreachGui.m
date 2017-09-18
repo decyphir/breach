@@ -1175,8 +1175,8 @@ else
     Br.P.selected(:,:) = 0;
     Br.P.selected(1:val) = 1;
 end
-handles = update_modif_panel(handles);
-
+handles =  plot_pts(handles);
+guidata(hObject,handles);
 
 % --------------------------------------------------------------------
 function menu_select_prop_gt_Callback(hObject, eventdata, handles)
@@ -1198,7 +1198,7 @@ if iprop
     val = val(:,1);
     Br.P.selected = (val>=val_threshold)';
 end
-handles = update_modif_panel(handles);
+handles =  plot_pts(handles);
 guidata(hObject,handles);
     
 
@@ -1209,9 +1209,8 @@ function menu_select_prop_abs_st_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 Br = handles.working_sets.(handles.current_set);
 
-try
-    iprop = find_prop(handles.current_prop,Br.P);
-    valst = inputdlg('smaller than ?');
+iprop = find_prop(handles.current_prop,Br.P);
+valst = inputdlg('smaller than ?');
     if isempty(valst)
         return;
     end
@@ -1222,14 +1221,10 @@ try
         Br.P.selected = (abs(val)<=val_threshold)';
     end
     
-    handles = update_modif_panel(handles);
-    guidata(hObject,handles);
-catch
-    s = lasterror;
-    warndlg(['Problem during selection: ' s.message] );
-    error(s);
-    return
-end
+    
+  handles =  plot_pts(handles);
+  guidata(hObject,handles);
+
 
 % --------------------------------------------------------------------
 function menu_inverse_selection_Callback(hObject, eventdata, handles)
@@ -1239,7 +1234,8 @@ function menu_inverse_selection_Callback(hObject, eventdata, handles)
 Br = handles.working_sets.(handles.current_set);
 
 Br.P.selected = ~ Br.P.selected;
-handles = update_modif_panel(handles);
+
+handles =  plot_pts(handles);
 guidata(hObject,handles);
 
 % --------------------------------------------------------------------
@@ -1248,7 +1244,6 @@ function plot_zero_contour_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 Br = handles.working_sets.(handles.current_set);
-try
     axes(handles.axes_pts);
     hold on;
     
@@ -1261,12 +1256,6 @@ try
                 QuickContourSf(Pf,Z)
         end
     end
-catch
-    s = lasterror;
-    warndlg(['Problem with plot_zero_contour: ' s.message] );
-    error(s);
-    return
-end
 
 % --------------------------------------------------------------------
 function menu_unselect_Callback(hObject, eventdata, handles)
@@ -1274,10 +1263,9 @@ function menu_unselect_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 Br = handles.working_sets.(handles.current_set);
-Br.P.selected = 0* ...
-    Br.P.selected;
-handles = update_modif_panel(handles);
+Br.P.selected = 0* Br.P.selected;
 
+handles = plot_pts(handles);
 guidata(hObject,handles);
 
 % --- Executes on button press in button_new_prop.
@@ -1895,8 +1883,6 @@ switch(val)
         handles.sample_arg_multi = 'combine';
 end
 
-handles = info(handles, st_info);
-
 guidata(hObject,handles);
 
 
@@ -2147,9 +2133,16 @@ function button_sample_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-handles = run_sample_domain(handles);
-plot_pts(handles);
-guidata(hObject,handles);
+try 
+   handles = run_sample_domain(handles);
+   plot_pts(handles);
+   guidata(hObject,handles);
+catch 
+   [msg, msgid] = lasterr; 
+   handles = info(handles,['Error: ' msgid '--' msg]); 
+   guidata(hObject,handles);
+ end
+   
 
 
 

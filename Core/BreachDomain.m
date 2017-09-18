@@ -2,7 +2,10 @@ classdef BreachDomain
     % BreachDomain Implements types and fundamental sets. 
     %
     %  TODO error handling when intersection of domain and enum is empty 
+    % 
     
+    % 
+     
     properties
         type='double' % can be 'int', 'bool', 'enum', 'double'
         domain            % TODO should always be an interval, empty means singleton
@@ -11,7 +14,7 @@ classdef BreachDomain
     
     methods
         function this = BreachDomain(type, domain,enum)
-        % BreachDomain(type, domain) 
+        % BreachDomain(type, domain, enum) 
         % 
         
             if nargin>1 && isempty(domain)

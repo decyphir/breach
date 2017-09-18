@@ -2,6 +2,9 @@
 #include "signal.h"
 
 void writeSignal(const Signal &y, mxArray * mx_times, mxArray* mx_values)  {
+#ifdef DEBUG__
+  mexPrintf("Entering wroteSignal\n");
+#endif
 
   double * times = mxGetPr(mx_times);
   double * values = mxGetPr(mx_values);
@@ -18,5 +21,8 @@ void writeSignal(const Signal &y, mxArray * mx_times, mxArray* mx_values)  {
   i = y.end()-1;
   times[k] = y.endTime;
   values[k] = (*i).valueAt(y.endTime);
-  
+
+#ifdef DEBUG__
+  mexPrintf("Leaving wroteSignal\n");
+#endif 
 }

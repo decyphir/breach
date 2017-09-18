@@ -664,8 +664,8 @@ classdef BreachSet < BreachStatus
         function PlotParams(this, varargin)
             % Plot parameters
             gca;
-            P = DiscrimPropValues(this.P);
-            SplotPts(P, varargin{:});
+            %P = DiscrimPropValues(this.P);
+            SplotPts(this.P, varargin{:});
         end
         
         %% Plot domains

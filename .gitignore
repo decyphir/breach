@@ -27,3 +27,10 @@ toggleHighDPISupport.p
 *.bckup
 html
 standard-release.sh
+
+wiki/
+
+# Debugging stuff 
+@STL_Formula/private/matlab.mat
+@STL_Formula/private/plot_bug.m
+@STL_Formula/private/recomp.m

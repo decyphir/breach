@@ -3,6 +3,7 @@ classdef merge_signal_gen < signal_gen
     properties
         sgs
     end
+    
     methods
         function this=  merge_signal_gen(sgs)
             this.sgs = sgs;

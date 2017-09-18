@@ -18,7 +18,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	/* read matlab inputs */
 
 #ifdef DEBUG__
-	cout << "Entering RobustAnd" << endl;
+	mexPrintf("Entering RobustAnd\n");
 #endif
 
 	// manage empty signal
@@ -44,26 +44,23 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	// signals
 	Signal *y1, *y2;
 
-//    std::cout << "N:" <<mxGetN(prhs[0])  << std::endl;
+   //  std::cout << "N:" <<mxGetN(prhs[0])  << std::endl;
 
 	y1 = new Signal(mxGetPr(prhs[0]), mxGetPr(prhs[1]), mxGetN(prhs[0]));
 	y2 = new Signal(mxGetPr(prhs[2]), mxGetPr(prhs[3]), mxGetN(prhs[2]));
 
-//    std::cout << "\n\n y1:" << *y1 << std::endl;
-//    std::cout << "\n\n y2:" << *y2 << std::endl;
-
+    //y1->print();
+    //y2->print();
+    
 	/* compute and robustness */
-	// std::cout << "\n\n Computing and :" << std::endl;
-
 	Signal *yand = computeAnd(y1, y2);
-    //	std::cout << "yand:" << *yand << std::endl;
-
+   
 	int N = yand->size();
 	plhs[0] = mxCreateDoubleMatrix(1, N+1, mxREAL);
 	plhs[1] = mxCreateDoubleMatrix(1, N+1, mxREAL);
 
 	writeSignal(*yand, plhs[0], plhs[1]);
-
+    
 	delete y1;
     delete y2;
     delete yand;
