@@ -3,7 +3,12 @@ function arg_cell = check_arg_is_cell(arg, num_args)
 % or if it is a scalar. In the latter case, returns cellifyied argument. 
 
 if nargin ==1
-    num_args = 1;
+    if iscell(arg)
+        arg_cell = arg;
+        return;
+    else
+        num_args = 1;
+    end
 end
 
 if ~iscell(arg)
