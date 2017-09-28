@@ -175,19 +175,29 @@ classdef BreachDomain
             
             if isempty(this.domain)
                 st = ['of type ' this.type];
-            else
-                st = ['of type ' this.type ' in [' num2str(this.domain(1)) ', ' num2str(this.domain(2)) ']' ];
-            if ismember(this.type,{'bool', 'enum'})
-                st = sprintf([st ' intersect with {'  num2str(this.enum(1:min(10,end)))]);
-                if numel(this.enum)>10
-                    st = [st ' ... ' num2str(this.enum(end)) '}']; 
-                else
-                    st = [st '}'];
+                if ismember(this.type,{'bool', 'enum'})
+                    st = [ st ' const in {' num2str(this.enum(1:min(10,end)))];
+                    if numel(this.enum)>10
+                        st = [st ' ... ' num2str(this.enum(end)) '}'];
+                    else
+                        st = [st '}'];
+                    end
+                    
                 end
                 
+            else
+                st = ['of type ' this.type ' in [' num2str(this.domain(1)) ', ' num2str(this.domain(2)) ']' ];
+                if ismember(this.type,{'bool', 'enum'})
+                    st = sprintf([st ' intersect with {'  num2str(this.enum(1:min(10,end)))]);
+                    if numel(this.enum)>10
+                        st = [st ' ... ' num2str(this.enum(end)) '}'];
+                    else
+                        st = [st '}'];
+                    end
+                    
+                end
             end
-             end
-           
+            
         end
         
         function new_x = sample_grid(this, num_samples)
