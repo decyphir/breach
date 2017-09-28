@@ -72,61 +72,100 @@ classdef BreachSet < BreachStatus
         end
         
         %% Domains
-        function SetDomain(this, params, type, domain)
-            % SetDomain
+        function SetDomain(this, params, type, domain, enum)
+            % SetDomain(params, breach_domains) or SetDomain(params, types, domains, enums)
             
-            if nargin<4
-                domain =ones(numel(params),0);
-            end
-            
-            if ischar(params)
-                params = {params};
-            end
-            
-            if isa(type,'BreachDomain')
-                if numel(type)==1
-                    type = repmat(type,1, numel(params));
-                end
-                if numel(type) ~= numel(params)
-                    error('number of types and parameters or signals mismatch.')
-                end
-            elseif ischar(type)
-                com_type = type; 
-                type = repmat(BreachDomain(), 1, numel(params));
+            % First let's collect idx for params
+            if nargin <3
+                error('BreachSet:SetDomain:not_enough_args', 'SetDomain requires at least parameter names and one or several types.' );
+            else
+                
+                params = check_arg_is_cell(params);
+                
+                idxs = zeros(1, numel(params));
                 for ip = 1:numel(params)
-                    type(ip) = BreachDomain(com_type, domain(ip,:));  
-                end
-            elseif iscell(type)
-                cell_type = type;
-                type = repmat(BreachDomain(), 1, numel(params));
-                for ip = 1:numel(params)
-                    if isa(cell_type{ip}, 'BreachDomain')
-                        type(ip) = type{ip};
-                    else 
-                        type(ip) = BreachDomain(cell_type{ip}, domain(ip,:));
+                    param = params{ip};
+                    [idx, found] = FindParam(this.P, param);
+                    if found==0
+                        error('BreachSet:SetDomain:param_or_signal_not_found', ['Parameter or signal '  param ' not found.']);
                     end
-               end
-             end
-             
-             for ip = 1:numel(params)
-                 param = params{ip};
-                 [idx, found] = FindParam(this.P, param);
-                 if any(found==0)
-                     error('Parameter or signal not found.');
-                 end
-                 
-                 if isa(type(ip),'BreachDomain')
-                     this.Domains(idx) = type(ip);
-                 else
-                     this.Domains(idx) = BreachDomain(type{ip,:}, domain(ip,:));
-                     if ~isempty(domain(ip,:))&&idx>this.P.DimX&&~isequal(type(ip,:), 'enum')
-                         this.SetParamRanges(idx, [this.Domains(idx).domain(1),this.Domains(idx).domain(2)]);
-                     end
-                 end
-             end
-               this.CheckinDomain();
+                    idxs(ip) = idx;
+                end
+            end
+            
+            % create domains
+            switch nargin
+                case 3
+                    % is type a BreachDomain already?
+                    if isa(type,'BreachDomain')
+                        if numel(type)==1
+                            type = repmat(type,1, numel(params));
+                        end
+                        if numel(type) ~= numel(params)
+                            error('number of types and parameters or signals mismatch.')
+                        end
+                        
+                        % Now we have as many BreachDomain objects as parameters
+                        for ip = 1:numel(idxs)
+                            this.Domains(idxs(ip)) = type(ip);
+                        end
+                    else  % type has to be a string or cell array
+                        if ischar(type)
+                            for ip = 1:numel(params)
+                                this.Domains(idxs(ip)) = BreachDomain(type);
+                            end
+                        elseif isnumeric(type)
+                            %  type given as ranges, go for double
+                            if isequal(size(type), [1 2])
+                                for ip = 1:numel(params)
+                                    this.Domains(idxs(ip)) = BreachDomain('double', type);
+                                end
+                            elseif size(type, 2) == numel(params)
+                                for ip = 1:numel(params)
+                                    this.Domains(idxs(ip)) = BreachDomain('double', type(ip,:));
+                                end
+                            else
+                                error('BreachSet:SetDomain:wrong_domain_size', 'Domain should be of size num_param x 2.');
+                            end
+                        end
+                        
+                        
+                    end
+                case 4
+                    type = check_arg_is_cell(type, numel(params));
+                    if isnumeric(domain)
+                        %  domain given as ranges or enums
+                        if isequal(size(domain), [1 2])
+                            for ip = 1:numel(params)
+                                this.Domains(idxs(ip)) = BreachDomain(type{ip}, domain);
+                            end
+                        elseif size(domain, 2) == numel(params)
+                            for ip = 1:numel(params)
+                                this.Domains(idxs(ip)) = BreachDomain(type{ip}, domain(ip,:));
+                            end
+                        else % might be enum, forward this to BreachDomain constructor
+                            domain = check_arg_is_cell(domain, numel(params));
+                            for ip = 1:numel(params)
+                                this.Domains(idxs(ip)) = BreachDomain(type{ip}, domain{ip});
+                            end
+                        end
+                    else
+                        domain = check_arg_is_cell(domain, numel(params));
+                        for ip = 1:numel(params)
+                            this.Domains(idxs(ip)) = BreachDomain(type{ip}, domain{ip});
+                        end
+                    end
+                    
+                case 5
+                    type = check_arg_is_cell(type, numel(params));
+                    domain = check_arg_is_cell(domain, numel(params));
+                    enum = check_arg_is_cell(enum, numel(params));
+                    for ip = 1:numel(params)
+                        this.Domains(idxs(ip)) = BreachDomain(type{ip}, domain{ip}, enum{ip});
+                    end
+            end
         end
-        
+                 
         function dom = GetDomain(this, param)
             % BreachSet.GetDomain
             idx = FindParam(this.P, param);
@@ -301,6 +340,7 @@ classdef BreachSet < BreachStatus
                    end
             end
             
+            % kept for backward compatibility with legacy stuff
             this.P.dim = i_params;
             
         end

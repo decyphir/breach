@@ -2,14 +2,17 @@
 
 ## Users
 - InstallBreach option 
+- PrintAll and PrintParams now displays enum values
+
 
 ##Bugfixes
-- GUI: selecting worst samples, etc, does not change plot parameters any more #26-1
+- GUI: selecting worst samples, etc, does not change plot parameters any more (#26-1)
 - RobustAnd can't return inconsistent time values (not time advancing)
-- GUI: embarrassing st_info bug when changing sampling option fixed #26-4
+- GUI: embarrassing st_info bug when changing sampling option fixed (#26-4)
 
 ## Developpers
 -  PlotParams not using DiscrimPropValues any more
+- More robust implementation of BreachDomain constructor 
 
 # Release 1.2.9
 

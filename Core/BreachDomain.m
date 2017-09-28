@@ -8,15 +8,15 @@ classdef BreachDomain
      
     properties
         type='double' % can be 'int', 'bool', 'enum', 'double'
-        domain            % TODO should always be an interval, empty means singleton
-        enum               % TODO should only be used with type enum
+        domain            % always be an interval, empty means singleton
+        enum               % only  used with type enum and 'bool'
     end
     
     methods
         function this = BreachDomain(type, domain,enum)
-        % BreachDomain(type, domain, enum) 
-        % 
-        
+            % BreachDomain(type, domain, enum)
+            %
+            
             if nargin>1 && isempty(domain)
                 domain=[];
             end
@@ -33,45 +33,58 @@ classdef BreachDomain
                         else
                             error('BreachDomain:wrong_type', 'BreachDomain first argument should be the string ''double'', ''int'', ''enum'' or ''bool'', or an interval.')
                         end
-                    else
+                    elseif ismember(type, {'double', 'int' ,'bool'} )
                         this.type  = type;
                         this.domain = [];
-                    end
-                case 2
-                    
-                    if isnumeric(type)
-                        if size(type,2)==2
-                            this.type = 'double';
-                            this.domain = type;
-                        else
-                            error('BreachDomain:wrong_type', 'BreachDomain first argument should be the string ''double'', ''int'', ''enum'' or ''bool'', or an interval.')
-                        end
+                    elseif isequal(type, 'enum')
+                        error('BreachDomain:enum_needs_values', 'Domain of type enum requires that values are provided in a second or third argument.');
                     else
-                        this.type  = type;
-                        this.domain = domain;
+                        error('BreachDomain:wrong_args', 'BreachDomain wrong arguments: unknown type or invalid domain.');
+                    end
+                    
+                case 2
+                    switch type
+                        case {'double', 'bool'}
+                            this.type = type;
+                            if isempty(domain)||(size(domain,2)==2)
+                                this.domain = domain;
+                            else
+                                error('BreachDomain:wrong_type', 'BreachDomain first argument should be the string ''double'', ''int'', ''enum'' or ''bool'', or an interval.')
+                            end
+                        case 'int'
+                            this.type = 'int';
+                            if  numel(domain) ~= 2
+                                this = BreachDomain('enum', [], domain);
+                            else
+                                this.domain = domain;
+                            end
+                        case {'enum'}
+                             this.type = type;
+                             if isnumeric(domain)&& size(domain, 1) ==1
+                                this.enum = domain;
+                                this.domain = [min(domain) max(domain)];
+                             else
+                                 error('BreachDomain:wrong_domain_or_enum', 'BreachDomain wrong arguments: domain or enum size invalid.');
+                             end
+                        otherwise
+                            error('BreachDomain:wrong_args', 'BreachDomain wrong arguments: unknown type or invalid domain.');
                     end
                 case 3 % only used for enum: define a dom
+                    
+                    switch type 
+                        case 'enum'  % TODO some additional consistency checking
+                            this.type = 'enum';
+                            this.domain = domain;
+                            this.enum = enum; 
+                        otherwise
+                            error('BreachDomain:wrong_args', 'BreachDomain wrong arguments: unknown type or invalid domain or enum.');
+                    end
             end
             
-            % init enum (I feel this will explode on me some day)
-            switch this.type
-                case 'int'
-                    if numel(this.domain)~=2
-                        this.enum = round(this.domain);
-                        this.domain  = [min(this.enum), max(this.enum)];
-                    else
-                        this.enum = this.domain(1):this.domain(2);
-                    end
-                case 'enum'
-                    this.enum = this.domain;
-                    this.domain = [min(this.enum), max(this.enum)];
-                case 'bool'
-                    this.domain = [0 1];
+            % init enum for bool 
+           if isequal(this.type, 'bool')
                     this.enum = [0 1];
-                case 'double'
-                otherwise
-                    error('BreachDomain:wrong_type', 'BreachDomain first argument should the string ''double'', ''int'', ''enum'' or ''bool'', or an interval.');
-            end
+           end
         end
         
         function bool = is_default(this)
@@ -137,8 +150,16 @@ classdef BreachDomain
                 
         function new_x = sample_rand(this, num_samples)
             % assumes bounded domain
+            assert(~isempty(this.domain), ...
+                    'BreachDomain:sample_rand:empty_domain',...
+                    'sample_rand cannot sample an empty domain.');
+            
             switch this.type
-                case {'enum', 'int'}
+                case 'bool'
+                    new_x = boolean(randi([0 1], 1, num_samples));
+                case 'int'
+                    new_x = randi([this.domain(1) this.domain(2)],1, num_samples);
+                case 'enum'
                     new_x = this.enum(randi(numel(this.enum),1,num_samples));
                 case 'double'
                     new_x = (this.domain(2)-this.domain(1))*rand(1,num_samples) + this.domain(1);
@@ -156,8 +177,17 @@ classdef BreachDomain
                 st = ['of type ' this.type];
             else
                 st = ['of type ' this.type ' in [' num2str(this.domain(1)) ', ' num2str(this.domain(2)) ']' ];
+            if ismember(this.type,{'bool', 'enum'})
+                st = sprintf([st ' intersect with {'  num2str(this.enum(1:min(10,end)))]);
+                if numel(this.enum)>10
+                    st = [st ' ... ' num2str(this.enum(end)) '}']; 
+                else
+                    st = [st '}'];
+                end
+                
             end
-            
+             end
+           
         end
         
         function new_x = sample_grid(this, num_samples)
