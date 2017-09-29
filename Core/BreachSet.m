@@ -139,7 +139,7 @@ classdef BreachSet < BreachStatus
                             for ip = 1:numel(params)
                                 this.Domains(idxs(ip)) = BreachDomain(type{ip}, domain);
                             end
-                        elseif size(domain, 2) == numel(params)
+                        elseif size(domain, 1) == numel(params)
                             for ip = 1:numel(params)
                                 this.Domains(idxs(ip)) = BreachDomain(type{ip}, domain(ip,:));
                             end
