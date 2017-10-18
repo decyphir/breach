@@ -142,8 +142,6 @@ handles.refine_args = 0;
 handles.show_params = BrGUI.P.ParamList;
 handles.select_cells = [];
 handles.current_plot_pts = {};
-%handles.selected_param=1;
-%handles.selected_varying_param = 1;
 
 % Init param pts plot
 handles.current_plot{1} =[];
@@ -151,8 +149,8 @@ handles.current_plot{2} =[];
 handles.current_plot{3} =[];
 handles.current_marked = [];
 
-handles = update_selected_domain(handles);
-handles.current_plot_pts = handles.selected_params;
+%handles = update_selected_domain(handles);
+%handles.current_plot_pts = handles.selected_params;
 handles = update_modif_panel(handles);
 handles = info(handles, 'Ready.');
 
@@ -924,7 +922,7 @@ k = handles.current_pts;
 handles = fill_uitable(handles);
 
 handles = update_selected_domain(handles);
-handles.current_plot_pts = handles.selected_params;
+handles.current_plot_pts = handles.selected_params(1:min(3,end));
 
 st_sample= get_sample_string(handles);
 handles = info(handles, st_sample);
@@ -993,8 +991,10 @@ if any(Br.P.selected)
             data = [get(h_scat, 'XData'); get(h_scat, 'YData');get(h_scat, 'ZData')];
     end
     % Find data in select
-    h_scat.BrushData  = double(ismember(data', pval_select','rows')');
-    set_brush_style();
+    if ~isempty(data)
+        h_scat.BrushData  = double(ismember(data', pval_select','rows')');
+        set_brush_style();
+    end
 end
 
 function set_selected_from_brush(handles)
