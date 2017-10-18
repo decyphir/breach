@@ -28,11 +28,12 @@ classdef BreachSimulinkSystem < BreachOpenSystem
     
     properties
         lookfor_scopes = false
-        sim_args = {}   % argument list passed to sim command 
+        lookfor_signalbuilders = false
+        sim_args = {}   % argument list passed to sim command
         InputSrc          % for each input, we match an input port or base workspace (0)
-        ParamSrc 
-        SimInputsOnly=false % if true, will not run Simulink model    
-        mdl   
+        ParamSrc
+        SimInputsOnly=false % if true, will not run Simulink model
+        mdl
         log_folder
     end
     
@@ -77,12 +78,12 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         end
         
         function SetupLogFolder(this, folder_name)
-        % SetupLogFolder creates a folder to log traces
-        
+            % SetupLogFolder creates a folder to log traces
+            
             mdl.checksum_hash = DataHash(this.mdl.checksum);
             if nargin<2
                 st = datestr(now,'ddmmyy-HHMM');
-                folder_name = [this.Sys.Dir filesep this.mdl.name '-' st]; 
+                folder_name = [this.Sys.Dir filesep this.mdl.name '-' st];
             end
             [success,msg,msg_id] = mkdir(folder_name);
             if success == 1
@@ -97,7 +98,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
             
         end
-             
+        
         function SetupParallel(this)
             this.use_parallel = 1;
             gcp;
@@ -110,11 +111,11 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             global BreachGlobOpt
             breach_dir = BreachGlobOpt.breach_dir;
             breach_data_dir = [breach_dir filesep 'Ext' filesep 'ModelsData' ];
-                    
+            
             % Give it a name
             mdl_breach = [mdl '_breach'];
             load_system(mdl);
-
+            
             % Get checksum of the model
             try
                 chs = Simulink.BlockDiagram.getChecksum(mdl);
@@ -154,7 +155,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             catch % default fixed step is t_end/1000, unless MaxStep is set smaller
                 t_step=[];
             end
-
+            
             if isempty(t_step) % makes it some default
                 t_step= t_end/1000;
                 try
@@ -236,7 +237,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 
             end
             
-            % creates default from_workspace input generator    
+            % creates default from_workspace input generator
             if ~isempty(sig_fw)
                 fw_input = from_workspace_signal_gen(sig_fw);
             else
@@ -246,11 +247,11 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             this.Sys.InputList= [sig_in, sig_fw]; % used by FindLoggedSignals
             this.InputSrc = zeros(1,numel(this.Sys.InputList));
             this.InputSrc(1:numel(sig_in)) = 1:numel(sig_in);
-           
+            
             
             %% Find outputs
             o = find_system(mdl_breach,'SearchDepth',1, 'BlockType', 'Outport');
-
+            
             sig_out= {};
             for i = 1:numel(o)
                 nm = regexprep(o{i},[mdl_breach '/'],'');
@@ -279,59 +280,65 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             if this.lookfor_scopes
                 sig_scopes = find_scope_signals(mdl_breach);
             end
-
+            
             %% Signal builders
-            
-            % collect signal names so far 
-            
-            % Find them
-            sb_potential = find_system(mdl_breach, 'BlockType', 'SubSystem');
-            sb_list={};
-            for ib = 1:numel(sb_potential)
-                try 
-                    signalbuilder(sb_potential{ib}); % will error if not a signalbuilder - would be nice to find a better test
-                    sb_list = [sb_list sb_potential{ib} ];
+            if this.lookfor_signalbuilders
+                % collect signal names so far
+                
+                % Find them
+                sb_potential = find_system(mdl_breach, 'BlockType', 'SubSystem');
+                sb_list={};
+                for ib = 1:numel(sb_potential)
+                    try
+                        signalbuilder(sb_potential{ib}); % will error if not a signalbuilder - would be nice to find a better test
+                        sb_list = [sb_list sb_potential{ib} ];
+                    end
+                end
+                
+                % Name them and collect parameters
+                sig_build_params = {};
+                sig_build_p0 = [];
+                for isb = 1:numel(sb_list)
+                    sb = sb_list{isb};
+                    line_out = get_param(sb, 'LineHandles');
+                    sb_name = get_param(sb,'Name');
+                    set(line_out.Outport,'Name',sb_name);  % can a signal builder have multiple output port? do we care?
+                    set(line_out.Outport,'DataLoggingName', 'Use signal name', 'DataLogging',1 );
+                    sb_idx = signalbuilder(sb, 'activegroup');
+                    sb_param = [sb_name '_group_idx'];
+                    sig_build_params = [sig_build_params sb_param];
+                    sig_build_p0(end+1) = sb_idx;
+                    this.ParamSrc(sb_param) = sb;
                 end
             end
-            
-            % Name them and collect parameters 
-            sig_build_params = {};
-            sig_build_p0 = [];
-            for isb = 1:numel(sb_list)
-                sb = sb_list{isb};
-                line_out = get_param(sb, 'LineHandles');
-               sb_name = get_param(sb,'Name');
-               set(line_out.Outport,'Name',sb_name);  % can a signal builder have multiple output port? do we care? 
-               set(line_out.Outport,'DataLoggingName', 'Use signal name', 'DataLogging',1 );
-               sb_idx = signalbuilder(sb, 'activegroup');
-               sb_param = [sb_name '_group_idx'];
-               sig_build_params = [sig_build_params sb_param];
-               sig_build_p0(end+1) = sb_idx; 
-               this.ParamSrc(sb_param) = sb;
-            end
-
             %% define parameters
             exclude = {'tspan','u__','t__'};
             assignin('base','tspan', 0:1);
             
-            if ~exist('params','var')||(exist('params','var')&&isequal(params, 'all'))  
+            if ~exist('params','var')||(exist('params','var')&&isequal(params, 'all'))
                 [params, p0] = filter_vars(mdl_breach, exclude);
                 % adds in signal_builder params
-                params = [params sig_build_params];
-                p0 = [p0 sig_build_p0];
+                if this.lookfor_signalbuilders
+                    params = [params sig_build_params];
+                    p0 = [p0 sig_build_p0];
+                end
+                
             elseif ~isempty(params)&&(~exist('p0','var') || isempty(p0))
-                p0 = zeros(1,numel(params));                
+                p0 = zeros(1,numel(params));
                 
                 for ip = 1:numel(params)
                     % need to check for sig_builder params
-                    idbp = strcmp(params{ip}, sig_build_params);
+                    
+                    if this.lookfor_signalbuilders
+                        idbp = strcmp(params{ip}, sig_build_params);
+                    end
                     if ~isempty(idbp)
                         p0(ip) = 1; % default value for signal builder parameter (group idx)
                     else
                         p0(ip) = evalin('base',params{ip});
                     end
                 end
-               
+                
             end
             
             if ~exist('p0', 'var')||isempty(p0)
@@ -388,20 +395,22 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 this.SetInputGen(InputGen);
             end
             
-         %% setup param domains
-         this.Domains = repmat(BreachDomain('double'),[1 this.Sys.DimP]);
-         
-         % Parameters for signalbuilder
-         for isb = 1:numel(sb_list)
-                 sb = sb_list{isb};
-                 idx= FindParam(this.Sys, sig_build_params{isb});
-                 [~,~,~,groupnames] = signalbuilder(sb);
-                 num_groups = numel(groupnames);
-                 this.Domains(idx) = BreachDomain('int',[1 num_groups]);     
-         end
-         %% Closing 
-         save_system(mdl_breach);
-         %close_system(mdl_breach);
+            %% setup param domains
+            this.Domains = repmat(BreachDomain('double'),[1 this.Sys.DimP]);
+            
+            % Parameters for signalbuilder
+            if this.lookfor_signalbuilders
+                for isb = 1:numel(sb_list)
+                    sb = sb_list{isb};
+                    idx= FindParam(this.Sys, sig_build_params{isb});
+                    [~,~,~,groupnames] = signalbuilder(sb);
+                    num_groups = numel(groupnames);
+                    this.Domains(idx) = BreachDomain('int',[1 num_groups]);
+                end
+            end
+            %% Closing
+            save_system(mdl_breach);
+            %close_system(mdl_breach);
         end
         
         function [tout, X] = sim_breach(this, Sys, tspan, pts)
@@ -424,7 +433,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             keys = this.ParamSrc.keys();
             for ik = 1:numel(keys)
                 [ipts, p_found] = FindParam(this.Sys, keys{ik});
-                if p_found 
+                if p_found
                     sb = this.ParamSrc(keys{ik});
                     signalbuilder(sb, 'activegroup', pts(ipts));
                 end
@@ -465,7 +474,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 this.InputGenerator.Reset();
             end
             % save system - hopefully do nothing if nothing is to be done
- %           save_system(this.Sys.mdl,[], 'OverwriteIfChangedOnDisk',true);
+            %           save_system(this.Sys.mdl,[], 'OverwriteIfChangedOnDisk',true);
         end
         
         function [tout, X] = GetXFrom_simout(this, simout)
@@ -541,7 +550,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 end
             end
         end
-          
+        
         function [tout, X, signals] = simout2X(this, simout)
             %
             % converts a simulink output to a data structure Breach can handle
@@ -629,7 +638,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 end
             end
         end
-            
+        
         function sig_log = FindLoggedSignals(this)
             %
             % converts a simulink output to a data structure Breach can handle
@@ -733,24 +742,24 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         end
         
         function  st = disp(this)
-           if isfield(this.P, 'traj')
-               nb_traj = numel(this.P.traj);
-           else
-               nb_traj = 0;
-           end
-           
-           st = ['BreachSimulinkSystem interfacing model ' this.mdl.name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' traces.'];
-           if nargout ==0
-               disp(st);
-           end
+            if isfield(this.P, 'traj')
+                nb_traj = numel(this.P.traj);
+            else
+                nb_traj = 0;
+            end
+            
+            st = ['BreachSimulinkSystem interfacing model ' this.mdl.name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' traces.'];
+            if nargout ==0
+                disp(st);
+            end
         end
-         
+        
         function changed = get_checksum(this)
             try
                 load_system(this.mdl.name);
                 chs = Simulink.BlockDiagram.getChecksum(this.mdl.name);
                 close_system(this.mdl.name);
-                changed  = ~isequal(this.mdl.checksum, chs); 
+                changed  = ~isequal(this.mdl.checksum, chs);
                 this.mdl.checksum = chs;
             catch
                 warning('BreachSimulinkSystem:get_checksum_failed', 'Simulink couldn''t compute a checksum for the model.');
@@ -761,7 +770,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         function disable_checksum_warn(this)
             warning('off', 'BreachSimulinkSystem:get_checksum_failed');
         end
-                   
+        
         %% Export result
         function [summary, traces] = ExportTracesToStruct(this,i_traces, varargin)
             % BreachSimulinkSystem.ExportTracesToStruct
@@ -804,7 +813,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             
             % signal generators
             for is  = 1:numel(input_names)
-                   signal_gen_types{is} = class(this.InputGenerator.GetSignalGenFromSignalName(input_names{is}));
+                signal_gen_types{is} = class(this.InputGenerator.GetSignalGenFromSignalName(input_names{is}));
             end
             
             % signal names
@@ -865,10 +874,10 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             summary.test_params.names = this.GetBoundedDomains();
             summary.input_generators = signal_gen_types;
             summary.test_params.values = this.GetParam(summary.test_params.names);
-
+            
             summary.const_params.names = setdiff( this.P.ParamList(this.P.DimX+1:end), this.GetBoundedDomains())';
             summary.const_params.values = this.GetParam(summary.const_params.names,1)';
-
+            
             
             if isfield(this.P, 'props')
                 summary.specs.names = spec_names;
@@ -881,9 +890,9 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             
             
         end
-   
         
-        function [success, msg, msg_id] = SaveResults(this, folder_name, varargin) 
+        
+        function [success, msg, msg_id] = SaveResults(this, folder_name, varargin)
             % Additional options
             options = struct('FolderName', folder_name, 'SaveBreachSystem', true, 'ExportToExcel', false, 'ExcelFileName', 'Results.xlsx');
             options = varargin2struct(options, varargin{:});
@@ -894,9 +903,9 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             
             folder_name = options.FolderName;
             [success,msg,msg_id] = mkdir(folder_name);
-            trace_folder_name = [folder_name filesep 'traces']; 
+            trace_folder_name = [folder_name filesep 'traces'];
             [success,msg,msg_id] = mkdir(trace_folder_name);
-
+            
             if success == 1
                 if isequal(msg_id, 'MATLAB:MKDIR:DirectoryExists')
                     this.disp_msg(['Saving in existing result folder at ' folder_name]);
@@ -907,12 +916,12 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             else
                 error(['Couldn''t create folder'  folder_name '.']);
             end
-   
+            
             [summary, traces] = this.ExportTracesToStruct();
             %saving summary
             summary_filename = [folder_name filesep 'summary'];
-            save(summary_filename,'-struct', 'summary'); 
-   
+            save(summary_filename,'-struct', 'summary');
+            
             if  options.SaveBreachSystem
                 breachsys_filename  = [folder_name filesep 'breach_system'];
                 breachsys_name = this.whoamI;
@@ -931,25 +940,25 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 breach_dir = BreachGlobOpt.breach_dir;
                 template_file_path = [breach_dir filesep 'Ext' filesep 'Toolboxes' filesep 'ExportResults' filesep 'BreachResults_template.xlsx'];
                 copyfile(template_file_path, excel_file);
-               
+                
                 % Write header
                 for ispec = 1:numel(summary.specs.names)
-                      hdr{ispec} = ['Req. ' num2str(ispec)];
-                end 
+                    hdr{ispec} = ['Req. ' num2str(ispec)];
+                end
                 for iparam = ispec+1:ispec+numel(summary.test_params.names)
-                     hdr{iparam} = ['param. ' num2str(iparam-ispec) ];
+                    hdr{iparam} = ['param. ' num2str(iparam-ispec) ];
                 end
                 xlswrite(excel_file, hdr, 1, 'B1');
                 xlswrite(excel_file, [summary.specs.names summary.test_params.names], 1, 'B2');
                 xlswrite(excel_file, [summary.specs.names summary.test_params.names], 1, 'B2');
-
+                
                 % Write data
                 xlswrite(excel_file, [ summary.num_sat' summary.specs.rob' summary.test_params.values'] , 1, 'A3');
-               
+                
                 this.disp_msg(['Summary written into ' excel_file]);
             end
             
-        end     
+        end
         
     end
     

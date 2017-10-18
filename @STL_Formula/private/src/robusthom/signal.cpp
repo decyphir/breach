@@ -1,4 +1,5 @@
 #include "signal.h"
+#include "mex.h"
 
 /* 
  * class Signal member functions
@@ -62,10 +63,35 @@ Signal::Signal(Sequence S) {
   }
 }
 
+int Signal::push_front(Sample P) {
+// Specialize push_front - ensures time is properly increasing and not beyond endTime
+    if (empty()) {
+        if (P.time< endTime)
+            std::deque<Sample>::push_front(P);
+        else {
+#ifdef DEBUG__
+            mexPrintf("WARNING: time after endTime!\n");
+#endif
+            return 1;
+        }
+    }
+    else
+        if   (P.time<front().time) {
+            std::deque<Sample>::push_front(P);
+        }
+        else {
+#ifdef DEBUG__
+            mexPrintf("WARNING: time not advancing!\n");
+#endif
+            return 1;
+        }
+    return 0;
+}
+
 //remove linear interpolations
 void Signal::simplify() {
 #ifdef DEBUG__
-  cout << "Entering Signal::simplify" << endl;
+  mexPrintf("Entering Signal::simplify\n");
 #endif
 	push_back(front());
 	pop_front();
@@ -75,8 +101,25 @@ void Signal::simplify() {
 		}
 		pop_front();
 	}
+#ifdef DEBUG__
+  mexPrintf("Leaving Signal::simplify\n");
+#endif
 }
 
+void Signal::print() const {
+    Signal::const_iterator i;
+    
+    if(begin() == end())
+        mexPrintf("EMPTY\n");
+    else {
+        mexPrintf("beginTime: %g endTime:%g\n", beginTime , endTime);
+        
+        mexPrintf("time    value   derivative\n");
+        for(i = begin(); i != end(); i++) {
+            mexPrintf("%g %g %g\n",i->time, i->value, i->derivative);
+        }
+    }
+}
 
 void Signal::resize(double s, double t, double v) {
 

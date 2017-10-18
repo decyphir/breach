@@ -75,7 +75,6 @@ set(hObject, 'Name', ['Choose from list']);
   prompt = varargin{2};
   set(hObject, 'Name', prompt);
   
-  
   handles.content_all = content_all;   
 
   % fill variable list 
@@ -201,7 +200,8 @@ function button_ok_Callback(hObject, eventdata, handles)
 % --- Executes on button press in button_cancel.
 function button_cancel_Callback(hObject, eventdata, handles)
 
-  handles.output=[];
+  handles.output=0;
+  guidata(hObject, handles);
   uiresume(handles.main);
 
 
@@ -318,6 +318,11 @@ function pushbutton_add_all_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+ content_all = get(handles.listbox_all_variables,'String');
+ set(handles.listbox_selected,'String',content_all);
+set(handles.listbox_selected,'Value',1);
+ guidata(hObject, handles);
+    
 
 
 
@@ -326,3 +331,8 @@ function pushbutton_rem_all_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_rem_all (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+set(handles.listbox_selected,'String',{});
+set(handles.listbox_selected,'Value',0);
+ guidata(hObject, handles);
+
+ 

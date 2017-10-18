@@ -4,6 +4,7 @@
 #include <deque>
 #include <iostream>
 #include <limits>
+#include "mex.h"
 #define BOTTOM -std::numeric_limits<double>::infinity()
 #define TOP std::numeric_limits<double>::infinity()
 
@@ -43,7 +44,7 @@ public:
 	Sample() { }
 	Sample(double t, double v, double d) : Point(t,v), derivative(d) { }	
     Sample constant() const;
-
+   
 	double valueAt(const double &) const;
 	double timeIntersect(const Sample &) const;
 	double area(const double &) const;
@@ -63,8 +64,9 @@ double Sample::valueAt(const double & t) const {
 
 inline
 double Sample::timeIntersect(const Sample & point) const {
-	return (value - point.value + (point.derivative * point.time) - (derivative * time)) / (point.derivative - derivative);
+    return (value - point.value + (point.derivative * point.time) - (derivative * time)) / (point.derivative - derivative);
 }
+
 
 
 //piecewise-constant, right-continuous signals
@@ -87,12 +89,13 @@ public:
 	Signal(Sequence);        
     Signal(double, double, int); 
 	Signal(double *, double *, int); //create continuous signal from array of sampling points (time, value) with linear interpolation
-
+    
 	void simplify(); //remove sampling points where (y,dy) is continuous.
 	void resize(double, double, double); //restricts/extends the signal to [s,t) with default value v where not defined
 	void shift(double); //shifts the signal of delta_t time units
     Signal* reverse();
-    
+    int push_front(Sample);
+    void print() const;
 	friend std::ostream & operator<<(std::ostream &, const Signal &);
 
 };
