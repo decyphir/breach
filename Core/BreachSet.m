@@ -1031,6 +1031,10 @@ classdef BreachSet < BreachStatus
         end
         
         %% Misc
+        function s= isSignal(this,params)
+            idx_s = FindParam(this.P, params);
+            s = idx_s <= this.P.DimX;
+        end
         
         % Warning handler
         function WarningResetP(this, fname)

@@ -145,9 +145,26 @@ classdef BreachDomain
         end
        
         function all_x = sample_all(this)
-            all_x = this.enum;
+            assert(~isempty(this.domain), ...
+                    'BreachDomain:sample_all:empty_domain',...
+                    'sample_all cannot sample an empty domain.');
+            
+          switch this.type
+                case 'bool'
+                    all_x = [false true];
+                case 'int'
+                    all_x = this.domain(1):this.domain(2);
+                case 'enum'
+                    all_x = this.enum;
+                case 'double'
+                    error ('BreachDomain:sample_all:double_domain',...
+                    'sample_all cannot sample a double domain.');
+          end
         end
-                
+            
+          
+        
+                     
         function new_x = sample_rand(this, num_samples)
             % assumes bounded domain
             assert(~isempty(this.domain), ...

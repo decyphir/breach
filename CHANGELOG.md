@@ -1,3 +1,15 @@
+# Release 1.2.11
+
+## Bugfixes
+- GUI: fixed Env. Param button when no input signal
+- Calling InitBreach in InstallBreach at very beginning to avoid
+  missing varargin2struc (#52)
+
+## Users
+- new helper function isSignal returns if a name represents a signal
+  in a BreachSet
+- GUI safeguards around selected parameters for sampling (Issues 32-33-34)
+
 # Release 1.2.10
 
 ## Users

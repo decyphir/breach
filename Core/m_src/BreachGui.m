@@ -412,9 +412,7 @@ else
         return
     end
 end
-
-%handles = run_sample_domain(handles);
-%plot_pts(handles);
+handles = update_sample_args(handles);
 guidata(hObject,handles);
 
 function handles  = run_sample_domain(handles)
@@ -427,6 +425,7 @@ Br.SampleDomain(handles.selected_params, ...
     handles.sample_arg_multi);
 
 function handles = update_sample_args(handles)
+Br = handles.working_sets.(handles.current_set);
 val = get(handles.popup_sample_option,'Value');
 switch(val)
     case 1
@@ -447,6 +446,44 @@ switch(val)
         handles.sample_arg_method = 'rand';
     case 4
         handles.sample_arg_method = 'quasi-random';
+end
+
+% checks if any selected param is actually a signal
+params = handles.selected_params; 
+isSig = Br.isSignal(params);
+if any(Br.isSignal(params))
+    isSig = params(isSig>0);
+    handles = info(handles,  ['Cannot sample ' isSig{1} ', as this is a signal.']); 
+    set(handles.button_sample, 'Enable', 'off');
+    return;
+end
+
+% checks whether everybody is a variables
+domains = Br.GetDomain(params);
+variables = {};
+for id = 1:numel(domains)
+    if  ~isempty(domains(id).domain)
+        variables = [variables params(id)];
+    end
+end
+
+params = setdiff(params,variables);
+if (~isempty(params))
+    set(handles.button_sample, 'Enable', 'off');
+    msg = ['Parameter ' params{1} ' is not a variable (empty domain), cannot sample.'];  
+    handles = info(handles,  msg); 
+    return
+end
+
+num_args = get(handles.edit_num_samples, 'String');
+if ~isempty(num_args)
+    set( handles.button_sample, 'Enable', 'on');
+    msg = ['Ready to sample domain of { ' get_domain_string(handles) '}'];  
+    handles = info(handles,  msg);
+else 
+    set( handles.button_sample, 'Enable', 'off');
+    msg = ['Enter a  number of samples. It can be a scalar: int or the keyword ''all'' or an array or cell of scalar and keyword.' ]; 
+     handles = info(handles,  msg);
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -1883,6 +1920,7 @@ switch(val)
         handles.sample_arg_multi = 'combine';
 end
 
+handles = update_sample_args(handles);
 guidata(hObject,handles);
 
 
@@ -1931,13 +1969,47 @@ handles.select_cells = idx;
 if ~isempty(idx)
     handles.selected_params = handles.show_params(idx(:,1));
     st_sample= get_sample_string(handles);
-    st = [st_sample ' - press ''ctrl-p'' to change plot.'];
+    st = [st_sample ' - press ''ctrl-p'' to change plot axis.'];
     handles = info(handles, st);
     guidata(hObject,handles);
 end
 
 function st_sample = get_sample_string(handles)
-st_sample = ['Domain { ' get_domain_string(handles) '}' ];
+Br = handles.working_sets.(handles.current_set);
+params = handles.selected_params;
+isSig = Br.isSignal(params);
+signals = params(isSig);
+params = params(~isSig);
+st_sample = ['Selected: ' ];
+
+if ~isempty(signals)
+    st_signals  = cell2mat(cellfun(@(c) ( [c ' ' ] ) , signals, 'UniformOutput', false ));
+    st_sample = [st_sample 'Signals: { ' st_signals '} '];
+    set(handles.button_sample, 'Enable', 'off');
+end
+
+if ~isempty(params)
+    
+    domains = Br.GetDomain(params);
+    variables = {};
+    for id = 1:numel(domains)
+        if  ~isempty(domains(id).domain)
+            variables = [variables params(id)];
+        end
+    end
+    if ~isempty(variables)
+        st_variables = cell2mat(cellfun(@(c) ( [c ' ' ] ) ,variables, 'UniformOutput', false ));
+        st_sample  = [st_sample ' Variables { ' st_variables '} '];
+    end
+    
+    params = setdiff(params,variables);
+    if ~isempty(params)
+        st_params  = cell2mat(cellfun(@(c) ( [c ' ' ] ) , params, 'UniformOutput', false ));
+        st_sample  = [st_sample 'Parameters { ' st_params '}'];
+        set(handles.button_sample, 'Enable', 'off');
+    end
+ end
+
 
 
 function st_dom = get_domain_string(handles)
@@ -2135,6 +2207,9 @@ function button_sample_Callback(hObject, eventdata, handles)
 
 try 
    handles = run_sample_domain(handles);
+   Br = handles.working_sets.(handles.current_set);
+   modif_panel_title = Br.disp();
+   set(handles.modif_param_panel,'Title', modif_panel_title);
    plot_pts(handles);
    guidata(hObject,handles);
 catch 
