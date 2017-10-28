@@ -807,19 +807,11 @@ if isempty(str)
     return;
 end
 
-try
     id = get_id(prop);
     phi_st = str{1};
     PHI = eval(['STL_Formula(''' id ''',''' phi_st ''')']);
     eval([get_id(PHI) '=PHI']);
     Br.AddSpec(PHI);
-catch
-    s = lasterror;
-    warndlg(['Invalid formula: ' s.message] );
-    error(s);
-    return
-end
-
 
 handles = update_properties_panel(handles);
 guidata(hObject, handles);

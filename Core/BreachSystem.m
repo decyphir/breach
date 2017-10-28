@@ -128,6 +128,7 @@ classdef BreachSystem < BreachSet
             
             % checks whether spec is in there already or not
             if this.Specs.isKey(get_id(phi))
+                this.Specs(get_id(phi)) = phi;
                 return;
             end
             

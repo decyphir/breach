@@ -582,11 +582,6 @@ end
 
 contents = get(hObject,'String');
 strpop = contents{get(hObject,'Value')};
-if (handles.plot_sensi(2))
-    handles.current_sensi{2,2} = {strpop};
-else
-    handles.current_var{2,2} = {strpop};
-end
 new_plot = plot_param(handles,2);
 handles.current_plot{2} = new_plot;
 guidata(hObject, handles);
@@ -619,11 +614,6 @@ end
 
 contents = get(hObject,'String');
 strpop = contents{get(hObject,'Value')};
-if (handles.plot_sensi(3))
-    handles.current_sensi{3,2} = {strpop};
-else
-    handles.current_var{3,2} = {strpop};
-end
 new_plot = plot_param(handles,3);
 handles.current_plot{3} = new_plot;
 
@@ -653,12 +643,6 @@ if (handles.plot_tout)
     handles.plot_tout =0;
     handles.traj_opt = {'b'};
     set(handles.plot_tout_button, 'Value', 0);
-end
-
-if (handles.plot_sensi(1))
-    handles.current_sensi{1,3} = {strpop};
-else
-    handles.current_var{1,3} = {strpop};
 end
 
 new_plot = plot_param(handles,1);
@@ -693,12 +677,6 @@ end
 contents = get(hObject,'String');
 strpop = contents{get(hObject,'Value')};
 
-if (handles.plot_sensi(2))
-    handles.current_sensi{2,3} = {strpop};
-else
-    handles.current_var{2,3} = {strpop};
-end
-
 new_plot = plot_param(handles,2);
 handles.current_plot{2} = new_plot;
 guidata(hObject, handles);
@@ -729,12 +707,6 @@ end
 
 contents = get(hObject,'String');
 strpop = contents{get(hObject,'Value')};
-
-if (handles.plot_sensi(3))
-    handles.current_sensi{3,3} = {strpop};
-else
-    handles.current_var{3,3} = {strpop};
-end
 
 new_plot = plot_param(handles,3);
 handles.current_plot{3} = new_plot;
@@ -798,17 +770,11 @@ handles.current_var{nb_ax,1} = handles.current_var{2,1};
 handles.current_var{nb_ax,2} = handles.current_var{2,2};
 handles.current_var{nb_ax,3} = handles.current_var{2,3};
 
-handles.current_sensi{nb_ax,1} = handles.current_sensi{2,1};
-handles.current_sensi{nb_ax,2} = handles.current_sensi{2,2};
-handles.current_sensi{nb_ax,3} = handles.current_sensi{2,3};
-handles.current_plot{nb_ax} = [];
-
-handles.plot_sensi = [handles.plot_sensi handles.plot_sensi(2)];
 figure;
 axes;
 ax = gca;
 handles.exported_axes = [handles.exported_axes ax];
-if (handles.plot_tout&&~handles.plot_sensi(2))
+if (handles.plot_tout)
     param_to_plot = handles.current_var{2,1};
     if (~strcmp(param_to_plot,''))
         if (~strcmp(handles.current_var{2,2},''))
@@ -838,17 +804,13 @@ handles.current_var{nb_ax,1} = handles.current_var{3,1};
 handles.current_var{nb_ax,2} = handles.current_var{3,2};
 handles.current_var{nb_ax,3} = handles.current_var{3,3};
 
-handles.current_sensi{nb_ax,1} = handles.current_sensi{3,1};
-handles.current_sensi{nb_ax,2} = handles.current_sensi{3,2};
-handles.current_sensi{nb_ax,3} = handles.current_sensi{3,3};
 handles.current_plot{nb_ax} = [];
 
-handles.plot_sensi = [handles.plot_sensi handles.plot_sensi(2)];
 figure;
 axes;
 ax = gca;
 handles.exported_axes = [handles.exported_axes ax];
-if (handles.plot_tout&&~handles.plot_sensi(2))
+if (handles.plot_tout)
     param_to_plot = handles.current_var{3,1};
     if (~strcmp(param_to_plot,''))
         if (~strcmp(handles.current_var{3,2},''))
