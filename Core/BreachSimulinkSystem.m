@@ -8,7 +8,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
     %   Arguments:
     %   mdl.name  -  a string naming a Simulink model.
     %   params    -  cell array of strings | 'all'
-    %   p0        -  (optional) default values for parameters
+    %   p0          -  (optional) default values for parameters
     %   signals   -  specifies signals to interface
     %   inputfn   -  specifies an input generator
     %
@@ -331,6 +331,8 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                     
                     if this.lookfor_signalbuilders
                         idbp = strcmp(params{ip}, sig_build_params);
+                    else 
+                        idbp = {};
                     end
                     if ~isempty(idbp)
                         p0(ip) = 1; % default value for signal builder parameter (group idx)
@@ -778,7 +780,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             summary = [];
             traces = [];
             if ~this.hasTraj()
-                warning('Breach:ExportTrace:no_trace', 'No trace to export - run Sim command first');
+                error('Breach:ExportTrace:no_trace', 'No trace to export - run Sim command first');
                 return;
             end
             
@@ -917,6 +919,11 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 error(['Couldn''t create folder'  folder_name '.']);
             end
             
+            if ~this.hasTraj()
+                error('Breach:SaveResult:no_trace', 'No trace to save - run Sim command first');
+                return;
+            end
+            
             [summary, traces] = this.ExportTracesToStruct();
             %saving summary
             summary_filename = [folder_name filesep 'summary'];
@@ -935,29 +942,32 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
             
             if options.ExportToExcel
-                excel_file = [folder_name filesep options.ExcelFileName];
-                global BreachGlobOpt
-                breach_dir = BreachGlobOpt.breach_dir;
-                template_file_path = [breach_dir filesep 'Ext' filesep 'Toolboxes' filesep 'ExportResults' filesep 'BreachResults_template.xlsx'];
-                copyfile(template_file_path, excel_file);
-                
-                % Write header
-                for ispec = 1:numel(summary.specs.names)
-                    hdr{ispec} = ['Req. ' num2str(ispec)];
+                if ~isfield(summary, 'specs')
+                    warning('Breach:SaveResult:no_spec_for_Excel','Export to Excel requested but there is no requirement result to report. Excel file not created.'); 
+                else
+                    excel_file = [folder_name filesep options.ExcelFileName];
+                    global BreachGlobOpt
+                    breach_dir = BreachGlobOpt.breach_dir;
+                    template_file_path = [breach_dir filesep 'Ext' filesep 'Toolboxes' filesep 'ExportResults' filesep 'BreachResults_template.xlsx'];
+                    copyfile(template_file_path, excel_file);
+                    
+                    % Write header
+                    for ispec = 1:numel(summary.specs.names)
+                        hdr{ispec} = ['Req. ' num2str(ispec)];
+                    end
+                    for iparam = ispec+1:ispec+numel(summary.test_params.names)
+                        hdr{iparam} = ['param. ' num2str(iparam-ispec) ];
+                    end
+                    xlswrite(excel_file, hdr, 1, 'B1');
+                    xlswrite(excel_file, [summary.specs.names summary.test_params.names], 1, 'B2');
+                    xlswrite(excel_file, [summary.specs.names summary.test_params.names], 1, 'B2');
+                    
+                    % Write data
+                    xlswrite(excel_file, [ summary.num_sat' summary.specs.rob' summary.test_params.values'] , 1, 'A3');
+                    
+                    this.disp_msg(['Summary written into ' excel_file]);
                 end
-                for iparam = ispec+1:ispec+numel(summary.test_params.names)
-                    hdr{iparam} = ['param. ' num2str(iparam-ispec) ];
-                end
-                xlswrite(excel_file, hdr, 1, 'B1');
-                xlswrite(excel_file, [summary.specs.names summary.test_params.names], 1, 'B2');
-                xlswrite(excel_file, [summary.specs.names summary.test_params.names], 1, 'B2');
-                
-                % Write data
-                xlswrite(excel_file, [ summary.num_sat' summary.specs.rob' summary.test_params.values'] , 1, 'A3');
-                
-                this.disp_msg(['Summary written into ' excel_file]);
             end
-            
         end
         
     end
