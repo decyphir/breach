@@ -7,6 +7,20 @@ optionNames = fieldnames(strct);
 
 % count arguments
 nArgs = length(varargin);
+
+if nArgs==1 % must be a struct 
+    opt = varargin{1}; 
+    opt_flds = fieldnames(opt);
+    s = setdiff(opt_flds,optionNames);
+    if ~isempty(s)
+        error('varargin2struct:invalid_options', [ s{1} ' is not a valid option.']);
+    end
+   
+    for io = 1:length(opt_flds)
+       strct.(opt_flds{io}) = opt.(opt_flds{io});
+    end
+ 
+else
 if round(nArgs/2)~=nArgs/2
    error('Options should be provided as  propertyName/propertyValue pairs')
 end
@@ -23,5 +37,5 @@ for pair = reshape(varargin,2,[]) %# pair is {propName;propValue}
       error('%s is not a recognized option name',pair{1})
    end
 end
-
+end
 end

@@ -33,7 +33,7 @@ end
 % do stuff
 
 options.Resize = 'on';
-options.WindowStyle = 'normal';
+options.WindowStyle = 'modal';
 options.Interpreter = 'None';
 
 answer = inputdlg(prompt,title,1,defaultanswer,options);

@@ -34,7 +34,6 @@ classdef BreachSet < BreachStatus
     
     properties
         Domains = BreachDomain('double', [])
-        % will replace SignalRanges eventually (?)
         SignalRanges % ranges of values taken by each signal variable      
         AppendWhenSample=false % when true, sampling appends new param vectors, otherwise replace.
     end
@@ -237,6 +236,9 @@ classdef BreachSet < BreachStatus
                     warning('SetParam:param_not_in_list',['Parameter ' nparam ' was set but is not a system parameter.' ...
                         ' If this is intended to be a spec. parameter, consider using SetParamSpec instead.']);
                 end
+                for ii = 1:length(i_not_sys)
+                    this.Domains(end+1) = BreachDomain(); % default domain for new parameters
+                end
             end
             
             num_params = numel(ip);
@@ -370,12 +372,17 @@ classdef BreachSet < BreachStatus
             sys_params = this.P.ParamList(this.P.DimX+1:this.P.DimP);
         end
         
+        function [params, idx] = GetParamsSysList(this)
+            % GetParamsSysList ahem, consider merging with GetSysParamList...
+            idx = this.P.DimX+1:this.P.DimP;
+            params = this.P.ParamList(idx);
+        end
+        
         function prop_params = GetPropParamList(this)
             % GetSysParamList returns system parameter names
             prop_params = this.P.ParamList(this.P.DimP+1:end);
         end
         
-          
         %% Signals
         function traces = GetTraces(this)
             % Get computed trajectories
@@ -477,8 +484,7 @@ classdef BreachSet < BreachStatus
             i_trajs = 1:numel(this.P.traj);
         end
         
-        [success,msg,msg_id] = mkdir(folder);
-            
+        [success,msg,msg_id] = mkdir(folder);           
         if success == 1
             if isequal(msg_id, 'MATLAB:MKDIR:DirectoryExists')
                 this.disp_msg(['Saving in existing folder ' folder]);
@@ -489,24 +495,26 @@ classdef BreachSet < BreachStatus
             error(['Couldn''t create folder'  folder '. mkdir returned error: ' msg]);
         end
         
+        [sys_param_list, sys_param_idx] = this.GetParamsSysList();           
         for ip = 1:numel(i_trajs)
             fname = [folder filesep name num2str(ip) '.mat'];
-            sig = [this.P.traj{ip}.time' this.GetSignalValues(signals{1}, ip)'];
-            eval([ signals{1} '= sig;']); 
-            save(fname, signals{1});
-            for is = 2:numel(signals)
-                sig = [this.P.traj{ip}.time' this.GetSignalValues(signals{is}, ip)'];
+            time = this.P.traj{ip}.time';
+            save(fname, 'time');
+            for is = 1:numel(signals)
+                sig = this.GetSignalValues(signals{is}, ip)';
                 eval([ signals{is} '= sig;']);
                 save(fname,'-append',  signals{is});
-            end            
-            
+            end
+            % save parameter values 
+            for iparam=1:numel(sys_param_idx)
+                p = this.P.traj{ip}.param(sys_param_idx(iparam));
+                eval([ sys_param_list{iparam} '= p;']);
+                save(fname,'-append',  sys_param_list{iparam});
+            end
         end
         
         end
-        
-        
-       
-        
+             
         function h = PlotSignals(this, varargin)
             % Plot signals
             if (~isfield(this.P,'traj'))

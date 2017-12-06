@@ -87,7 +87,7 @@ Model {
       $ObjectID		      2
       $ClassName	      "Simulink.WindowInfo"
       IsActive		      [1]
-      Location		      [781.0, 578.0, 2062.0, 1232.0]
+      Location		      [689.0, 691.0, 2062.0, 1232.0]
       Object {
 	$PropName		"ModelBrowserInfo"
 	$ObjectID		3
@@ -123,7 +123,7 @@ Model {
   ModifiedByFormat	  "%<Auto>"
   LastModifiedBy	  "donze"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "Fri Jul 07 09:59:05 2017"
+  LastModifiedDate	  "Tue Nov 28 09:06:48 2017"
   RTWModifiedTimeStamp	  421322322
   ModelVersionFormat	  "1.%<AutoIncrement:276>"
   ConfigurationManager	  "none"
@@ -1030,7 +1030,7 @@ Model {
   }
   System {
     Name		    "Autotrans_shift"
-    Location		    [781, 578, 2843, 1810]
+    Location		    [689, 691, 2751, 1923]
     Open		    on
     ModelBrowserVisibility  off
     ModelBrowserWidth	    200

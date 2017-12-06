@@ -1,14 +1,26 @@
 # Release 1.2.11
 
+## Users
+- SetInitFn method sets a callback function for initialization before simulation
+- new helper function isSignal returns if a name represents a signal
+  in a BreachSet
+- GUI safeguards around selected parameters for sampling (Issues 32-33-34)
+- GUI 'Domain' button changed to 'Variables' 
+- Support struct parameters and model workspace, still experimental 
+- Enable parallel from GUI
+- SaveSignals/Load
+- BreachSave function saves Breach objects in the workspace into a mat file 
+
+
 ## Bugfixes
 - GUI: fixed Env. Param button when no input signal
 - Calling InitBreach in InstallBreach at very beginning to avoid
   missing varargin2struc (#52)
+- Fixed bug in BreachDomain with 'int' and empty domain leading to change to enum type
+- Fixed bug in SetInputGen which would not update domains appropriately
 
-## Users
-- new helper function isSignal returns if a name represents a signal
-  in a BreachSet
-- GUI safeguards around selected parameters for sampling (Issues 32-33-34)
+## Developpers
+- New class BreachOptionGui to create gui from options
 
 # Release 1.2.10
 

@@ -14,13 +14,12 @@ classdef BreachStatus < handle
         
         function  my_name = whoamI(this)
             S = evalin('base', 'who');
-            my_name= 'B'; 
+            my_name= '__Nobody__'; 
             for iv = 1:numel(S)
               if isequal(evalin('base', S{iv}), this)
                   my_name = S{iv};
               end
             end
-            
         end
         
         function addStatus(this, status, key, msg)

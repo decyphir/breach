@@ -53,7 +53,7 @@ classdef BreachDomain
                             end
                         case 'int'
                             this.type = 'int';
-                            if  numel(domain) ~= 2
+                            if  all([0 2] ~= numel(domain))
                                 this = BreachDomain('enum', [], domain);
                             else
                                 this.domain = domain;
