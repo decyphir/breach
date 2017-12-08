@@ -56,7 +56,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             this.mdl.path = which(mdl_name);
             this.mdl.date =  datestr(now,'ddmmyy-HHMM');
             this.ParamSrc = containers.Map();
-           
+            
             switch nargin
                 case 1,
                     this.CreateInterface(mdl_name);
@@ -91,14 +91,14 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             %% Init param sources, if not done already
             for ip = this.P.DimX+1:length(this.P.ParamList)
                 if  ~this.ParamSrc.isKey(this.P.ParamList{ip})
-                   this.ParamSrc(this.P.ParamList{ip}) = BreachParam(this.P.ParamList{ip}); 
+                    this.ParamSrc(this.P.ParamList{ip}) = BreachParam(this.P.ParamList{ip});
                 end
             end
             
         end
         
         function SetupOptions(this, varargin)
-        % handles additional options for model interfacing
+            % handles additional options for model interfacing
             options.StoreTracesOnDisk = false;
             options.FindScopes = false;
             options.FindTables = false;
@@ -106,7 +106,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             options.Parallel = 'off';
             options.SimCmdArgs = {};
             options.Verbose = 1;
-            options.MaxNumTabParam = 10; 
+            options.MaxNumTabParam = 10;
             options.InitFn = '';
             options = varargin2struct(options, varargin{:});
             
@@ -149,24 +149,24 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             this.use_parallel = 1;
             gcp;
             this.Sys.Parallel = 1;
-            % 
+            %
             if ~isempty(this.InitFn)
                 pctRunOnAll(this.InitFn);
             end
             pctRunOnAll('warning(''off'', ''Simulink:Commands:MdlFileChangedCloseManually'')'); % should be harmless right?
-
+            
         end
         
         function StopParallel(this)
             this.use_parallel = 0;
-            this.Sys.Parallel = 0; 
+            this.Sys.Parallel = 0;
         end
         
-%% Interface creation
+        %% Interface creation
         
         function [sig_in, sig_out, sig_fw, params, sig_build_params] = CreateInterface(this, mdl, params, p0, signals)
             %% Copy the model
-
+            
             %  Get Breach directory
             global BreachGlobOpt
             breach_dir = BreachGlobOpt.breach_dir;
@@ -306,7 +306,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             this.Sys.InputList= [sig_in, sig_fw]; % used by FindLoggedSignals
             this.InputSrc = zeros(1,numel(this.Sys.InputList));
             this.InputSrc(1:numel(sig_in)) = 1:numel(sig_in);
-                       
+            
             %% Find outputs
             o = find_system(mdl_breach,'SearchDepth',1, 'BlockType', 'Outport');
             sig_out= {};
@@ -387,7 +387,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 
                 for ip = 1:numel(params)
                     % need to check for sig_builder params
-                    pname = params{ip}; 
+                    pname = params{ip};
                     if this.FindSignalBuilders
                         idbp = strcmp(pname, sig_build_params);
                     else
@@ -399,21 +399,21 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                         % BreachParam, and a corresponding BreachParam
                         p0(ip) = 1; % default value for signal builder parameter (group idx)
                     else
-                       bparam = GetSimulinkBreachParam(mdl_breach, pname);
-                       this.ParamSrc(pname) = bparam;
-                       p0(ip) = bparam.getValue(); 
+                        bparam = GetSimulinkBreachParam(mdl_breach, pname);
+                        this.ParamSrc(pname) = bparam;
+                        p0(ip) = bparam.getValue();
                     end
                 end
             elseif ~isempty(params)&&exist('p0', 'var')
                 if ~isequal(size(p0), size(params))
                     error('BreachSimulinkSystem:params_p0_size_differ', 'Wrong number of default values for parameters.')
                 else
-                    for ip = 1:numel(params) 
-                       pname = params{ip};
-                       bparam = GetSimulinkBreachParam(mdl_breach, pname);
-                    bparam.setValue(p0(ip));
-                       this.ParamSrc(pname) = bparam;
-                end
+                    for ip = 1:numel(params)
+                        pname = params{ip};
+                        bparam = GetSimulinkBreachParam(mdl_breach, pname);
+                        bparam.setValue(p0(ip));
+                        this.ParamSrc(pname) = bparam;
+                    end
                 end
             else
                 params = {};
@@ -442,7 +442,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                     warning('BreachSimulinkSystem:signal_not_found',['Signal ' signals{not_found} ' not found in model.']);
                 end
             end
-                     
+            
             %% Create the Breach structure
             p0 = [zeros(1,numel(signals)) p0 pu];
             Sys = CreateSystem(signals, params, p0'); % define signals and parameters
@@ -491,7 +491,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             save_system(mdl_breach);
             
         end
-                    
+        
         function sig_log = FindLoggedSignals(this)
             %
             % converts a simulink output to a data structure Breach can handle
@@ -603,12 +603,12 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                         v = evalin('base',vname);
                         msg= sprintf('Found var %s in %s used by %s.',  var.Name, var.SourceType, var.Users{1});
                         this.disp_msg(msg,1);
-                    
+                        
                     case 'model workspace'
                         v = getVariable(mdl_ws,var.Name);
                         msg= sprintf('Found var %s in %s used by %s.',  var.Name, var.SourceType, var.Users{1});
                         this.disp_msg(msg,1);
-                    otherwise 
+                    otherwise
                         msg= sprintf('Found var %s in a %s for block %s. This type of workspace is not yet supported.',  var.Name, var.SourceType, var.Source);
                         this.disp_msg(msg,2);
                         continue; % TODO ? support other exotic workspaces (mask workspace, etc? )
@@ -616,7 +616,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 
                 % is it a scalar, a struct or an array?
                 if (isnumeric(v)) % scalar or array
-                    new_par(v, vname); 
+                    new_par(v, vname);
                 elseif isstruct(v)  % struct
                     fds = fieldnames(v);
                     for svi = 1:numel(fds)
@@ -624,9 +624,9 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                     end
                 end
             end
-
+            
             function new_par(nv, nvname)
-                if (isscalar(nv)) % scalar 
+                if (isscalar(nv)) % scalar
                     newp= newp+1;
                     vars{newp}= nvname;
                     vals(newp) = nv;
@@ -634,32 +634,32 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 else
                     msg = sprintf('Found %s, %d %d table - ', vname,size(v,1), size(v,2) );  % TODO verbose option
                     if this.FindTables == false
-                        msg = [msg ' Set ''FindTables'' option to true to generate table parameters.'];  
+                        msg = [msg ' Set ''FindTables'' option to true to generate table parameters.'];
                         this.disp_msg(msg, 1);
                         return
-                    end                    
-                       num = 0;
-                        for  i = 1:size(nv,1)
-                            for j= 1:size(nv,2)
-                                if (nv(i,j)~=0)&&(num<=this.MaxNumTabParam)
-                                    num = num+1;
-                                    newp=newp+1;
-                                    vars{newp} = [nvname '__at_' num2str(i) '_' num2str(j)];
-                                    vals(newp) = nv(i,j);
-                                    ParamSrc{newp} = GetSimulinkBreachParam(mdl, vars{newp});
-                                end
+                    end
+                    num = 0;
+                    for  i = 1:size(nv,1)
+                        for j= 1:size(nv,2)
+                            if (nv(i,j)~=0)&&(num<=this.MaxNumTabParam)
+                                num = num+1;
+                                newp=newp+1;
+                                vars{newp} = [nvname '__at_' num2str(i) '_' num2str(j)];
+                                vals(newp) = nv(i,j);
+                                ParamSrc{newp} = GetSimulinkBreachParam(mdl, vars{newp});
                             end
                         end
-                        if num>this.MaxNumTabParam
-                            msg = [msg ' WARNING: number of element greater than max. Increase maximum using ''MaxNumTabParam''  option.'  ];
-                        end
-                        this.disp_msg(msg,1);
+                    end
+                    if num>this.MaxNumTabParam
+                        msg = [msg ' WARNING: number of element greater than max. Increase maximum using ''MaxNumTabParam''  option.'  ];
+                    end
+                    this.disp_msg(msg,1);
                 end
             end
-
+            
         end
-
-%% Simulation         
+        
+        %% Simulation
         function Sim(this, tspan, U)
             switch nargin
                 case 1
@@ -673,7 +673,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 save_system(this.Sys.mdl);
             end
         end
-     
+        
         function [tout, X] = sim_breach(this, Sys, tspan, pts)
             %
             % BreachSimulinkSystem.sim_breach Generic wrapper function that runs a Simulink model and collect signal
@@ -692,7 +692,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 bparam.setValue(pval); % set value in the appropriate workspace
             end
             
-            % 
+            %
             % TODO: fix support for signal builder using a proper
             % BreachParam
             %keys = this.ParamSrc.keys();
@@ -737,7 +737,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 X = zeros(Sys.DimX, numel(tout));
             end
             
-            % FIXME: the following needs to be reviewed 
+            % FIXME: the following needs to be reviewed
             if ~isempty(this.InputGenerator)&&this.use_precomputed_inputs==false
                 this.InputGenerator.Reset();
             end
@@ -921,15 +921,15 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 
             end
         end
-
-%% Misc      
-function OpenMdl(this)
-    open_system(this.mdl.name);    
-end
-function OpenBreachMdl(this)
-    open_system(this.Sys.name);    
-end
-
+        
+        %% Misc
+        function OpenMdl(this)
+            open_system(this.mdl.name);
+        end
+        function OpenBreachMdl(this)
+            open_system(this.Sys.name);
+        end
+        
         function changed = get_checksum(this)
             try
                 load_system(this.mdl.name);
@@ -947,10 +947,10 @@ end
             warning('off', 'BreachSimulinkSystem:get_checksum_failed');
         end
         
-
-
+        
+        
         %% Export result
-
+        
         function  st = disp(this)
             if isfield(this.P, 'traj')
                 nb_traj = numel(this.P.traj);
@@ -964,7 +964,7 @@ end
             end
         end
         
-
+        
         function [summary, traces] = ExportTracesToStruct(this,i_traces, varargin)
             % BreachSimulinkSystem.ExportTracesToStruct
             
@@ -1070,8 +1070,7 @@ end
             
             summary.const_params.names = setdiff( this.P.ParamList(this.P.DimX+1:end), this.GetBoundedDomains())';
             summary.const_params.values = this.GetParam(summary.const_params.names,1)';
-            
-            
+   
             if isfield(this.P, 'props')
                 summary.specs.names = spec_names;
                 this.SortbyRob();
@@ -1080,8 +1079,6 @@ end
                 summary.specs.sat = summary.specs.rob>=0;
                 summary.num_sat = - sum( ~summary.specs.sat, 1  );
             end
-            
-            
         end
         
         function [success, msg, msg_id] = SaveResults(this, folder_name, varargin)
@@ -1133,7 +1130,7 @@ end
             
             if options.ExportToExcel
                 if ~isfield(summary, 'specs')
-                    warning('Breach:SaveResult:no_spec_for_Excel','Export to Excel requested but there is no requirement result to report. Excel file not created.'); 
+                    warning('Breach:SaveResult:no_spec_for_Excel','Export to Excel requested but there is no requirement result to report. Excel file not created.');
                 else
                     excel_file = [folder_name filesep options.ExcelFileName];
                     global BreachGlobOpt
@@ -1149,7 +1146,6 @@ end
                         hdr{iparam} = ['param. ' num2str(iparam-ispec) ];
                     end
                     xlswrite(excel_file, hdr, 1, 'B1');
-                    xlswrite(excel_file, [summary.specs.names summary.test_params.names], 1, 'B2');
                     xlswrite(excel_file, [summary.specs.names summary.test_params.names], 1, 'B2');
                     
                     % Write data

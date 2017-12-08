@@ -24,16 +24,28 @@ classdef FalsificationProblem < BreachProblem
         
         % Constructor calls parent constructor
         function this = FalsificationProblem(BrSys, phi, params, ranges)
+           
+            Br = BrSys.copy();
             switch nargin
                 case 2
-                    super_args{1} = BrSys;
+                    params = Br.GetSysVariables();
+                    req_params = Br.GetReqVariables();
+                    if ~isempty(req_params)
+                      Br.ResetDomain(req_params);
+                    end
+                    super_args{1} = Br;
                     super_args{2} = phi;
+                    if isempty(params)
+                        error('FalsificationProblem:invalid_system_variables', 'No valid system or input variables.');
+                    end
+                    super_args{3} = params;
+                    
                 case 3
-                    super_args{1} = BrSys;
+                    super_args{1} = Br;
                     super_args{2} = phi;
                     super_args{3} = params;
                 case 4
-                    super_args{1} = BrSys;
+                    super_args{1} = Br;
                     super_args{2} = phi;
                     super_args{3} = params;
                     super_args{4} = ranges;

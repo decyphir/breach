@@ -79,10 +79,10 @@ classdef BreachOptionGui < handle
                 'Toolbar', 'none',....
                 'Menubar', 'none',...
                 'NumberTitle','off');
-            this.dlg_pos = [1000 1000];
+            pos = get(this.dlg, 'Position');
+            this.dlg_pos = pos(1:2);
             this.dlg_sz = [600 0];
             set(this.dlg, 'Position', [this.dlg_pos this.dlg_sz])
- 
             this.add_ok_cancel_buttons();
             
             flds = fieldnames(this.output);
@@ -93,7 +93,7 @@ classdef BreachOptionGui < handle
                 opt_tip = this.tips.(opt_name);
                 this.add_uicontrol(opt_name,opt_value, opt_choices, opt_tip);
             end
-           
+            
         end
         
         function add_uicontrol(this, name, val, choices, tip)
@@ -229,6 +229,9 @@ classdef BreachOptionGui < handle
                 'Position', sz(2,:));
             
             function output = ok_callback(hobj, evt)
+                
+               set(hobj, 'String', 'Please wait...')
+               drawnow;
                 close(this.dlg);
             end
             
@@ -245,6 +248,7 @@ classdef BreachOptionGui < handle
          function make_room(this)
             n = size(this.gui_components, 1)+1;
             this.dlg_sz = this.dlg_sz+ [0 60];
+            this.dlg_pos = this.dlg_pos - [0 30];
             set(this.dlg, 'Position', [this.dlg_pos this.dlg_sz])
             if n>1
                 new_inter = 0.1/(n-1);
