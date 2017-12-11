@@ -78,7 +78,7 @@ classdef random_signal_gen < signal_gen
             X = zeros(numel(this.signals),numel(time));
             for isg = 1:numel(this.signals)
                 
-                rng(p((isg-1)*5+1));    
+                rng(p((isg-1)*5+1), 'twister');    
                 dt_min = p((isg-1)*5+2);
                 dt_max = p((isg-1)*5+3);
                 cp_min = p((isg-1)*5+4);

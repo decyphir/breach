@@ -1,5 +1,11 @@
 function res = solve_global_nelder_mead(this)
-X0 = init_basic_X0(this);
+
+if this.solver_options.use_param_set_as_init
+    X0 = this.BrSet.GetParam(this.params);
+    this.BrSys.ResetParamSet;    % needs double-checking...
+else
+    X0 = init_basic_X0(this);
+end
 
 % display header
 fprintf('Eval objective function on %d initial parameters.\n', size(X0,2));

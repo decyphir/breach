@@ -14,14 +14,20 @@ classdef BreachStatus < handle
         
         function  my_name = whoamI(this)
             S = evalin('base', 'who');
-            my_name= 'B'; 
+            my_name= '__Nobody__'; 
             for iv = 1:numel(S)
               if isequal(evalin('base', S{iv}), this)
                   my_name = S{iv};
               end
             end
-            
         end
+        
+        function new = copy(this)
+            % copy operator, works with R2010b or newer.
+            objByteArray = getByteStreamFromArray(this);
+            new = getArrayFromByteStream(objByteArray);
+        end
+
         
         function addStatus(this, status, key, msg)
             % Add new active status
@@ -67,12 +73,6 @@ classdef BreachStatus < handle
            fprintf(getStatus(this));
         end
       
-        function new = copy(this)
-            % copy operator, works with R2010b or newer.
-            objByteArray = getByteStreamFromArray(this);
-            new = getArrayFromByteStream(objByteArray);
-        end
-
         function disp_msg(this, msg, verbose_min) 
             % disp_msg display a message if this.verbose is more than
             % second arg

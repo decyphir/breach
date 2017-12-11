@@ -4,7 +4,12 @@ function [params_u, idx_u] = FindParamsInput(Sys, InputName)
 params_u = {};    
 idx_u = [];     
 
-InputNames = Sys.InputList;
+if isfield(Sys, 'InputList')
+    InputNames = Sys.InputList;
+else
+    return;
+end
+
 if isfield(Sys, 'InputOpt')&&~isempty(Sys.InputOpt)
     
     InputOpt  = Sys.InputOpt;

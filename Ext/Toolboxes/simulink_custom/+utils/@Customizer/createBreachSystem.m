@@ -14,31 +14,8 @@ end
 function createBreachSystemCb(callbackInfo)
 % Callback function: createBreachSystem menu item
  
-mdl = gcs;
-mdl = strsplit(mdl, '/');
-mdl = mdl{1};
+mdl = bdroot;
 save_system(mdl);
-Name = get_param(mdl, 'Name');
-close_system(mdl);
-B = evalin('base', ['BreachSimulinkSystem(''' Name ''')']);
-signals = B.GetSignalList();
-niou_sigs = select_cell_gui(signals, 'Select signals from list');
-if isequal(niou_sigs,0) % pushed cancel
-    open_system(mdl);
-    return;
-end
 
-assignin('base','sigs__', niou_sigs);
-
-params = B.GetParamsSysList();
-if ~isempty(params)
-    params = select_cell_gui(params, 'Select parameters from list');
-    if isequal(params,0) % pushed cancel
-        open_system(mdl);
-        return;
-    end
-end
-    assignin('base','params__', params);
-    evalin('base', ['B=BreachSimulinkSystem(''' Name ''', params__,[],sigs__);']);
-    evalin('base', 'B.RunGUI');
+BreachSimulinkWizard(mdl, [], 'RunFromSimulink', true);
 end
