@@ -90,8 +90,8 @@ signal_types= {
  'fixed_cp_signal_gen',...
  'var_cp_signal_gen',...
  'pulse_signal_gen',...
- 'random_signal_gen',...
- 'from_file_signal_gen',...
+ 'random_signal_gen'...
+% 'from_file_signal_gen',...  % done from main gui now.
  };
 set(handles.popupmenu_signal_gen_type, 'String', signal_types);
 
@@ -108,7 +108,9 @@ for isig= 1:numel(signal_names)
             sg_class = class(sg);
             classes = get(handles.popupmenu_signal_gen_type, 'String');
             idx = find(strcmp(signal_types, sg_class));
+            if isig == 1
             set(handles.popupmenu_signal_gen_type,'Value', idx);
+            end
         else
            handles.signal_gen_map(c)=constant_signal_gen({c});
         end
@@ -117,9 +119,6 @@ for isig= 1:numel(signal_names)
     end
       
 end
-
-
-
 
 % Init time
 handles.time = 0:.01:10;
@@ -155,7 +154,6 @@ function popupmenu_signal_gen_type_Callback(hObject, eventdata, handles)
 % hObject    handle to popupmenu_signal_gen_type (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
 
 % get signal name 
 sig_name = get_current_signal(handles);

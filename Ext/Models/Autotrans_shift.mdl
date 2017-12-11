@@ -87,7 +87,7 @@ Model {
       $ObjectID		      2
       $ClassName	      "Simulink.WindowInfo"
       IsActive		      [1]
-      Location		      [781.0, 578.0, 2062.0, 1232.0]
+      Location		      [833.0, 467.0, 2062.0, 1232.0]
       Object {
 	$PropName		"ModelBrowserInfo"
 	$ObjectID		3
@@ -123,8 +123,8 @@ Model {
   ModifiedByFormat	  "%<Auto>"
   LastModifiedBy	  "donze"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "Fri Jul 07 09:59:05 2017"
-  RTWModifiedTimeStamp	  421322322
+  LastModifiedDate	  "Mon Dec 11 13:40:05 2017"
+  RTWModifiedTimeStamp	  434900096
   ModelVersionFormat	  "1.%<AutoIncrement:276>"
   ConfigurationManager	  "none"
   SampleTimeColors	  on
@@ -1030,7 +1030,7 @@ Model {
   }
   System {
     Name		    "Autotrans_shift"
-    Location		    [781, 578, 2843, 1810]
+    Location		    [833, 467, 2895, 1699]
     Open		    on
     ModelBrowserVisibility  off
     ModelBrowserWidth	    200
@@ -1264,7 +1264,7 @@ Model {
       Position		      [120, 56, 150, 89]
       ZOrder		      -5
       Floating		      off
-      Location		      [955, 374, 1435, 864]
+      Location		      [898, 979, 1378, 1469]
       Open		      off
       NumInputPorts	      "2"
       TickLabels	      "on"
@@ -1272,6 +1272,16 @@ Model {
 	ListType		AxesTitles
 	axes1			"%<SignalLabel>"
 	axes2			"%<SignalLabel>"
+      }
+      List {
+	ListType		ScopeGraphics
+	FigureColor		"[0.5 0.5 0.5]"
+	AxesColor		"[0 0 0]"
+	AxesTickColor		"[1 1 1]"
+	LineColors		"[1 1 0;1 0 1;0 1 1;1 0 0;0 1 0;0 0 1]"
+	LineStyles		"-|-|-|-|-|-"
+	LineWidths		"[0.5 0.5 0.5 0.5 0.5 0.5]"
+	MarkerStyles		"none|none|none|none|none|none"
       }
       YMin		      "-5~-5"
       YMax		      "100~350"
@@ -3258,31 +3268,6 @@ Stateflow {
   }
   transition {
     id			    24
-    labelString		    "after(TWAIT,tick)\n[speed <= down_th]\n{gear_state.DOWN}"
-    labelPosition	    [196.136 254.598 88.631 37.417]
-    fontSize		    10
-    arrowSize		    10
-    src {
-      id		      3
-      intersection	      [2 1 0 0.6609 174.7018 244.6579 0 0]
-    }
-    dst {
-      id		      11
-      intersection	      [3 0 1 0.6756 283.8028 184.3405 0 0]
-    }
-    midPoint		    [244.9922 233.2938]
-    chart		    2
-    linkNode		    [9 23 25]
-    dataLimits		    [174.702 286.803 184.34 244.658]
-    subviewer		    2
-    slide {
-      sticky		      BOTH_STICK
-    }
-    executionOrder	    1
-    ssIdNumber		    22
-  }
-  transition {
-    id			    25
     labelString		    "[speed > down_th]"
     labelPosition	    [131.216 211.56 81.301 13.363]
     fontSize		    10
@@ -3297,7 +3282,7 @@ Stateflow {
     }
     midPoint		    [235.8157 224.6063]
     chart		    2
-    linkNode		    [9 24 26]
+    linkNode		    [9 23 25]
     dataLimits		    [174.702 274.547 184.34 230.82]
     subviewer		    2
     slide {
@@ -3305,6 +3290,31 @@ Stateflow {
     }
     executionOrder	    2
     ssIdNumber		    21
+  }
+  transition {
+    id			    25
+    labelString		    "after(TWAIT,tick)\n[speed <= down_th]\n{gear_state.DOWN}"
+    labelPosition	    [196.136 254.598 88.631 37.417]
+    fontSize		    10
+    arrowSize		    10
+    src {
+      id		      3
+      intersection	      [2 1 0 0.6609 174.7018 244.6579 0 0]
+    }
+    dst {
+      id		      11
+      intersection	      [3 0 1 0.6756 283.8028 184.3405 0 0]
+    }
+    midPoint		    [244.9922 233.2938]
+    chart		    2
+    linkNode		    [9 24 26]
+    dataLimits		    [174.702 286.803 184.34 244.658]
+    subviewer		    2
+    slide {
+      sticky		      BOTH_STICK
+    }
+    executionOrder	    1
+    ssIdNumber		    22
   }
   transition {
     id			    26

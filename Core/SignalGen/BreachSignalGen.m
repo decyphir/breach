@@ -80,11 +80,12 @@ classdef BreachSignalGen < BreachSystem
             p0 = [zeros(numel(signals),1) ; p0 ];
             this.Sys = CreateExternSystem('BreachSignalGen', signals, params, p0, @(Sys, tspan, p)breachSimWrapper(this, Sys, tspan, p));
             this.Sys.tspan =0:.01:10;
+            this.Sys.Verbose =0;
             this.P = CreateParamSet(this.Sys);
             this.P.epsi(:,:)=0 ;
             
             if isaSys(this.Sys) % Note: we ignore initial conditions for now in ParamRanges
-                                % OK for Simulink, less so for ODEs...
+                                       % OK for Simulink, less so for ODEs...
                 this.SignalRanges = [];
             end
             
@@ -102,15 +103,69 @@ classdef BreachSignalGen < BreachSystem
             p = p(this.Sys.DimX+1:end);
             cur_ip =1;
             cur_is =1;
+            
             for isg = 1:numel(this.signalGenerators)
-               np = numel(this.signalGenerators{isg}.params);
+               sg = this.signalGenerators{isg};
+               np = numel(sg.params);
                p_isg = p(cur_ip:cur_ip+np-1);  % 
-               ns = numel(this.signalGenerators{isg}.signals);
-               X(cur_is:cur_is+ns-1, :) = this.signalGenerators{isg}.computeSignals(p_isg, tspan); 
+               ns = numel(sg.signals);
+               X(cur_is:cur_is+ns-1, :) = sg.computeSignals(p_isg, tspan);
                cur_ip = cur_ip+ np;
                cur_is = cur_is+ ns;
             end
                 
+        end
+        
+        function SetParam(this, params, values, varargin)
+            SetParam@BreachSet(this, params, values, varargin{:});
+            pts = [];
+            
+            % look for parameters from_file_signal generators
+            for isg = 1:numel(this.signalGenerators)
+                sg = this.signalGenerators{isg};
+                if isa(sg, 'from_file_signal_gen')
+                    % parameters in from_file_signal_gen are enum, listed
+                    % in a field pts. First element of params is going to
+                    % determine the others
+                    if iscell(params)
+                        param_ref = params{1};
+                    else
+                        param_ref = params;
+                    end
+                    if isnumeric(param_ref)
+                        param_ref = this.P.ParamList{param_ref};
+                    end
+                    pts = GetParam(this, sg.params);
+                    
+                    i_ref = find(strcmp(param_ref,sg.params),1);
+                    if ~isempty(i_ref) % might be a requirement parameter
+                        for jp = 1:size(pts,2)
+                            p = pts(:, jp);
+                            p_is_good= false;  % checks whether p is a valid parameter, i.e., can be found in sg.pts
+                            for sg_jp = 1:size(sg.pts,2) % look into columns of signal_generator matrix of valid parameters
+                                if isequal(p, sg.pts(:,sg_jp));
+                                    p_is_good = true;
+                                    break;
+                                end
+                            end
+                            if p_is_good
+                                continue;
+                            else  % we need to fix p. First find a valid parameter value for param_ref
+                                pref =p(i_ref);
+                                j_ref = find(sg.pts(i_ref,:)==pref,1);
+                                if isempty(j_ref) % find closest - should be the job of checkin domain but whatever... 
+                                    [~, j_ref] = min(abs(sg.pts(i_ref,:)-pref));
+                                    p(i_ref) = sg.pts(i_ref, j_ref); 
+                                end
+                                p = sg.pts(:, j_ref);
+                                pts(:, jp) = p;
+                            end
+                        end
+                        this.SetParam@BreachSet(sg.params, pts);
+                    end
+                end
+            end
+            
         end
         
         function sg = GetSignalGenFromSignalName(this, sig_name)

@@ -26,7 +26,9 @@ classdef BreachSystem < BreachSet
     properties
         Sys                   % Legacy Breach system structure
         Specs               % A set (map) of STL formulas
+        ParamSrc=containers.Map()
         use_parallel=0 % 
+        InitFn    = ''           % Initialization function 
     end
     
     methods
@@ -64,6 +66,17 @@ classdef BreachSystem < BreachSet
             this.use_parallel = 1;
             this.Sys.Parallel =1;
             gcp;
+        end
+        
+        function this = SetInitFn(this,Fn)
+            if isa(Fn, 'function_handle')
+                f = functions(Fn);
+                this.InitFn = f.function;
+            elseif ischar(Fn)&&any(  [2 3 5 6] ==  exist(Fn)) 
+                this.InitFn = Fn;
+            else
+                error('Argument of SetInitFn must be a valid function handle or function or script name.');
+            end
         end
         
         %% Parameters
@@ -107,6 +120,7 @@ classdef BreachSystem < BreachSet
         function Sim(this,tspan)
             % BreachSystem.Sim(time) Performs a simulation from the parameter
             % vector(s) defined in P
+            evalin('base', this.InitFn);
             this.CheckinDomainParam();
             if nargin==1
                 tspan = this.Sys.tspan;
@@ -127,9 +141,10 @@ classdef BreachSystem < BreachSet
             end
             
             % checks whether spec is in there already or not
-            if this.Specs.isKey(get_id(phi))
-                return;
-            end
+            %if this.Specs.isKey(get_id(phi))
+             %   this.Specs(get_id(phi)) = phi;
+             %   return;
+           % end
             
             % checks signal compatibility
             [~,sig]= STL_ExtractPredicates(phi);
@@ -525,7 +540,7 @@ classdef BreachSystem < BreachSet
                     if numel(new_val)>size(val, 1)
                         val(end+1:numel(new_val),:) = NaN;
                     end
-                    val(:, iu) = new_val';
+                    val(1:numel(new_val), iu) = new_val';
                 end
             else
                 pval = this.P.pts(this.P.DimX:end,:);
@@ -717,8 +732,11 @@ classdef BreachSystem < BreachSet
                 % defined yet
                 params_prop = get_params(new_phi);
                 names_params_prop = fieldnames(params_prop)';
-                [~,  idx_status ] = FindParam(this.P, names_params_prop);
-                params_not_found = names_params_prop(idx_status==0);
+                params_not_found = [];
+                if ~isempty(names_params_prop)
+                    [~,  idx_status ] = FindParam(this.P, names_params_prop);
+                    params_not_found = names_params_prop(idx_status==0);
+                end
                 if ~isempty(params_not_found)
                     this.SetParamSpec(params_not_found, cellfun(@(c) (params_prop.(c)), params_not_found));
                 end
