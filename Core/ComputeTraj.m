@@ -102,9 +102,9 @@ if strcmp(Sys.type,'traces') % No model
     for ii = 1:numel(Pf.traj)
         Pf.traj{ii}.param = Pf.pts(1:Pf.DimP,ii)';
     end
-elseif(isfield(P0,'traj_to_compute') &&...    
+elseif(isfield(P0,'traj_to_compute') &&...
         ~isempty(P0.traj_to_compute) && ~isequal(P0.traj_to_compute,1:size(P0.pts,2))&&... % some traces have already be computed
-         isfield(P0, 'traj')&&~isempty(P0.traj)&&isequal(P0.traj{1}.time, tspan))     %  some traces have been computed on the same tspan
+        isfield(P0, 'traj')&&~isempty(P0.traj)&&isequal(P0.traj{1}.time, tspan))     %  some traces have been computed on the same tspan
     % Here, we assume:
     % 1/ that the index of a param vector is not in traj_to_compute if
     % there is a valid simulation for this param vector
@@ -135,19 +135,18 @@ elseif(isfield(P0,'traj_to_compute') &&...
 end
 
 % From now, we only got unique system-parameter vectors
+Pf = P0;
+ipts = 1:size(P0.pts,2);
+
+ii=0;
 
 switch Sys.type
     
     case 'Extern'
         model = Sys.name;
-        Pf = P0;
-        ipts = 1:size(P0.pts,2);
         if Verbose==1
-            if(numel(ipts)>1)
-                fprintf(['Computing ' num2str(numel(ipts)) ' trajectories of model ' model '\n'...
-                    '[             25%%           50%%            75%%               ]\n ']);
-                iprog = 0;
-            end
+            rfprintf_reset();
+            rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
         end
         
         for ii = ipts
@@ -161,15 +160,10 @@ switch Sys.type
             traj.param = P0.pts(1:P0.DimP,ii)';
             Pf.traj{ii} = traj;
             Pf.Xf(:,ii) = traj.X(:,end);
-            
             if Verbose==1
-                if(numel(ipts)>1)
-                    while(floor(60*ii/numel(ipts))>iprog)
-                        fprintf('^');
-                        iprog = iprog+1;
-                    end
-                end
+                rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
             end
+            
         end
         if Verbose==1
             if(numel(ipts)>1)
@@ -182,8 +176,12 @@ switch Sys.type
         
     case 'Simulink'
         model = Sys.mdl;
-        Pf = P0;
-        ipts = 1:size(P0.pts,2);
+        
+        if Verbose==1
+            rfprintf_reset();
+            rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
+        end
+        
         if numel(ipts) == 1
             Verbose=0;
         end
@@ -206,11 +204,6 @@ switch Sys.type
             end
             
         else
-            ii=0;
-            if Verbose==1
-                rfprintf_reset();
-                rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
-            end
             
             trajs = cell(1, numel(ipts));
             for ii = ipts

@@ -80,6 +80,7 @@ classdef BreachSignalGen < BreachSystem
             p0 = [zeros(numel(signals),1) ; p0 ];
             this.Sys = CreateExternSystem('BreachSignalGen', signals, params, p0, @(Sys, tspan, p)breachSimWrapper(this, Sys, tspan, p));
             this.Sys.tspan =0:.01:10;
+            this.Sys.Verbose =0;
             this.P = CreateParamSet(this.Sys);
             this.P.epsi(:,:)=0 ;
             
