@@ -22,7 +22,7 @@ function varargout = BreachGui(varargin)
 
 % Edit the above text to modify the response to help BreachGui
 
-% Last Modified by GUIDE v2.5 29-Nov-2017 18:53:45
+% Last Modified by GUIDE v2.5 08-Dec-2017 14:05:08
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -185,11 +185,6 @@ for iv= 1:numel(ws_var)
          
     end
 end
-
-
-
-
-
 
 function h_scat = get_scatter_handle()
 % might get useless when I implement a new class for updatable plots..
@@ -1441,11 +1436,11 @@ switch col
     case 2  % change value 
         idx = FindParam(Br.P,handles.selected_params(1));
         if isempty(domains(idx_params).domain)  % constant parameter, set everybody
-            Br.SetParam(idx,  p0(idx_params));
+            Br.SetParam(idx,  p0(idx_params), true);
         else % set only current_pts, tricky and slightly inefficient- consider having SetParam handling this in the future
             all_values = Br.GetParam(idx);
             all_values( handles.current_pts) = p0(idx_params);
-            Br.SetParam(idx, all_values);
+            Br.SetParam(idx, all_values, true);
         end
     case {3,4,5}  % change domain 
         Br.SetDomain(handles.selected_params,domains(idx_params));
@@ -2046,8 +2041,6 @@ handles = update_working_sets_panel(handles);
 guidata(hObject, handles);
 
 
-
-
 % --------------------------------------------------------------------
 function menu_import_traces_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_import_traces (see GCBO)
@@ -2060,6 +2053,10 @@ if isa(B.signalGenerators{1}, 'constant_signal_gen') % canceled
     return;
 end
 
+all_signals = B.GetSignalList();
+signals = select_cell_gui(all_signals ,all_signals, 'Select signals from list'); 
+B = BreachImportData(B.fname, signals);
+
 assignin('base', new_name,B);
 handles = get_param_sets(handles,B);
 handles.show_params = B.P.ParamList;
@@ -2069,5 +2066,53 @@ handles =set_default_plot(handles);
 handles = plot_pts(handles);
 
 guidata(hObject, handles);
+
+% --------------------------------------------------------------------
+function menu_reqmining_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_reqmining (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+Br = get_current_set(handles);
+req = get_current_req_name(handles);
+pb = ReqMiningWizard('ParamSet', handles.current_set,'Requirement', req);
+if ~isempty(pb)
+    pb.solve();
+    % Extract 
+    pb_name = pb.whoamI;
+    sol_name = [pb_name '_result'];
+    log_name = [pb_name '_falsif_log'];
+    Bres = pb.synth_pb.GetBrSet_Best();
+    Blog = pb.falsif_pb.GetBrSet_Logged();
+    assignin('base', sol_name, Bres);
+    assignin('base', log_name, Blog);
+    handles = get_param_sets(handles,Br);
+    handles.current_set = sol_name;
+    handles.show_params = Bres.GetVariables();
+    handles.current_plot_pts = handles.show_params;
+    handles = update_working_sets_panel(handles);
+    handles = update_modif_panel(handles);
+   handles = plot_pts(handles);
+    guidata(hObject, handles);
+end
+
+
+
+% --------------------------------------------------------------------
+function menu_export_to_excel_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_export_to_excel (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+opt.FileName = 'Results.xlsx';
+choices.FileName = 'string';
+tips.FileName = 'Choose a name for Excel file.';
+
+gu = BreachOptionGui('Export to Excel sheet', opt, choices, tips);
+uiwait(gu.dlg); 
+if ~isempty(gu.output)
+Br = get_current_set(handles);
+Br.ExportToExcel('FileName', gu.output.FileName);
+end
+
 
 

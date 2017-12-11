@@ -560,7 +560,7 @@ classdef BreachProblem < BreachStatus
                 BrOut.SetParam(this.params, this.X_log);
             end
             BrOut.Sys.Verbose=1;
-            BrOut.AddSpec(this.Spec);
+            BrOut.CheckSpec(this.Spec);
         end
         
         function BrBest = GetBrSet_Best(this)
@@ -573,6 +573,7 @@ classdef BreachProblem < BreachStatus
                 end
             end
             BrBest.Sys.Verbose=1;
+            BrBest.CheckSpec(this.Spec);
         end
         
         function SetupLogFolder(this, fname)

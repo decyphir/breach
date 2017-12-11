@@ -321,16 +321,23 @@ if isempty(exp)
     
 else
     content_all = get(handles.listbox_all_variables, 'String');
-    val_all = get(handles.listbox_all_variables, 'Value');
-    content_all_select= content_all(val_all);
-    
+    if ~isempty(content_all)
+        val_all = get(handles.listbox_all_variables, 'Value');
+        content_all_select= content_all(val_all);
+    else
+        content_all_select = {};
+    end
     s = cellfun(@(c)isempty(c), regexp(handles.content_really_all, exp));
     handles.content_all = handles.content_really_all(~s);
     set(handles.listbox_all_variables, 'Value',1);
     set(handles.listbox_all_variables, 'String', handles.content_all);
+    if ~isempty(content_all_select)
     nval_all = find(strcmp(handles.content_all, content_all_select));
     if isempty(nval_all)
         nval_all = 1;
+    end
+    else
+        nval_all =1;
     end
     set(handles.listbox_all_variables, 'Value', nval_all);
 end

@@ -164,7 +164,7 @@ classdef BreachSet < BreachStatus
                     end
             end
         end
-                 
+        
         function dom = GetDomain(this, param)
             % BreachSet.GetDomain
             idx = FindParam(this.P, param);
@@ -425,9 +425,10 @@ classdef BreachSet < BreachStatus
             SigNames = this.P.ParamList(1:this.P.DimX);
         end
         
-        function signals = GetSignalList(this)
+        function [signals, idx] = GetSignalList(this)
             % GetSignalList returns signal names
             signals = this.P.ParamList(1:this.P.DimX);
+            idx = 1:this.P.DimX;
         end
           
         function X = GetSignalValues(this, signals, itrajs, t)
@@ -994,6 +995,28 @@ classdef BreachSet < BreachStatus
             end
         end
         
+        function [params, ipr] = GetVariables(this)
+            [params, ipr] = GetBoundedDomains(this);
+        end
+        
+        function [params, ipr] = GetSysVariables(this)
+            [params, ipr] = GetBoundedDomains(this);
+            if ~isempty(params)
+                req_params = this.GetPropParamList();
+                [params, i_diff] = setdiff(params, req_params);
+                ipr = ipr(i_diff);
+            end
+        end
+
+        function [params, ipr] = GetReqVariables(this)
+            [params, ipr] = GetBoundedDomains(this);
+            if ~isempty(params)
+                req_params = this.GetPropParamList();
+                [params, i_intersect] = intersect(params, req_params);
+                ipr = ipr(i_intersect);
+            end
+        end
+
         function [ params, ipr]  = GetBoundedDomains(this)
             % GetNonEmptyDomains
             ipr = cellfun(@(c)(~isempty(c)), {this.Domains.domain});
@@ -1086,12 +1109,26 @@ classdef BreachSet < BreachStatus
             this.P.epsi(:,:) = 0;
         end
         
+        
+        
         function ResetDomains(this)
-        %      
+            % BreachSet.ResetDomains Sets all domains to empty
             for id = 1:numel(this.Domains)
                 this.Domains(id).domain = [];
             end
         end
+        
+        function ResetDomain(this, params)
+            % BreachSet.ResetDomains Sets given domain(s) to empty
+
+            idx_params = FindParam(this.P, params); 
+            for id = 1:numel(idx_params)
+                if (idx_params(id) <= numel(this.Domains)) % param was found, otherwise do nothing 
+                    this.Domains(idx_params(id)).domain = [];
+                end
+            end
+        end
+        
         
         function ResetSimulations(this)
             % Removes computed trajectories

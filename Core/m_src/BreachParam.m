@@ -31,7 +31,7 @@ classdef BreachParam < handle
         end
         
         function WS = getWorkspace(this)
-            if isSimulinkModel(this.ws)   % model workspace
+            if exist(this.ws, 'file')==4   % this is a simulink model workspace
                 warning('off', 'Simulink:Commands:SaveMdlWithDirtyWorkspace');
                 WS = get_param(this.ws, 'ModelWorkspace');
             elseif isequal(this.ws, 'base')

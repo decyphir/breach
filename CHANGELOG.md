@@ -10,7 +10,7 @@
 - Enable parallel from GUI
 - SaveSignals/Load
 - BreachSave function saves Breach objects in the workspace into a mat file 
-
+- GetVariables method returns names of variables in a set, i.e., parameters with non-empty domain/range
 
 ## Bugfixes
 - GUI: fixed Env. Param button when no input signal
@@ -21,6 +21,8 @@
 
 ## Developpers
 - New class BreachOptionGui to create gui from options
+- FalsificationProblem now ignores requirement variables 
+- ParamSynthesisProblem now ignores non-requirement variables
 
 # Release 1.2.10
 

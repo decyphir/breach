@@ -1,11 +1,10 @@
-classdef BreachCEGIS < handle
+classdef BreachCEGIS < BreachStatus
     
     properties
         synth_pb
         falsif_pb
         iter = 0
         iter_max = 10
-        verbose = 1
     end
     
     methods

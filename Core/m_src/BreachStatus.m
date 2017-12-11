@@ -22,6 +22,13 @@ classdef BreachStatus < handle
             end
         end
         
+        function new = copy(this)
+            % copy operator, works with R2010b or newer.
+            objByteArray = getByteStreamFromArray(this);
+            new = getArrayFromByteStream(objByteArray);
+        end
+
+        
         function addStatus(this, status, key, msg)
             % Add new active status
             this.status = [this.status status];
@@ -66,12 +73,6 @@ classdef BreachStatus < handle
            fprintf(getStatus(this));
         end
       
-        function new = copy(this)
-            % copy operator, works with R2010b or newer.
-            objByteArray = getByteStreamFromArray(this);
-            new = getArrayFromByteStream(objByteArray);
-        end
-
         function disp_msg(this, msg, verbose_min) 
             % disp_msg display a message if this.verbose is more than
             % second arg
