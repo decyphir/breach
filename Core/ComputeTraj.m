@@ -145,8 +145,10 @@ switch Sys.type
     case 'Extern'
         model = Sys.name;
         if Verbose==1
-            rfprintf_reset();
-            rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
+            if(numel(ipts)>1)
+                rfprintf_reset();
+                rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
+            end
         end
         
         for ii = ipts
@@ -161,7 +163,9 @@ switch Sys.type
             Pf.traj{ii} = traj;
             Pf.Xf(:,ii) = traj.X(:,end);
             if Verbose==1
-                rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
+                if(numel(ipts)>1)
+                    rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
+                end
             end
             
         end
@@ -178,8 +182,10 @@ switch Sys.type
         model = Sys.mdl;
         
         if Verbose==1
-            rfprintf_reset();
-            rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
+            if(numel(ipts)>1)
+                rfprintf_reset();
+                rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
+            end
         end
         
         if numel(ipts) == 1
@@ -216,7 +222,9 @@ switch Sys.type
                 [trajs{ii}.time, trajs{ii}.X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
                 trajs{ii}.param = P0.pts(1:P0.DimP,ii)';
                 if Verbose ==1
-                    rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
+                    if(numel(ipts)>1)
+                        rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
+                    end
                 end
             end
             Pf.traj = trajs;
