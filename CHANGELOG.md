@@ -1,4 +1,11 @@
-# Release 1.2.11
+# Release 1.2.11beta2
+
+## Bugfixes
+- small bug in displaying number of computed traces
+- fixed bug in until robustness computation causing crash
+- 
+
+# Release 1.2.11beta
 
 ## Users
 - SetInitFn method sets a callback function for initialization before simulation

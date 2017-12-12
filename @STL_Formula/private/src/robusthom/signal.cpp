@@ -72,7 +72,8 @@ int Signal::push_front(Sample P) {
 #ifdef DEBUG__
             mexPrintf("WARNING: time after endTime!\n");
 #endif
-            return 1;
+            std::deque<Sample>::push_front(P);
+            endTime=P.time;
         }
     }
     else

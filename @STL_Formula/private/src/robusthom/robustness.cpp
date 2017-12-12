@@ -89,7 +89,7 @@ Signal * computeEventually(Signal * x) {
 
 Signal * computeUntil(Signal * x, Signal * y) {
 #ifdef DEBUG__
-    cout << "Entering computeUntil" << endl;
+    mexPrintf("Entering computeUntil\n");
 #endif
     
     double s, t;
@@ -517,6 +517,12 @@ void computePartialEventually(Signal* z, Signal::reverse_iterator & i, double s,
 }
 
 void computeSegmentUntil(Signal * z, const Sample & i, double t, Signal::reverse_iterator & j, double z_max) {
+
+#ifdef DEBUG__
+    mexPrintf("Entering computeSegmentUntil\n");
+#endif
+
+
     Signal *z1, *z2, *z3;
     Signal::reverse_iterator k, l;
     double s=i.time;
