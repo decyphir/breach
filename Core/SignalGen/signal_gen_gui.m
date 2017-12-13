@@ -91,6 +91,9 @@ signal_types= {
  'var_cp_signal_gen',...
  'pulse_signal_gen',...
  'random_signal_gen'...
+ 'exponential_signal_gen'...
+ 'sinusoid_signal_gen'...
+ 'spike_signal_gen'...  
 % 'from_file_signal_gen',...  % done from main gui now.
  };
 set(handles.popupmenu_signal_gen_type, 'String', signal_types);
@@ -121,8 +124,8 @@ for isig= 1:numel(signal_names)
 end
 
 % Init time
-handles.time = 0:.01:10;
-
+handles.time = handles.B.GetTime();
+set( handles.edit_time, 'String', get_time_string(handles.time));
 % Choose default command line output for signal_gen_gui
 signal_gens= handles.signal_gen_map.values;
 handles.output = BreachSignalGen(signal_gens);
@@ -138,7 +141,21 @@ update_plot(handles);
 guidata(hObject, handles);
 %uiwait(handles.main);
 
+function st = dbl2str(x)
+    st = num2str(x, '%0.5g');
 
+function time_string = get_time_string(time)
+
+   if isscalar(time)
+        time_string = ['[0 ' dbl2str(time) ']'];
+    elseif numel(time)==2
+        time_string = ['[' dbl2str(time(1)) ' ' dbl2str(time(2)) ']'];
+   elseif max(diff(diff(time)))<100*eps
+       time_string = ['0:' dbl2str(time(2)-time(1)) ':' dbl2str(time(end))];
+   else
+       time_string = num2str(time);
+   end
+   
 % --- Outputs from this function are returned to the command line.
 function varargout = signal_gen_gui_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
