@@ -33,6 +33,7 @@ methods
         
         if ~isempty(fname)
             ff_ingen = from_file_signal_gen(signals, fname);
+            ff_ingen.ignore_time = true;
         else
             ff_ingen = constant_signal_gen('x');
         end
@@ -49,6 +50,10 @@ methods
         end
 
         this.fname = fname;
+    end
+    
+    function idx = GetParamsInputIdx(this)
+        idx = [];
     end
     
     function [tspan, X] = breachSimWrapper(this, Sys, tspan, p)
@@ -123,7 +128,7 @@ methods
                 % filename 
                 ip = file_idx(it);
                 [pth, fn] = fileparts(this.signalGenerators{1}.file_list(ip).name); 
-                traces(it).filename = fn;
+                traces(it).filename = [fn '.mat'];
                 traces(it).path = pth;
                 
                 summary.filenames   = [summary.filenames traces(it).filename];
@@ -193,15 +198,15 @@ methods
                     hdr{iparam} = ['param. ' num2str(iparam-ispec) ];
                 end
                 
-                xlswrite(excel_file, hdr, 1, 'D1');
-                xlswrite(excel_file, ['Path' 'Filename' summary.specs.names summary.params.names], 1, 'B2');
-                 
-                xlswrite(excel_file, summary.paths', 1, 'B3');
-                xlswrite(excel_file, summary.filenames', 1, 'C3');
-                xlswrite(excel_file,  summary.num_sat'  , 1, 'A3');
-  
+                hdr = [ {'' '' ''} hdr ;  ['-#False'  'Path' 'Filename' summary.specs.names summary.params.names]];
+                tbl = [hdr ; cell(size(summary.num_sat,2), size(hdr,2))];
+                sub_tbl = num2cell([summary.num_sat' zeros(numel(summary.num_sat), 2) summary.specs.rob' summary.params.values']);
+                tbl(3:end, : ) = sub_tbl;
+                tbl(3:end, 2:3) = [summary.paths' summary.filenames'];
+                
+                xlswrite(excel_file, tbl, 1, 'A1');
+
                 % Write data
-                xlswrite(excel_file, [ summary.specs.rob' summary.params.values'] , 1, 'D3');
                 
                 this.disp_msg(['Summary written into ' excel_file]);
             end

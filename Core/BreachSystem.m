@@ -139,13 +139,7 @@ classdef BreachSystem < BreachSet
                 phi_id = MakeUniqueID([this.Sys.name '_spec'],  BreachGlobOpt.STLDB.keys);
                 phi = STL_Formula(phi_id, varargin{1});
             end
-            
-            % checks whether spec is in there already or not
-            %if this.Specs.isKey(get_id(phi))
-             %   this.Specs(get_id(phi)) = phi;
-             %   return;
-           % end
-            
+                     
             % checks signal compatibility
             [~,sig]= STL_ExtractPredicates(phi);
             i_sig = FindParam(this.Sys, sig);
@@ -329,7 +323,10 @@ classdef BreachSystem < BreachSet
             % default options
             opt.DispTitle = true;  
             opt = varargin2struct(opt, varargin{:});
-            params_values = this.GetParam(params);
+         
+           if ischar(params)
+               params = {params};
+           end
             
             [valu, pvalu, val, pval] = this.GetSatValues(phi, params);
             if isempty(valu)
@@ -337,14 +334,15 @@ classdef BreachSystem < BreachSet
             end
             
             iparam = FindParam(this.P, params);
+       
             switch numel(params)
                 case 1
                     x = pvalu(1,:) ;   % this.P.pts(iparam(1),:);
                     y = zeros(size(x));
                     scatter2dPlot(x,y,valu);
                     xlabel(params{1}, 'Interpreter', 'None');
-                    grid on;
-                    set(gca, 'YTick', []);
+                    ylabel('');
+                    zlabel('');
                 case 2
                     x = pvalu(1,:);
                     y = pvalu(2,:);
@@ -352,7 +350,8 @@ classdef BreachSystem < BreachSet
                     scatter2dPlot(x,y,valu);
                     xlabel(params{1}, 'Interpreter', 'None');
                     ylabel(params{2}, 'Interpreter', 'None');
-                    
+                    zlabel('');
+
                 case 3
                     x = pvalu(1,:);
                     y = pvalu(2,:);
@@ -362,9 +361,9 @@ classdef BreachSystem < BreachSet
                     xlabel(params{1}, 'Interpreter', 'None');
                     ylabel(params{2}, 'Interpreter', 'None');
                     zlabel(params{3}, 'Interpreter', 'None');
-                    grid on;
             end
-            
+
+            grid on;
             if ~isempty(valu)
                 title_st = [get_id(phi) ' satisfied by '...
                     num2str(numel(find(valu>0))) '/' num2str(numel(valu))
@@ -472,6 +471,7 @@ classdef BreachSystem < BreachSet
                     end
                 end
             end
+            
             function scatter3dPlot(x,y,z,val)
                 
                 hold on
@@ -499,7 +499,6 @@ classdef BreachSystem < BreachSet
             end
             
         end
-        
         
         function [val, pval, valm, pvalm] = GetSatValues(this, spec, params, varargin)
             % [val, pval, valm, pvalm] = GetSatValues(this, spec, params) returns satisfaction values for spec computed
@@ -711,7 +710,7 @@ classdef BreachSystem < BreachSet
                 nb_traj = 0;
             end
             
-            st = ['BreachSystem ' this.Sys.name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' traces.'];
+            st = ['BreachSystem ' this.Sys.name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' unique traces.'];
             
             if nargout ==0
                 disp(st);

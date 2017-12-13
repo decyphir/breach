@@ -216,7 +216,7 @@ classdef BreachSet < BreachStatus
             end
         end
         
-        %%  Param 
+        %%  Params 
         function SetParam(this, params, values, is_spec_param)
         % BreachSet.SetParam(params, values,  is_spec_param) sets values to
         % parameters listed in params. If the set contains only one sample,
@@ -305,7 +305,6 @@ classdef BreachSet < BreachStatus
                 this.CheckinDomain();
             end
         end
-        
         
         %% Get and Set param ranges
         function SetParamRanges(this, params, ranges)
@@ -509,8 +508,10 @@ classdef BreachSet < BreachStatus
             % save parameter values 
             for iparam=1:numel(sys_param_idx)
                 p = this.P.traj{ip}.param(sys_param_idx(iparam));
-                eval([ sys_param_list{iparam} '= p;']);
-                save(fname,'-append',  sys_param_list{iparam});
+                if ~isequal(sys_param_list{iparam}, 'file_idx')
+                    eval([ sys_param_list{iparam} '= p;']);
+                    save(fname,'-append',  sys_param_list{iparam});
+                end
             end
         end
         
@@ -635,8 +636,7 @@ classdef BreachSet < BreachStatus
             end
             
         end
-        
-    
+          
         %% Legacy sampling
         function GridSample(this, delta)
             % BreachSet.GridSample(num_samples) sample all bounded domain
@@ -714,7 +714,33 @@ classdef BreachSet < BreachStatus
             % Plot parameters
             gca;
             %P = DiscrimPropValues(this.P);
-            SplotPts(this.P, varargin{:});
+            params = SplotPts(this.P, varargin{:});
+            %% Datacursor mode customization
+            h = datacursormode(gcf);
+            h.UpdateFcn = @myupdatefcn;
+            h.SnapToDataVertex = 'on';
+            datacursormode on
+            
+            function [txt] = myupdatefcn(obj,event_obj)
+    
+                pos = event_obj.Position;
+                switch numel(params)
+                    case 1
+                        txt = {[params{1} ':' num2str(pos(1))],...
+                            };
+                    case 2
+                        txt = {[params{1} ':' num2str(pos(1))],...
+                            [params{2} ': ',num2str(pos(2))],...
+                            };
+                        
+                    case 3
+                        txt = {[params{1} ':' num2str(pos(1))],...
+                            [params{2} ': ',num2str(pos(2))],...
+                            [params{3} ': ',num2str(pos(3))],...
+                            };
+                end
+            end
+            
         end
         
         %% Plot domains
