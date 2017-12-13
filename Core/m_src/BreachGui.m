@@ -43,7 +43,6 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-
 % --- Executes just before BreachGui is made visible.
 function BreachGui_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
@@ -79,6 +78,7 @@ set(hObject, 'Name', ['Breach (' crd  ')']);
 %% used to memorize previous entries
 handles.last_options =[];
 handles.check_prop_options =[];
+handles.current_set = [];
 
 %% Init stuff
 if numel(varargin)>=1
@@ -126,10 +126,10 @@ if ~isempty(BrGUI)
     
     handles = update_working_sets_panel(handles);
     handles = update_modif_panel(handles);
-    handles = update_properties_panel(handles);  
+    handles = update_properties_panel(handles);
     handles = set_default_plot(handles);
     handles = plot_pts(handles);
-
+    
 end
 
 handles = info(handles, 'Ready.');
@@ -164,7 +164,7 @@ for iv= 1:numel(ws_var)
             BrGUI = BB__.BrSet;
             handles.current_set = set_name;
         end
-              
+        
         if isprop(BB__, 'BrSet_Best')&& ~isempty(BB__.BrSet_Best)
             set_name  = [ws_var{iv} '__Best'];
             handles.working_sets.(set_name) = BB__.BrSet_Best;
@@ -182,7 +182,7 @@ for iv= 1:numel(ws_var)
                 handles.current_set = set_name;
             end
         end
-         
+        
     end
 end
 
@@ -222,11 +222,13 @@ hM(1).Size = 14;
 
 function handles = update_selected_domain(handles)
 Br = get_current_set(handles);
-params = Br.GetBoundedDomains();
-handles.selected_params = intersect(handles.show_params, params);
-if isempty(handles.selected_params)
-    if numel(handles.show_params) >=1
-        handles.selected_params = handles.show_params(1);
+if ~isempty(Br)
+    params = Br.GetBoundedDomains();
+    handles.selected_params = intersect(handles.show_params, params);
+    if isempty(handles.selected_params)
+        if numel(handles.show_params) >=1
+            handles.selected_params = handles.show_params(1);
+        end
     end
 end
 
@@ -238,122 +240,100 @@ function varargout = BreachGui_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-if ~isempty(handles) 
-varargout{1} = handles.output;
-end
-
-% --- Executes during object creation, after setting all properties.
-function edit_epsi_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit_epsi (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
+if ~isempty(handles)
+    varargout{1} = handles.output;
 end
 
 % --- Executes on button press in button_remove_set.
 function button_remove_set_Callback(hObject, eventdata, handles)
-old_name = handles.current_set;
-fn = fieldnames(handles.working_sets);
-if numel(fn)>1
-    st = fn{get(handles.working_sets_listbox,'Value')};
-    val = get(handles.working_sets_listbox,'Value');
-    
-    if (val>1)
-        val = val-1;
-        set(handles.working_sets_listbox,'Value', val);
-        handles.current_set = fn{val};
-    else
-        handles.current_set = fn{val+1};
-    end
-    
-    handles.working_sets = rmfield(handles.working_sets,st);
-    evalin('base', ['clear ' old_name]);
-    
     Br = get_current_set(handles);
-    handles.show_params = Br.P.ParamList;
-    
-    handles =update_working_sets_panel(handles);
-    handles= update_properties_panel(handles);
-    handles =update_modif_panel(handles);
-    handles = set_default_plot(handles);
-    handles = plot_pts(handles);
-    guidata(hObject,handles);
-end
-% hObject    handle to button_remove_set (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+    if ~isempty(Br)
+        
+        old_name = handles.current_set;
+        fn = fieldnames(handles.working_sets);
+        if numel(fn)>1
+            st = fn{get(handles.working_sets_listbox,'Value')};
+            val = get(handles.working_sets_listbox,'Value');
+            
+            if (val>1)
+                val = val-1;
+                set(handles.working_sets_listbox,'Value', val);
+                handles.current_set = fn{val};
+            else
+                handles.current_set = fn{val+1};
+            end
+            
+            handles.working_sets = rmfield(handles.working_sets,st);
+            evalin('base', ['clear ' old_name]);
+            
+            
+            handles.show_params = Br.P.ParamList;
+            
+            handles =update_working_sets_panel(handles);
+            handles= update_properties_panel(handles);
+            handles =update_modif_panel(handles);
+            handles = set_default_plot(handles);
+            handles = plot_pts(handles);
+            guidata(hObject,handles);
+        end
+    end
 
 % --- Executes on selection change in working_sets_listbox.
 function working_sets_listbox_Callback(hObject, eventdata, handles)
-% hObject    handle to working_sets_listbox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 contents = get(hObject,'String');
 fn = fieldnames(handles.working_sets);
 set_name = fn{get(hObject,'Value')};
 handles.current_set = set_name;
 handles.current_pts = 1;
 Br = get_current_set(handles);
-handles.show_params = Br.P.ParamList;
-
-handles = update_working_sets_panel(handles);
-handles= update_properties_panel(handles);
-handles = update_modif_panel(handles);
-
-handles = set_default_plot(handles);
-handles = plot_pts(handles);
-guidata(hObject, handles);
+if ~isempty(Br)
+    handles.show_params = Br.P.ParamList;
+    
+    handles = update_working_sets_panel(handles);
+    handles= update_properties_panel(handles);
+    handles = update_modif_panel(handles);
+    
+    handles = set_default_plot(handles);
+    handles = plot_pts(handles);
+    guidata(hObject, handles);
+end
 
 function handles = set_default_plot(handles)
 Br = get_current_set(handles);
-handles.current_plot_pts = Br.GetBoundedDomains();
-if isempty(handles.current_plot_pts)&&Br.P.DimP>Br.P.DimX % not like I'm happy with that
-    handles.current_plot_pts = Br.P.ParamList{Br.P.DimX+1};
+if ~isempty(Br)
+    handles.current_plot_pts = Br.GetBoundedDomains();
+    if isempty(handles.current_plot_pts)&&Br.P.DimP>Br.P.DimX % not like I'm happy with that
+        handles.current_plot_pts = Br.P.ParamList{Br.P.DimX+1};
+    end
 end
-
-
-
 
 % --- Executes during object creation, after setting all properties.
 function working_sets_listbox_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to working_sets_listbox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: listbox controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
 
 % --- Executes on button press in button_compute_traj.
 function button_compute_traj_Callback(hObject, eventdata, handles)
-% hObject    handle to button_compute_traj (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 Br = get_current_set(handles);
-
-time_str  = get(handles.edit_time, 'String');
-tspan = eval(time_str);
-if isempty(tspan)
-    handles = info(handles, 'Enter a valid simulation time, e.g., 0:.01:10');
-    return;
+if ~isempty(Br)
+    time_str  = get(handles.edit_time, 'String');
+    tspan = eval(time_str);
+    if isempty(tspan)
+        handles = info(handles, 'Enter a valid simulation time, e.g., 0:.01:10');
+        return;
+    end
+    
+    handles= info(handles,'Computing trajectories...');
+    Br.Sim(tspan);
+    handles= info(handles,'Computing trajectories... Done.');
+    
+    handles = update_working_sets_panel(handles);
+    handles = update_modif_panel(handles);
+    guidata(hObject, handles);
+    h = BreachTrajGui(Br, handles);
 end
-
-handles= info(handles,'Computing trajectories...');
-Br.Sim(tspan);
-handles= info(handles,'Computing trajectories... Done.');
-
-handles = update_working_sets_panel(handles);
-handles = update_modif_panel(handles);
-guidata(hObject, handles);
-h = BreachTrajGui(Br, handles);
-
 
 function edit_num_samples_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_num_samples (see GCBO)
@@ -361,89 +341,96 @@ function edit_num_samples_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 Br = get_current_set(handles);
-st = get(hObject,'String');
-if strcmp(st, 'all')
-    handles.sample_arg_num_samples = 'all';
-else
-    try
-        handles.sample_arg_num_samples = str2num(st);
-    catch
-        handles.sample_arg_num_samples = 0;
-        return
+if ~isempty(Br)
+    st = get(hObject,'String');
+    if strcmp(st, 'all')
+        handles.sample_arg_num_samples = 'all';
+    else
+        try
+            handles.sample_arg_num_samples = str2num(st);
+        catch
+            handles.sample_arg_num_samples = 0;
+            return
+        end
     end
+    handles = update_sample_args(handles);
+    guidata(hObject,handles);
 end
-handles = update_sample_args(handles);
-guidata(hObject,handles);
 
 function handles  = run_sample_domain(handles)
 Br = get_current_set(handles);
-handles = update_sample_args(handles);
-
-Br.SampleDomain(handles.selected_params, ...
-    handles.sample_arg_num_samples,...
-    handles.sample_arg_method,...
-    handles.sample_arg_multi);
+if ~isempty(Br)
+    handles = update_sample_args(handles);
+    
+    Br.SampleDomain(handles.selected_params, ...
+        handles.sample_arg_num_samples,...
+        handles.sample_arg_method,...
+        handles.sample_arg_multi);
+end
 
 function handles = update_sample_args(handles)
 Br = get_current_set(handles);
-val = get(handles.popup_sample_option,'Value');
-switch(val)
-    case 1
-        handles.sample_arg_multi = 'replace';
-    case 2
-        handles.sample_arg_multi = 'append';
-    case 3
-        handles.sample_arg_multi = 'combine';
-end
-
-val = get(handles.popup_method,'Value');
-switch(val)
-    case 1
-        handles.sample_arg_method = 'grid';
-    case 2
-        handles.sample_arg_method = 'corners';
-    case 3
-        handles.sample_arg_method = 'rand';
-    case 4
-        handles.sample_arg_method = 'quasi-random';
-end
-
-% checks if any selected param is actually a signal
-params = handles.selected_params; 
-isSig = Br.isSignal(params);
-if any(Br.isSignal(params))
-    isSig = params(isSig>0);
-    handles = info(handles,  ['Cannot sample ' isSig{1} ', as this is a signal.']); 
-    set(handles.button_sample, 'Enable', 'off');
-    return;
-end
-
-% checks whether everybody is a variables
-domains = Br.GetDomain(params);
-variables = {};
-for id = 1:numel(domains)
-    if  ~isempty(domains(id).domain)
-        variables = [variables params(id)];
+if ~isempty(Br)
+    
+    val = get(handles.popup_sample_option,'Value');
+    switch(val)
+        case 1
+            handles.sample_arg_multi = 'replace';
+        case 2
+            handles.sample_arg_multi = 'append';
+        case 3
+            handles.sample_arg_multi = 'combine';
     end
-end
-
-params = setdiff(params,variables);
-if (~isempty(params))
-    set(handles.button_sample, 'Enable', 'off');
-    msg = ['Parameter ' params{1} ' is not a variable (empty domain), cannot sample.'];  
-    handles = info(handles,  msg); 
-    return
-end
-
-num_args = get(handles.edit_num_samples, 'String');
-if ~isempty(num_args)
-    set( handles.button_sample, 'Enable', 'on');
-    msg = ['Ready to sample domain of { ' get_domain_string(handles) '}'];  
-    handles = info(handles,  msg);
-else 
-    set( handles.button_sample, 'Enable', 'off');
-    msg = ['Enter a  number of samples. It can be a scalar: int or the keyword ''all'' or an array or cell of scalar and keyword.' ]; 
-     handles = info(handles,  msg);
+    
+    val = get(handles.popup_method,'Value');
+    switch(val)
+        case 1
+            handles.sample_arg_method = 'grid';
+        case 2
+            handles.sample_arg_method = 'corners';
+        case 3
+            handles.sample_arg_method = 'rand';
+        case 4
+            handles.sample_arg_method = 'quasi-random';
+    end
+    
+    % checks if any selected param is actually a signal
+    params = handles.selected_params;
+    isSig = Br.isSignal(params);
+    if any(Br.isSignal(params))
+        isSig = params(isSig>0);
+        handles = info(handles,  ['Cannot sample ' isSig{1} ', as this is a signal.']);
+        set(handles.button_sample, 'Enable', 'off');
+        return;
+    end
+    
+    % checks whether everybody is a variables
+    domains = Br.GetDomain(params);
+    variables = {};
+    for id = 1:numel(domains)
+        if  ~isempty(domains(id).domain)
+            variables = [variables params(id)];
+        end
+    end
+    
+    params = setdiff(params,variables);
+    if (~isempty(params))
+        set(handles.button_sample, 'Enable', 'off');
+        msg = ['Parameter ' params{1} ' is not a variable (empty domain), cannot sample.'];
+        handles = info(handles,  msg);
+        return
+    end
+    
+    num_args = get(handles.edit_num_samples, 'String');
+    if ~isempty(num_args)
+        set( handles.button_sample, 'Enable', 'on');
+        msg = ['Ready to sample domain of { ' get_domain_string(handles) '}'];
+        handles = info(handles,  msg);
+    else
+        set( handles.button_sample, 'Enable', 'off');
+        msg = ['Enter a  number of samples. It can be a scalar: int or the keyword ''all'' or an array or cell of scalar and keyword.' ];
+        handles = info(handles,  msg);
+    end
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -463,19 +450,21 @@ function button_new_set_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 Br = get_current_set(handles);
-names = fieldnames(handles.working_sets);
-new_name =  genvarname('Br',names);
-Br_new = Br.copy();
-Br_new.ResetParamSet();
-Br_new.ResetSelected();
-handles.working_sets = setfield(handles.working_sets, new_name, Br_new);
-assignin('base', new_name, handles.working_sets.(new_name));
-
-handles = update_working_sets_panel(handles);
-handles = update_properties_panel(handles);
-handles = update_modif_panel(handles);
-
-guidata(hObject,handles);
+if ~isempty(Br)
+    names = fieldnames(handles.working_sets);
+    new_name =  genvarname('Br',names);
+    Br_new = Br.copy();
+    Br_new.ResetParamSet();
+    Br_new.ResetSelected();
+    handles.working_sets = setfield(handles.working_sets, new_name, Br_new);
+    assignin('base', new_name, handles.working_sets.(new_name));
+    
+    handles = update_working_sets_panel(handles);
+    handles = update_properties_panel(handles);
+    handles = update_modif_panel(handles);
+    
+    guidata(hObject,handles);
+end
 
 % --------------------------------------------------------------------
 function menu_file_Callback(hObject, eventdata, handles)
@@ -493,21 +482,23 @@ load_breachset(hObject,handles);
 
 function load_breachset(hObject, handles)
 Br = get_current_set(handles);
-[FileName,PathName] = uigetfile('*.mat','Load Parameter Set...');
-if(FileName==0)
-    return;
-end
 
-handles.working_sets_file_name = [PathName, FileName];
-try
-    handles.working_sets = evalin('base', ['load(''' handles.working_sets_file_name ''')']);
-    handles = get_param_sets(handles, Br);
-    guidata(hObject,handles);
-catch err
-    warndlg(['Problem loading: ' err.message] );
-    rethrow(err);
+if ~isempty(Br)
+    [FileName,PathName] = uigetfile('*.mat','Load Parameter Set...');
+    if(FileName==0)
+        return;
+    end
+    
+    handles.working_sets_file_name = [PathName, FileName];
+    try
+        handles.working_sets = evalin('base', ['load(''' handles.working_sets_file_name ''')']);
+        handles = get_param_sets(handles, Br);
+        guidata(hObject,handles);
+    catch err
+        warndlg(['Problem loading: ' err.message] );
+        rethrow(err);
+    end
 end
-
 
 % --------------------------------------------------------------------
 function menu_save_as_Callback(hObject, eventdata, handles)
@@ -546,85 +537,58 @@ function button_copy_set_Callback(hObject, eventdata, handles)
 % hObject    handle to button_copy_set (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-val = get(handles.working_sets_listbox, 'Value');
-names = fieldnames(handles.working_sets);
-set_name = names{val};
-new_name = genvarname(set_name,names);
 Br = get_current_set(handles);
-Brcopy = Br.copy();
-handles.working_sets = setfield(handles.working_sets, new_name, Brcopy);
-assignin('base', new_name, Brcopy);
-handles = update_working_sets_panel(handles);
-
-guidata(hObject,handles);
+if ~isempty(Br)
+    val = get(handles.working_sets_listbox, 'Value');
+    names = fieldnames(handles.working_sets);
+    set_name = names{val};
+    new_name = genvarname(set_name,names);
+    Brcopy = Br.copy();
+    handles.working_sets = setfield(handles.working_sets, new_name, Brcopy);
+    assignin('base', new_name, Brcopy);
+    handles = update_working_sets_panel(handles);
+    guidata(hObject,handles);
+end
 
 function edit_rename_Callback(hObject, eventdata, handles)
-% hObject    handle to edit_rename (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 Br = get_current_set(handles);
-old_name = handles.current_set;
-new_name= get(hObject,'String');
-if (isfield(handles.working_sets,new_name))
-    handles = info(handles, 'Name exists already.');
-    return
+if ~isempty(Br)
+    
+    old_name = handles.current_set;
+    new_name= get(hObject,'String');
+    if (isfield(handles.working_sets,new_name))
+        handles = info(handles, 'Name exists already.');
+        return
+    end
+    handles.working_sets = setfield(handles.working_sets,new_name, ...
+        Br);
+    handles.working_sets = rmfield(handles.working_sets, handles.current_set);
+    handles.current_set = new_name;
+    handles = update_working_sets_panel(handles);
+    handles = update_modif_panel(handles);
+    handles= update_properties_panel(handles);
+    evalin('base', ['clear ' old_name]);
+    assignin('base', new_name, Br);
+    guidata(hObject, handles);
 end
-handles.working_sets = setfield(handles.working_sets,new_name, ...
-    Br);
-handles.working_sets = rmfield(handles.working_sets, handles.current_set);
-handles.current_set = new_name;
-handles = update_working_sets_panel(handles);
-handles = update_modif_panel(handles);
-handles= update_properties_panel(handles);
-evalin('base', ['clear ' old_name]);
-assignin('base', new_name, Br);
-guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function edit_rename_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit_rename (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
 
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
 
-
 % --------------------------------------------------------------------
 function menu_files_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_files (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes during object creation, after setting all properties.
-function slider_current_pts_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to slider_current_pts (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
 
 % --------------------------------------------------------------------
 function menu_save_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_save (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 ws = handles.working_sets;
-
 try
     handles = info(handles, ['Saving parameter set to ' handles.working_sets_file_name '...']);
     BreachSave(handles.working_sets_file_name);
-  catch
+catch
     [FileName,PathName] = uiputfile('*.mat','Save Parameter Set As...');
     if(FileName==0)
         return;
@@ -645,21 +609,23 @@ function menu_copy_selected_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 Br = get_current_set(handles);
-
-names = fieldnames(handles.working_sets);
-new_name = genvarname(handles.current_set,names);
-
-ipts = find(Br.P.selected);
-if isempty(ipts)
-    return
+if ~isempty(Br)
+    
+    names = fieldnames(handles.working_sets);
+    new_name = genvarname(handles.current_set,names);
+    
+    ipts = find(Br.P.selected);
+    if isempty(ipts)
+        return
+    end
+    Br_new = Br.copy();
+    Br_new.P = Sselect(Br.P, ipts);
+    
+    handles.working_sets.(new_name) =  Br_new;
+    assignin('base', new_name, Br_new);
+    handles = update_working_sets_panel(handles);
+    guidata(hObject,handles);
 end
-Br_new = Br.copy();
-Br_new.P = Sselect(Br.P, ipts);
-
-handles.working_sets.(new_name) =  Br_new;
-assignin('base', new_name, Br_new);
-handles = update_working_sets_panel(handles);
-guidata(hObject,handles);
 
 % --- Executes on selection change in listbox_prop.
 function listbox_prop_Callback(hObject, eventdata, handles)
@@ -703,19 +669,22 @@ end
 % --- Executes on button press in button_check_property.
 function button_check_property_Callback(hObject, eventdata, handles)
 Br = get_current_set(handles);
-prop = handles.properties.(handles.current_prop);
-
-handles = info(handles, 'Computing satisfaction of formula...');
-Br.CheckSpec(prop);
-Br.SortbyRob();
-Br.SortbySat();
-handles = info(handles, 'Computing satisfaction of formula... Done.');
-
-handles = update_working_sets_panel(handles);
-%handles = update_modif_panel(handles);
-plot_pts(handles);
-handles = update_properties_panel(handles);
-guidata(hObject,handles);
+if ~isempty(Br)
+    
+    prop = handles.properties.(handles.current_prop);
+    
+    handles = info(handles, 'Computing satisfaction of formula...');
+    Br.CheckSpec(prop);
+    Br.SortbyRob();
+    Br.SortbySat();
+    handles = info(handles, 'Computing satisfaction of formula... Done.');
+    
+    handles = update_working_sets_panel(handles);
+    %handles = update_modif_panel(handles);
+    plot_pts(handles);
+    handles = update_properties_panel(handles);
+    guidata(hObject,handles);
+end
 
 % --- Executes on button press in button_edit_prop.
 function button_edit_prop_Callback(hObject, eventdata, handles)
@@ -724,28 +693,31 @@ function button_edit_prop_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 Br = get_current_set(handles);
 
-prop = handles.properties.(handles.current_prop);
-
-prompt={'Edit formula expression:'};
-name='Edit property';
-numlines=1;
-defaultanswer={disp(prop,-1)};
-opts.Resize='on';
-opts.WindowStyle='normal';
-str=inputdlg(prompt,name,numlines,defaultanswer, opts);
-
-if isempty(str)
-    return;
-end
-
+if ~isempty(Br)
+    
+    prop = handles.properties.(handles.current_prop);
+    
+    prompt={'Edit formula expression:'};
+    name='Edit property';
+    numlines=1;
+    defaultanswer={disp(prop,-1)};
+    opts.Resize='on';
+    opts.WindowStyle='normal';
+    str=inputdlg(prompt,name,numlines,defaultanswer, opts);
+    
+    if isempty(str)
+        return;
+    end
+    
     id = get_id(prop);
     phi_st = str{1};
     PHI = eval(['STL_Formula(''' id ''',''' phi_st ''')']);
     eval([get_id(PHI) '=PHI']);
     Br.AddSpec(PHI);
-
-handles = update_properties_panel(handles);
-guidata(hObject, handles);
+    
+    handles = update_properties_panel(handles);
+    guidata(hObject, handles);
+end
 
 function handles = update_working_sets_panel(handles)
 
@@ -781,165 +753,213 @@ set(handles.edit_rename,'String',handles.current_set);
 
 function handles = update_properties_panel(handles)
 Br = get_current_set(handles);
-
-str_name = ['Requirements of ' handles.current_set ];
-if (numel(str_name)>35)
-    str_name= [str_name(1:30) '...' str_name(end-5:end)];
-end
-set(handles.panel_properties,'Title',str_name );
-
-handles.properties = struct;
-specs = Br.Specs;
-specs_names = specs.keys();
-
-for iprop = 1:numel(specs_names)
-    this_name= specs_names{iprop};
-    handles.properties.(this_name) = specs(this_name);
-end
-
-fnames = fieldnames(handles.properties);
-
-content={};
-for i = 1:numel(fnames)
-    st = disp(handles.properties.(fnames{i}),-1);
-    iprop = find_prop(fnames{i},  Br.P);
-    if (iprop)
-        content = {content{:}, ['*' fnames{i} ': ' st]};
-    else
-        content = {content{:}, [fnames{i} ': ' st]};
+if ~isempty(Br)
+    
+    str_name = ['Requirements of ' handles.current_set ];
+    if (numel(str_name)>35)
+        str_name= [str_name(1:30) '...' str_name(end-5:end)];
     end
-end
-
-set(handles.listbox_prop,'String', content);
-
-if ~isfield(handles, 'current_prop')&&~isempty(fnames)
-    handles.current_prop = fnames{1};
-    set(handles.listbox_prop, 'Value',1);
-end
-
-val = get(handles.listbox_prop,'Value');
-val = min(val, numel(fnames));
-if val>0
-    set(handles.listbox_prop, 'Value',val);
-    handles.current_prop = fnames{val};
+    set(handles.panel_properties,'Title',str_name );
+    
+    handles.properties = struct;
+    specs = Br.Specs;
+    specs_names = specs.keys();
+    
+    for iprop = 1:numel(specs_names)
+        this_name= specs_names{iprop};
+        handles.properties.(this_name) = specs(this_name);
+    end
+    
+    fnames = fieldnames(handles.properties);
+    
+    content={};
+    for i = 1:numel(fnames)
+        st = disp(handles.properties.(fnames{i}),-1);
+        iprop = find_prop(fnames{i},  Br.P);
+        if (iprop)
+            content = {content{:}, ['*' fnames{i} ': ' st]};
+        else
+            content = {content{:}, [fnames{i} ': ' st]};
+        end
+    end
+    
+    set(handles.listbox_prop,'String', content);
+    
+    if ~isfield(handles, 'current_prop')&&~isempty(fnames)
+        handles.current_prop = fnames{1};
+        set(handles.listbox_prop, 'Value',1);
+    end
+    
+    val = get(handles.listbox_prop,'Value');
+    val = min(val, numel(fnames));
+    if val>0
+        set(handles.listbox_prop, 'Value',val);
+        handles.current_prop = fnames{val};
+    end
 end
 
 function handles= fill_uitable(handles)
 Br = get_current_set(handles);
-k = handles.current_pts;
-DimX = Br.P.DimX;
-
-h_tb= handles.uitable_params;
-current_pts = Br.GetParam(handles.show_params,k);
-domains = Br.GetDomain(handles.show_params);
-idx = FindParam(Br.P, handles.show_params);
-is_signal = find(idx<=DimX);
-
-fill_uitable_params(h_tb, handles.show_params, current_pts, domains, is_signal); % last argument tells which is a signal
-set(h_tb, 'ColumnEditable', [false, true, true, true, true]);
-set(h_tb, 'ColumnWidth', handles.TBL_SZ);
+if ~isempty(Br)
+    
+    k = handles.current_pts;
+    DimX = Br.P.DimX;
+    
+    h_tb= handles.uitable_params;
+    current_pts = Br.GetParam(handles.show_params,k);
+    domains = Br.GetDomain(handles.show_params);
+    idx = FindParam(Br.P, handles.show_params);
+    is_signal = find(idx<=DimX);
+    
+    fill_uitable_params(h_tb, handles.show_params, current_pts, domains, is_signal); % last argument tells which is a signal
+    set(h_tb, 'ColumnEditable', [false, true, true, true, true]);
+    set(h_tb, 'ColumnWidth', handles.TBL_SZ);
+end
 
 function time_string = get_time_string(time)
 
-   if isscalar(time)
-        time_string = ['[0 ' dbl2str(time) ']'];
-    elseif numel(time)==2
-        time_string = ['[' dbl2str(time(1)) ' ' dbl2str(time(2)) ']'];
-   elseif max(diff(diff(time)))<100*eps
-       time_string = ['0:' dbl2str(time(2)-time(1)) ':' dbl2str(time(end))];
-   else
-       time_string = num2str(time);
-   end
+if isscalar(time)
+    time_string = ['[0 ' dbl2str(time) ']'];
+elseif numel(time)==2
+    time_string = ['[' dbl2str(time(1)) ' ' dbl2str(time(2)) ']'];
+elseif max(diff(diff(time)))<100*eps
+    time_string = ['0:' dbl2str(time(2)-time(1)) ':' dbl2str(time(end))];
+else
+    time_string = num2str(time);
+end
 
 function handles = update_modif_panel(handles)
 
 Br = get_current_set(handles);
-
-%% Parallel checkbox
-set(handles.button_parallel, 'Value', Br.use_parallel);
-
-%% Time edit
-time = Br.GetTime();
-
-%%
-modif_panel_title = Br.disp();
-set(handles.modif_param_panel,'Title', modif_panel_title);
-
-%% parameters listbox
-nb_pts = size( Br.P.pts,2);
-if ~isfield(Br.P,'selected')
-    Br.P.selected=zeros(1,nb_pts);
+if ~isempty(Br)
+    
+    %% Parallel checkbox
+    set(handles.button_parallel, 'Value', Br.use_parallel);
+    
+    %% Time edit
+    time = Br.GetTime();
+    
+    %%
+    modif_panel_title = Br.disp();
+    set(handles.modif_param_panel,'Title', modif_panel_title);
+    
+    %% parameters listbox
+    nb_pts = size( Br.P.pts,2);
+    if ~isfield(Br.P,'selected')
+        Br.P.selected=zeros(1,nb_pts);
+    end
+    nb_pts = size(Br.P.pts,2);
+    
+    %% fix selected field if first time in GUI
+    if ~isfield(Br.P, 'selected')
+        val = get(handles.working_sets_listbox, 'Value');
+        names = fieldnames(handles.working_sets);
+        set_name = names{val};
+        handles.working_sets.(set_name).ResetSelected();
+    end
+    
+    handles.current_pts = min(handles.current_pts, nb_pts);
+    
+    %% fill uitable
+    handles = fill_uitable(handles);
+    handles = update_selected_domain(handles);
+    st_sample= get_sample_string(handles);
+    handles = info(handles, st_sample);
+    set(handles.breach,'UserData', Br);
 end
-nb_pts = size(Br.P.pts,2);
-
-%% fix selected field if first time in GUI
-if ~isfield(Br.P, 'selected')
-    val = get(handles.working_sets_listbox, 'Value');
-    names = fieldnames(handles.working_sets);
-    set_name = names{val};
-    handles.working_sets.(set_name).ResetSelected();
-end
-
-handles.current_pts = min(handles.current_pts, nb_pts);
-
-%% fill uitable
-handles = fill_uitable(handles);
-handles = update_selected_domain(handles);
-st_sample= get_sample_string(handles);
-handles = info(handles, st_sample);
-set(handles.breach,'UserData', Br);
 
 %% Plot function
 function handles= plot_pts(handles)
 Br = get_current_set(handles);
-
-if ~isfield(Br.P,'selected')
-    Br.P.selected = zeros(size(Br.P.pts,2));
-end
-
-axes(handles.axes_pts);
-hold off;
-cla;
-legend off;
-title('');
-
-%% Determines projection
-params_to_plot = handles.current_plot_pts;
-if isempty(params_to_plot);
-    return;
-end
-
-%% Plots domain - TODO robustify PlotDomain
-try
-Br.PlotDomain(params_to_plot);
-end
-%% Determines property
-spec_id = handles.current_prop;
-spec = [];
-if ~isempty(spec_id)
-    if isfield(Br.P, 'props_names')&&any(strcmp(Br.P.props_names, handles.current_prop))
-        spec = handles.properties.(spec_id);
+if ~isempty(Br)
+    if ~isfield(Br.P,'selected')
+        Br.P.selected = zeros(size(Br.P.pts,2));
     end
-end
-
-if isempty(spec)
-    Br.PlotParams(params_to_plot);
+    
+    %% Determines projection
+    params_to_plot = handles.current_plot_pts;
+    if isempty(params_to_plot);
+        return;
+    end
+    %% Reset axes
+    
+    axes(handles.axes_pts);
+    %hold off;
+    cla;
+    legend off;
     title('');
-    h = datacursormode(gcf);
-    h.UpdateFcn = [];  % TODO simple update fcn with param name
-    datacursormode on   
-else
-    Br.PlotSatParams(spec, params_to_plot);
-end
+    hold on;
+    set(gca, 'XTickMode','auto', 'YTickMode', 'auto', 'ZTickMode', 'auto',...
+        'XLimMode', 'auto', 'YLimMode', 'auto', 'ZLimMode', 'auto');
+    xlabel('');   ylabel('');   zlabel(''); 
+    if numel(params_to_plot)>=3
+        view(3);
+    else
+        view(2);
+    end
+    
+    %% Plots domain - only if all parameters are variables
+    var = Br.GetVariables();
+    var_dom_to_plot = intersect(params_to_plot,var,'stable');
+    if isequal(var_dom_to_plot, params_to_plot)
+        hold on;
+         Br.PlotDomain(var_dom_to_plot);
+    end
 
-set_brush_from_selected(handles);
+    %end
+    %% Determines property
+    spec_id = handles.current_prop;
+    spec = [];
+    if ~isempty(spec_id)
+        if isfield(Br.P, 'props_names')&&any(strcmp(Br.P.props_names, handles.current_prop))
+            spec = handles.properties.(spec_id);
+        end
+    end
+    
+    if isempty(spec)
+        Br.PlotParams(params_to_plot);
+        title('');
+    else
+        Br.PlotSatParams(spec, params_to_plot);
+    end
+    
+    
+    set_brush_from_selected(handles);
+end
 
 function set_brush_from_selected(handles)
 Br = get_current_set(handles);
-if any(Br.P.selected)
-    kn = find(Br.P.selected);
+if ~isempty(Br)
+    
+    if any(Br.P.selected)
+        kn = find(Br.P.selected);
+        num_axes = min(numel(handles.current_plot_pts), 3);
+        pval_select = Br.GetParam(handles.current_plot_pts(1:num_axes), kn);
+        h_scat = get_scatter_handle();
+        switch num_axes
+            case 1
+                data = get(h_scat, 'XData');
+            case 2
+                data = [get(h_scat, 'XData'); get(h_scat, 'YData')];
+            case 3
+                data = [get(h_scat, 'XData'); get(h_scat, 'YData');get(h_scat, 'ZData')];
+        end
+        % Find data in select
+        if ~isempty(data)
+            h_scat.BrushData  = double(ismember(data', pval_select','rows')');
+            set_brush_style();
+        end
+    end
+end
+
+function set_selected_from_brush(handles)
+Br = get_current_set(handles);
+
+if ~isempty(Br)
+    
     num_axes = min(numel(handles.current_plot_pts), 3);
-    pval_select = Br.GetParam(handles.current_plot_pts(1:num_axes), kn);
+    pval = Br.GetParam(handles.current_plot_pts(1:num_axes));
+    
     h_scat = get_scatter_handle();
     switch num_axes
         case 1
@@ -949,32 +969,11 @@ if any(Br.P.selected)
         case 3
             data = [get(h_scat, 'XData'); get(h_scat, 'YData');get(h_scat, 'ZData')];
     end
-    % Find data in select
-    if ~isempty(data)
-        h_scat.BrushData  = double(ismember(data', pval_select','rows')');
-        set_brush_style();
-    end
+    
+    % Find pval in brush data in select
+    brushed_data = data(:, logical(h_scat.BrushData));
+    Br.P.selected =  double(ismember(pval', brushed_data','rows')');
 end
-
-function set_selected_from_brush(handles)
-Br = get_current_set(handles);
-
-num_axes = min(numel(handles.current_plot_pts), 3);
-pval = Br.GetParam(handles.current_plot_pts(1:num_axes));
-
-h_scat = get_scatter_handle();
-switch num_axes
-    case 1
-        data = get(h_scat, 'XData');
-    case 2
-        data = [get(h_scat, 'XData'); get(h_scat, 'YData')];
-    case 3
-        data = [get(h_scat, 'XData'); get(h_scat, 'YData');get(h_scat, 'ZData')];
-end
-
-% Find pval in brush data in select
-brushed_data = data(:, logical(h_scat.BrushData));
-Br.P.selected =  double(ismember(pval', brushed_data','rows')');
 
 % --------------------------------------------------------------------
 function menu_plot_property_val_Callback(hObject, eventdata, handles)
@@ -982,201 +981,180 @@ function menu_plot_property_val_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 Br = get_current_set(handles);
-
-try
-    close(handles.figp)
+if ~isempty(Br)
+    try
+        close(handles.figp)
+    end
+    handles.figp = figure;
+    hold on;
+    num_params = numel(handles.selected_params);
+    Br.PlotRobustMap(handles.properties.(handles.current_prop), handles.selected_params(1:min(num_params,2)));
+    guidata(hObject,handles);
 end
-handles.figp = figure;
-hold on;
-num_params = numel(handles.selected_params);
-Br.PlotRobustMap(handles.properties.(handles.current_prop), handles.selected_params(1:min(num_params,2)));
-guidata(hObject,handles);
 
 function req = get_current_req_name(handles)
 req = handles.current_prop;
 
 
 % --------------------------------------------------------------------
-function menu_falsify_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_falsify (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-%try
-Br = get_current_set(handles);
-req = get_current_req_name(handles);
-pb = FalsifWizard('ParamSet', handles.current_set,'Requirement', req);
-if ~isempty(pb)
-    pb.solve();
-    handles = get_param_sets(handles,Br);
-    handles = update_working_sets_panel(handles);
-    guidata(hObject, handles);
-end
-
+    function menu_falsify_Callback(hObject, eventdata, handles)
+        Br = get_current_set(handles);
+        if ~isempty(Br)
+            req = get_current_req_name(handles);
+            pb = FalsifWizard('ParamSet', handles.current_set,'Requirement', req);
+            if ~isempty(pb)
+                pb.solve();
+                handles = get_param_sets(handles,Br);
+                handles = update_working_sets_panel(handles);
+                guidata(hObject, handles);
+            end
+        end
 
 % --------------------------------------------------------------------
 function menu_select_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_select (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 
 % --------------------------------------------------------------------
 function menu_select_N_worst_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_select_N_worst (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 Br = get_current_set(handles);
-valst = inputdlg('Number of samples to select:','',1,{'1'});
-if isempty(valst)
-    return;
-else
-    Br.SortbyRob();
-    Br.SortbySat();
-    val = str2num(valst{1});
-    val = min(val, Br.GetNbParamVectors());
-    Br.P.selected(:,:) = 0;
-    Br.P.selected(1:val) = 1;
+if ~isempty(Br)
+    valst = inputdlg('Number of samples to select:','',1,{'1'});
+    if isempty(valst)
+        return;
+    else
+        Br.SortbyRob();
+        Br.SortbySat();
+        val = str2num(valst{1});
+        val = min(val, Br.GetNbParamVectors());
+        Br.P.selected(:,:) = 0;
+        Br.P.selected(1:val) = 1;
+    end
+    handles =  plot_pts(handles);
+    guidata(hObject,handles);
 end
-handles =  plot_pts(handles);
-guidata(hObject,handles);
 
 % --------------------------------------------------------------------
 function menu_select_prop_gt_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_select_prop_gt (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 Br = get_current_set(handles);
-
-iprop = find_prop(handles.current_prop,Br.P );
-valst = inputdlg('greater than ?');
-if isempty(valst)
-    return;
-end
-
-val_threshold = eval(valst{1});
-
-if iprop
-    val = cat(1,Br.P.props_values(iprop,:).val);
-    val = val(:,1);
-    Br.P.selected = (val>=val_threshold)';
-end
-handles =  plot_pts(handles);
-guidata(hObject,handles);
+if ~isempty(Br)
+    iprop = find_prop(handles.current_prop,Br.P );
+    valst = inputdlg('greater than ?');
+    if isempty(valst)
+        return;
+    end
     
+    val_threshold = eval(valst{1});
+    
+    if iprop
+        val = cat(1,Br.P.props_values(iprop,:).val);
+        val = val(:,1);
+        Br.P.selected = (val>=val_threshold)';
+    end
+    handles =  plot_pts(handles);
+    guidata(hObject,handles);
+end
 
 % --------------------------------------------------------------------
 function menu_select_prop_abs_st_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_select_prop_abs_st (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 Br = get_current_set(handles);
 
 iprop = find_prop(handles.current_prop,Br.P);
 valst = inputdlg('smaller than ?');
-    if isempty(valst)
-        return;
-    end
-    val_threshold = eval(valst{1});
-    if iprop
-        val = cat(1,handles.current_prop,Br.P.props_values(iprop,:).val);
-        val = val(:,1);
-        Br.P.selected = (abs(val)<=val_threshold)';
-    end
-    
-    
-  handles =  plot_pts(handles);
-  guidata(hObject,handles);
-
-
-% --------------------------------------------------------------------
-function menu_inverse_selection_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_inverse_selection (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-Br = get_current_set(handles);
-Br.P.selected = ~ Br.P.selected;
+if isempty(valst)
+    return;
+end
+val_threshold = eval(valst{1});
+if iprop
+    val = cat(1,handles.current_prop,Br.P.props_values(iprop,:).val);
+    val = val(:,1);
+    Br.P.selected = (abs(val)<=val_threshold)';
+end
 handles =  plot_pts(handles);
 guidata(hObject,handles);
 
 % --------------------------------------------------------------------
-function menu_unselect_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_unselect (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+function menu_inverse_selection_Callback(hObject, eventdata, handles)
 Br = get_current_set(handles);
-Br.P.selected = 0* Br.P.selected;
+if ~isempty(Br)
+    Br.P.selected = ~ Br.P.selected;
+    handles =  plot_pts(handles);
+    guidata(hObject,handles);
+end
 
-handles = plot_pts(handles);
-guidata(hObject,handles);
+% --------------------------------------------------------------------
+function menu_unselect_Callback(hObject, eventdata, handles)
+Br = get_current_set(handles);
+if ~isempty(Br)
+    Br.P.selected = 0* Br.P.selected;    
+    handles = plot_pts(handles);
+    guidata(hObject,handles);
+end
 
 % --- Executes on button press in button_new_prop.
 function button_new_prop_Callback(hObject, eventdata, handles)
-% hObject    handle to button_new_prop (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 Br = get_current_set(handles);
-
-PHI_= Br.AddSpecGUI();
-
-if isa(PHI_,'STL_Formula')
-    eval([get_id(PHI_) '=PHI_']);
-    handles = update_properties_panel(handles);
-    guidata(hObject, handles);
-else
-    info(handles,'No new formula was defined.');
-end
-
-function i = find_prop(st, P)
-i=0;
-
-if ~isfield(P, 'props_names')
-    return;
-else
-    props_names =  P.props_names;
-end
-
-for k = 1:numel(props_names)
-    if strcmp(st,props_names{k})
-        i = k;
-        return;
+if ~isempty(Br)
+    PHI_= Br.AddSpecGUI();
+    
+    if isa(PHI_,'STL_Formula')
+        eval([get_id(PHI_) '=PHI_']);
+        handles = update_properties_panel(handles);
+        guidata(hObject, handles);
+    else
+        info(handles,'No new formula was defined.');
     end
 end
+
+    function i = find_prop(st, P)
+        i=0;
+        
+        if ~isfield(P, 'props_names')
+            return;
+        else
+            props_names =  P.props_names;
+        end
+        
+        for k = 1:numel(props_names)
+            if strcmp(st,props_names{k})
+                i = k;
+                return;
+            end
+        end
 
 % --- Executes on button press in button_del_property.
 function button_del_property_Callback(hObject, eventdata, handles)
 % hObject    handle to button_del_property (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    
+
 fn = fieldnames(handles.properties);
+
+if numel(fn)==0
+    return
+end
+
+st = fn{get(handles.listbox_prop,'Value')};
+val = get(handles.listbox_prop,'Value');
+
+if(val>1)
+    val = val-1;
+    set(handles.listbox_prop,'Value', val);
+    handles.current_prop = fn{val};
+elseif numel(fn)==1
+    handles.current_prop = '';
     
-    %if numel(fn)==1
-    %    return
-    %end
-    
-    st = fn{get(handles.listbox_prop,'Value')};
-    val = get(handles.listbox_prop,'Value');
-    
-    if(val>1)
-        val = val-1;
-        set(handles.listbox_prop,'Value', val);
-        handles.current_prop = fn{val};
-    elseif numel(fn)==1
-        handles.current_prop = '';
-        
-    else
-        handles.current_prop = fn{val+1};
-    end
-    
-    handles.properties = rmfield(handles.properties,st);
-    
-    Br = get_current_set(handles);
-    Br.P = SPurge_props(Br.P);
-    Br.Specs.remove(st);
-    
-    handles = update_properties_panel(handles);
-    guidata(hObject, handles);
-    
+else
+    handles.current_prop = fn{val+1};
+end
+
+handles.properties = rmfield(handles.properties,st);
+
+Br = get_current_set(handles);
+Br.P = SPurge_props(Br.P);
+Br.Specs.remove(st);
+
+handles = update_properties_panel(handles);
+guidata(hObject, handles);
+
 % --------------------------------------------------------------------
 function menu_load_properties_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_load_properties (see GCBO)
@@ -1186,52 +1164,51 @@ load_requirement(hObject, handles);
 
 function load_requirement(hObject, handles)
 Br = get_current_set(handles);
-[FileName,PathName,FilterIndex] = uigetfile('*.mat; *.stl','Load Properties Set...');
-
-if (FileName ==0)
-    return
-end
-
-[~,~,ext] = fileparts(FileName);
-
-if strcmp(ext,'.mat')
-    props = load(FileName);
-    fnames = fieldnames(props);
+if ~isempty(Br)
+    [FileName,PathName,FilterIndex] = uigetfile('*.mat; *.stl','Load Properties Set...');
     
-    % find properties in the file loaded
-    nprops = [];
+    if (FileName ==0)
+        return
+    end
     
-    for j = 1:numel(fnames)
-        if isa(props.(fnames{j}), 'STL_Formula')
-            nprops = [ nprops props.(fnames{j}) ];
+    [~,~,ext] = fileparts(FileName);
+    
+    if strcmp(ext,'.mat')
+        props = load(FileName);
+        fnames = fieldnames(props);
+        
+        % find properties in the file loaded
+        nprops = [];
+        
+        for j = 1:numel(fnames)
+            if isa(props.(fnames{j}), 'STL_Formula')
+                nprops = [ nprops props.(fnames{j}) ];
+            end
+        end
+        
+        if isempty(nprops)
+            warndlg('No properties in this file');
+            return
+        else
+            handles.properties = nprops;
+        end
+        handles.current_prop = fnames{1};
+        handles.idx_prop = 1;
+        
+    elseif strcmp(ext,'.stl')
+        [prop_names, props] = STL_ReadFile([PathName FileName]);
+        for iprop = 1:numel(props)
+            Br.AddSpec(props{iprop});
         end
     end
     
-    if isempty(nprops)
-        warndlg('No properties in this file');
-        return
-    else
-        handles.properties = nprops;
-    end
-    handles.current_prop = fnames{1};
-    handles.idx_prop = 1;
-    
-elseif strcmp(ext,'.stl')
-    [prop_names, props] = STL_ReadFile([PathName FileName]);
-    for iprop = 1:numel(props)
-        Br.AddSpec(props{iprop});
-    end
+    set(handles.listbox_prop, 'Value', 1);
+    handles = update_properties_panel(handles);
+    guidata(hObject,handles);
 end
-
-set(handles.listbox_prop, 'Value', 1);
-handles = update_properties_panel(handles);
-guidata(hObject,handles);
 
 % --------------------------------------------------------------------
 function menu_save_properties_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_save_properties (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 try
     FileName = uiputfile('*.mat','Save Properties Set As...');
     
@@ -1254,93 +1231,78 @@ end
 
 % --------------------------------------------------------------------
 function menu_param_sets_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_param_sets (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 % --------------------------------------------------------------------
 function menu_properties_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_properties (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 % --- Executes on button press in button_explore_traj.
 function button_explore_traj_Callback(hObject, eventdata, handles)
-% hObject    handle to button_explore_traj (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 Br = get_current_set(handles);
-h = BreachTrajGui(Br, handles);
+if ~isempty(Br)
+    h = BreachTrajGui(Br, handles);
+end
 
 % --- Executes on button press in button_save.
 function button_save_Callback(hObject, eventdata, handles)
-% hObject    handle to button_save (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 ws = handles.working_sets; %#ok<NASGU>
 save(handles.working_sets_file_name, '-struct', 'ws');
 
-
 % --------------------------------------------------------------------
 function menu_del_select_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_del_select (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 Br = get_current_set(handles);
-
-try
-    
-    % deals with the case where no dynamics is used (only traces)
-    restore_traj = 0;
-    if isfield(Br.Sys, 'type')
-        if strcmp(Br.Sys.type,'traces')
-            if isfield(Br.P, 'traj')
-                traj = Br.P.traj;
-                restore_traj =1;
+if ~isempty(Br)
+    try
+        
+        % deals with the case where no dynamics is used (only traces)
+        restore_traj = 0;
+        if isfield(Br.Sys, 'type')
+            if strcmp(Br.Sys.type,'traces')
+                if isfield(Br.P, 'traj')
+                    traj = Br.P.traj;
+                    restore_traj =1;
+                end
             end
         end
+        
+        nb_pts = size(Br.P.pts,2);
+        if(nb_pts == 1) % cannot delete a unique sample
+            return;
+        end
+        
+        ipts = find(Br.P.selected);
+        if isempty(ipts)
+            return;
+        end
+        
+        nipts = find(~Br.P.selected);
+        if ipts == handles.current_pts
+            nipts = nipts(nipts~=handles.current_pts);
+        end
+        
+        P = Sselect(Br.P, nipts);
+        
+        Br.P = P;
+        handles = update_modif_panel(handles);
+        guidata(hObject,handles);
+        
+    catch
+        s = lasterror;
+        warndlg(['Problem deleting selected: ' s.message] );
     end
-    
-    nb_pts = size(Br.P.pts,2);
-    if(nb_pts == 1) % cannot delete a unique sample
-        return;
-    end
-    
-    ipts = find(Br.P.selected);
-    if isempty(ipts)
-        return;
-    end
-    
-    nipts = find(~Br.P.selected);
-    if ipts == handles.current_pts
-        nipts = nipts(nipts~=handles.current_pts);
-    end
-    
-    P = Sselect(Br.P, nipts);
-    
-    Br.P = P;
-    handles = update_modif_panel(handles);
-    guidata(hObject,handles);
-    
-catch
-    s = lasterror;
-    warndlg(['Problem deleting selected: ' s.message] );
 end
-
 % --------------------------------------------------------------------
 function menu_remove_prop_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_remove_prop (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 Br = get_current_set(handles);
-
-Br.P = SPurge_props(Br.P);
-handles = update_working_sets_panel(handles);
-handles = update_properties_panel(handles);
-handles = update_modif_panel(handles);
-guidata(hObject,handles);
+if ~isempty(Br)
+    Br.P = SPurge_props(Br.P);
+    handles = update_working_sets_panel(handles);
+    handles = update_properties_panel(handles);
+    handles = update_modif_panel(handles);
+    guidata(hObject,handles);
+end
 
 % --- Executes on button press in button_break_prop.
 function button_break_prop_Callback(hObject, eventdata, handles)
@@ -1349,6 +1311,7 @@ function button_break_prop_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 Br = get_current_set(handles);
+if ~isempty(Br)
 prop = handles.properties.(handles.current_prop);
 props = STL_Break(prop);
 
@@ -1360,8 +1323,8 @@ for i = 1:numel(props)
 end
 
 handles = update_properties_panel(handles);
-
 guidata(hObject, handles);
+end
 
 % --- Executes on key press with focus on breach and none of its controls.
 function breach_KeyPressFcn(hObject, eventdata, handles)
@@ -1378,21 +1341,19 @@ st = num2str(x, '%0.5g');
 
 % --------------------------------------------------------------------
 function menu_select_satisfied_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_select_satisfied (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 Br = get_current_set(handles);
-iprop = find_prop(handles.current_prop,Br.P);
-val_threshold = 0;
-if iprop
-    val = cat(1,Br.P.props_values(iprop,:).val);
-    val = val(:,1);
-    Br.P.selected = (val<val_threshold)';
+if ~isempty(Br)
+    iprop = find_prop(handles.current_prop,Br.P);
+    val_threshold = 0;
+    if iprop
+        val = cat(1,Br.P.props_values(iprop,:).val);
+        val = val(:,1);
+        Br.P.selected = (val<val_threshold)';
+    end
+    
+    handles = plot_pts(handles);
+    guidata(hObject,handles);
 end
-
-handles = plot_pts(handles);
-guidata(hObject,handles);
 
 function h = info(h,msg)
 % INFO write the message into the information panel.
@@ -1401,7 +1362,6 @@ drawnow();
 
 % --------------------------------------------------------------------
 function menu_param_synth_Callback(hObject, eventdata, handles)
-
 Br = get_current_set(handles);
 req = get_current_req_name(handles);
 pb = ParamSynthWizard('ParamSet', handles.current_set,'Requirement', req);
@@ -1430,10 +1390,10 @@ Br = get_current_set(handles);
 % look for parameter to change
 idx_params = find(strcmp(params, handles.selected_params(1)) );
 
-% check whether we changed a value or a domain 
+% check whether we changed a value or a domain
 col = eventdata.Indices(2);
 switch col
-    case 2  % change value 
+    case 2  % change value
         idx = FindParam(Br.P,handles.selected_params(1));
         if isempty(domains(idx_params).domain)  % constant parameter, set everybody
             Br.SetParam(idx,  p0(idx_params), true);
@@ -1442,86 +1402,66 @@ switch col
             all_values( handles.current_pts) = p0(idx_params);
             Br.SetParam(idx, all_values, true);
         end
-    case {3,4,5}  % change domain 
+    case {3,4,5}  % change domain
         Br.SetDomain(handles.selected_params,domains(idx_params));
 end
 Br.CheckinDomain();
 handles = info(handles, 'Parameters changed - rerun simulations and/or check requirements');
-
 handles = update_modif_panel(handles);
-% plot_pts(handles);
-
 guidata(hObject,handles);
 
 % --- Executes on button press in button_all.
 function button_all_Callback(hObject, eventdata, handles)
-% hObject    handle to button_all (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 Br = get_current_set(handles);
-handles.show_params = Br.P.ParamList;
-handles = fill_uitable(handles);
-guidata(hObject,handles);
-
+if ~isempty(Br)
+    handles.show_params = Br.P.ParamList;
+    handles = fill_uitable(handles);
+    guidata(hObject,handles);
+end
 
 % --- Executes on button press in button_sys_params.
 function button_sys_params_Callback(hObject, eventdata, handles)
-% hObject    handle to button_sys_params (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 Br = get_current_set(handles);
-handles.show_params = Br.GetParamsSysList();
-
-handles = fill_uitable(handles);
-guidata(hObject,handles);
-
+if ~isempty(Br)
+    handles.show_params = Br.GetParamsSysList();
+    handles = fill_uitable(handles);
+    guidata(hObject,handles);
+end
 
 % --- Executes on button press in button_inputs.
 function button_inputs_Callback(hObject, eventdata, handles)
-% hObject    handle to button_inputs (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 Br = get_current_set(handles);
-idx = Br.GetParamsInputIdx();
-handles.show_params = Br.P.ParamList(idx);
-
-handles = fill_uitable(handles);
-guidata(hObject,handles);
+if ~isempty(Br)
+    idx = Br.GetParamsInputIdx();
+    handles.show_params = Br.P.ParamList(idx);
+    handles = fill_uitable(handles);
+    guidata(hObject,handles);
+end
 
 
 % --- Executes on button press in button_prop_param.
 function button_prop_param_Callback(hObject, eventdata, handles)
-% hObject    handle to button_prop_param (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 Br = get_current_set(handles);
-handles.show_params = Br.GetPropParamList();
-handles = fill_uitable(handles);
-guidata(hObject,handles);
-
-
-function edit_filter_Callback(hObject, eventdata, handles)
-% hObject    handle to edit_filter (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-Br = get_current_set(handles);
-st = get(hObject,'String');
-if ~isempty(st)
-    handles.show_params = Br.P.ParamList(cellfun(@(c)(~isempty(c)),  regexp( Br.P.ParamList,st)));
+if ~isempty(Br)
+    handles.show_params = Br.GetPropParamList();
+    handles = fill_uitable(handles);
+    guidata(hObject,handles);
 end
 
-handles = fill_uitable(handles);
-guidata(hObject,handles);
+function edit_filter_Callback(hObject, eventdata, handles)
+Br = get_current_set(handles);
+if ~isempty(Br)
+    st = get(hObject,'String');
+    if ~isempty(st)
+        handles.show_params = Br.P.ParamList(cellfun(@(c)(~isempty(c)),  regexp( Br.P.ParamList,st)));
+    end
+    
+    handles = fill_uitable(handles);
+    guidata(hObject,handles);
+end
 
 % --- Executes during object creation, after setting all properties.
 function edit_filter_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit_filter (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -1529,22 +1469,16 @@ end
 
 % --- Executes on button press in button_domain.
 function button_domain_Callback(hObject, eventdata, handles)
-% hObject    handle to button_domain (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 Br = get_current_set(handles);
-handles.show_params = Br.GetBoundedDomains();
-
-handles = fill_uitable(handles);
-guidata(hObject,handles);
-
+if ~isempty(Br)
+    handles.show_params = Br.GetBoundedDomains();
+    
+    handles = fill_uitable(handles);
+    guidata(hObject,handles);
+end
 
 % --- Executes on selection change in popup_sample_option.
 function popup_sample_option_Callback(hObject, eventdata, handles)
-% hObject    handle to popup_sample_option (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 val = get(hObject,'Value');
 switch(val)
@@ -1562,9 +1496,6 @@ guidata(hObject,handles);
 
 % --- Executes on selection change in popup_method.
 function popup_method_Callback(hObject, eventdata, handles)
-% hObject    handle to popup_method (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 val = get(hObject,'Value');
 switch(val)
@@ -1577,17 +1508,10 @@ switch(val)
     case 4
         handles.sample_arg_method = 'quasi';
 end
-
 guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function popup_method_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popup_method (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -1595,11 +1519,6 @@ end
 
 % --- Executes when selected cell(s) is changed in uitable_params.
 function uitable_params_CellSelectionCallback(hObject, eventdata, handles)
-% hObject    handle to uitable_params (see GCBO)
-% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.TABLE)
-%	Indices: row and column indices of the cell(s) currently selecteds
-% handles    structure with handles and user data (see GUIDATA)
-
 idx = eventdata.Indices;
 handles.select_cells = idx;
 if ~isempty(idx)
@@ -1612,58 +1531,56 @@ end
 
 function st_sample = get_sample_string(handles)
 Br = get_current_set(handles);
-params = handles.selected_params;
-isSig = Br.isSignal(params);
-signals = params(isSig);
-params = params(~isSig);
-st_sample = ['Selected: ' ];
-
-if ~isempty(signals)
-    st_signals  = cell2mat(cellfun(@(c) ( [c ' ' ] ) , signals, 'UniformOutput', false ));
-    st_sample = [st_sample 'Signals: { ' st_signals '} '];
-    set(handles.button_sample, 'Enable', 'off');
-end
-
-if ~isempty(params)
+if ~isempty(Br)
+    params = handles.selected_params;
+    isSig = Br.isSignal(params);
+    signals = params(isSig);
+    params = params(~isSig);
+    st_sample = ['Selected: ' ];
     
-    domains = Br.GetDomain(params);
-    variables = {};
-    for id = 1:numel(domains)
-        if  ~isempty(domains(id).domain)
-            variables = [variables params(id)];
-        end
-    end
-    if ~isempty(variables)
-        st_variables = cell2mat(cellfun(@(c) ( [c ' ' ] ) ,variables, 'UniformOutput', false ));
-        st_sample  = [st_sample ' Variables { ' st_variables '} '];
-    end
-    
-    params = setdiff(params,variables);
-    if ~isempty(params)
-        st_params  = cell2mat(cellfun(@(c) ( [c ' ' ] ) , params, 'UniformOutput', false ));
-        st_sample  = [st_sample 'Parameters { ' st_params '}'];
+    if ~isempty(signals)
+        st_signals  = cell2mat(cellfun(@(c) ( [c ' ' ] ) , signals, 'UniformOutput', false ));
+        st_sample = [st_sample 'Signals: { ' st_signals '} '];
         set(handles.button_sample, 'Enable', 'off');
     end
- end
-
+    
+    if ~isempty(params)
+        
+        domains = Br.GetDomain(params);
+        variables = {};
+        for id = 1:numel(domains)
+            if  ~isempty(domains(id).domain)
+                variables = [variables params(id)];
+            end
+        end
+        if ~isempty(variables)
+            st_variables = cell2mat(cellfun(@(c) ( [c ' ' ] ) ,variables, 'UniformOutput', false ));
+            st_sample  = [st_sample ' Variables { ' st_variables '} '];
+        end
+        
+        params = setdiff(params,variables);
+        if ~isempty(params)
+            st_params  = cell2mat(cellfun(@(c) ( [c ' ' ] ) , params, 'UniformOutput', false ));
+            st_sample  = [st_sample 'Parameters { ' st_params '}'];
+            set(handles.button_sample, 'Enable', 'off');
+        end
+    end
+end
 
 
 function st_dom = get_domain_string(handles)
 st_dom =  cell2mat(cellfun(@(c) ( [c ' ' ] ) , handles.selected_params, 'UniformOutput', false ));
 
-
 % --- Executes on button press in button_reset.
 function button_reset_Callback(hObject, eventdata, handles)
-% hObject    handle to button_reset (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 Br = get_current_set(handles);
-Br.ResetParamSet();
-handles = update_working_sets_panel(handles);
-handles = update_properties_panel(handles);
-handles = update_modif_panel(handles);
-guidata(hObject,handles);
-
+if ~isempty(Br)
+    Br.ResetParamSet();
+    handles = update_working_sets_panel(handles);
+    handles = update_properties_panel(handles);
+    handles = update_modif_panel(handles);
+    guidata(hObject,handles);
+end
 
 % --- Executes on key press with focus on uitable_params and none of its controls.
 function uitable_params_KeyPressFcn(hObject, eventdata, handles)
@@ -1673,7 +1590,6 @@ function uitable_params_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-
 
 if (isa(eventdata, 'matlab.ui.eventdata.UIClientComponentKeyEvent'))
     switch eventdata.Key
@@ -1706,8 +1622,8 @@ if (isa(eventdata, 'matlab.ui.eventdata.UIClientComponentKeyEvent'))
                         end
                     end
                     Br.CheckinDomain();
-                    handles = info(handles, 'Parameters changed - rerun simulations and/or check requirements'); 
-                    plot_pts(handles);
+                    handles = info(handles, 'Parameters changed - rerun simulations and/or check requirements');
+                    handles = plot_pts(handles);
                     guidata(hObject,handles);
                     
                 end
@@ -1715,37 +1631,22 @@ if (isa(eventdata, 'matlab.ui.eventdata.UIClientComponentKeyEvent'))
         case 'p'
             if strcmp(eventdata.Modifier, 'control')
                 handles.current_plot_pts = handles.selected_params;
-                
-                plot_pts(handles);
+                handles = plot_pts(handles);
                 guidata(hObject,handles);
             end
-            
     end
 end
 
 function breach_WindowButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to breach (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 % --- Executes on mouse motion over figure - except title and menu.
 function breach_WindowButtonMotionFcn(hObject, eventdata, handles)
-% hObject    handle to breach (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 % --------------------------------------------------------------------
 function brushtoggle_OnCallback(hObject, eventdata, handles)
-% hObject    handle to brushtoggle (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 % --------------------------------------------------------------------
 function brushtoggle_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to brushtoggle (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 delete(findall(gca,'Type','hggroup','HandleVisibility','off'));
 
 if isequal(hObject.State, 'on')
@@ -1762,74 +1663,40 @@ brush( handles.breach, 'off' );
 
 % --------------------------------------------------------------------
 function uitoggletool5_OnCallback(hObject, eventdata, handles)
-% hObject    handle to uitoggletool5 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 handles = disable_brush(handles);
 guidata(hObject,handles);
 
 % --------------------------------------------------------------------
 function uitoggletool1_OnCallback(hObject, eventdata, handles)
-% hObject    handle to uitoggletool1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 handles = disable_brush(handles);
 guidata(hObject,handles);
 
 % --------------------------------------------------------------------
 function uitoggletool2_OnCallback(hObject, eventdata, handles)
-% hObject    handle to uitoggletool2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 handles = disable_brush(handles);
 guidata(hObject,handles);
 
 % --------------------------------------------------------------------
 function uitoggletool3_OnCallback(hObject, eventdata, handles)
-% hObject    handle to uitoggletool3 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 handles = disable_brush(handles);
 guidata(hObject,handles);
 
-
 % --------------------------------------------------------------------
 function uitoggletool4_OnCallback(hObject, eventdata, handles)
-% hObject    handle to uitoggletool4 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 handles = disable_brush(handles);
 guidata(hObject,handles);
 
 
 % --- Executes on button press in button_load_req.
 function button_load_req_Callback(hObject, eventdata, handles)
-% hObject    handle to button_load_req (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 load_requirement(hObject,handles);
-
-
 
 % --------------------------------------------------------------------
 function uipushtool_load_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to uipushtool_load (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 load_breachset(hObject,handles);
-
 
 % --------------------------------------------------------------------
 function uipushtool_export_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to uipushtool_export (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 ws = handles.working_sets;
 try
     handles = info(handles, ['Saving parameter set to ' handles.working_sets_file_name '...']);
@@ -1843,7 +1710,7 @@ catch
     handles.working_sets_file_name = [PathName  FileName];
     handles = info(handles, ['Saving parameter set to ' handles.working_sets_file_name '...']);
     BreachSave(handles.working_sets_file_name);
-    handles = update_working_sets_panel(handles);   
+    handles = update_working_sets_panel(handles);
 end
 
 handles = info(handles, ['Saving parameter sets to ' handles.working_sets_file_name '... Done']);
@@ -1852,64 +1719,53 @@ guidata(hObject, handles);
 
 % --- Executes on button press in button_sample.
 function button_sample_Callback(hObject, eventdata, handles)
-% hObject    handle to button_sample (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-try 
-   handles = run_sample_domain(handles);
-   Br = get_current_set(handles);
-   modif_panel_title = Br.disp();
-   set(handles.modif_param_panel,'Title', modif_panel_title);
-   plot_pts(handles);
-   guidata(hObject,handles);
-catch 
-   [msg, msgid] = lasterr; 
-   handles = info(handles,['Error: ' msgid '--' msg]); 
-   guidata(hObject,handles);
- end
-   
-
-
-
+try
+    handles = run_sample_domain(handles);
+    Br = get_current_set(handles);
+    if ~isempty(Br)
+        modif_panel_title = Br.disp();
+        set(handles.modif_param_panel,'Title', modif_panel_title);
+        plot_pts(handles);
+        guidata(hObject,handles);
+    end
+catch
+    [msg, msgid] = lasterr;
+    handles = info(handles,['Error: ' msgid '--' msg]);
+    guidata(hObject,handles);
+end
 
 % --------------------------------------------------------------------
 function menu_inputs_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_inputs (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 % --------------------------------------------------------------------
 function menu_import_inputs_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_import_inputs (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 Br = get_current_set(handles);
-
-[filenames, paths] = uigetfile( ...
-{  '*.mat','MAT-files (*.mat)'}, ...
-   'Pick one or more files', ...
-   'MultiSelect', 'on');
-
-if isequal(filenames,0) % cancel
-    return
+if ~isempty(Br)
+    [filenames, paths] = uigetfile( ...
+        {  '*.mat','MAT-files (*.mat)'}, ...
+        'Pick one or more files', ...
+        'MultiSelect', 'on');
+    
+    if isequal(filenames,0) % cancel
+        return
+    end
+    if ~iscell(filenames)
+        filenames= {filenames};
+    end
+    
+    files = cellfun( @(c)([ paths c  ] ), filenames,'UniformOutput',false);
+    signals = Br.GetSignalList();
+    input_signals = signals(Br.GetInputSignalsIdx);
+    BInputData = BreachImportData(files, input_signals);
+    Br.SetInputGen(BInputData);
+    Br.use_precomputed_inputs = true;
+    
+    idx = Br.GetParamsInputIdx();
+    handles.show_params = Br.P.ParamList(idx);
+    handles = update_modif_panel(handles);
+    guidata(hObject, handles);
 end
-if ~iscell(filenames)
-    filenames= {filenames};
-end
-
-files = cellfun( @(c)([ paths c  ] ), filenames,'UniformOutput',false);
-signals = Br.GetSignalList();
-input_signals = signals(Br.GetInputSignalsIdx);
-BInputData = BreachImportData(files, input_signals);
-Br.SetInputGen(BInputData);
-Br.use_precomputed_inputs = true;
-
-idx = Br.GetParamsInputIdx();
-handles.show_params = Br.P.ParamList(idx);
-handles = update_modif_panel(handles);
-guidata(hObject, handles);
 
 % --------------------------------------------------------------------
 function menu_export_signals_Callback(hObject, eventdata, handles)
@@ -1917,11 +1773,13 @@ function menu_export_signals_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 Br = get_current_set(handles);
-pat= uigetdir;
-if isequal(pat,0)
-    return;
+if ~isempty(Br)
+    pat= uigetdir;
+    if isequal(pat,0)
+        return;
+    end
+    Br.SaveSignals([], pat );
 end
-Br.SaveSignals([], pat );
 
 % --------------------------------------------------------------------
 function open_mdl_Callback(hObject, eventdata, handles)
@@ -1936,9 +1794,6 @@ end
 
 % --------------------------------------------------------------------
 function open_breach_mdl_Callback(hObject, eventdata, handles)
-% hObject    handle to open_breach_mdl (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 Br = get_current_set(handles);
 if isa(Br,'BreachSimulinkSystem')
     Br.OpenBreachMdl();
@@ -1947,9 +1802,6 @@ end
 
 % --------------------------------------------------------------------
 function reset_mdl_Callback(hObject, eventdata, handles)
-% hObject    handle to reset_mdl (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 Br = get_current_set(handles);
 Bnew = BreachSimulinkWizard(Br.mdl.name, Br, 'VariableName',handles.current_set);
 if ~isempty(Bnew)
@@ -1959,39 +1811,35 @@ if ~isempty(Bnew)
     guidata(hObject, handles);
 end
 
-
 % --- Executes on button press in button_parallel.
 function button_parallel_Callback(hObject, eventdata, handles)
-% hObject    handle to button_parallel (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 Br = get_current_set(handles);
-%v = get(hObject,'Value');% returns toggle state of button_parallel
-if Br.use_parallel
-    Br.StopParallel();
-else
-    Br.SetupParallel();
+if ~isempty(Br)
+    if Br.use_parallel
+        Br.StopParallel();
+    else
+        Br.SetupParallel();
+    end
 end
-    
 
 function Br = get_current_set(handles)
-Br = handles.working_sets.(handles.current_set);
-
+Br = [];
+try
+    Br = handles.working_sets.(handles.current_set);
+end
 
 % --------------------------------------------------------------------
 function menu_set_input_gen_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_set_input_gen (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 Br = get_current_set(handles);
-hsi = Br.SetInputGenGUI;
-waitfor(hsi);
-idx = Br.GetParamsInputIdx();
-handles.show_params = Br.P.ParamList(idx);
-handles = update_modif_panel(handles);
-guidata(hObject,handles);
-
+if ~isempty(Br)
+    hsi = Br.SetInputGenGUI;
+    waitfor(hsi);
+    idx = Br.GetParamsInputIdx();
+    handles.show_params = Br.P.ParamList(idx);
+    handles = update_modif_panel(handles);
+    guidata(hObject,handles);
+end
 
 function edit_time_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_time (see GCBO)
@@ -2000,16 +1848,18 @@ function edit_time_Callback(hObject, eventdata, handles)
 
 try
     Br = get_current_set(handles);
-    old_time_string = get_time_string(Br.GetTime());
-    st = get(hObject,'String'); % returns contents of edit_time as text
-    if ~isequal(old_time_string, st)
-        Br.ResetSimulations();
+    if ~isempty(Br)
+        old_time_string = get_time_string(Br.GetTime());
+        st = get(hObject,'String'); % returns contents of edit_time as text
+        if ~isequal(old_time_string, st)
+            Br.ResetSimulations();
+        end
+        time = eval(get(hObject,'String'));
+        Br.SetTime(time);
+        handles = update_working_sets_panel(handles);
+        set(handles.button_compute_traj, 'Enable','on');
+        guidata(hObject,handles);
     end
-    time = eval(get(hObject,'String'));
-    Br.SetTime(time);
-    handles = update_working_sets_panel(handles);
-    set(handles.button_compute_traj, 'Enable','on');
-    guidata(hObject,handles);
 catch
     handles = info(handles, 'Invalid simulation time.' );
     set(handles.button_compute_traj, 'Enable','off');
@@ -2036,10 +1886,11 @@ function menu_clear_traces_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 Br = get_current_set(handles);
-Br.ResetSimulations();
-handles = update_working_sets_panel(handles);
-guidata(hObject, handles);
-
+if ~isempty(Br)
+    Br.ResetSimulations();
+    handles = update_working_sets_panel(handles);
+    guidata(hObject, handles);
+end
 
 % --------------------------------------------------------------------
 function menu_import_traces_Callback(hObject, eventdata, handles)
@@ -2049,14 +1900,17 @@ function menu_import_traces_Callback(hObject, eventdata, handles)
 
 new_name = evalin('base','matlab.lang.makeUniqueStrings(''Bimport'', who)');
 B = BreachImportData();
-if isa(B.signalGenerators{1}, 'constant_signal_gen') % canceled 
+if isa(B.signalGenerators{1}, 'constant_signal_gen') % canceled
     return;
 end
 
 all_signals = B.GetSignalList();
-signals = select_cell_gui(all_signals ,all_signals, 'Select signals from list'); 
-B = BreachImportData(B.fname, signals);
-
+signals = select_cell_gui(all_signals ,all_signals, 'Select signals from list');
+if ~isempty(signals)&&~isequal(signals,0)
+    B = BreachImportData(B.fname, signals);
+else
+    return;
+end
 assignin('base', new_name,B);
 handles = get_param_sets(handles,B);
 handles.show_params = B.P.ParamList;
@@ -2073,28 +1927,33 @@ function menu_reqmining_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 Br = get_current_set(handles);
-req = get_current_req_name(handles);
-pb = ReqMiningWizard('ParamSet', handles.current_set,'Requirement', req);
-if ~isempty(pb)
-    pb.solve();
-    % Extract 
-    pb_name = pb.whoamI;
-    sol_name = [pb_name '_result'];
-    log_name = [pb_name '_falsif_log'];
-    Bres = pb.synth_pb.GetBrSet_Best();
-    Blog = pb.falsif_pb.GetBrSet_Logged();
-    assignin('base', sol_name, Bres);
-    assignin('base', log_name, Blog);
-    handles = get_param_sets(handles,Br);
-    handles.current_set = sol_name;
-    handles.show_params = Bres.GetVariables();
-    handles.current_plot_pts = handles.show_params;
-    handles = update_working_sets_panel(handles);
-    handles = update_modif_panel(handles);
-   handles = plot_pts(handles);
-    guidata(hObject, handles);
+if ~isempty(Br)
+    req = get_current_req_name(handles);
+    if isempty(req)
+    pb = ReqMiningWizard('ParamSet', handles.current_set);
+    else    
+    pb = ReqMiningWizard('ParamSet', handles.current_set,'Requirement', req);
+    end
+    if ~isempty(pb)
+        pb.solve();
+        % Extract
+        pb_name = pb.whoamI;
+        sol_name = [pb_name '_result'];
+        log_name = [pb_name '_falsif_log'];
+        Bres = pb.synth_pb.GetBrSet_Best();
+        Blog = pb.falsif_pb.GetBrSet_Logged();
+        assignin('base', sol_name, Bres);
+        assignin('base', log_name, Blog);
+        handles = get_param_sets(handles,Br);
+        handles.current_set = sol_name;
+        handles.show_params = Bres.GetVariables();
+        handles.current_plot_pts = handles.show_params;
+        handles = update_working_sets_panel(handles);
+        handles = update_modif_panel(handles);
+        handles = plot_pts(handles);
+        guidata(hObject, handles);
+    end
 end
-
 
 
 % --------------------------------------------------------------------
@@ -2103,16 +1962,19 @@ function menu_export_to_excel_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-opt.FileName = 'Results.xlsx';
-choices.FileName = 'string';
-tips.FileName = 'Choose a name for Excel file.';
+    Br = get_current_set(handles);
 
-gu = BreachOptionGui('Export to Excel sheet', opt, choices, tips);
-uiwait(gu.dlg); 
-if ~isempty(gu.output)
-Br = get_current_set(handles);
-Br.ExportToExcel('FileName', gu.output.FileName);
-end
-
+    if ~isempty(Br)
+        opt.FileName = 'Results.xlsx';
+        choices.FileName = 'string';
+        tips.FileName = 'Choose a name for Excel file.';
+        
+        gu = BreachOptionGui('Export to Excel sheet', opt, choices, tips);
+        uiwait(gu.dlg);
+        if ~isempty(gu.output)
+            Br.ExportToExcel('FileName', gu.output.FileName);
+        end
+    end
+    
 
 
