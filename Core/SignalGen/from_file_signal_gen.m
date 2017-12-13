@@ -4,7 +4,7 @@ classdef from_file_signal_gen < signal_gen
         file_name
         var_name
         time_var_name
-        ignore_time = true   % if true, will ignore time given as parameter of Sim command and use time data instead
+        ignore_time = false   % if true, will ignore time given as parameter of Sim command and use time data instead
         data_fmt = 'timed_variables' % other could be 'timed_array', 'struct_with_time', etc
         pts  % stores possible values of parameters
     end

@@ -1,9 +1,21 @@
+# Release 1.2.11
+- Performance improvement for Export to Excel
+
+## Developpers
+- Some cleaning in BreachGui
+
+## Bugfixes
+- plot in GUI would not update axes labels and limits
+- Fixed errors when clicking buttons and stuff on empty GUI
+- Ignore file_idx parameter when writing traces 
+
+
 # Release 1.2.11beta2
 
 ## Bugfixes
 - small bug in displaying number of computed traces
 - fixed bug in until robustness computation causing crash
-- 
+
 
 # Release 1.2.11beta
 
