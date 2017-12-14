@@ -109,7 +109,7 @@ for isig= 1:numel(signal_names)
             classes = get(handles.popupmenu_signal_gen_type, 'String');
             idx = find(strcmp(signal_types, sg_class));
             if isig == 1
-            set(handles.popupmenu_signal_gen_type,'Value', idx);
+                set(handles.popupmenu_signal_gen_type,'Value', idx);
             end
         else
            handles.signal_gen_map(c)=constant_signal_gen({c});
@@ -162,7 +162,7 @@ sig_name = get_current_signal(handles);
 idx = get(hObject,'Value');
 classes = get(hObject,'String');
 class_name = classes{idx};
-handles.signal_gen_map(sig_name) = eval([class_name '({sig_name});']);
+handles.signal_gen_map(sig_name) = eval([class_name '({ sig_name });']);
 
 % update config and params
 update_config(handles);
@@ -426,7 +426,6 @@ if (isa(eventdata, 'matlab.ui.eventdata.UIClientComponentKeyEvent'))
                 guidata(hObject, handles);
             end
             end
-            
             
     end
 end

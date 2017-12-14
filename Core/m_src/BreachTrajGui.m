@@ -895,7 +895,6 @@ function edit_change_tspan_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-try
     
     handles.tspan= eval(get(hObject,'String'));
     
@@ -904,12 +903,6 @@ try
     end
     
     guidata(hObject,handles);
-catch
-    s = lasterror;
-    warndlg(['Problem change_tspan: ' s.message] );
-    error(s);
-    return
-end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1503,6 +1496,8 @@ end
 
 function handles =  update_listbox_param(handles, changed)
 
+Br = handles.BrSys;
+
 % update values and plots
 
 if nargin==1
@@ -1515,18 +1510,18 @@ ind_p = handles.current_change_param;
 if (ind_p)
     if (changed)
         new_val = get(handles.slider_param,'Value')*lbda;
-        if (ind_p<=numel(handles.BrSys.P.ParamList))
+        if (ind_p<=numel(Br.P.ParamList))
             if (get(handles.for_all_checkbox,'Value'))
-                handles.BrSys.P.pts(ind_p, :) = new_val;
-                if (ind_p<=handles.BrSys.P.DimP)
-                    for i = 1:numel(handles.BrSys.P.traj)
-                        handles.BrSys.P.traj{i}.param(ind_p) = new_val;
+                Br.P.pts(ind_p, :) = new_val;
+                if (ind_p<=Br.P.DimP)
+                    for i = 1:numel(Br.P.traj)
+                        Br.P.traj{i}.param(ind_p) = new_val;
                     end
                 end
             else
-                handles.BrSys.P.pts(ind_p, handles.current_pts) = new_val;
-                if (ind_p<=handles.BrSys.P.DimP)
-                    handles.BrSys.P.traj{handles.current_pts}.param(ind_p) = new_val;
+                Br.P.pts(ind_p, handles.current_pts) = new_val;
+                if (ind_p<=Br.P.DimP)
+                    Br.P.traj{handles.current_pts}.param(ind_p) = new_val;
                 end
                 
             end
@@ -1541,7 +1536,7 @@ if (ind_p)
         end
         
         if (handles.auto_recompute)
-            if (ind_p<=handles.BrSys.P.DimP)
+            if (ind_p<=Br.P.DimP)
                 handles = update_trajectories(handles);
             end
             handles = UpdatePlots(handles);
@@ -1570,17 +1565,19 @@ end
 
 content = {'Varying parameters' '-------------------'};
 
-for i=1:numel(handles.BrSys.P.dim)
-    st = handles.BrSys.P.ParamList{handles.BrSys.P.dim(i)};
-    st = strcat(st, ':',' ',dbl2str(handles.BrSys.P.pts(handles.BrSys.P.dim(i), handles.current_pts)));
+variables = Br.GetVariables();
+for i=1:numel(variables)
+    st = variables{i};
+    val = Br.GetParam(st);
+    st = strcat(st, ':',' ',dbl2str(val(handles.current_pts)));
     handles.current_varying_param{i} = st;
 end
 
 content = {content{:} handles.current_varying_param{:} '' 'Systems and props parameters' '-------------------'};
 
-for i=1:numel(handles.BrSys.P.ParamList)
-    st = handles.BrSys.P.ParamList{i};
-    st = strcat(st, ':',' ',dbl2str(handles.BrSys.P.pts(i, handles.current_pts)));
+for i=1:numel(Br.P.ParamList)
+    st = Br.P.ParamList{i};
+    st = strcat(st, ':',' ',dbl2str(Br.P.pts(i, handles.current_pts)));
     content = {content{:} st};
 end
 

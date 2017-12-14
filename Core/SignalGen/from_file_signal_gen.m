@@ -9,7 +9,7 @@ classdef from_file_signal_gen < signal_gen
         pts  % stores possible values of parameters
     end
     methods
-        function this = from_file_signal_gen(signals, fname, varname)
+        function this = from_file_signal_gen(signals, fname, varname,params)
             
             if ~exist('fname', 'var')
                 fname=  '*.mat';
@@ -64,19 +64,29 @@ classdef from_file_signal_gen < signal_gen
             % Next is detecting all parameters- we're looking for
             % constant scalar parameters defined in all files - and all
             % signals - they have to be defined  in all files.
+            if exist('params','var')
+                if ischar(params)
+                    params = {params};
+                end
+            else
+                params= {}; 
+            end
+            
+            
             signals_all = {};
             for iv = 1:numel(vars)
                 v = vars{iv};
-                if (iv ~= itime)&&isnumeric(st.(v))   % ignore time and everything not numeric
-                    if isscalar(st.(v)) % this is a pararmeter!
-                        this.params = [this.params v];
-                        this.p0(end+1) = st.(v);
-                    elseif length(st.(v))==length(time) % looks like  a signal
-                        signals_all = [signals_all  v];
+                if isempty(params)||(ismember(v,params)) % if params is specified, make sure v is in
+                    if (iv ~= itime)&&isnumeric(st.(v))   % ignore time and everything not numeric
+                        if isscalar(st.(v)) % this is a pararmeter!
+                            this.params = [this.params v];
+                            this.p0(end+1) = st.(v);
+                        elseif length(st.(v))==length(time) % looks like  a signal
+                            signals_all = [signals_all  v];
+                        end
                     end
                 end
             end
-            
             % go over all files to fetch values for the parameters and
             % create enum domains
             for ifile = 1:numel(this.file_list)
@@ -102,7 +112,7 @@ classdef from_file_signal_gen < signal_gen
             
             this.signals = signals;
             
-            if ~exist('varname', 'var' )
+            if ~exist('varname', 'var')||isempty(varname)
                 varname = signals{1};
             end
             

@@ -8,7 +8,7 @@ properties
 end
 
 methods
-    function this = BreachImportData(fname, signals) 
+    function this = BreachImportData(fname, signals, params) 
 
         if ~exist('fname', 'var')||isempty(fname)
             
@@ -32,7 +32,11 @@ methods
         end  
         
         if ~isempty(fname)
-            ff_ingen = from_file_signal_gen(signals, fname);
+            if exist('params', 'var')
+                ff_ingen = from_file_signal_gen(signals, fname,{}, params);
+            else
+                ff_ingen = from_file_signal_gen(signals, fname);
+            end
             ff_ingen.ignore_time = true;
         else
             ff_ingen = constant_signal_gen('x');
@@ -211,6 +215,20 @@ methods
                 this.disp_msg(['Summary written into ' excel_file]);
             end
             
+        end
+        
+        function st = disp(this)
+            if isfield(this.P, 'traj')
+                nb_traj = numel(this.P.traj);
+            else
+                nb_traj = 0;
+            end
+            
+            st = ['BreachImportData ' this.whoamI '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' unique traces.'];
+            
+            if nargout ==0
+                disp(st);
+            end
         end
         
     

@@ -806,6 +806,10 @@ if ~isempty(Br)
     DimX = Br.P.DimX;
     
     h_tb= handles.uitable_params;
+    % filter out invalid parameters (occurs when changing BreachSet to
+    % another with different input generator for example
+    handles.show_params = intersect(handles.show_params, Br.P.ParamList,'stable'); 
+    
     current_pts = Br.GetParam(handles.show_params,k);
     domains = Br.GetDomain(handles.show_params);
     idx = FindParam(Br.P, handles.show_params);
@@ -836,10 +840,7 @@ if ~isempty(Br)
     %% Parallel checkbox
     set(handles.button_parallel, 'Value', Br.use_parallel);
     
-    %% Time edit
-    time = Br.GetTime();
-    
-    %%
+    %% Title
     modif_panel_title = Br.disp();
     set(handles.modif_param_panel,'Title', modif_panel_title);
     
@@ -1758,6 +1759,13 @@ if ~isempty(Br)
     signals = Br.GetSignalList();
     input_signals = signals(Br.GetInputSignalsIdx);
     BInputData = BreachImportData(files, input_signals);
+    
+    if numel(BInputData.GetParamList)>1
+        params_all = BInputData.GetParamList;
+        params = select_cell_gui(params_all(2:end), params_all(2:end), 'Select system parameters to import from files');    
+        BInputData = BreachImportData(files, input_signals, params);
+    end
+    
     Br.SetInputGen(BInputData);
     Br.use_precomputed_inputs = true;
     
@@ -1894,9 +1902,6 @@ end
 
 % --------------------------------------------------------------------
 function menu_import_traces_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_import_traces (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 new_name = evalin('base','matlab.lang.makeUniqueStrings(''Bimport'', who)');
 B = BreachImportData();
@@ -1923,9 +1928,6 @@ guidata(hObject, handles);
 
 % --------------------------------------------------------------------
 function menu_reqmining_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_reqmining (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 Br = get_current_set(handles);
 if ~isempty(Br)
     req = get_current_req_name(handles);
@@ -1958,9 +1960,6 @@ end
 
 % --------------------------------------------------------------------
 function menu_export_to_excel_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_export_to_excel (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
     Br = get_current_set(handles);
 
@@ -1972,7 +1971,20 @@ function menu_export_to_excel_Callback(hObject, eventdata, handles)
         gu = BreachOptionGui('Export to Excel sheet', opt, choices, tips);
         uiwait(gu.dlg);
         if ~isempty(gu.output)
-            Br.ExportToExcel('FileName', gu.output.FileName);
+            if isa(Br.InputGenerator, 'BreachImportData')
+                % Let's cheat
+                Bi = Br.InputGenerator.copy();
+                Bi.P = Br.P;  % arrrg.
+                Bi.ExportToExcel('FileName', gu.output.FileName);
+            elseif isa(Br, 'BreachImportData')
+                
+                Br.ExportToExcel('FileName', gu.output.FileName);
+            elseif isa(Br, 'BreachSimulinkSystem')
+               Br.ExportToExcel(gu.output.FileName);
+            else
+                handles = info(handles, 'Export to Excel not supported for this type of system.');
+                guidata(hObject, handles);
+            end
         end
     end
     
