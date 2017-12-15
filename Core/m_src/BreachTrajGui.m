@@ -1564,7 +1564,7 @@ end
 % update listbox display
 
 content = {'Varying parameters' '-------------------'};
-
+ handles.current_varying_param = {};
 variables = Br.GetVariables();
 for i=1:numel(variables)
     st = variables{i};

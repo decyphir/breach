@@ -108,6 +108,7 @@ switch (numel(proj))
             xlabel(['x_' num2str(proj(1))],'Interpreter','tex');
         end
         ylabel('');
+        set(gca, 'YTick', []);
         x = P.pts(proj(1),ipts)*rescale;
         plot(x,0*x,opt.plot_opt{:});
         
