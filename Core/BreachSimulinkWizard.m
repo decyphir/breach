@@ -19,6 +19,8 @@ options.Verbose = 1;
 
 if ~isempty(Br)
     options.InitFn = Br.InitFn;
+else
+    options.InitFn = '';
 end
 
 if nargin >=3

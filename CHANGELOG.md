@@ -8,7 +8,9 @@
 - plot in GUI would not update axes labels and limits
 - Fixed errors when clicking buttons and stuff on empty GUI
 - Ignore file_idx parameter when writing traces 
-
+- fixed bug in SampleDomain when combining samples of dimensions more than 1
+- fixed bug in PlotDomain for more than three dimensions
+- fixed load parameter set not working in GUI
 
 # Release 1.2.11beta2
 

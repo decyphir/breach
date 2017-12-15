@@ -957,8 +957,13 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             else
                 nb_traj = 0;
             end
+            name = this.whoamI; 
             
-            st = ['BreachSimulinkSystem interfacing model ' this.mdl.name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' traces.'];
+            if isequal(name, '__Nobody__')
+            st = ['BreachSimulinkSystem interfacing model ' this.mdl.name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' unique traces.'];
+            else
+            st = ['BreachSimulinkSystem ' name ' interfacing model ' this.mdl.name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' unique traces.'];
+            end
             if nargout ==0
                 disp(st);
             end
@@ -1129,33 +1134,38 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
             
             if options.ExportToExcel
-                if ~isfield(summary, 'specs')
-                    warning('Breach:SaveResult:no_spec_for_Excel','Export to Excel requested but there is no requirement result to report. Excel file not created.');
-                else
-                    excel_file = [folder_name filesep options.ExcelFileName];
-                    global BreachGlobOpt
-                    breach_dir = BreachGlobOpt.breach_dir;
-                    template_file_path = [breach_dir filesep 'Ext' filesep 'Toolboxes' filesep 'ExportResults' filesep 'BreachResults_template.xlsx'];
-                    copyfile(template_file_path, excel_file);
-                    
-                    % Write header
-                    for ispec = 1:numel(summary.specs.names)
-                        hdr{ispec} = ['Req. ' num2str(ispec)];
-                    end
-                    for iparam = ispec+1:ispec+numel(summary.test_params.names)
-                        hdr{iparam} = ['param. ' num2str(iparam-ispec) ];
-                    end
-                    xlswrite(excel_file, hdr, 1, 'B1');
-                    xlswrite(excel_file, [summary.specs.names summary.test_params.names], 1, 'B2');
-                    
-                    % Write data
-                    xlswrite(excel_file, [ summary.num_sat' summary.specs.rob' summary.test_params.values'] , 1, 'A3');
-                    
-                    this.disp_msg(['Summary written into ' excel_file]);
-                end
+                this.ExportToExcel(excel_file);
             end
         end
         
+        function ExportToExcel(this, excel_file)
+            [summary, traces] = this.ExportTracesToStruct();
+            global BreachGlobOpt
+    
+            if ~isfield(summary, 'specs')
+                warning('Breach:SaveResult:no_spec_for_Excel','Export to Excel requested but there is no requirement result to report. Excel file not created.');
+            else
+                breach_dir = BreachGlobOpt.breach_dir;
+                template_file_path = [breach_dir filesep 'Ext' filesep 'Toolboxes' filesep 'ExportResults' filesep 'BreachResults_template.xlsx'];
+                copyfile(template_file_path, excel_file);
+                
+                % Write header
+                for ispec = 1:numel(summary.specs.names)
+                    hdr{ispec} = ['Req. ' num2str(ispec)];
+                end
+                for iparam = ispec+1:ispec+numel(summary.test_params.names)
+                    hdr{iparam} = ['param. ' num2str(iparam-ispec) ];
+                end
+                xlswrite(excel_file, hdr, 1, 'B1');
+                xlswrite(excel_file, [summary.specs.names summary.test_params.names], 1, 'B2');
+                
+                % Write data
+                xlswrite(excel_file, [ summary.num_sat' summary.specs.rob' summary.test_params.values'] , 1, 'A3');
+                
+                this.disp_msg(['Summary written into ' excel_file]);
+            end
+            
+        end
     end
     
 end

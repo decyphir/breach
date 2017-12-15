@@ -622,7 +622,7 @@ classdef BreachSet < BreachStatus
                     end
                     
                 case 'combine'
-                    num_new = numel(x);
+                    num_new = size(x,2);
                     idx = N2Nn(2, [num_old num_new]);
                     pts = this.P.pts(:, idx(1,:));
                     pts(idx_param,:) = x(:, idx(2,:));
@@ -797,7 +797,7 @@ classdef BreachSet < BreachStatus
                     dylim = ylim(2) - ylim(1);
                     set(gca, 'YLim', [ylim(1)-dylim/30, ylim(2)+dylim/30]);
                     
-                case 3
+                otherwise
                     
                     domain1 = this.GetDomain(params{1});
                     domain2 = this.GetDomain(params{2});

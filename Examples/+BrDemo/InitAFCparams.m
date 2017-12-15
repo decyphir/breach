@@ -1,4 +1,3 @@
-clear;
 InitBreach;
 fuel_inj_tol = 1.0; 
 MAF_sensor_tol = 1.0;
