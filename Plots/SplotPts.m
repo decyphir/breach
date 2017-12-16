@@ -1,4 +1,4 @@
-function SplotPts(P,proj,ipts,opt)
+function params = SplotPts(P,proj,ipts,opt)
 %SPLOTPTS plots parameters points (aka: the field pts) in a parameter set
 % 
 % Synopsis: SplotPts(P [, proj, ipts, opt])
@@ -101,18 +101,21 @@ switch (numel(proj))
     
     case {1}
         hold on;
+        params = {P.ParamList{proj(1)}};
         if isfield(P,'ParamList')
             xlabel(P.ParamList{proj(1)},'Interpreter','none');
         else
             xlabel(['x_' num2str(proj(1))],'Interpreter','tex');
         end
         ylabel('');
+        set(gca, 'YTick', []);
         x = P.pts(proj(1),ipts)*rescale;
         plot(x,0*x,opt.plot_opt{:});
         
     case {2}
         hold on;
         grid on;
+        params = {P.ParamList{proj(1)},P.ParamList{proj(2)}};
         if isfield(P,'ParamList')
             xlabel(P.ParamList{proj(1)},'Interpreter','none');
             ylabel(P.ParamList{proj(2)},'Interpreter','none');
@@ -128,6 +131,7 @@ switch (numel(proj))
     otherwise
         hold on;
         grid on;
+        params = {P.ParamList{proj(1)},P.ParamList{proj(2)},P.ParamList{proj(3)}};
         if isfield(P,'ParamList')
             xlabel(P.ParamList{proj(1)},'Interpreter','none');
             ylabel(P.ParamList{proj(2)},'Interpreter','none');
@@ -146,7 +150,7 @@ switch (numel(proj))
 end
 grid on;
 hold off;
-%  set(gca,'FontSize',14,'FontName','times');
+%  set(gca,'FontSize',14,'FontName','times');            
 
 end
 

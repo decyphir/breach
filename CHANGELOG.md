@@ -1,3 +1,50 @@
+# Release 1.2.11
+- Performance improvement for Export to Excel
+
+## Developpers
+- Some cleaning in BreachGui
+
+## Bugfixes
+- plot in GUI would not update axes labels and limits
+- Fixed errors when clicking buttons and stuff on empty GUI
+- Ignore file_idx parameter when writing traces 
+- fixed bug in SampleDomain when combining samples of dimensions more than 1
+- fixed bug in PlotDomain for more than three dimensions
+- fixed load parameter set not working in GUI
+
+# Release 1.2.11beta2
+
+## Bugfixes
+- small bug in displaying number of computed traces
+- fixed bug in until robustness computation causing crash
+
+
+# Release 1.2.11beta
+
+## Users
+- SetInitFn method sets a callback function for initialization before simulation
+- new helper function isSignal returns if a name represents a signal
+  in a BreachSet
+- GUI safeguards around selected parameters for sampling (Issues 32-33-34)
+- GUI 'Domain' button changed to 'Variables' 
+- Support struct parameters and model workspace, still experimental 
+- Enable parallel from GUI
+- SaveSignals/Load
+- BreachSave function saves Breach objects in the workspace into a mat file 
+- GetVariables method returns names of variables in a set, i.e., parameters with non-empty domain/range
+
+## Bugfixes
+- GUI: fixed Env. Param button when no input signal
+- Calling InitBreach in InstallBreach at very beginning to avoid
+  missing varargin2struc (#52)
+- Fixed bug in BreachDomain with 'int' and empty domain leading to change to enum type
+- Fixed bug in SetInputGen which would not update domains appropriately
+
+## Developpers
+- New class BreachOptionGui to create gui from options
+- FalsificationProblem now ignores requirement variables 
+- ParamSynthesisProblem now ignores non-requirement variables
+
 # Release 1.2.10
 
 ## Users

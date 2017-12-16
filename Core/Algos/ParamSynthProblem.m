@@ -31,16 +31,26 @@ classdef ParamSynthProblem < BreachProblem
         
         % Constructor calls parent constructor
         function this = ParamSynthProblem(BrSys, phi, params, ranges)
+            
+            Br = BrSys.copy();
+               
             switch nargin
                 case 2
-                    super_args{1} = BrSys;
+                    sys_var = Br.GetSysVariables();
+                    if ~isempty(sys_var)
+                        Br.ResetDomain(sys_var);
+                    end
+                    
+                    super_args{1} = Br;
                     super_args{2} = phi;
+                    req_params = Br.GetReqVariables();
+                    super_args{3} = req_params;
                 case 3
-                    super_args{1} = BrSys;
+                    super_args{1} = Br;
                     super_args{2} = phi;
                     super_args{3} = params;
                 case 4
-                    super_args{1} = BrSys;
+                    super_args{1} = Br;
                     super_args{2} = phi;
                     super_args{3} = params;
                     super_args{4} = ranges;

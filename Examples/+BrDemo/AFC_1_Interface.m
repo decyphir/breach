@@ -48,7 +48,7 @@ BrAFC.PrintParams()
 % explicitly specify those we want to tune, e.g., some PI parameters:
 
 BrAFC_less_params = BreachSimulinkSystem(mdl, {'ki', 'kp'}, [0.14 0.04]);
-BrAFC_less_params.PrintParams
+BrAFC_less_params.PrintParams()
 
 
 %% 

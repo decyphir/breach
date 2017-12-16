@@ -26,7 +26,9 @@ classdef BreachSystem < BreachSet
     properties
         Sys                   % Legacy Breach system structure
         Specs               % A set (map) of STL formulas
+        ParamSrc=containers.Map()
         use_parallel=0 % 
+        InitFn    = ''           % Initialization function 
     end
     
     methods
@@ -64,6 +66,20 @@ classdef BreachSystem < BreachSet
             this.use_parallel = 1;
             this.Sys.Parallel =1;
             gcp;
+        end
+        
+        function this = SetInitFn(this,Fn)
+            if isa(Fn, 'function_handle')
+                f = functions(Fn);
+                this.InitFn = f.function;
+            else
+                try
+                    evalin('base', Fn);
+                    this.InitFn = Fn;
+                catch
+                    error('Argument of SetInitFn must be a valid function handle or function or script name.');
+                end
+            end
         end
         
         %% Parameters
@@ -107,6 +123,7 @@ classdef BreachSystem < BreachSet
         function Sim(this,tspan)
             % BreachSystem.Sim(time) Performs a simulation from the parameter
             % vector(s) defined in P
+            evalin('base', this.InitFn);
             this.CheckinDomainParam();
             if nargin==1
                 tspan = this.Sys.tspan;
@@ -125,12 +142,7 @@ classdef BreachSystem < BreachSet
                 phi_id = MakeUniqueID([this.Sys.name '_spec'],  BreachGlobOpt.STLDB.keys);
                 phi = STL_Formula(phi_id, varargin{1});
             end
-            
-            % checks whether spec is in there already or not
-            if this.Specs.isKey(get_id(phi))
-                return;
-            end
-            
+                     
             % checks signal compatibility
             [~,sig]= STL_ExtractPredicates(phi);
             i_sig = FindParam(this.Sys, sig);
@@ -314,7 +326,10 @@ classdef BreachSystem < BreachSet
             % default options
             opt.DispTitle = true;  
             opt = varargin2struct(opt, varargin{:});
-            params_values = this.GetParam(params);
+         
+           if ischar(params)
+               params = {params};
+           end
             
             [valu, pvalu, val, pval] = this.GetSatValues(phi, params);
             if isempty(valu)
@@ -322,14 +337,15 @@ classdef BreachSystem < BreachSet
             end
             
             iparam = FindParam(this.P, params);
+       
             switch numel(params)
                 case 1
                     x = pvalu(1,:) ;   % this.P.pts(iparam(1),:);
                     y = zeros(size(x));
                     scatter2dPlot(x,y,valu);
                     xlabel(params{1}, 'Interpreter', 'None');
-                    grid on;
-                    set(gca, 'YTick', []);
+                    ylabel('');
+                    zlabel('');
                 case 2
                     x = pvalu(1,:);
                     y = pvalu(2,:);
@@ -337,7 +353,8 @@ classdef BreachSystem < BreachSet
                     scatter2dPlot(x,y,valu);
                     xlabel(params{1}, 'Interpreter', 'None');
                     ylabel(params{2}, 'Interpreter', 'None');
-                    
+                    zlabel('');
+
                 case 3
                     x = pvalu(1,:);
                     y = pvalu(2,:);
@@ -347,12 +364,12 @@ classdef BreachSystem < BreachSet
                     xlabel(params{1}, 'Interpreter', 'None');
                     ylabel(params{2}, 'Interpreter', 'None');
                     zlabel(params{3}, 'Interpreter', 'None');
-                    grid on;
             end
-            
+
+            grid on;
             if ~isempty(valu)
                 title_st = [get_id(phi) ' satisfied by '...
-                    num2str(numel(find(valu>0))) '/' num2str(numel(valu))
+                    num2str(numel(find(valu(1,:)>0))) '/' num2str(size(valu,2))
                     ];
                 title(title_st, 'Interpreter', 'None');
             end
@@ -452,11 +469,13 @@ classdef BreachSystem < BreachSet
                     if size(val,1)>1
                         for il = 2:size(val,1)
                             vali = val(il, :)';
-                            scatter(x,y, 20, vali, 'filled');
+                            i_not_nan = find(~isnan(vali));
+                            scatter(x(i_not_nan),y(i_not_nan), 20, vali(i_not_nan), 'filled');
                         end
                     end
                 end
             end
+            
             function scatter3dPlot(x,y,z,val)
                 
                 hold on
@@ -476,7 +495,8 @@ classdef BreachSystem < BreachSet
                     if size(val,1)>1
                         for il = 2:size(val,1)
                             vali = val(il, :)';
-                            scatter3(x,y,z, 20, vali, 'filled');
+                            i_not_nan = find(~isnan(vali));
+                            scatter3(x(i_not_nan),y(i_not_nan),z(i_not_nan), 20, vali(i_not_nan), 'filled');
                         end
                     end
                 end
@@ -484,7 +504,6 @@ classdef BreachSystem < BreachSet
             end
             
         end
-        
         
         function [val, pval, valm, pvalm] = GetSatValues(this, spec, params, varargin)
             % [val, pval, valm, pvalm] = GetSatValues(this, spec, params) returns satisfaction values for spec computed
@@ -525,7 +544,7 @@ classdef BreachSystem < BreachSet
                     if numel(new_val)>size(val, 1)
                         val(end+1:numel(new_val),:) = NaN;
                     end
-                    val(:, iu) = new_val';
+                    val(1:numel(new_val), iu) = new_val';
                 end
             else
                 pval = this.P.pts(this.P.DimX:end,:);
@@ -696,7 +715,7 @@ classdef BreachSystem < BreachSet
                 nb_traj = 0;
             end
             
-            st = ['BreachSystem ' this.Sys.name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' traces.'];
+            st = ['BreachSystem ' this.Sys.name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' unique traces.'];
             
             if nargout ==0
                 disp(st);
@@ -717,8 +736,11 @@ classdef BreachSystem < BreachSet
                 % defined yet
                 params_prop = get_params(new_phi);
                 names_params_prop = fieldnames(params_prop)';
-                [~,  idx_status ] = FindParam(this.P, names_params_prop);
-                params_not_found = names_params_prop(idx_status==0);
+                params_not_found = [];
+                if ~isempty(names_params_prop)
+                    [~,  idx_status ] = FindParam(this.P, names_params_prop);
+                    params_not_found = names_params_prop(idx_status==0);
+                end
                 if ~isempty(params_not_found)
                     this.SetParamSpec(params_not_found, cellfun(@(c) (params_prop.(c)), params_not_found));
                 end

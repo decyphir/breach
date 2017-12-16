@@ -582,11 +582,6 @@ end
 
 contents = get(hObject,'String');
 strpop = contents{get(hObject,'Value')};
-if (handles.plot_sensi(2))
-    handles.current_sensi{2,2} = {strpop};
-else
-    handles.current_var{2,2} = {strpop};
-end
 new_plot = plot_param(handles,2);
 handles.current_plot{2} = new_plot;
 guidata(hObject, handles);
@@ -619,11 +614,6 @@ end
 
 contents = get(hObject,'String');
 strpop = contents{get(hObject,'Value')};
-if (handles.plot_sensi(3))
-    handles.current_sensi{3,2} = {strpop};
-else
-    handles.current_var{3,2} = {strpop};
-end
 new_plot = plot_param(handles,3);
 handles.current_plot{3} = new_plot;
 
@@ -653,12 +643,6 @@ if (handles.plot_tout)
     handles.plot_tout =0;
     handles.traj_opt = {'b'};
     set(handles.plot_tout_button, 'Value', 0);
-end
-
-if (handles.plot_sensi(1))
-    handles.current_sensi{1,3} = {strpop};
-else
-    handles.current_var{1,3} = {strpop};
 end
 
 new_plot = plot_param(handles,1);
@@ -693,12 +677,6 @@ end
 contents = get(hObject,'String');
 strpop = contents{get(hObject,'Value')};
 
-if (handles.plot_sensi(2))
-    handles.current_sensi{2,3} = {strpop};
-else
-    handles.current_var{2,3} = {strpop};
-end
-
 new_plot = plot_param(handles,2);
 handles.current_plot{2} = new_plot;
 guidata(hObject, handles);
@@ -729,12 +707,6 @@ end
 
 contents = get(hObject,'String');
 strpop = contents{get(hObject,'Value')};
-
-if (handles.plot_sensi(3))
-    handles.current_sensi{3,3} = {strpop};
-else
-    handles.current_var{3,3} = {strpop};
-end
 
 new_plot = plot_param(handles,3);
 handles.current_plot{3} = new_plot;
@@ -798,17 +770,11 @@ handles.current_var{nb_ax,1} = handles.current_var{2,1};
 handles.current_var{nb_ax,2} = handles.current_var{2,2};
 handles.current_var{nb_ax,3} = handles.current_var{2,3};
 
-handles.current_sensi{nb_ax,1} = handles.current_sensi{2,1};
-handles.current_sensi{nb_ax,2} = handles.current_sensi{2,2};
-handles.current_sensi{nb_ax,3} = handles.current_sensi{2,3};
-handles.current_plot{nb_ax} = [];
-
-handles.plot_sensi = [handles.plot_sensi handles.plot_sensi(2)];
 figure;
 axes;
 ax = gca;
 handles.exported_axes = [handles.exported_axes ax];
-if (handles.plot_tout&&~handles.plot_sensi(2))
+if (handles.plot_tout)
     param_to_plot = handles.current_var{2,1};
     if (~strcmp(param_to_plot,''))
         if (~strcmp(handles.current_var{2,2},''))
@@ -838,17 +804,13 @@ handles.current_var{nb_ax,1} = handles.current_var{3,1};
 handles.current_var{nb_ax,2} = handles.current_var{3,2};
 handles.current_var{nb_ax,3} = handles.current_var{3,3};
 
-handles.current_sensi{nb_ax,1} = handles.current_sensi{3,1};
-handles.current_sensi{nb_ax,2} = handles.current_sensi{3,2};
-handles.current_sensi{nb_ax,3} = handles.current_sensi{3,3};
 handles.current_plot{nb_ax} = [];
 
-handles.plot_sensi = [handles.plot_sensi handles.plot_sensi(2)];
 figure;
 axes;
 ax = gca;
 handles.exported_axes = [handles.exported_axes ax];
-if (handles.plot_tout&&~handles.plot_sensi(2))
+if (handles.plot_tout)
     param_to_plot = handles.current_var{3,1};
     if (~strcmp(param_to_plot,''))
         if (~strcmp(handles.current_var{3,2},''))
@@ -933,7 +895,6 @@ function edit_change_tspan_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-try
     
     handles.tspan= eval(get(hObject,'String'));
     
@@ -942,12 +903,6 @@ try
     end
     
     guidata(hObject,handles);
-catch
-    s = lasterror;
-    warndlg(['Problem change_tspan: ' s.message] );
-    error(s);
-    return
-end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1541,6 +1496,8 @@ end
 
 function handles =  update_listbox_param(handles, changed)
 
+Br = handles.BrSys;
+
 % update values and plots
 
 if nargin==1
@@ -1553,18 +1510,18 @@ ind_p = handles.current_change_param;
 if (ind_p)
     if (changed)
         new_val = get(handles.slider_param,'Value')*lbda;
-        if (ind_p<=numel(handles.BrSys.P.ParamList))
+        if (ind_p<=numel(Br.P.ParamList))
             if (get(handles.for_all_checkbox,'Value'))
-                handles.BrSys.P.pts(ind_p, :) = new_val;
-                if (ind_p<=handles.BrSys.P.DimP)
-                    for i = 1:numel(handles.BrSys.P.traj)
-                        handles.BrSys.P.traj{i}.param(ind_p) = new_val;
+                Br.P.pts(ind_p, :) = new_val;
+                if (ind_p<=Br.P.DimP)
+                    for i = 1:numel(Br.P.traj)
+                        Br.P.traj{i}.param(ind_p) = new_val;
                     end
                 end
             else
-                handles.BrSys.P.pts(ind_p, handles.current_pts) = new_val;
-                if (ind_p<=handles.BrSys.P.DimP)
-                    handles.BrSys.P.traj{handles.current_pts}.param(ind_p) = new_val;
+                Br.P.pts(ind_p, handles.current_pts) = new_val;
+                if (ind_p<=Br.P.DimP)
+                    Br.P.traj{handles.current_pts}.param(ind_p) = new_val;
                 end
                 
             end
@@ -1579,7 +1536,7 @@ if (ind_p)
         end
         
         if (handles.auto_recompute)
-            if (ind_p<=handles.BrSys.P.DimP)
+            if (ind_p<=Br.P.DimP)
                 handles = update_trajectories(handles);
             end
             handles = UpdatePlots(handles);
@@ -1607,18 +1564,20 @@ end
 % update listbox display
 
 content = {'Varying parameters' '-------------------'};
-
-for i=1:numel(handles.BrSys.P.dim)
-    st = handles.BrSys.P.ParamList{handles.BrSys.P.dim(i)};
-    st = strcat(st, ':',' ',dbl2str(handles.BrSys.P.pts(handles.BrSys.P.dim(i), handles.current_pts)));
+ handles.current_varying_param = {};
+variables = Br.GetVariables();
+for i=1:numel(variables)
+    st = variables{i};
+    val = Br.GetParam(st);
+    st = strcat(st, ':',' ',dbl2str(val(handles.current_pts)));
     handles.current_varying_param{i} = st;
 end
 
 content = {content{:} handles.current_varying_param{:} '' 'Systems and props parameters' '-------------------'};
 
-for i=1:numel(handles.BrSys.P.ParamList)
-    st = handles.BrSys.P.ParamList{i};
-    st = strcat(st, ':',' ',dbl2str(handles.BrSys.P.pts(i, handles.current_pts)));
+for i=1:numel(Br.P.ParamList)
+    st = Br.P.ParamList{i};
+    st = strcat(st, ':',' ',dbl2str(Br.P.pts(i, handles.current_pts)));
     content = {content{:} st};
 end
 

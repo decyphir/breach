@@ -16,12 +16,11 @@ for irow = 1:size(data,1)
     else
         domain=[];
     end
-    type = data{irow,5};
     
+    type = data{irow,5};
     enum  = data{irow, 4};
     
     
-   
     switch type
         case 'enum'
             if isempty(enum)
@@ -29,11 +28,10 @@ for irow = 1:size(data,1)
             else
                 enum = str2num(enum);
             end
-            
-            domains(irow) = BreachDomain(type, enum);
+            domains(irow) = BreachDomain(type, domain, enum);
         otherwise 
             domains(irow) = BreachDomain(type, domain);
     end
-    
+%     
 end
 end

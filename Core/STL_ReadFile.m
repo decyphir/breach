@@ -17,8 +17,8 @@ function [props_names, props, signal_names, param_names] = STL_ReadFile(fname)
 %          phis.stl:
 %
 %          mu := x0[t] > 3             # That's a predicate
-%          phi1 := mu until mu         # useless subformula
-%          phi2 := alw_[0,2.3] phi1    # useless formula
+%          phi1 := mu until mu         # some subformula
+%          phi2 := alw_[0,2.3] phi1    # some other formula
 %
 %          -- end of phis.stl
 %
@@ -28,11 +28,7 @@ function [props_names, props, signal_names, param_names] = STL_ReadFile(fname)
 %  - props       : is a cell array containing the defined STL formulas in
 %                  the same order than props_name.
 %
-% Example (Lorentz84):
-%  [props_names,props] = STL_ReadFile('oscil_prop.stl');
-%  props_names
-%
-%See also STL_Formula RecoverFormula
+%See also STL_Formula 
 %
 
 % checks if Breach (and STLDB in particular) needs initialization 

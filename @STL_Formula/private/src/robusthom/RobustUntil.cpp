@@ -13,7 +13,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	/* read matlab inputs */
 
 #ifdef DEBUG__
-	cout << "Entering RobustUntil" << endl;
+    mexPrintf("Entering RobustUntil\n");
 #endif
 
 	// manage empty input
