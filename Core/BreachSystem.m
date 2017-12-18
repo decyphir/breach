@@ -72,10 +72,13 @@ classdef BreachSystem < BreachSet
             if isa(Fn, 'function_handle')
                 f = functions(Fn);
                 this.InitFn = f.function;
-            elseif ischar(Fn)&&any(  [2 3 5 6] ==  exist(Fn)) 
-                this.InitFn = Fn;
             else
-                error('Argument of SetInitFn must be a valid function handle or function or script name.');
+                try
+                    evalin('base', Fn);
+                    this.InitFn = Fn;
+                catch
+                    error('Argument of SetInitFn must be a valid function handle or function or script name.');
+                end
             end
         end
         
@@ -366,7 +369,7 @@ classdef BreachSystem < BreachSet
             grid on;
             if ~isempty(valu)
                 title_st = [get_id(phi) ' satisfied by '...
-                    num2str(numel(find(valu>0))) '/' num2str(numel(valu))
+                    num2str(numel(find(valu(1,:)>0))) '/' num2str(size(valu,2))
                     ];
                 title(title_st, 'Interpreter', 'None');
             end
@@ -466,7 +469,8 @@ classdef BreachSystem < BreachSet
                     if size(val,1)>1
                         for il = 2:size(val,1)
                             vali = val(il, :)';
-                            scatter(x,y, 20, vali, 'filled');
+                            i_not_nan = find(~isnan(vali));
+                            scatter(x(i_not_nan),y(i_not_nan), 20, vali(i_not_nan), 'filled');
                         end
                     end
                 end
@@ -491,7 +495,8 @@ classdef BreachSystem < BreachSet
                     if size(val,1)>1
                         for il = 2:size(val,1)
                             vali = val(il, :)';
-                            scatter3(x,y,z, 20, vali, 'filled');
+                            i_not_nan = find(~isnan(vali));
+                            scatter3(x(i_not_nan),y(i_not_nan),z(i_not_nan), 20, vali(i_not_nan), 'filled');
                         end
                     end
                 end
