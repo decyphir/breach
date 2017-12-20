@@ -100,6 +100,7 @@ handles.halton = 0;
 handles.refine_args = 0;
 handles.select_cells = [];
 handles.current_plot_pts = {};
+handles.working_sets = struct;
 
 % Init param pts plot
 handles.current_plot{1} =[];
@@ -675,10 +676,13 @@ end
 % --- Executes on button press in button_check_property.
 function button_check_property_Callback(hObject, eventdata, handles)
 Br = get_current_set(handles);
-if ~isempty(Br)
-    
-    prop = handles.properties.(handles.current_prop);
-    
+if ~isempty(Br)&&~isempty(handles.current_prop) 
+    if ~Br.hasTraj
+        handles = info(handles, 'No traces to check requirement on. Run simulations first.');
+        guidata(hObject,handles);
+        return;
+    end 
+    prop = handles.properties.(handles.current_prop);  
     handles = info(handles, 'Computing satisfaction of formula...');
     Br.CheckSpec(prop);
     Br.SortbyRob();
@@ -1355,8 +1359,7 @@ if ~isempty(Br)
         val = cat(1,Br.P.props_values(iprop,:).val);
         val = val(:,1);
         Br.P.selected = (val<val_threshold)';
-    end
-    
+    end   
     handles = plot_pts(handles);
     guidata(hObject,handles);
 end
@@ -1443,7 +1446,6 @@ if ~isempty(Br)
     handles = fill_uitable(handles);
     guidata(hObject,handles);
 end
-
 
 % --- Executes on button press in button_prop_param.
 function button_prop_param_Callback(hObject, eventdata, handles)
@@ -1770,6 +1772,9 @@ if ~isempty(Br)
     if numel(BInputData.GetParamList)>1
         params_all = BInputData.GetParamList;
         params = select_cell_gui(params_all(2:end), params_all(2:end), 'Select system parameters to import from files');    
+        if isequal(params,0)
+            return
+        end
         BInputData = BreachImportData(files, input_signals, params);
     end
     
@@ -1853,6 +1858,8 @@ if ~isempty(Br)
     idx = Br.GetParamsInputIdx();
     handles.show_params = Br.P.ParamList(idx);
     handles = update_modif_panel(handles);
+    handles = set_default_plot(handles);
+    handles = plot_pts(handles);
     guidata(hObject,handles);
 end
 
@@ -1978,14 +1985,13 @@ function menu_export_to_excel_Callback(hObject, eventdata, handles)
         gu = BreachOptionGui('Export to Excel sheet', opt, choices, tips);
         uiwait(gu.dlg);
         if ~isempty(gu.output)
-            if isa(Br.InputGenerator, 'BreachImportData')
+            if isa(Br, 'BreachImportData')
+               Br.ExportToExcel('FileName', gu.output.FileName);
+            elseif isa(Br.InputGenerator, 'BreachImportData')
                 % Let's cheat
                 Bi = Br.InputGenerator.copy();
                 Bi.P = Br.P;  % arrrg.
                 Bi.ExportToExcel('FileName', gu.output.FileName);
-            elseif isa(Br, 'BreachImportData')
-                
-                Br.ExportToExcel('FileName', gu.output.FileName);
             elseif isa(Br, 'BreachSimulinkSystem')
                Br.ExportToExcel(gu.output.FileName);
             else

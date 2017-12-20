@@ -1134,7 +1134,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
             
             if options.ExportToExcel
-                this.ExportToExcel(excel_file);
+                this.ExportToExcel(options.ExcelFileName);
             end
         end
         
