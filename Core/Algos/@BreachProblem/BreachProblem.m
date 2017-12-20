@@ -250,6 +250,13 @@ classdef BreachProblem < BreachStatus
             this.nb_obj_eval = 0;
         end
         
+        
+        function ResetTimeSpent(this)
+            this.time_spent= 0; 
+            this.time_start = tic; 
+        end
+        
+        
         %% Options for various solvers
         function [solver_opt, is_gui] = setup_solver(this, solver_name, is_gui)
             if ~exist('solver_name','var')
@@ -331,8 +338,7 @@ classdef BreachProblem < BreachStatus
             rfprintf_reset();
             
             % reset time
-            this.time_start = tic;
-            this.time_spent = 0;
+            this.ResetTimeSpent();
             
             % create problem structure
             problem = this.get_problem();
@@ -560,7 +566,9 @@ classdef BreachProblem < BreachStatus
                 BrOut.SetParam(this.params, this.X_log);
             end
             BrOut.Sys.Verbose=1;
-            BrOut.CheckSpec(this.Spec);
+            if isempty(BrOut.InputGenerator.Specs) % TODO: change this when dealing with Input requirements/constraints
+                    BrOut.CheckSpec(this.Spec);
+            end
         end
         
         function BrBest = GetBrSet_Best(this)

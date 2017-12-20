@@ -20,6 +20,7 @@ classdef MyFalsificationProblem < FalsificationProblem
         
         % call solver and return a structure with results. 
         function res = solve(this)
+            this.ResetTimeSpent();   % set timer to 0
             [x, fval] = fmincon(this.objective, ... % objective calls objective_fn plus some bookkeeping
             this.x0, ...          % obtained from BrSys
              [], [], [],[], ...   % linear (in)-equalities
