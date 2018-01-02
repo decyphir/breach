@@ -1,4 +1,14 @@
 # Release 1.2.11
+
+## Developpers
+- ResetTimeSpent method for BreachProblem
+
+## Bugfixes
+- Problems when exporting to Excel with imported data (inputs or not, issues 56-57)
+- BreachGui wouldn't start without sets in the workspace (issue 55) 
+- Error message caught when checking with no trace 
+
+# Release 1.2.11beta3
 - Performance improvement for Export to Excel
 
 ## Developpers

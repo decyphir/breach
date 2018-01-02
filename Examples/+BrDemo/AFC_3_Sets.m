@@ -102,7 +102,8 @@ BrAFC.SetDomain(p_int_50, 'enum', 900:50:1100);
 
 %% SampleDomain examples
 % SampleDomain is a function to sample domains. It is more generic,
-% flexible and comprehensive than the legacy QuasiRandomSample and GridSample.\\[1cm] 
+% flexible and comprehensive than the legacy QuasiRandomSample and
+% GridSample.
 
 %%
 % The general syntax is 
