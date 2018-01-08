@@ -27,16 +27,16 @@ if  nb_dir>1
         br_old_dir =   fileparts(br_all_dir{idir});
         all_paths = strsplit(path, ';');
         nb_paths = numel(all_paths);
-        disp(['Removing paths in ' br_old_dir]);
+        disp(['Warning: removing paths in ' br_old_dir]);
         rm_path_list = {};
         for ii = 1:nb_paths
             if strcmp(all_paths{ii}(1:numel(br_old_dir)),br_old_dir)
-                disp(['              ' all_paths{ii}]);
+                %disp(['              ' all_paths{ii}]);
                 rm_path_list = [rm_path_list all_paths{ii}];
             end
         end
-        rmpath(rm_path_list);
-        disp;
+        rmpath(rm_path_list{:});
+        disp(' ');
     end
 end
     
@@ -44,7 +44,6 @@ end
 if ~exist( [br_dir filesep 'Ext' filesep 'ModelsData'], 'dir')
     mkdir([br_dir filesep 'Ext' filesep 'ModelsData']);
 end
-
 
 %% Init
 disp(['Initializing Breach from folder ' br_dir '...']);
