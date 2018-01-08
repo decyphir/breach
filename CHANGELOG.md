@@ -1,3 +1,12 @@
+# Release 1.2.12 
+
+- InitBreach now better removes path from older/other versions
+- Added BreachVersion
+
+## Bugfixes
+- InitBreach creates ModelsData folder when absent
+
+
 # Release 1.2.11
 
 ## Developpers

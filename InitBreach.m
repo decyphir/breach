@@ -1,33 +1,51 @@
-function InitBreach(br_dir)
-% InitBreach This script initializes Breach, in particular adding paths to Breach directories
+function InitBreach(br_dir, force_init)
+% InitBreach  initializes Breach, in particular adding paths to Breach directories
 
-% checks if global configuration variable is defined
+%% checks if global configuration variable is defined
 global BreachGlobOpt
-if isfield(BreachGlobOpt, 'breach_dir')
-    if ~exist('br_dir', 'var') || isequal(BreachGlobOpt.breach_dir, br_dir)
-        return; % OK InitBreach has been run before
-    end
-end
 
-if ~exist('br_dir', 'var')
+if ~exist('br_dir', 'var')||isempty(br_dir)
     br_dir = which('InstallBreach');
     br_dir = fileparts(br_dir);
 end
 
-% remove old path, if any
-if isfield(BreachGlobOpt, 'breach_dir')
-    if isfield(BreachGlobOpt, 'list_path')  % we listed paths from previous version
-        rmpath(BreachGlobOpt.list_path{:});
-    else % in case we're dealing with an older version of Breach (dangerous, let's warn)
-        warning('Breach:RemoveOldPath','Older version of Breach detected. Attempting to clean old path by removing every path with ''breach'' in it.');
-        old_dr = BreachGlobOpt.breach_dir;
-        toks = regexp(old_dr, ['(' old_dr '[\w' filesep '\+_-]*):'],'tokens');
-        for ii = 1:numel(toks)
-            rmpath(toks{ii}{1});
-        end
+if nargin<2
+    force_init = false;
+end
+
+if ~force_init && isfield(BreachGlobOpt, 'breach_dir')
+    if  isequal(BreachGlobOpt.breach_dir, br_dir)
+        return; % OK InitBreach has been run before
     end
 end
 
+%% remove old path, if any
+br_all_dir = which('InstallBreach', '-all');
+nb_dir = numel(br_all_dir);   
+if  nb_dir>1
+    for idir =  2: nb_dir
+        br_old_dir =   fileparts(br_all_dir{idir});
+        all_paths = strsplit(path, ';');
+        nb_paths = numel(all_paths);
+        disp(['Warning: removing paths in ' br_old_dir]);
+        rm_path_list = {};
+        for ii = 1:nb_paths
+            if strcmp(all_paths{ii}(1:min(numel(br_old_dir),end)),br_old_dir)
+                %disp(['              ' all_paths{ii}]);
+                rm_path_list = [rm_path_list all_paths{ii}];
+            end
+        end
+        rmpath(rm_path_list{:});
+        disp(' ');
+    end
+end
+    
+%%  Make sure ModelsData exist
+if ~exist( [br_dir filesep 'Ext' filesep 'ModelsData'], 'dir')
+    mkdir([br_dir filesep 'Ext' filesep 'ModelsData']);
+end
+
+%% Init
 disp(['Initializing Breach from folder ' br_dir '...']);
 
 id = 'MATLAB:dispatcher:nameConflict';
@@ -39,6 +57,7 @@ cd(br_dir);
 list_path = { ...
     br_dir, ...
     [br_dir filesep 'Core'], ...
+    [br_dir filesep 'Core' filesep 'Init'], ...
     [br_dir filesep 'Core' filesep 'm_src'], ...
     [br_dir filesep 'Core' filesep 'Algos'], ...
     [br_dir filesep 'Core' filesep 'SignalGen'], ...
