@@ -30,7 +30,7 @@ if  nb_dir>1
         disp(['Warning: removing paths in ' br_old_dir]);
         rm_path_list = {};
         for ii = 1:nb_paths
-            if strcmp(all_paths{ii}(1:numel(br_old_dir)),br_old_dir)
+            if strcmp(all_paths{ii}(1:min(numel(br_old_dir),end)),br_old_dir)
                 %disp(['              ' all_paths{ii}]);
                 rm_path_list = [rm_path_list all_paths{ii}];
             end
