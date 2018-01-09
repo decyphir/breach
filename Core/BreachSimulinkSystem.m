@@ -37,7 +37,6 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         MdlVars          % List of variables used by the model
         SimInputsOnly=false % if true, will not run Simulink model
         mdl
-        log_folder
     end
     
     methods

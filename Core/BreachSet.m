@@ -36,6 +36,7 @@ classdef BreachSet < BreachStatus
         Domains = BreachDomain('double', [])
         SignalRanges % ranges of values taken by each signal variable
         AppendWhenSample=false % when true, sampling appends new param vectors, otherwise replace.
+        log_folder
     end
     
     methods (Hidden=true)
@@ -1104,19 +1105,10 @@ classdef BreachSet < BreachStatus
             summary.params.values = this.GetParam(summary.params.names);
             
             %% traces
-            file_idx= this.GetParam('file_idx');
             summary.filenames = {};
             summary.paths = {};
             for it = i_traces
                 
-                % filename
-                ip = file_idx(it);
-                [pth, fn] = fileparts(this.signalGenerators{1}.file_list(ip).name);
-                traces(it).filename = [fn '.mat'];
-                traces(it).path = pth;
-                
-                summary.filenames   = [summary.filenames traces(it).filename];
-                summary.paths   = [summary.paths traces(it).path];
                 % params
                 traces(it).params.names = param_names;
                 traces(it).params.values = this.GetParam(param_names,it)';
