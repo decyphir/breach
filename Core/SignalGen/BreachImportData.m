@@ -1,73 +1,73 @@
 classdef BreachImportData < BreachSignalGen
-% BreachImportData Specialisation of BreachSignalGen to
-% from_file_signal_gen - main thing is that when importing signals, it can use
-% different times, also pre-sample and loads all traces 
-      
-properties
-    fname
-end
-
-methods
-    function this = BreachImportData(fname, signals, params) 
-
-        if ~exist('fname', 'var')||isempty(fname)
+    % BreachImportData Specialisation of BreachSignalGen to
+    % from_file_signal_gen - main thing is that when importing signals, it can use
+    % different times, also pre-sample and loads all traces
+    
+    properties
+        fname
+    end
+    
+    methods
+        function this = BreachImportData(fname, signals, params)
             
-            [filenames, paths] = uigetfile( ...
-                {  '*.mat','MAT-files (*.mat)'}, ...
-                'Pick one or more files', ...
-                'MultiSelect', 'on');
-            
-            if isequal(filenames,0) % cancel
-                  fname = {};  
-            else
-                if ~iscell(filenames)
-                    filenames= {filenames};
+            if ~exist('fname', 'var')||isempty(fname)
+                
+                [filenames, paths] = uigetfile( ...
+                    {  '*.mat','MAT-files (*.mat)'}, ...
+                    'Pick one or more files', ...
+                    'MultiSelect', 'on');
+                
+                if isequal(filenames,0) % cancel
+                    fname = {};
+                else
+                    if ~iscell(filenames)
+                        filenames= {filenames};
+                    end
+                    fname = cellfun( @(c)([ paths c  ] ), filenames,'UniformOutput',false);
                 end
-                fname = cellfun( @(c)([ paths c  ] ), filenames,'UniformOutput',false);
             end
-        end
-        
-        if ~exist('signals', 'var')
-            signals = {};
-        end  
-        
-        if ~isempty(fname)
-            if exist('params', 'var')
-                ff_ingen = from_file_signal_gen(signals, fname,{}, params);
-            else
-                ff_ingen = from_file_signal_gen(signals, fname);
-            end
-            ff_ingen.ignore_time = true;
-        else
-            ff_ingen = constant_signal_gen('x');
-        end
-        
-        this = this@BreachSignalGen({ff_ingen});
-        
-        if ~isa(ff_ingen, 'constant_signal_gen')  % not canceled 
-            dom = this.GetDomain('file_idx');  % will need to improve this at some point
-            dom.domain = [dom.enum(1) dom.enum(end)];
-            this.SetDomain('file_idx', dom);
-            this.SampleDomain('file_idx', 'all');
-            this.Sys.Verbose=0;
-            this.Sim();
-        end
-
-        this.fname = fname;
-    end
-    
-    function idx = GetParamsInputIdx(this)
-        idx = [];
-    end
-    
-    function [tspan, X] = breachSimWrapper(this, Sys, tspan, p)
             
-             sg = this.signalGenerators{1};
- 
+            if ~exist('signals', 'var')
+                signals = {};
+            end
+            
+            if ~isempty(fname)
+                if exist('params', 'var')
+                    ff_ingen = from_file_signal_gen(signals, fname,{}, params);
+                else
+                    ff_ingen = from_file_signal_gen(signals, fname);
+                end
+                ff_ingen.ignore_time = true;
+            else
+                ff_ingen = constant_signal_gen('x');
+            end
+            
+            this = this@BreachSignalGen({ff_ingen});
+            
+            if ~isa(ff_ingen, 'constant_signal_gen')  % not canceled
+                dom = this.GetDomain('file_idx');  % will need to improve this at some point
+                dom.domain = [dom.enum(1) dom.enum(end)];
+                this.SetDomain('file_idx', dom);
+                this.SampleDomain('file_idx', 'all');
+                this.Sys.Verbose=0;
+                this.Sim();
+            end
+            
+            this.fname = fname;
+        end
+        
+        function idx = GetParamsInputIdx(this)
+            idx = [];
+        end
+        
+        function [tspan, X] = breachSimWrapper(this, Sys, tspan, p)
+            
+            sg = this.signalGenerators{1};
+            
             if numel(tspan)==1
-               tspan = 0:this.dt_default:tspan; 
+                tspan = 0:this.dt_default:tspan;
             elseif numel(tspan)==2
-               tspan = tspan(1):this.dt_default:tspan(2); 
+                tspan = tspan(1):this.dt_default:tspan(2);
             end
             
             % Needs some more cleanup
@@ -80,9 +80,9 @@ methods
             ns = numel(sg.signals);
             [X(cur_is:cur_is+ns-1, :), tspan] = sg.computeSignals(p_isg, tspan);
             
-    end
-    
-            function [summary, traces] = ExportTracesToStruct(this,i_traces, varargin)
+        end
+        
+        function [summary, traces] = ExportTracesToStruct(this,i_traces, varargin)
             % BreachImportData.ExportTracesToStruct
             
             summary = [];
@@ -112,16 +112,16 @@ methods
             
             % input signal names
             signal_names = this.GetSignalList();
-                      
+            
             if isfield(this.P,'props_names')
                 spec_names = this.P.props_names;
             end
-
+            
             summary.date = datestr(now);
             summary.num_traces = num_traces;
             summary.params.names = param_names;
             summary.params.values = this.GetParam(summary.params.names);
-
+            
             
             %% traces
             file_idx= this.GetParam('file_idx');
@@ -129,9 +129,9 @@ methods
             summary.paths = {};
             for it = i_traces
                 
-                % filename 
+                % filename
                 ip = file_idx(it);
-                [pth, fn] = fileparts(this.signalGenerators{1}.file_list(ip).name); 
+                [pth, fn] = fileparts(this.signalGenerators{1}.file_list(ip).name);
                 traces(it).filename = [fn '.mat'];
                 traces(it).path = pth;
                 
@@ -147,7 +147,7 @@ methods
                 % input signals
                 traces(it).signals.names = signal_names;
                 traces(it).signals.values =  this.GetSignalValues(signal_names, it);
-                                
+                
                 % specifications
                 if isfield(this.P,'props_names')
                     traces(it).specs.ids = spec_names;
@@ -193,7 +193,7 @@ methods
                 copyfile(template_file_path, excel_file);
                 
                 % Write header
-               
+                
                 for ispec = 1:numel(summary.specs.names)
                     hdr{ispec} = ['Req. ' num2str(ispec)];
                 end
@@ -209,7 +209,7 @@ methods
                 tbl(3:end, 2:3) = [summary.paths' summary.filenames'];
                 
                 xlswrite(excel_file, tbl, 1, 'A1');
-
+                
                 % Write data
                 
                 this.disp_msg(['Summary written into ' excel_file]);
@@ -231,6 +231,6 @@ methods
             end
         end
         
-    
-end
+        
+    end
 end
