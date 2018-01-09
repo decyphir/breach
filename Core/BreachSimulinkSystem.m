@@ -1138,7 +1138,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
         end
         
-        function ExportToExcel(this, excel_file)
+        function ExportToExcel(this, excel_file)  % TODO: specialize to Simulink ? or use BreachSet.ExportToExcel 
             [summary, traces] = this.ExportTracesToStruct();
             global BreachGlobOpt
     

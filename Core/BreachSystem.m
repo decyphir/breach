@@ -28,7 +28,7 @@ classdef BreachSystem < BreachSet
         Specs               % A set (map) of STL formulas
         ParamSrc=containers.Map()
         use_parallel=0 % 
-        InitFn    = ''           % Initialization function 
+        InitFn = ''           % Initialization function 
     end
     
     methods
@@ -639,19 +639,7 @@ classdef BreachSystem < BreachSet
                 [X, t] = STL_Eval(this.Sys, expr_tmp_, this.P, this.P.traj, this.P.traj{1}.time);
             end
         end
-        
-        function  SortbyRob(this)
-            sat_values = this.GetSatValues();
-            [ ~, order_rob] = sort(sum(sat_values,1));
-            this.P = Sselect(this.P, order_rob);
-        end
-        
-        function  SortbySat(this)
-            sat_values = this.GetSatValues();
-            [ ~, order_rob] = sort(sum(sat_values>=0,1));
-            this.P = Sselect(this.P, order_rob);
-        end
-        
+               
         
         %% Sensitivity analysis
         function [mu, mustar, sigma] = SensiSpec(this, phi, params, ranges, opt)
@@ -721,7 +709,6 @@ classdef BreachSystem < BreachSet
                 disp(st);
             end
         end
-        
         
         %% GUI
         function new_phi  = AddSpecGUI(this)
