@@ -1,3 +1,15 @@
+# Release 1.2.12 
+
+## Users	
+- InitBreach now better removes path from older/other versions
+- InitBreach takes a second Boolean argument, if true, forces re-initialization
+- Added BreachVersion, returns current version
+- SaveResults, ExportToStruct, ExportToExcel now available for BreachSet and all derivated classes
+
+## Bugfixes
+- InitBreach creates ModelsData folder when absent, e.g., with fresh
+  clone 
+
 # Release 1.2.11
 
 ## Developpers

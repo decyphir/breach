@@ -37,7 +37,6 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         MdlVars          % List of variables used by the model
         SimInputsOnly=false % if true, will not run Simulink model
         mdl
-        log_folder
     end
     
     methods
@@ -1138,7 +1137,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
         end
         
-        function ExportToExcel(this, excel_file)
+        function ExportToExcel(this, excel_file)  % TODO: specialize to Simulink ? or use BreachSet.ExportToExcel 
             [summary, traces] = this.ExportTracesToStruct();
             global BreachGlobOpt
     

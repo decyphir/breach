@@ -484,7 +484,7 @@ classdef BreachProblem < BreachStatus
                 this.LogX(x, fval);
  
                 % update status
-                if rem(this.nb_obj_eval,this.freq_update)==1
+                if rem(this.nb_obj_eval,this.freq_update)==0
                     this.display_status();
                 end
                 
