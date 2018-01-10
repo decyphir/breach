@@ -169,7 +169,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             %  Get Breach directory
             global BreachGlobOpt
             breach_dir = BreachGlobOpt.breach_dir;
-            breach_data_dir = [breach_dir filesep 'Ext' filesep 'Models' ];
+            breach_data_dir = [breach_dir filesep 'Ext' filesep 'ModelsData' ];
             
             % Give it a name
             mdl_breach = [mdl '_breach'];
