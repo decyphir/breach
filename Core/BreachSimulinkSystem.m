@@ -150,11 +150,14 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         function SetupParallel(this, NumWorkers, varargin)
         % BreachSimulinkSystem.SetupParallel     
         
+        cluster = parcluster;
+        maxNumWorkers = cluster.NumWorkers;
+        
         switch nargin
             case 1
-                cluster = parcluster;
-                NumWorkers = cluster.NumWorkers;
+                NumWorkers = maxNumWorkers;
             case 2
+                NumWorkers = min(NumWorkers, maxNumWorkers);
             otherwise
         end
         

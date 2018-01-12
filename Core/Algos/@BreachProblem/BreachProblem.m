@@ -457,8 +457,8 @@ classdef BreachProblem < BreachStatus
         end
         
         %% Parallel 
-        function SetupParallel(this)
-            this.BrSys.SetupParallel();
+        function SetupParallel(this, varargin)
+            this.BrSys.SetupParallel(varargin{:});
             this.BrSys.Sys.Parallel=0;  % not intuitive, uh?
             this.use_parallel =1;
             this.log_traces = 0;
