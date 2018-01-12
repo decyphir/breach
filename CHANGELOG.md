@@ -1,3 +1,17 @@
+# Release 1.2.13
+
+## Users
+- Improves parallel support: display simulations during computation
+  and optimization and number of workers now tunable with B.SetupParallel(NumWorkers)
+- Experimental struct parameter detection now disabled by default
+  (would not work with nested struct), made available with FindStruct
+  option in BreachSimulinkSystem constructor 
+- New signal generators (sinusoid, exponential, spike)
+
+## Bugfixes
+- freq_update now only affects display, independant from number of
+  cores during parallel simulation
+
 # Release 1.2.12 
 
 ## Users	

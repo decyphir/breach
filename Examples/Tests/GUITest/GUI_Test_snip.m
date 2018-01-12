@@ -13,7 +13,7 @@ added_name = hWorkSetListBox.String{end};
 assert(~isempty(strfind(added_name, selected_name)))
 
 %% test the keyboard
-inputEmuWrapper(hBreach, 'edit_rename', 0, 'key_normal', 'testName\ENTER');
-% validate
+inputEmuWrapper(hBreach, 'edit_rename', 0.1, 'key_normal', 'testName\ENTER');
+
+%% validate
 assert(any(strcmp(hWorkSetListBox.String, 'testName')))
-%%
