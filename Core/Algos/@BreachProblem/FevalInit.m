@@ -7,48 +7,37 @@ end
 nb_init = min(size(X0,2), this.max_obj_eval);
 fval = inf(1,nb_init);
 
-if this.use_parallel
-    
-    fun = @(x) this.objective_fn(x);
-    
-    % Display header
-    this.display_status_header();
-    fq = this.freq_update;
-
-    for iter=1:floor(nb_init/fq)
-        
-        i_range =(iter-1)*fq+1:fq*iter;
-        parfor isample = i_range
-            fval(isample) = fun(X0(:,isample));
-        end
-        this.LogX(X0(:, i_range), fval(i_range));
-        
-        % update status
-        this.display_status();
-
-        if this.stopping()
-            break
-        end
-    end
-    
-    if ~this.stopping()
-        if isempty(iter) %  nb_init was less than fq
-            i_range = 1:nb_init;
-        else
-            i_range = fq*iter:nb_init;
-        end
-        parfor isample = i_range
-            fval(isample) = fun(X0(:,isample));
-        end
-        this.LogX(X0(:, i_range), fval(i_range));
-        this.display_status();
-    end
-    
-else % serial  
+if this.use_parallel==0
     fun = this.objective;
     for isample = 1:nb_init
         fval(isample) = fun(X0(:,isample));
     end
+else 
+    fun = @(x) this.objective_fn(x);
+    
+    % Launch tasks 
+    for idx = 1:nb_init
+        par_f(idx) = parfeval(@(isample) fun(X0(:,isample)),1, idx);
+    end
+   
+    % Display header
+    this.display_status_header();
+    fq = this.freq_update;
+
+    for iter=1:nb_init
+        [idx, value] = fetchNext(par_f);
+        fval(idx) = value;
+        this.LogX(X0(:, idx), fval(idx));
+        
+        % update status
+        if rem(iter,fq)==0
+            this.display_status();
+        end
+        if this.stopping()
+            break
+        end
+    end
+    cancel(par_f);
 end
 
 [fopt,iopt] = min(fval);

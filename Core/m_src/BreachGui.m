@@ -848,7 +848,7 @@ Br = get_current_set(handles);
 if ~isempty(Br)
     
     %% Parallel checkbox
-    set(handles.button_parallel, 'Value', Br.use_parallel);
+    set(handles.button_parallel, 'Value', Br.use_parallel~=0);
     
     %% Title
     modif_panel_title = Br.disp();

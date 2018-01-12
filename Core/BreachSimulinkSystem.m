@@ -30,6 +30,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         FindScopes = false
         FindSignalBuilders = false
         FindTables = false
+        FindStruct = false
         MaxNumTabParam
         StoreTracesOnDisk
         SimCmdArgs = {}   % argument list passed to sim command
@@ -101,6 +102,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             options.StoreTracesOnDisk = false;
             options.FindScopes = false;
             options.FindTables = false;
+            options.FindStruct  = false; 
             options.FindSignalBuilders = false;  % TODO fixme when true
             options.Parallel = 'off';
             options.SimCmdArgs = {};
@@ -112,6 +114,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             this.StoreTracesOnDisk = options.StoreTracesOnDisk;
             this.FindScopes = options.FindScopes;
             this.FindTables = options.FindTables;
+            this.FindStruct = options.FindStruct;
             this.MaxNumTabParam = options.MaxNumTabParam;
             this.SimCmdArgs = options.SimCmdArgs;
             this.verbose = options.Verbose;
@@ -144,19 +147,55 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             
         end
         
-        function SetupParallel(this)
-            this.use_parallel = 1;
-            gcp;
-            this.Sys.Parallel = 1;
-            %
-            if ~isempty(this.InitFn)
-                pctRunOnAll(this.InitFn);
-            end
-            pctRunOnAll('warning(''off'', ''Simulink:Commands:MdlFileChangedCloseManually'')'); % should be harmless right?
-            
+        function SetupParallel(this, NumWorkers, varargin)
+        % BreachSimulinkSystem.SetupParallel     
+        
+        cluster = parcluster;
+        maxNumWorkers = cluster.NumWorkers;
+        
+        switch nargin
+            case 1
+                NumWorkers = maxNumWorkers;
+            case 2
+                NumWorkers = min(NumWorkers, maxNumWorkers);
+            otherwise
+        end
+        
+        % check existing workers
+        poolobj = gcp('nocreate'); % If no pool, do not create new one.
+        if isempty(poolobj)
+            currentNumWorkers = 0;
+        else
+            currentNumWorkers = poolobj.NumWorkers;
+        end
+        
+        if(currentNumWorkers ~= 0 && NumWorkers ~= 0 && (currentNumWorkers ~= NumWorkers))
+            this.StopParallel();
+            currentNumWorkers=0; 
+        end
+        
+        if NumWorkers~=1 && currentNumWorkers == 0
+            distcomp.feature( 'LocalUseMpiexec', false );   %TODO: mathworks suggested this command. it prevents calling "Mpiexec". I'm not sure the needs of that.
+            poolobj=parpool(NumWorkers); %Matlab2013b or later
+        end
+        this.use_parallel = NumWorkers; %Arthur comment: if Breach's original design is to let use_parallel be strictly boolean, then maybe need to create a new property to track NumWorkers
+        this.Sys.Parallel = NumWorkers;
+        
+        % run initialization function on all workers
+        if ~isempty(this.InitFn)
+            pctRunOnAll(this.InitFn);
+        end
+        pctRunOnAll('warning(''off'', ''Simulink:Commands:MdlFileChangedCloseManually'')'); % should be harmless right?
+        
         end
         
         function StopParallel(this)
+            
+            poolobj = gcp('nocreate'); % If no pool, do not create new one.
+            if ~isempty(poolobj)
+                delete(poolobj);     % not sure this is doing anything
+            end
+
             this.use_parallel = 0;
             this.Sys.Parallel = 0;
         end
@@ -616,7 +655,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 % is it a scalar, a struct or an array?
                 if (isnumeric(v)) % scalar or array
                     new_par(v, vname);
-                elseif isstruct(v)  % struct
+                elseif isstruct(v)&&this.FindStruct % struct
                     fds = fieldnames(v);
                     for svi = 1:numel(fds)
                         new_par(v.(fds{svi}), [vname '.' fds{svi}]);

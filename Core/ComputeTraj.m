@@ -192,23 +192,38 @@ switch Sys.type
             Verbose=0;
         end
         
-        if isfield(Sys, 'Parallel')&&Sys.Parallel
-            trajs = cell(1, numel(ipts));
-            parfor ii = ipts
-                if isfield(Sys,'init_u')
-                    U = Sys.init_u(Sys.InputOpt, P0.pts(1:Sys.DimP,ii), tspan);
-                    assignin('base','t__',U.t);
-                    assignin('base', 'u__',U.u);
-                end
-                
-                [trajs{ii}.time, trajs{ii}.X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
-                trajs{ii}.param = P0.pts(1:P0.DimP,ii)';
+        if isfield(Sys, 'Parallel')&&Sys.Parallel&&numel(ipts)>1
+            
+            for idx = ipts
+                % calculate each magic square from 1:10
+                f(idx) = parfeval(@(ii)task_sim(Sys,P0,tspan,ii), 1, idx);
             end
+            trajs = cell(1, numel(ipts));
+            
+            for idx = ipts
+                % fetchNext blocks until more results are available, and
+                % returns the index into f that is now complete, as well
+                % as the value computed by f.
+                [completedIdx, value] = fetchNext(f);
+                trajs{completedIdx} = value;
+                if Verbose >=1
+                    if(numel(ipts)>1)
+                        rfprintf(['Computed ' num2str(idx) '/' num2str(numel(ipts)) ' simulations of ' model])
+                    end
+                end
+            end
+            
             Pf.traj = trajs;
             for ii=ipts
                 Pf.Xf(:,ii) = Pf.traj{ii}.X(:,end);
             end
             
+            if Verbose>=1
+                if(numel(ipts)>1)
+                    fprintf('\n');
+                end
+            end
+       
         else
             
             trajs = cell(1, numel(ipts));
@@ -221,7 +236,7 @@ switch Sys.type
                 
                 [trajs{ii}.time, trajs{ii}.X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
                 trajs{ii}.param = P0.pts(1:P0.DimP,ii)';
-                if Verbose ==1
+                if Verbose >=1
                     if(numel(ipts)>1)
                         rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
                     end
@@ -231,7 +246,7 @@ switch Sys.type
             for ii=ipts
                 Pf.Xf(:,ii) = Pf.traj{ii}.X(:,end);
             end
-            if Verbose==1
+            if Verbose>=1
                 if(numel(ipts)>1)
                     fprintf('\n');
                 end
@@ -294,7 +309,25 @@ if(isfield(Sys,'time_mult') && ~isfield(Pf,'time_mult'))
     Pf.time_mult = Sys.time_mult;
 end
 
+
+
 end
+
+    function traj = task_sim(Sys, P0,tspan,ii)
+        if isfield(Sys,'init_u')
+            U = Sys.init_u(Sys.InputOpt, P0.pts(1:Sys.DimP,ii), tspan);
+            assignin('base','t__',U.t);
+            assignin('base', 'u__',U.u);
+        end
+        [traj.time, traj.X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
+        traj.param = P0.pts(1:P0.DimP,ii)';
+        
+        %[trajs{ii}.time, trajs{ii}.X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
+        %trajs{ii}.param = P0.pts(1:P0.DimP,ii)';
+        
+    end
+
+
 
 
 function err = check_u(u)

@@ -457,8 +457,8 @@ classdef BreachProblem < BreachStatus
         end
         
         %% Parallel 
-        function SetupParallel(this)
-            this.BrSys.SetupParallel();
+        function SetupParallel(this, varargin)
+            this.BrSys.SetupParallel(varargin{:});
             this.BrSys.Sys.Parallel=0;  % not intuitive, uh?
             this.use_parallel =1;
             this.log_traces = 0;
@@ -566,8 +566,8 @@ classdef BreachProblem < BreachStatus
                 BrOut.SetParam(this.params, this.X_log);
             end
             BrOut.Sys.Verbose=1;
-            if isempty(BrOut.InputGenerator.Specs) % TODO: change this when dealing with Input requirements/constraints
-                    BrOut.CheckSpec(this.Spec);
+            if isempty(BrOut.InputGenerator.Specs)&&BrOut.hasTraj() % TODO: change this when dealing with Input requirements/constraints
+                BrOut.CheckSpec(this.Spec);
             end
         end
         
@@ -581,7 +581,9 @@ classdef BreachProblem < BreachStatus
                 end
             end
             BrBest.Sys.Verbose=1;
-            BrBest.CheckSpec(this.Spec);
+            if BrBest.hasTraj() 
+                BrBest.CheckSpec(this.Spec);
+            end
         end
         
         function SetupLogFolder(this, fname)
