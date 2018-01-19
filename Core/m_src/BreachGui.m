@@ -22,7 +22,7 @@ function varargout = BreachGui(varargin)
 
 % Edit the above text to modify the response to help BreachGui
 
-% Last Modified by GUIDE v2.5 08-Dec-2017 14:05:08
+% Last Modified by GUIDE v2.5 19-Jan-2018 12:50:58
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -53,16 +53,16 @@ function BreachGui_OpeningFcn(hObject, eventdata, handles, varargin)
 
 handles = info(handles, 'Starting Breach.... (Memory tip: his first name is Millard)');
 
-% Set fonts and size depending on system
-if ismac
-    FONT=12;
-    POS = [50 10 200 50];
-    handles.TBL_SZ = {200 120 120 150 80} ;
-else
-    FONT=10;
-    POS = [50 10 200 50];
-    handles.TBL_SZ = {300 120 150 200 120} ;
-end
+% % Set fonts and size depending on system
+% if ismac
+%     FONT=12;
+%     POS = [50 10 200 50];
+%     handles.TBL_SZ = {200 120 120 150 80} ;
+% else
+%     FONT=10;
+%     POS = [50 10 200 50];
+%     handles.TBL_SZ = {300 120 150 200 120} ;
+% end
 
 hfn = fieldnames(handles);
 for ifn = 1:numel(hfn)
@@ -70,7 +70,7 @@ for ifn = 1:numel(hfn)
         set(handles.(hfn{ifn}), 'FontSize', FONT);
     end
 end
-set(handles.breach, 'Position',POS);
+% set(handles.breach, 'Position',POS);
 
 crd = pwd;
 set(hObject, 'Name', ['Breach (' crd  ')']);
@@ -2003,3 +2003,10 @@ function menu_export_to_excel_Callback(hObject, eventdata, handles)
     
 
 
+
+
+% --- Executes during object creation, after setting all properties.
+function breach_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to breach (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
