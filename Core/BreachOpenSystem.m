@@ -363,7 +363,8 @@ classdef BreachOpenSystem < BreachSystem
         end
         
         function idx = GetInputSignalsIdx(this)
-            idx = FindParam(this.Sys, this.Sys.InputList);
+            [idx, status] = FindParam(this.Sys, this.Sys.InputList);
+            idx = idx(status~=0);
         end
         
         function PrintSignals(this)
