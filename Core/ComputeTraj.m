@@ -137,7 +137,6 @@ end
 % From now, we only got unique system-parameter vectors
 Pf = P0;
 ipts = 1:size(P0.pts,2);
-
 ii=0;
 
 switch Sys.type
@@ -223,19 +222,12 @@ switch Sys.type
                     fprintf('\n');
                 end
             end
-       
+            
         else
             
             trajs = cell(1, numel(ipts));
             for ii = ipts
-                if isfield(Sys,'init_u')
-                    U = Sys.init_u(Sys.InputOpt, P0.pts(1:Sys.DimP,ii), tspan);
-                    assignin('base','t__',U.t);
-                    assignin('base', 'u__',U.u);
-                end
-                
-                [trajs{ii}.time, trajs{ii}.X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
-                trajs{ii}.param = P0.pts(1:P0.DimP,ii)';
+                trajs{ii} = task_sim(Sys, P0, tspan, ii);
                 if Verbose >=1
                     if(numel(ipts)>1)
                         rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
@@ -309,24 +301,49 @@ if(isfield(Sys,'time_mult') && ~isfield(Pf,'time_mult'))
     Pf.time_mult = Sys.time_mult;
 end
 
-
-
 end
 
-    function traj = task_sim(Sys, P0,tspan,ii)
-        if isfield(Sys,'init_u')
-            U = Sys.init_u(Sys.InputOpt, P0.pts(1:Sys.DimP,ii), tspan);
-            assignin('base','t__',U.t);
-            assignin('base', 'u__',U.u);
-        end
-        [traj.time, traj.X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
-        traj.param = P0.pts(1:P0.DimP,ii)';
-        
-        %[trajs{ii}.time, trajs{ii}.X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
-        %trajs{ii}.param = P0.pts(1:P0.DimP,ii)';
-        
-    end
+function traj = task_sim(Sys, P0,tspan,ii)
 
+use_caching = isfield(Sys,'DiskCachingFolder')&&(~isempty(Sys.DiskCachingFolder));
+do_compute = 1;
+p = P0.pts(1:Sys.DimP,ii);
+if  use_caching
+    hash_traj = DataHash({Sys.ParamList, p, tspan});
+    cache_traj_filename = [Sys.DiskCachingFolder filesep 'traj_' hash_traj '.mat'];
+    if exist(cache_traj_filename, 'file')
+        if isfield(Sys, 'StoreTracesOnDisk')&&Sys.StoreTracesOnDisk
+            traj = matfile(cache_traj_filename);
+        else
+            traj = load(cache_traj_filename);
+        end
+        do_compute = 0;
+    else
+        do_compute = 1;
+    end
+end
+
+if do_compute
+    if isfield(Sys,'init_u')
+        U = Sys.init_u(Sys.InputOpt, p, tspan);
+        assignin('base','t__',U.t);
+        assignin('base', 'u__',U.u);
+    end
+    [traj.time, traj.X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
+    traj.param = P0.pts(1:P0.DimP,ii)';
+    
+    if use_caching % cache new trace
+        cache_traj = matfile(cache_traj_filename);
+        cache_traj.param = traj.param;
+        cache_traj.time = traj.time;
+        cache_traj.X = traj.X;
+        cache_traj.Properties.Writable= false;
+        if isfield(Sys, 'StoreTracesOnDisk')&&Sys.StoreTracesOnDisk
+            traj = cache_traj;
+        end
+    end
+end
+end
 
 
 

@@ -32,8 +32,7 @@ classdef BreachProblem < BreachStatus
     %                     help to know available options (E.g., for matlab solvers, this is
     %                     often set using the optimset command).
     %   max_time       -  maximum wall-time budget allocated to optimization
-    %   log_traces     -  (default=true) logs all traces computed during optimization
-    %                     (can be memory intensive)
+    %   log_traces     -  (default=true) logs all traces computed during optimization                 
     %   T_spec         -  time 
     % 
     % BreachProblem Properties (outputs)
@@ -93,7 +92,7 @@ classdef BreachProblem < BreachStatus
     properties
         display = 'on'
         freq_update = 10 
-        use_parallel = false % true default?
+        use_parallel =0
         max_time = 60
         time_start = tic
         time_spent = 0
@@ -156,11 +155,14 @@ classdef BreachProblem < BreachStatus
             this.BrSet = BrSet.copy();
             this.BrSet.Sys.Verbose=0;
             
-            this.use_parallel = BrSet.use_parallel;
+            this.use_parallel = this.BrSet.use_parallel;
         
+            % Use caching by default
+            this.BrSet.SetupDiskCaching();
+            
             % Parameter ranges
             if ~exist('params','var')
-                params = BrSet.GetBoundedDomains();
+                params = this.BrSet.GetBoundedDomains();
             else
                 if ischar(params)
                     params = {params};
@@ -188,7 +190,7 @@ classdef BreachProblem < BreachStatus
             this.Reset_x0();
             
             % robustness
-            [this.robust_fn, this.BrSys] = BrSet.GetRobustSatFn(phi, this.params, this.T_Spec);
+            [this.robust_fn, this.BrSys] = this.BrSet.GetRobustSatFn(phi, this.params, this.T_Spec);
             this.BrSys.Sys.Verbose=0;
              
             % objective function
@@ -202,7 +204,7 @@ classdef BreachProblem < BreachStatus
             
             % Setup use parallel
             if this.use_parallel
-                  this.SetupParallel();
+                  this.SetupParallel(this.use_parallel);
             end
             
         end
@@ -221,6 +223,7 @@ classdef BreachProblem < BreachStatus
                     error('BreachProblem:unknown_param', ['Parameter ' this.params{ip} ' is neither a system parameter nor a property parameter.']);
                 end
             end
+            
             this.BrSet.SetParam(this.params, x0__,'spec');
             
             this.x0 = unique(x0__', 'rows')';
@@ -459,10 +462,18 @@ classdef BreachProblem < BreachStatus
         %% Parallel 
         function SetupParallel(this, varargin)
             this.BrSys.SetupParallel(varargin{:});
-            this.BrSys.Sys.Parallel=0;  % not intuitive, uh?
+            this.BrSys.Sys.Parallel=0;  % prevents ComputeTraj from performing nested parallel simulations 
             this.use_parallel =1;
-            this.log_traces = 0;
+            this.log_traces = 0; 
             this.objective= @(x) objective_fn(this,x);
+        end
+        
+        function StopParallel(this)
+            this.BrSys.StopParallel();
+        end
+        
+        function SetupDiskCaching(this, varargin)
+            this.BrSys.SetupDiskCaching(varargin{:});
         end
         
         %% Objective wrapper        
@@ -564,11 +575,15 @@ classdef BreachProblem < BreachStatus
                 BrOut = this.BrSys.copy();
                 BrOut.ResetSimulations();
                 BrOut.SetParam(this.params, this.X_log);
+                if this.BrSys.UseDiskCaching
+                    BrOut.Sim(); 
+                end
             end
             BrOut.Sys.Verbose=1;
             if isempty(BrOut.InputGenerator.Specs)&&BrOut.hasTraj() % TODO: change this when dealing with Input requirements/constraints
                 BrOut.CheckSpec(this.Spec);
             end
+            
         end
         
         function BrBest = GetBrSet_Best(this)
@@ -576,9 +591,7 @@ classdef BreachProblem < BreachStatus
             if isempty(BrBest)
                 BrBest = this.BrSys.copy();
                 BrBest.SetParam(this.params, this.x_best, 'spec');
-                if ~isempty(this.BrSys.log_folder)
-                   BrBest.Sim(); 
-                end
+                BrBest.Sim();
             end
             BrBest.Sys.Verbose=1;
             if BrBest.hasTraj() 
