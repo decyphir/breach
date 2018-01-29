@@ -16,21 +16,21 @@ Template for Beamer publish. Creates a simple set of slides. First section
 <xsl:template match="mscript">
     
 \documentclass[hyperref, xcolor=dvipsnames, 8pt ]{beamer}
-    
+\usepackage{graphbox}    
 \usetheme{default}
 \usefonttheme[onlymath]{serif}
 \setbeamertemplate{navigation symbols}{}
 \setbeamertemplate{items}[default]
 
+
 \setbeamertemplate{footline}
 {
-  \leavevmode%
-  \hbox{%
-    \begin{beamercolorbox}[wd=\paperwidth,ht=2.25ex,dp=1ex,right]{}%
-      \insertframenumber{}/ \inserttotalframenumber \hspace*{1ex}
-    \end{beamercolorbox}}%
-  \vskip0pt%
-}
+ \includegraphics[align=c, height=0.5cm]{DecyphirLogo.png}%
+       \hfill%
+       \usebeamercolor[fg]{page number in head/foot}%
+       \usebeamerfont{page number in head/foot}%
+       \insertframenumber\,/\,\inserttotalframenumber\kern1em%
+ }
 \usecolortheme[named=BlueViolet]{structure}
 \setbeamercovered{transparent=0}
 
