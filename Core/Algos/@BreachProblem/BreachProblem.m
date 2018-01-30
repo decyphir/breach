@@ -156,10 +156,7 @@ classdef BreachProblem < BreachStatus
             this.BrSet.Sys.Verbose=0;
             
             this.use_parallel = this.BrSet.use_parallel;
-        
-            % Use caching by default
-            this.BrSet.SetupDiskCaching();
-            
+                  
             % Parameter ranges
             if ~exist('params','var')
                 params = this.BrSet.GetBoundedDomains();
@@ -258,8 +255,7 @@ classdef BreachProblem < BreachStatus
             this.time_spent= 0; 
             this.time_start = tic; 
         end
-        
-        
+           
         %% Options for various solvers
         function [solver_opt, is_gui] = setup_solver(this, solver_name, is_gui)
             if ~exist('solver_name','var')
@@ -348,6 +344,7 @@ classdef BreachProblem < BreachStatus
                         
             switch this.solver
                 case 'init'
+                    this.display_status_header();
                     res = FevalInit(this);
                     
                 case 'basic'
@@ -461,10 +458,18 @@ classdef BreachProblem < BreachStatus
         
         %% Parallel 
         function SetupParallel(this, varargin)
-            this.BrSys.SetupParallel(varargin{:});
-            this.BrSys.Sys.Parallel=0;  % prevents ComputeTraj from performing nested parallel simulations 
-            this.use_parallel =1;
-            this.log_traces = 0; 
+           
+            % Create parallel pool and get number of workers
+            this.BrSys.SetupParallel(varargin{:});          
+            this.use_parallel =this.BrSys.Sys.Parallel;   
+            
+            % Disable parallel at BrSys level, to prevent ComputeTraj from performing nested parallel simulations, in case BrSys must compute several traces for each objective evaluation 
+            this.BrSys.use_parallel = 0;   
+            this.BrSys.Sys.Parallel=0;     
+            
+            % Disable serial logging mechanism and enable DiskCaching
+            this.log_traces = 0;   
+            this.SetupDiskCaching();
             this.objective= @(x) objective_fn(this,x);
         end
         
@@ -546,7 +551,12 @@ classdef BreachProblem < BreachStatus
         end
         
         function DispResultMsg(this)
-            this.display_status();
+       
+            % display status of last eval if not already done
+            if rem(this.nb_obj_eval,this.freq_update)
+                this.display_status();
+            end
+            
             % DispResultMsg message displayed at the end of optimization
             if this.time_spent> this.max_time
                 fprintf('\n Stopped after max_time was reached.\n');
@@ -620,10 +630,10 @@ classdef BreachProblem < BreachStatus
                     fval = this.obj_log(end); % bof bof
                 end
                 
-                if this.nb_obj_eval==1
-                    this.display_status_header();
-                    rfprintf_reset();
-                end
+%                 if this.nb_obj_eval==1
+%                     this.display_status_header();
+%                     rfprintf_reset();
+%                 end
                 
                 st__= sprintf('    %5d                   %7.1f                            %+5.5e             %+5.5e\n', ...
                     this.nb_obj_eval, this.time_spent, this.obj_best, fval);

@@ -10,13 +10,15 @@ end
 % display header
 fprintf('Eval objective function on %d initial parameters.\n', size(X0,2));
 
+this.display_status_header();
 res = FevalInit(this, X0);
 this.solver_options.start_at_trial = this.solver_options.start_at_trial+this.solver_options.nb_new_trials;
 
 if (this.solver_options.nb_local_iter>0) && (~this.stopping)
     rfprintf_reset()
-    fprintf('Local optimization using Nelder-Mead algorithm\n');
+    fprintf('\nStarting local optimization using Nelder-Mead algorithm\n');
     
+    this.display_status_header();
     % Collect and sort solutions
     [~, ibest] = sort(res.fval);
     options = optimset(this.solver_options.local_optim_options, 'MaxIter',this.solver_options.nb_local_iter);
