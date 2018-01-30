@@ -39,8 +39,9 @@ end
             ws = mdl;
         else
             % look into base workspace
-            var= Simulink.findVars(mdl, 'WorkspaceType','base', 'Name', vname);
-            if isempty(var)
+            var = evalin('base', ['exist(''' vname ''',''var'')']);
+            %Simulink.findVars(mdl, 'WorkspaceType','base', 'Name', vname);
+            if var==0
                 error('BreachSimulinkSystem:param_not_found', ['Parameter ' vname ' is not defined in the model nor base workspace.' ]);
             else
                 ws = 'base';
