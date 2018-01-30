@@ -1,3 +1,20 @@
+# Release 1.2.14
+
+## Users
+- DiskCaching feature added, enabled by SetupDiskCaching method
+- Added BreachAbout, gives some info about which folder Breach runs
+  from and its version (will add more in future releases)
+
+## Bugfixes
+- display status during optimization no longer display twice in
+  certain cases
+- parameters in workspace detected even if not part of Simulink model
+
+## Developpers
+- display_status_header is no longer called by FevalInit
+- when using parallel computation, DiskCaching is used to log traces 
+
+
 # Release 1.2.13
 
 ## Users
