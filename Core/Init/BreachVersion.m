@@ -7,7 +7,7 @@ v_file_name =[VERSION_path filesep 'VERSION'];
 fo = fopen(v_file_name);
 st = fgetl(fo);
 if nargout == 0
-    disp(st)
+    disp(st);
 end
 fclose(fo);
 end

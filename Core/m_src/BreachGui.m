@@ -51,7 +51,7 @@ function BreachGui_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to BreachGui (see VARARGIN)
 
-handles = info(handles, 'Starting Breach.... (Memory tip: his first name is Millard)');
+handles = info(handles, 'Starting Breach....');
 
 % Set fonts and size depending on system
 if ismac

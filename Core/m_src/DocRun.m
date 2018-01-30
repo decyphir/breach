@@ -20,7 +20,7 @@ classdef DocRun < handle
         %% Constructor
         function this = DocRun(script, run_now)
             % DocRun(scriptname, run_now) -- if run_now is 1, runs as ref, otherwise run_and_cmp
-            
+            InitBreach;
             this.current_dir = pwd;
             this.publish_dir = this.current_dir;
             
@@ -69,8 +69,7 @@ classdef DocRun < handle
             evalin('base', ['save(''' this.ref_result ''');']);
             this.post_run()
         end
-        
-        
+             
         function run_and_cmp(this)
             
             % run script
@@ -113,9 +112,7 @@ classdef DocRun < handle
                 end
             end
         end
-        
-        
-        
+               
         function show_report(this)
             % shows comparison results
             flds = fieldnames(this.report);
@@ -133,16 +130,14 @@ classdef DocRun < handle
         function pre_run(this)
             % saves workspace
             evalin('base','save docrun_backup.mat');
-            evalin('base','clear');
-            
+            evalin('base','clear');          
             cd(this.script_dir);
         end
         
         function [success, msg, msg_id] = post_run(this)
             % checks error status 
             success = 1; 
-            [msg, msg_id] = lasterr;
-            
+            [msg, msg_id] = lasterr;           
             
             % get back to current folder, and load back workspace
             cd(this.current_dir);
@@ -161,9 +156,12 @@ classdef DocRun < handle
             
             % get beamer template
             breach_publish_stuff_dir = [BreachGlobOpt.breach_dir filesep 'Core' filesep 'm_src' filesep 'publish_stuff' filesep];
-            
+               
             % run publish command
             res = evalin('base', ['publish(''' this.script_name ''',' 'struct(''format'',''latex'',''catchError'',false,''stylesheet'',''' breach_publish_stuff_dir  'matlab2beamer.xsl'', ''outputDir'',''' this.publish_src_dir ''')' ');']);
+            
+            % copy Decyphir Logo
+            copyfile([breach_publish_stuff_dir filesep 'DecyphirLogo.png'], [this.publish_dir filesep 'publish_src']); 
             
             % get resulting file
             [tex_src_path, tex_src]= fileparts(res);

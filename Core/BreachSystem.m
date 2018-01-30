@@ -27,8 +27,8 @@ classdef BreachSystem < BreachSet
         Sys                   % Legacy Breach system structure
         Specs               % A set (map) of STL formulas
         ParamSrc=containers.Map()
-        use_parallel=0 % 
-        InitFn = ''           % Initialization function 
+        use_parallel=0     % 
+        InitFn = ''             % Initialization function 
     end
     
     methods
@@ -61,11 +61,44 @@ classdef BreachSystem < BreachSet
                 this.P = CreateParamSet(this.Sys);
             end
         end
-        
-        function SetupParallel(this)
-            this.use_parallel = 1;
-            this.Sys.Parallel =1;
-            gcp;
+                
+        function SetupParallel(this, NumWorkers)
+            
+            cluster = parcluster;
+            maxNumWorkers = cluster.NumWorkers;
+            
+            switch nargin
+                case 1
+                    NumWorkers = maxNumWorkers;
+                case 2
+                    NumWorkers = min(NumWorkers, maxNumWorkers);
+                otherwise
+            end
+            
+            % check existing workers
+            poolobj = gcp('nocreate'); % If no pool, do not create new one.
+            if isempty(poolobj)
+                currentNumWorkers = 0;
+            else
+                currentNumWorkers = poolobj.NumWorkers;
+            end
+            
+            if(currentNumWorkers ~= 0 && NumWorkers ~= 0 && (currentNumWorkers ~= NumWorkers))
+                this.StopParallel();
+                currentNumWorkers=0;
+            end
+            
+            if NumWorkers~=1 && currentNumWorkers == 0
+                distcomp.feature( 'LocalUseMpiexec', false );   %TODO: mathworks suggested this command. it prevents calling "Mpiexec". I'm not sure the needs of that.
+                poolobj=parpool(NumWorkers); %Matlab2013b or later
+            end
+            this.use_parallel = NumWorkers;
+            this.Sys.Parallel = NumWorkers;
+            
+            % run initialization function on all workers
+            if ~isempty(this.InitFn)
+                pctRunOnAll(this.InitFn);
+            end
         end
         
         function this = SetInitFn(this,Fn)

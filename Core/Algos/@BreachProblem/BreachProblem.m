@@ -32,8 +32,7 @@ classdef BreachProblem < BreachStatus
     %                     help to know available options (E.g., for matlab solvers, this is
     %                     often set using the optimset command).
     %   max_time       -  maximum wall-time budget allocated to optimization
-    %   log_traces     -  (default=true) logs all traces computed during optimization
-    %                     (can be memory intensive)
+    %   log_traces     -  (default=true) logs all traces computed during optimization                 
     %   T_spec         -  time 
     % 
     % BreachProblem Properties (outputs)
@@ -93,7 +92,7 @@ classdef BreachProblem < BreachStatus
     properties
         display = 'on'
         freq_update = 10 
-        use_parallel = false % true default?
+        use_parallel =0
         max_time = 60
         time_start = tic
         time_spent = 0
@@ -156,11 +155,11 @@ classdef BreachProblem < BreachStatus
             this.BrSet = BrSet.copy();
             this.BrSet.Sys.Verbose=0;
             
-            this.use_parallel = BrSet.use_parallel;
-        
+            this.use_parallel = this.BrSet.use_parallel;
+                  
             % Parameter ranges
             if ~exist('params','var')
-                params = BrSet.GetBoundedDomains();
+                params = this.BrSet.GetBoundedDomains();
             else
                 if ischar(params)
                     params = {params};
@@ -188,7 +187,7 @@ classdef BreachProblem < BreachStatus
             this.Reset_x0();
             
             % robustness
-            [this.robust_fn, this.BrSys] = BrSet.GetRobustSatFn(phi, this.params, this.T_Spec);
+            [this.robust_fn, this.BrSys] = this.BrSet.GetRobustSatFn(phi, this.params, this.T_Spec);
             this.BrSys.Sys.Verbose=0;
              
             % objective function
@@ -202,7 +201,7 @@ classdef BreachProblem < BreachStatus
             
             % Setup use parallel
             if this.use_parallel
-                  this.SetupParallel();
+                  this.SetupParallel(this.use_parallel);
             end
             
         end
@@ -221,6 +220,7 @@ classdef BreachProblem < BreachStatus
                     error('BreachProblem:unknown_param', ['Parameter ' this.params{ip} ' is neither a system parameter nor a property parameter.']);
                 end
             end
+            
             this.BrSet.SetParam(this.params, x0__,'spec');
             
             this.x0 = unique(x0__', 'rows')';
@@ -255,8 +255,7 @@ classdef BreachProblem < BreachStatus
             this.time_spent= 0; 
             this.time_start = tic; 
         end
-        
-        
+           
         %% Options for various solvers
         function [solver_opt, is_gui] = setup_solver(this, solver_name, is_gui)
             if ~exist('solver_name','var')
@@ -345,6 +344,7 @@ classdef BreachProblem < BreachStatus
                         
             switch this.solver
                 case 'init'
+                    this.display_status_header();
                     res = FevalInit(this);
                     
                 case 'basic'
@@ -458,11 +458,27 @@ classdef BreachProblem < BreachStatus
         
         %% Parallel 
         function SetupParallel(this, varargin)
-            this.BrSys.SetupParallel(varargin{:});
-            this.BrSys.Sys.Parallel=0;  % not intuitive, uh?
-            this.use_parallel =1;
-            this.log_traces = 0;
+           
+            % Create parallel pool and get number of workers
+            this.BrSys.SetupParallel(varargin{:});          
+            this.use_parallel =this.BrSys.Sys.Parallel;   
+            
+            % Disable parallel at BrSys level, to prevent ComputeTraj from performing nested parallel simulations, in case BrSys must compute several traces for each objective evaluation 
+            this.BrSys.use_parallel = 0;   
+            this.BrSys.Sys.Parallel=0;     
+            
+            % Disable serial logging mechanism and enable DiskCaching
+            this.log_traces = 0;   
+            this.SetupDiskCaching();
             this.objective= @(x) objective_fn(this,x);
+        end
+        
+        function StopParallel(this)
+            this.BrSys.StopParallel();
+        end
+        
+        function SetupDiskCaching(this, varargin)
+            this.BrSys.SetupDiskCaching(varargin{:});
         end
         
         %% Objective wrapper        
@@ -535,7 +551,12 @@ classdef BreachProblem < BreachStatus
         end
         
         function DispResultMsg(this)
-            this.display_status();
+       
+            % display status of last eval if not already done
+            if rem(this.nb_obj_eval,this.freq_update)
+                this.display_status();
+            end
+            
             % DispResultMsg message displayed at the end of optimization
             if this.time_spent> this.max_time
                 fprintf('\n Stopped after max_time was reached.\n');
@@ -564,11 +585,15 @@ classdef BreachProblem < BreachStatus
                 BrOut = this.BrSys.copy();
                 BrOut.ResetSimulations();
                 BrOut.SetParam(this.params, this.X_log);
+                if this.BrSys.UseDiskCaching
+                    BrOut.Sim(); 
+                end
             end
             BrOut.Sys.Verbose=1;
             if isempty(BrOut.InputGenerator.Specs)&&BrOut.hasTraj() % TODO: change this when dealing with Input requirements/constraints
                 BrOut.CheckSpec(this.Spec);
             end
+            
         end
         
         function BrBest = GetBrSet_Best(this)
@@ -576,9 +601,7 @@ classdef BreachProblem < BreachStatus
             if isempty(BrBest)
                 BrBest = this.BrSys.copy();
                 BrBest.SetParam(this.params, this.x_best, 'spec');
-                if ~isempty(this.BrSys.log_folder)
-                   BrBest.Sim(); 
-                end
+                BrBest.Sim();
             end
             BrBest.Sys.Verbose=1;
             if BrBest.hasTraj() 
@@ -607,10 +630,10 @@ classdef BreachProblem < BreachStatus
                     fval = this.obj_log(end); % bof bof
                 end
                 
-                if this.nb_obj_eval==1
-                    this.display_status_header();
-                    rfprintf_reset();
-                end
+%                 if this.nb_obj_eval==1
+%                     this.display_status_header();
+%                     rfprintf_reset();
+%                 end
                 
                 st__= sprintf('    %5d                   %7.1f                            %+5.5e             %+5.5e\n', ...
                     this.nb_obj_eval, this.time_spent, this.obj_best, fval);

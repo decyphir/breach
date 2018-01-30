@@ -1,5 +1,5 @@
 function res = FevalInit(this,X0)
-% FEvalInit Eval objective function on parameters in BrSys
+% FevalInit Eval objective function on parameters in BrSys
 
 if ~exist('X0', 'var')
     X0 = this.BrSet.GetParam(this.params);
@@ -21,7 +21,6 @@ else
     end
    
     % Display header
-    this.display_status_header();
     fq = this.freq_update;
 
     for iter=1:nb_init

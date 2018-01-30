@@ -61,32 +61,32 @@ classdef BreachOpenSystem < BreachSystem
             end
             
             if (do_compute)
-            Sys = this.Sys;
-            if exist('U','var') % in this case, the InputGenerator becomes a trace object
-                % TODO: handles multiple input signals - or use an
-                % from_workspace_signal_gen?
-                
-                if isnumeric(U)
-                    DimU = this.InputMap.Count();
-                    if size(U, 2)~=DimU+1;
-                        err_msg= fprintf('Input must be an array with %d columns, first one being time.',DimU);
-                        error(err_msg);
-                    end
-                    Us.t = U(:,1);
-                    Us.u = U(:,2:end);
-                else
-                    Us = U;
-                end
-                InputGen = BreachTraceSystem(this.InputMap.keys,U);
-                this.SetInputGen(InputGen);
                 Sys = this.Sys;
-                Sys.init_u = @(~, pts, tspan) (Us);
-            end
+                if exist('U','var') % in this case, the InputGenerator becomes a trace object
+                    % TODO: handles multiple input signals - or use an
+                    % from_workspace_signal_gen?
+                    
+                    if isnumeric(U)
+                        DimU = this.InputMap.Count();
+                        if size(U, 2)~=DimU+1;
+                            err_msg= fprintf('Input must be an array with %d columns, first one being time.',DimU);
+                            error(err_msg);
+                        end
+                        Us.t = U(:,1);
+                        Us.u = U(:,2:end);
+                    else
+                        Us = U;
+                    end
+                    InputGen = BreachTraceSystem(this.InputMap.keys,U);
+                    this.SetInputGen(InputGen);
+                    Sys = this.Sys;
+                    Sys.init_u = @(~, pts, tspan) (Us);
+                end
             
             this.P = ComputeTraj(Sys, this.P, tspan);
             this.CheckinDomainTraj();
             
-            % Write log file 
+            % Cache trace - older implementation, keeping for backward compatibility  
             if ~isempty(this.log_folder)
                this.disp_msg('Writing to log file.', 2);
                
@@ -103,6 +103,7 @@ classdef BreachOpenSystem < BreachSystem
                Br = this.copy();
                save(log_filename,'Br');
             end
+            
             
             this.CheckinDomainTraj();
             end
@@ -363,7 +364,8 @@ classdef BreachOpenSystem < BreachSystem
         end
         
         function idx = GetInputSignalsIdx(this)
-            idx = FindParam(this.Sys, this.Sys.InputList);
+            [idx, status] = FindParam(this.Sys, this.Sys.InputList);
+            idx = idx(status~=0);
         end
         
         function PrintSignals(this)
