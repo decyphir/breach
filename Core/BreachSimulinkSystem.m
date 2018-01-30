@@ -277,7 +277,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             cs.set_param('SignalLoggingName', 'logsout');   % Signal logging name
             
             if (verLessThan('matlab','R2011a'))
-                error('Sorry, this version of Matlab is too old.')
+                error('Sorry, this version of Matlab is not supported.')
             end
             cs.set_param('DSMLoggingName', 'dsmout');   % Data stores logging name
             cs.set_param('SignalLoggingSaveFormat', 'Dataset');   % Signal logging format
@@ -713,9 +713,9 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 case 3
                     Sim@BreachOpenSystem(this, tspan, U);
             end
-            if this.use_parallel == 0 % don't autosave in parallel mode
-                save_system(this.Sys.mdl);
-            end
+            %if this.use_parallel == 0 % don't autosave in parallel mode
+            %    save_system(this.Sys.mdl);
+            %end
         end
         
         function [tout, X] = sim_breach(this, Sys, tspan, pts)
@@ -731,6 +731,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             for i = 1:numel(params)-num_signals
                 pname =  params{i+num_signals};
                 pval  = pts(i+num_signals);
+                
                 bparam = this.ParamSrc(pname);
                 bparam.setValue(pval); % set value in the appropriate workspace
             end
@@ -775,7 +776,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 else
                     tout = [0 tspan];
                 end
-                error(['An error was returned from Simulink:' s.message '\n Returning a null trajectory']);
+                warning(['An error was returned from Simulink:' s.message '\n Returning a null trajectory']);
                 X = zeros(Sys.DimX, numel(tout));
             end
             
