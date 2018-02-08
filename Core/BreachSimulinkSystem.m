@@ -723,7 +723,11 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             % BreachSimulinkSystem.sim_breach Generic wrapper function that runs a Simulink model and collect signal
             % data in Breach format (called by ComputeTraj)
             %
-            
+            cwd = pwd;
+            if this.use_parallel
+                worker_id = get(getCurrentTask(), 'ID');
+                cd([this.ParallelTempRoot filesep 'Worker' int2str(worker_id)]);
+            end
             mdl = Sys.mdl;
             load_system(mdl);
             num_signals = Sys.DimX;
@@ -784,7 +788,9 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             if ~isempty(this.InputGenerator)&&this.use_precomputed_inputs==false
                 this.InputGenerator.Reset();
             end
-            
+            if this.use_parallel
+                cd(cwd)
+            end
         end
         
         function [tout, X] = GetXFrom_simout(this, simout)

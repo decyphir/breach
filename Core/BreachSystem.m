@@ -27,7 +27,8 @@ classdef BreachSystem < BreachSet
         Sys                   % Legacy Breach system structure
         Specs               % A set (map) of STL formulas
         ParamSrc=containers.Map()
-        use_parallel=0     % 
+        use_parallel=0     % the flag to indicate the usage of parallel computing
+        ParallelTempRoot = ''   % the default temporary folder for parallel computing 
         InitFn = ''             % Initialization function 
     end
     
@@ -36,7 +37,8 @@ classdef BreachSystem < BreachSet
         %% Constructor
         function this = BreachSystem(varargin)
             this.Specs = containers.Map();
-            
+            global BreachGlobOpt;
+            this.ParallelTempRoot = [BreachGlobOpt.breach_dir filesep 'Ext' filesep 'ModelsData' filesep 'ParallelTemp'];
             switch nargin
                 case 0 % do nothing
                 case 1 % Should be a Sys structure
@@ -99,6 +101,18 @@ classdef BreachSystem < BreachSet
             if ~isempty(this.InitFn)
                 pctRunOnAll(this.InitFn);
             end
+            
+            % setup the temp folders for the workers
+            cwd = pwd;
+            cd(this.ParallelTempRoot)
+            for ii = 1:NumWorkers 
+                dirName = ['Worker' int2str(ii)];
+                if exist(dirName, 'dir') == 7
+                    rmdir(dirName)
+                end
+                mkdir(dirName)
+            end
+            cd(cwd)
         end
         
         function this = SetInitFn(this,Fn)
