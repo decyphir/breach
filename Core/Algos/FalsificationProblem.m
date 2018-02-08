@@ -110,7 +110,7 @@ classdef FalsificationProblem < BreachProblem
                 if ~isempty(i_false)
                     BrFalse = this.BrSys.copy();
                     BrFalse.SetParam(this.params, this.X_log(:, i_false));
-                    if ~isempty(this.BrSys.log_folder)
+                    if this.BrSys.UseDiskCaching
                         BrFalse.Sim();
                     end
                 end
