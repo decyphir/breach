@@ -115,6 +115,18 @@ classdef BreachSystem < BreachSet
             cd(cwd)
         end
         
+        % clear up the ModelsData/ParallelTemp folder
+        function StopParallel(this)
+            cd(this.ParallelTempRoot)
+            folders = dir(this.ParallelTempRoot);
+            names = {folders.name};
+            % delete the path for the current folder and parent folder
+            names(ismember(names,{'.', '..'})) = []; 
+            for ii = 1:length(names)
+                rmdir(names{ii}, 's');
+            end      
+        end
+        
         function this = SetInitFn(this,Fn)
             if isa(Fn, 'function_handle')
                 f = functions(Fn);

@@ -191,7 +191,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         end
         
         function StopParallel(this)
-            
+            this.StopParallel@BreachSystem();
             poolobj = gcp('nocreate'); % If no pool, do not create new one.
             if ~isempty(poolobj)
                 delete(poolobj);     % not sure this is doing anything
