@@ -57,6 +57,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             this.mdl.path = which(mdl_name);
             this.mdl.date =  datestr(now,'ddmmyy-HHMM');
             this.mdl.file_info = dir(this.mdl.path);
+            this.mdl.mdl_breach_path = BreachGetModelsDataPath();
             this.ParamSrc = containers.Map();
             
             switch nargin
@@ -461,18 +462,33 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             if ~exist('p0', 'var')||isempty(p0)
                 p0 = zeros(1,numel(params));
             end
-            
+     
             params = [params U.params];
+            
+            %% Test run model on 0 time and collect simout 
+            tspan = evalin('base', 'tspan;');
+            assignin('base','tspan',[0 eps]);
+            assignin('base','t__',0);
+            assignin('base','u__',zeros(1, numel(this.Sys.InputList)));
+            assignin('base','tspan',tspan);
+            crd = pwd;
+            cd(crd);
+            try 
+                simout = sim(mdl_breach, this.SimCmdArgs{:});
+            catch MException
+                cd(crd);
+                rethrow(MException);
+            end
             
             %% find logged signals (including inputs and outputs)
             this.Sys.mdl= mdl_breach;
             if ~exist('signals', 'var')||isempty(signals)||isequal(signals,'all')
-                signals = FindLoggedSignals(this);
+                signals = FindLoggedSignals(this, simout);
                 % Ensure inputs are at the end of signals:
                 signals= setdiff(signals, sig_in);
                 signals = [signals sig_in];
             else
-                sig_log = FindLoggedSignals(this);
+                sig_log = FindLoggedSignals(this, simout);
                 found = ismember(signals, sig_log);
                 
                 if ~all(found)
@@ -530,20 +546,11 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             
         end
         
-        function sig_log = FindLoggedSignals(this)
+        function sig_log = FindLoggedSignals(this, simout)
             %
             % converts a simulink output to a data structure Breach can handle
             %
-            
-            %Run the model for time 0 to check proper initialization and collect signal names
-            tspan = evalin('base', 'tspan;');
-            assignin('base','tspan',[0 eps]);
-            assignin('base','t__',0);
-            assignin('base','u__',zeros(1, numel(this.Sys.InputList)));
-            
-            simout = sim(this.Sys.mdl);
-            assignin('base','tspan',tspan);
-            
+                       
             %% Outputs and scopes
             Vars = simout.who;
             lenVars = numel(Vars);
@@ -727,7 +734,10 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             if this.use_parallel
                 worker_id = get(getCurrentTask(), 'ID');
                 cd([this.ParallelTempRoot filesep 'Worker' int2str(worker_id)]);
+            else
+                cd(this.mdl.mdl_breach_path);
             end
+            
             mdl = Sys.mdl;
             load_system(mdl);
             num_signals = Sys.DimX;
@@ -735,7 +745,6 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             for i = 1:numel(params)-num_signals
                 pname =  params{i+num_signals};
                 pval  = pts(i+num_signals);
-                
                 bparam = this.ParamSrc(pname);
                 bparam.setValue(pval); % set value in the appropriate workspace
             end
@@ -773,14 +782,14 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                     simout= sim(mdl, this.SimCmdArgs{:});
                     [tout, X] = GetXFrom_simout(this, simout);
                 end
-            catch
-                s= lasterror;
+            catch MException
+                cd(cwd);
                 if numel(tspan)>1
                     tout = tspan;
                 else
                     tout = [0 tspan];
                 end
-                warning(['An error was returned from Simulink:' s.message '\n Returning a null trajectory']);
+                warning(['An error was returned from Simulink:' MException.message '\n Returning a null trajectory']);
                 X = zeros(Sys.DimX, numel(tout));
             end
             
@@ -788,9 +797,8 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             if ~isempty(this.InputGenerator)&&this.use_precomputed_inputs==false
                 this.InputGenerator.Reset();
             end
-            if this.use_parallel
-                cd(cwd)
-            end
+            cd(cwd)
+
         end
         
         function [tout, X] = GetXFrom_simout(this, simout)

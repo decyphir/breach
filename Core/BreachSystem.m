@@ -9,7 +9,7 @@ classdef BreachSystem < BreachSet
     %
     % BreachSystem Properties
     %   Specs  - a set of Signal Temporal Logic (STL) formulas.
-    %
+    %   
     %
     % BreachSystem methods
     %   Sim           - Simulate the system for some time using every parameter vectors.
@@ -39,6 +39,7 @@ classdef BreachSystem < BreachSet
             this.Specs = containers.Map();
             global BreachGlobOpt;
             this.ParallelTempRoot = [BreachGlobOpt.breach_dir filesep 'Ext' filesep 'ModelsData' filesep 'ParallelTemp'];
+        
             switch nargin
                 case 0 % do nothing
                 case 1 % Should be a Sys structure
