@@ -117,6 +117,7 @@ classdef BreachSystem < BreachSet
         
         % clear up the ModelsData/ParallelTemp folder
         function StopParallel(this)
+            cwd = pwd;
             cd(this.ParallelTempRoot)
             folders = dir(this.ParallelTempRoot);
             names = {folders.name};
@@ -125,6 +126,7 @@ classdef BreachSystem < BreachSet
             for ii = 1:length(names)
                 rmdir(names{ii}, 's');
             end      
+            cd(cwd)
         end
         
         function this = SetInitFn(this,Fn)
