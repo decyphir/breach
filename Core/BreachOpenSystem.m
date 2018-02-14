@@ -41,73 +41,31 @@ classdef BreachOpenSystem < BreachSystem
                 tspan = this.Sys.tspan;
             end
             
-            % Checks wether we're logging to folder
-            do_compute = 1; 
-            if ~isempty(this.log_folder)
-               % See if this simulation was performed already
-               hash = DataHash({this.P.ParamList, this.P.pts, tspan});
-               log_filename = [this.log_folder filesep 'Br' hash '.mat'];
-               
-               if exist(log_filename, 'file')
-                  % additional check? 
-                  load(log_filename);
-                  this.P = Br.P;
-                  this.disp_msg('Reading trace from log file.', 2);
-                  do_compute=0;
-               else
-                  % TODO figure out for each trace if a log file exist 
-               
-               end                 
-            end
-            
-            if (do_compute)
-                Sys = this.Sys;
-                if exist('U','var') % in this case, the InputGenerator becomes a trace object
-                    % TODO: handles multiple input signals - or use an
-                    % from_workspace_signal_gen?
-                    
-                    if isnumeric(U)
-                        DimU = this.InputMap.Count();
-                        if size(U, 2)~=DimU+1;
-                            err_msg= fprintf('Input must be an array with %d columns, first one being time.',DimU);
-                            error(err_msg);
-                        end
-                        Us.t = U(:,1);
-                        Us.u = U(:,2:end);
-                    else
-                        Us = U;
+            Sys = this.Sys;
+            if exist('U','var') % in this case, the InputGenerator becomes a trace object
+                % TODO: handles multiple input signals - or use an
+                % from_workspace_signal_gen?
+                
+                if isnumeric(U)
+                    DimU = this.InputMap.Count();
+                    if size(U, 2)~=DimU+1;
+                        err_msg= fprintf('Input must be an array with %d columns, first one being time.',DimU);
+                        error(err_msg);
                     end
-                    InputGen = BreachTraceSystem(this.InputMap.keys,U);
-                    this.SetInputGen(InputGen);
-                    Sys = this.Sys;
-                    Sys.init_u = @(~, pts, tspan) (Us);
+                    Us.t = U(:,1);
+                    Us.u = U(:,2:end);
+                else
+                    Us = U;
                 end
+                InputGen = BreachTraceSystem(this.InputMap.keys,U);
+                this.SetInputGen(InputGen);
+                Sys = this.Sys;
+                Sys.init_u = @(~, pts, tspan) (Us);
+            end
             
             this.P = ComputeTraj(Sys, this.P, tspan);
             this.CheckinDomainTraj();
-            
-            % Cache trace - older implementation, keeping for backward compatibility  
-            if ~isempty(this.log_folder)
-               this.disp_msg('Writing to log file.', 2);
-               
-               for itraj = 1:numel(this.P.traj)
-                   hash_traj = DataHash({this.Sys.ParamList, this.P.traj{itraj}.param, this.P.traj{itraj}.time});
-                   log_traj_filename = [this.log_folder filesep 'traj_' hash_traj '.mat'];
-                   log_traj = matfile(log_traj_filename);
-                   log_traj.param = this.P.traj{itraj}.param;
-                   log_traj.time = this.P.traj{itraj}.time;
-                   log_traj.X = this.P.traj{itraj}.X;
-                   this.P.traj{itraj} = log_traj;
-                   this.P.traj{itraj}.Properties.Writable= false;
-               end
-               Br = this.copy();
-               save(log_filename,'Br');
-            end
-            
-            
-            this.CheckinDomainTraj();
-            end
-        end
+         end
         
         % we merge parameters of the input generator with those of the
         % system, but keep both BreachObjects
