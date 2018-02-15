@@ -36,6 +36,7 @@ classdef BreachSystem < BreachSet
         
         %% Constructor
         function this = BreachSystem(varargin)
+            InitBreach;
             this.Specs = containers.Map();
             global BreachGlobOpt;
             this.ParallelTempRoot = [BreachGlobOpt.breach_dir filesep 'Ext' filesep 'ModelsData' filesep 'ParallelTemp'];
@@ -132,7 +133,6 @@ classdef BreachSystem < BreachSet
         
         %% Parameters
         % Get and set default parameter values (defined in Sys)
-        
         function values = GetDefaultParam(this, params)
             % Get default parameter values (defined in Sys)
             values = GetParam(this.Sys,params);
@@ -157,8 +157,7 @@ classdef BreachSystem < BreachSet
             % ResetSampling
             this.P = CreateParamSet(this.Sys);
             this.CheckinDomain();
-            this.TraceStatus = [];
-        end
+          end
         
         %% Simulation
         function SetTime(this,tspan)
@@ -179,6 +178,7 @@ classdef BreachSystem < BreachSet
             end
             this.P = ComputeTraj(this.Sys, this.P, tspan);
             this.CheckinDomainTraj();
+            this.dispTraceStatus();
         end
         
         %% Specs
@@ -688,8 +688,7 @@ classdef BreachSystem < BreachSet
                 [X, t] = STL_Eval(this.Sys, expr_tmp_, this.P, this.P.traj, this.P.traj{1}.time);
             end
         end
-               
-        
+                   
         %% Sensitivity analysis
         function [mu, mustar, sigma] = SensiSpec(this, phi, params, ranges, opt)
             % SensiSpec Sensitivity analysis of a formula to a set of parameters

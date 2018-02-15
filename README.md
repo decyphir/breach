@@ -17,7 +17,9 @@ Breach is a Matlab toolbox for simulation-based design of dynamical/CPS/Hybrid s
 Type 'BrDemo.' and Tab to get a list of available demo scripts. 
 
 Running GenDoc() will run all demos and publish results into Doc folder, 
-accessible via Doc/index.html. 
+accessible via Doc/index.html. A version of html documentation is also
+available
+[online](https://bitbucket.decyphir.io/breach-docs/index.html). 
 
 ## Contact/Support
 

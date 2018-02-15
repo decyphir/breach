@@ -1,3 +1,12 @@
+# Release 1.2.15
+
+- New function FilterTracesStatus to remove/extract Null traces
+  resulting from Simulink error and NaN traces resulting from input
+  constraints violations 
+- Simulink generated files are now all in ModelsData folder
+
+
+
 # Release 1.2.14
 
 ## Users

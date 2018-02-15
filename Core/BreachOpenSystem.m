@@ -64,7 +64,9 @@ classdef BreachOpenSystem < BreachSystem
             end
             
             this.P = ComputeTraj(Sys, this.P, tspan);
+
             this.CheckinDomainTraj();
+            this.dispTraceStatus();
          end
         
         % we merge parameters of the input generator with those of the

@@ -37,7 +37,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         MdlVars           % List of variables used by the model
         SimInputsOnly=false % if true, will not run Simulink model
         mdl
-        UseDiskCaching=true
+        UseDiskCaching=false 
         DiskCachingRoot 
     end
     
@@ -247,6 +247,11 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             
             %%  Solver pane - times
             t_end= str2num(cs.get_param('StopTime'));
+            if isinf(t_end)
+                warning('BreachSimulinkSystem:t_end_inf', 'stop time is inf, setting to 1 instead. Use SetTime method to specify another simulation end time.');
+                t_end= 1;
+            end
+            
             try
                 t_step= str2num(cs.get_param('FixedStep'));
             catch % default fixed step is t_end/1000, unless MaxStep is set smaller
@@ -728,6 +733,8 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             % BreachSimulinkSystem.sim_breach Generic wrapper function that runs a Simulink model and collect signal
             % data in Breach format (called by ComputeTraj)
             %
+            
+            status = 0; % optimistic default;
             cwd = pwd;
             if this.use_parallel
                 worker_id = get(getCurrentTask(), 'ID');
@@ -1287,17 +1294,18 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
             name = this.whoamI; 
             
+            [~,~, ~, st_status]  = GetTraceStatus(this); 
             if isequal(name, '__Nobody__')
                 st = ['BreachSimulinkSystem interfacing model ' this.mdl.name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' unique traces.'];
             else
                 st = ['BreachSimulinkSystem ' name ' interfacing model ' this.mdl.name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' unique traces.'];
             end
+            st = sprintf('%s %s',st, st_status);
             if nargout ==0
-                disp(st);
+                fprintf('%s\n', st);
             end
         end
         
-
     end
     
 end

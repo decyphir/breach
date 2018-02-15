@@ -1,6 +1,6 @@
 function BreachClearCache()
 % BreachClearCache clear all files in default cache location (DiskCaching)
-
+InitBreach;
 global BreachGlobOpt;
 folder =[BreachGlobOpt.breach_dir filesep 'Ext' filesep 'ModelsData' filesep 'Cache'];
 

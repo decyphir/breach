@@ -336,6 +336,7 @@ if do_compute
         cache_traj = matfile(cache_traj_filename);
         cache_traj.param = traj.param;
         cache_traj.time = traj.time;
+        cache_traj.status = traj.status;
         cache_traj.X = traj.X;
         cache_traj.Properties.Writable= false;
         if ~isfield(Sys, 'StoreTracesOnDisk')||~Sys.StoreTracesOnDisk

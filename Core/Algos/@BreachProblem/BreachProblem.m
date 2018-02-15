@@ -498,7 +498,7 @@ classdef BreachProblem < BreachStatus
                 
                 % logging and updating best
                 this.LogX(x, fval);
- 
+                
                 % update status
                 if rem(this.nb_obj_eval,this.freq_update)==0
                     this.display_status();
@@ -575,12 +575,10 @@ classdef BreachProblem < BreachStatus
             
         end
         
-        function BrOut = GetBrSet_Logged(this)
+        function [BrOut, Berr, BbadU] = GetBrSet_Logged(this)
             % GetBrSet_Logged gets BreachSet object containing parameters and traces computed during optimization
             if this.log_traces
                 BrOut = this.BrSet_Logged;
-            elseif ~isempty(this.BrSys.log_folder)
-                BrOut = LoadLogFolder(this.BrSys.log_folder);
             else
                 BrOut = this.BrSys.copy();
                 BrOut.ResetSimulations();
@@ -590,7 +588,17 @@ classdef BreachProblem < BreachStatus
                 end
             end
             BrOut.Sys.Verbose=1;
-            if isempty(BrOut.InputGenerator.Specs)&&BrOut.hasTraj() % TODO: change this when dealing with Input requirements/constraints
+            Berr =[];
+            BbadU = []; 
+            [idx_ok, idx_sim_error, idx_invalid_input, st_status]  = BrOut.GetTraceStatus();
+       
+            if ~isempty(idx_sim_error)||~isempty(idx_invalid_input)
+                [Bok, Berr, BbadU] = FilterTraceStatus(BrOut);
+                BrOut= Bok; 
+                this.disp_msg(['Warning: ' st_status],1);
+            end
+            
+            if ~isempty(idx_ok)
                 BrOut.CheckSpec(this.Spec);
             end
             
