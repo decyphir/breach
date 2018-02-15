@@ -19,7 +19,7 @@ else
     for idx = 1:nb_init
         par_f(idx) = parfeval(@(isample) fun(X0(:,isample)),1, idx);
     end
-   
+    
     % Display header
     fq = this.freq_update;
 

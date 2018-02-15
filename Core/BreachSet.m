@@ -293,7 +293,6 @@ classdef BreachSet < BreachStatus
         
         function ResetParamSet(this)
             % ResetParamSet remove samples and keeps one in the domain
-            
             this.P = SPurge(this.P);
             % find non empty domains
             ipr = cellfun(@(c)(~isempty(c)), {this.Domains.domain});
@@ -1328,7 +1327,7 @@ classdef BreachSet < BreachStatus
         
         
         function ResetSimulations(this)
-            % Removes computed trajectories
+            % Removes computed trajectories     
             this.P = SPurge(this.P);
             this.SignalRanges = [];
         end

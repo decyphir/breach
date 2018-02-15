@@ -30,7 +30,7 @@ classdef BreachStatus < handle
 
         
         function addStatus(this, status, key, msg)
-            % Add new active status
+            % BreachStatus.addStatus Adds new active status
             this.status = [this.status status];
             
             if (~ischar(key) && numel(key)>200)
@@ -67,6 +67,7 @@ classdef BreachStatus < handle
                 end
                 
             end
+            
         end
         
         function printStatus(this)
@@ -83,8 +84,10 @@ classdef BreachStatus < handle
             if (this.verbose>=verbose_min)
                disp(msg);                 
             end
-            this.logged_msg = [this.logged_msg {msg}];
             
+            if numel(this.logged_msg)<this.max_logged_msg
+                this.logged_msg = [this.logged_msg {msg}];
+            end
         end
         
     end

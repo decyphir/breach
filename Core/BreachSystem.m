@@ -30,7 +30,7 @@ classdef BreachSystem < BreachSet
         use_parallel=0     % the flag to indicate the usage of parallel computing
         ParallelTempRoot = ''   % the default temporary folder for parallel computing 
         InitFn = ''             % Initialization function 
-    end
+        end
     
     methods
         
@@ -109,9 +109,9 @@ classdef BreachSystem < BreachSet
             for ii = 1:NumWorkers 
                 dirName = ['Worker' int2str(ii)];
                 if exist(dirName, 'dir') == 7
-                    rmdir(dirName)
+                    rmdir(dirName,'s');
                 end
-                mkdir(dirName)
+                mkdir(dirName);
             end
             cd(cwd)
         end
@@ -157,6 +157,7 @@ classdef BreachSystem < BreachSet
             % ResetSampling
             this.P = CreateParamSet(this.Sys);
             this.CheckinDomain();
+            this.TraceStatus = [];
         end
         
         %% Simulation

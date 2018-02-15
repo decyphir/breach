@@ -114,7 +114,10 @@ classdef FalsificationProblem < BreachProblem
                         BrFalse.Sim();
                     end
                 end
-                
+                BrFalse.Sys.Verbose=1;
+                if isempty(BrFalse.InputGenerator.Specs)&&BrFalse.hasTraj() % TODO: change this when dealing with Input requirements/constraints
+                    BrFalse.CheckSpec(this.Spec);
+                end
             end
         end
         
