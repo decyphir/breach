@@ -68,6 +68,7 @@ classdef FalsificationProblem < BreachProblem
             robs(NaN_idx) = inf;
             obj = min(robs);
         end     
+        
         % Nothing fancy - calls parent solve then returns falsifying params
         % if found.
         function [Xfalse, res] = solve(this)

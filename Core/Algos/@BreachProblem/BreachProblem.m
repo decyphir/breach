@@ -129,7 +129,6 @@ classdef BreachProblem < BreachStatus
                 else
                     disp(solvers{i_solv});
                 end
-            
             end
         end
         
@@ -470,7 +469,6 @@ classdef BreachProblem < BreachStatus
             % Disable serial logging mechanism and enable DiskCaching
             this.log_traces = 0;   
             this.SetupDiskCaching();
-            this.objective= @(x) objective_fn(this,x);
         end
         
         function StopParallel(this)
@@ -490,22 +488,56 @@ classdef BreachProblem < BreachStatus
         function fval= objective_wrapper(this,x)
             % objective_wrapper calls the objective function and wraps some bookkeeping
             
-            if this.stopping()==true
-                fval = this.obj_best;
-            else
-                % calling actual objective function
-                fval = this.objective_fn(x);
-                
-                % logging and updating best
-                this.LogX(x, fval);
-                
-                % update status
-                if rem(this.nb_obj_eval,this.freq_update)==0
-                    this.display_status();
-                end
-                
+            if size(x,1) ~= numel(this.params)
+                x = x';
             end
             
+            nb_eval =  size(x,2);
+            fval = inf*ones(1, nb_eval);
+            
+            fun = @(isample) this.objective_fn(x(:, isample));
+
+            
+            nb_iter = min(nb_eval, this.max_obj_eval);
+            if this.stopping()==false
+                if ~this.use_parallel
+                    for iter = 1:nb_iter
+                        
+                        % calling actual objective function
+                        fval(iter) = fun(iter);
+                        
+                        % logging and updating best
+                        this.LogX(x(:, iter), fval(iter));
+                        
+                        % update status
+                        if rem(this.nb_obj_eval,this.freq_update)==0
+                            this.display_status();
+                        end
+                    end
+                else
+                    
+                    % Launch tasks
+                    for iter = 1:nb_iter
+                        par_f(iter) = parfeval(fun,1, iter);
+                    end
+                    
+                    fq = this.freq_update;                  
+                    for iter=1:nb_iter
+                        [idx, value] = fetchNext(par_f);
+                        fval(idx) = value;
+                        this.LogX(x(:, idx), fval(idx));
+                        
+                        % update status
+                        if rem(iter,fq)==0
+                            this.display_status();
+                        end
+                        if this.stopping()
+                            cancel(par_f);
+                            break
+                        end
+                    end
+                end
+            end
         end
         
         function b = stopping(this)
