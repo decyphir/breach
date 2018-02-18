@@ -1,3 +1,20 @@
+# Release 1.2.15
+
+## Users 
+- New function FilterTracesStatus to remove/extract Null traces
+  resulting from Simulink error and NaN traces resulting from input
+  constraints violations 
+- Simulink generated files are now all in ModelsData folder
+- Added a small vdp example 
+- In parallel, simulation are run in a different folder for each
+  worker
+- SaveResults now supports DiskCaching 
+
+
+## Developpers
+- In BreachProblem, objective function is now same for parallel and
+  serial 
+
 # Release 1.2.14
 
 ## Users

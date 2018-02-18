@@ -54,11 +54,11 @@ function signal_gen_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 % Set fonts and size depending on system
 if ismac
     FONT=12;
-    POS = [50 10 200 50];
+    %POS = [50 10 200 50];
     handles.TBL_SZ = {200 120 120 150 80} ;
 else
     FONT=10;
-    POS = [50 10 200 50];
+    %POS = [50 10 200 50];
     handles.TBL_SZ = {400 150 150 150 150 150};
 end
 
@@ -68,7 +68,7 @@ for ifn = 1:numel(hfn)
         set(handles.(hfn{ifn}), 'FontSize', FONT);
     end
 end
-set(handles.main, 'Position',POS);
+%set(handles.main, 'Position',POS);
 
 handles.select_cells = []; 
 

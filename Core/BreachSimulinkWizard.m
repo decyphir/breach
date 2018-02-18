@@ -108,7 +108,9 @@ end
 %%  Execute model for 0 time (forces compilation, checks and stuff)
 sim_cmd = ['sim(''' mdl ''',[0 0]);'] ;
 fprintf_log('Trying command: ''%s'' ... ', sim_cmd);
-try
+crd = pwd;
+cd(BreachGetModelsDataPath());
+try  
     evalin('base', sim_cmd);
     fprintf_log('done.\n');
 catch
@@ -126,9 +128,10 @@ catch
     if options.RunFromSimulink
         open_system(mdl);
     end
+    cd(crd);
     return;
 end
-
+cd(crd);
 
 %%  Creates default interface
 Name = get_param(mdl, 'Name');

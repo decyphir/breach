@@ -9,7 +9,7 @@ classdef BreachSystem < BreachSet
     %
     % BreachSystem Properties
     %   Specs  - a set of Signal Temporal Logic (STL) formulas.
-    %
+    %   
     %
     % BreachSystem methods
     %   Sim           - Simulate the system for some time using every parameter vectors.
@@ -27,16 +27,20 @@ classdef BreachSystem < BreachSet
         Sys                   % Legacy Breach system structure
         Specs               % A set (map) of STL formulas
         ParamSrc=containers.Map()
-        use_parallel=0     % 
+        use_parallel=0     % the flag to indicate the usage of parallel computing
+        ParallelTempRoot = ''   % the default temporary folder for parallel computing 
         InitFn = ''             % Initialization function 
-    end
+        end
     
     methods
         
         %% Constructor
         function this = BreachSystem(varargin)
+            InitBreach;
             this.Specs = containers.Map();
-            
+            global BreachGlobOpt;
+            this.ParallelTempRoot = [BreachGlobOpt.breach_dir filesep 'Ext' filesep 'ModelsData' filesep 'ParallelTemp'];
+        
             switch nargin
                 case 0 % do nothing
                 case 1 % Should be a Sys structure
@@ -99,6 +103,18 @@ classdef BreachSystem < BreachSet
             if ~isempty(this.InitFn)
                 pctRunOnAll(this.InitFn);
             end
+            
+            % setup the temp folders for the workers
+            cwd = pwd;
+            cd(this.ParallelTempRoot)
+            for ii = 1:NumWorkers 
+                dirName = ['Worker' int2str(ii)];
+                if exist(dirName, 'dir') == 7
+                    rmdir(dirName,'s');
+                end
+                mkdir(dirName);
+            end
+            cd(cwd)
         end
         
         function this = SetInitFn(this,Fn)
@@ -117,7 +133,6 @@ classdef BreachSystem < BreachSet
         
         %% Parameters
         % Get and set default parameter values (defined in Sys)
-        
         function values = GetDefaultParam(this, params)
             % Get default parameter values (defined in Sys)
             values = GetParam(this.Sys,params);
@@ -142,7 +157,7 @@ classdef BreachSystem < BreachSet
             % ResetSampling
             this.P = CreateParamSet(this.Sys);
             this.CheckinDomain();
-        end
+          end
         
         %% Simulation
         function SetTime(this,tspan)
@@ -163,6 +178,7 @@ classdef BreachSystem < BreachSet
             end
             this.P = ComputeTraj(this.Sys, this.P, tspan);
             this.CheckinDomainTraj();
+            this.dispTraceStatus();
         end
         
         %% Specs
@@ -672,8 +688,7 @@ classdef BreachSystem < BreachSet
                 [X, t] = STL_Eval(this.Sys, expr_tmp_, this.P, this.P.traj, this.P.traj{1}.time);
             end
         end
-               
-        
+                   
         %% Sensitivity analysis
         function [mu, mustar, sigma] = SensiSpec(this, phi, params, ranges, opt)
             % SensiSpec Sensitivity analysis of a formula to a set of parameters

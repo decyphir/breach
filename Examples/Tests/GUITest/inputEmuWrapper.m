@@ -61,16 +61,24 @@ if isempty(hTarget)
     error(['Cannot find the Tag name' tag 'in the handle' handle]);
 end
 % get positions for the GUI and the tag 
+
 posGUI = getpixelposition(handle); 
 pos = getpixelposition(hTarget, true);
 
 figure(handle);
 drawnow;
+x = round(posGUI(1)+pos(1));
+y = round(posGUI(2)+pos(2));
+
 switch cmd
     case {'move','none','wheel' ,'normal', 'extend', 'alternate', 'open'}
-        inputemu({cmd, [posGUI(1)+pos(1),posGUI(2)+pos(2)]}')
+        moveToPosition(x, y);
+        inputemu({cmd, []}')
     case {'key_normal', 'key_ctrl', 'key_alt', 'key_win'}
-        inputemu({'normal', [posGUI(1)+pos(1),posGUI(2)+pos(2)]}');
+        moveToPosition(x, y);
+        figure(handle);
+        drawnow;
+        inputemu({'normal', []}');
         inputemu({'key_ctrl' 'a'});
         inputemu({cmd, text});
     otherwise
@@ -81,4 +89,18 @@ pause(delayI); % extra pause to let all mouse actions to complete
 end % inputEmuWrapper
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+function moveToPosition(x, y)
+screenSize = get(groot, 'Screensize' );
+numTest = 20;
+while numTest
+    inputemu({'move', [x, y]}');
+    points = get(0,'PointerLocation');
+    if (x + screenSize(1)) == points(1) && y == points(2)  
+        break
+    end
+    numTest = numTest - 1;
+end
+if numTest == 0
+    error(['Cannot move the move to the point [' x ', ' y ']'])
+end
+end
