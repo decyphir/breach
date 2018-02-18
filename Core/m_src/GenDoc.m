@@ -4,7 +4,7 @@ function [index_path, success, msg, msg_id, log] = GenDoc(list_scripts, varargin
 InitBreach;
 
 % Default list of scripts
-if nargin==0
+if nargin==0||isempty(list_scripts)
     list_scripts = get_BrDemo_scripts();
 end
 
@@ -133,6 +133,8 @@ if isequal(fid,-1)
 end
 
 fprintf(fid, '%%%% List of scripts\n%%\n');
+fprintf(fid, '%% Generated on %s with Breach Version %s\n', char(datetime), BreachVersion());
+fprintf(fid, '%%%%%%\n');
 fprintf(fid, '%% <html>\n%% <ul>\n');
 for is =1:numel(list_script)
     [sc_path, sc_name]  = fileparts(which(list_script{is}));

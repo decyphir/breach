@@ -8,7 +8,7 @@
 % * Generating input signals  
 % * Running simulations and collecting signals for analysis
 %  
-% We use the model $\mathtt{AbstractFuelControl\_M1}$ as running example.
+% We use the model AbstractFuelControl as running example.
 
 %%
 % First, we initialize Breach and instantiate parameters for the model to run properly: 
@@ -35,7 +35,7 @@ warning('off', 'Simulink:LoadSave:EncodingMismatch') %avoid warning encoding con
 BrAFC = BreachSimulinkSystem(mdl)
 
 %% 
-% Note that Breach created a copy of the model in $\mathtt{AbstractFuelControl\_M1\_breach}$.
+% Note that Breach created a copy of the model in AbstractFuelControl_breach
 
 %%
 % We can check which parameters are interfaced via the following command: 

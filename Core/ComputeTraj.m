@@ -312,10 +312,10 @@ if  use_caching
     hash_traj = DataHash({Sys.ParamList, p, tspan});
     cache_traj_filename = [Sys.DiskCachingFolder filesep 'traj_' hash_traj '.mat'];
     if exist(cache_traj_filename, 'file')
-        if isfield(Sys, 'StoreTracesOnDisk')&&Sys.StoreTracesOnDisk
-            traj = matfile(cache_traj_filename);
-        else
+        if isfield(Sys, 'StoreTracesOnDisk')&&~Sys.StoreTracesOnDisk
             traj = load(cache_traj_filename);
+        else
+            traj = matfile(cache_traj_filename);
         end
         do_compute = 0;
     else
@@ -329,16 +329,17 @@ if do_compute
         assignin('base','t__',U.t);
         assignin('base', 'u__',U.u);
     end
-    [traj.time, traj.X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
+    [traj.time, traj.X,traj.status] = Sys.sim(Sys, tspan, P0.pts(:,ii));
     traj.param = P0.pts(1:P0.DimP,ii)';
     
     if use_caching % cache new trace
         cache_traj = matfile(cache_traj_filename);
         cache_traj.param = traj.param;
         cache_traj.time = traj.time;
+        cache_traj.status = traj.status;
         cache_traj.X = traj.X;
         cache_traj.Properties.Writable= false;
-        if isfield(Sys, 'StoreTracesOnDisk')&&Sys.StoreTracesOnDisk
+        if ~isfield(Sys, 'StoreTracesOnDisk')||~Sys.StoreTracesOnDisk
             traj = cache_traj;
         end
     end

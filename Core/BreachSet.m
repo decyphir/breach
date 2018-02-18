@@ -293,7 +293,6 @@ classdef BreachSet < BreachStatus
         
         function ResetParamSet(this)
             % ResetParamSet remove samples and keeps one in the domain
-            
             this.P = SPurge(this.P);
             % find non empty domains
             ipr = cellfun(@(c)(~isempty(c)), {this.Domains.domain});
@@ -383,12 +382,112 @@ classdef BreachSet < BreachStatus
             prop_params = this.P.ParamList(this.P.DimP+1:end);
         end
         
+            % Get the number of param vectors - -1 means P is empty
+        function nb_pts = GetNbParamVectors(this)
+            if isempty(this.P)
+                nb_pts = -1;
+            else
+                nb_pts= size(this.P.pts,2);
+            end
+        end
+    
+            
+        function [params, ipr] = GetVariables(this)
+            [params, ipr] = GetBoundedDomains(this);
+        end
+        
+        function [params, ipr] = GetSysVariables(this)
+            [params, ipr] = GetBoundedDomains(this);
+            if ~isempty(params)
+                req_params = this.GetPropParamList();
+                [params, i_diff] = setdiff(params, req_params);
+                ipr = ipr(i_diff);
+            end
+        end
+        
+        function [params, ipr] = GetReqVariables(this)
+            [params, ipr] = GetBoundedDomains(this);
+            if ~isempty(params)
+                req_params = this.GetPropParamList();
+                [params, i_intersect] = intersect(params, req_params);
+                ipr = ipr(i_intersect);
+            end
+        end
+        
+        function [ params, ipr]  = GetBoundedDomains(this)
+            % GetNonEmptyDomains
+            ipr = cellfun(@(c)(~isempty(c)), {this.Domains.domain});
+            params =   this.P.ParamList(ipr);
+        end
+    
+        
         %% Signals
         function traces = GetTraces(this)
             % Get computed trajectories
             traces= [];
             if isfield(this.P,'traj')
                 traces = this.P.traj;
+            end
+        end
+        
+        function [idx_ok, idx_sim_error, idx_invalid_input, st_status]  = GetTraceStatus(this)
+        % BreachSet.GetTraceStatus returns indices of ok traces, error and input invalid.    
+            idx_ok = [];
+            idx_sim_error = [];
+            idx_invalid_input = [];
+            
+            if this.hasTraj
+                nb_pts = size(this.P.pts, 2);
+                idx_ok = 1:nb_pts;
+                if isfield(this.P.traj{1}, 'status')
+                    
+                    traj_status = zeros(1, nb_pts);
+                    for it = 1:nb_pts
+                        traj_status(it) = this.P.traj{this.P.traj_ref(it)}.status;
+                    end
+                    
+                    idx_ok = find(traj_status == 0);
+                    idx_sim_error = find(traj_status == -1);
+                    idx_invalid_input = find(traj_status == -2);
+                end
+            end
+            
+            st_status = '';
+            if ~isempty(idx_sim_error)
+                st_status = sprintf('%s %d samples caused a simulation error.', st_status, numel(idx_sim_error));
+            end
+            if ~isempty(idx_invalid_input)
+                st_status = sprintf('%s %d simulations skipped for invalid inputs.', st_status, numel(idx_invalid_input));
+            end
+            
+        end
+        
+        function dispTraceStatus(this)
+            [~,~, ~, st_status]  = GetTraceStatus(this);
+            if ~isempty(st_status)
+                fprintf('%s\n', st_status);
+            end
+        end
+        
+        function [Bok, Bsim_error, Binvalid_input] = FilterTraceStatus(this)
+            % BreachSet.FilterTraceStatus() Removes and extract traces with simulator errors or input not satisfying constraints
+            %
+            
+            Bok = [];
+            Bsim_error =[];
+            Binvalid_input = [];
+            [idx_ok, idx_sim_error, idx_invalid_input]  = GetTraceStatus(this);
+             
+            if ~isempty(idx_ok)
+                Bok = this.ExtractSubset(idx_ok);
+            end
+         
+            if ~isempty(idx_sim_error)
+                Bsim_error = this.ExtractSubset(idx_sim_error);
+            end
+            
+            if ~isempty(idx_invalid_input)
+                Binvalid_input = this.ExtractSubset(idx_invalid_input);
             end
         end
         
@@ -465,7 +564,7 @@ classdef BreachSet < BreachStatus
         end
         
         function SaveSignals(this, signals, folder, name,i_trajs)
-            % SaveSignals Save signals in mat files as simple time series
+            % BreachSet SaveSignals Save signals in mat files as simple time series
             
             if ~this.hasTraj()
                 error('No signals computed for this set.' );
@@ -696,18 +795,17 @@ classdef BreachSet < BreachStatus
             this.CheckinDomainParam();
         end
         
-        % Get the number of param vectors - -1 means P is empty
-        function nb_pts = GetNbParamVectors(this)
-            if isempty(this.P)
-                nb_pts = -1;
-            else
-                nb_pts= size(this.P.pts,2);
-            end
-        end
         
-        %% Concatenation - needs some additional compatibility checks...
+    
+        
+        %% Concatenation, ExtractSubset - needs some additional compatibility checks...
         function Concat(this, other)
             this.P = SConcat(this.P, other.P);
+        end
+        
+        function other  = ExtractSubset(this, idx)
+            other = this.copy();
+            other.P = Sselect(this.P, idx);
         end
         
         %% Plot parameters
@@ -1020,35 +1118,6 @@ classdef BreachSet < BreachStatus
                     error('Coverage for more than 2 signals is not supported');
             end
         end
-        
-        function [params, ipr] = GetVariables(this)
-            [params, ipr] = GetBoundedDomains(this);
-        end
-        
-        function [params, ipr] = GetSysVariables(this)
-            [params, ipr] = GetBoundedDomains(this);
-            if ~isempty(params)
-                req_params = this.GetPropParamList();
-                [params, i_diff] = setdiff(params, req_params);
-                ipr = ipr(i_diff);
-            end
-        end
-        
-        function [params, ipr] = GetReqVariables(this)
-            [params, ipr] = GetBoundedDomains(this);
-            if ~isempty(params)
-                req_params = this.GetPropParamList();
-                [params, i_intersect] = intersect(params, req_params);
-                ipr = ipr(i_intersect);
-            end
-        end
-        
-        function [ params, ipr]  = GetBoundedDomains(this)
-            % GetNonEmptyDomains
-            ipr = cellfun(@(c)(~isempty(c)), {this.Domains.domain});
-            params =   this.P.ParamList(ipr);
-        end
-        
         %% Requirements
         
         function  SortbyRob(this)
@@ -1261,6 +1330,7 @@ classdef BreachSet < BreachStatus
             
             disp(' ')
         end
+       
         
         %% Misc
         function s= isSignal(this,params)
@@ -1328,7 +1398,7 @@ classdef BreachSet < BreachStatus
         
         
         function ResetSimulations(this)
-            % Removes computed trajectories
+            % Removes computed trajectories     
             this.P = SPurge(this.P);
             this.SignalRanges = [];
         end

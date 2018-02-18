@@ -54,10 +54,10 @@ function STL_TemplateGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 
 if ismac
     FONT=12;
-    POS = [50 10 200 50];
+    %POS = [50 10 200 50];
 else
     FONT=10;
-    POS = [50 10 200 50];
+    %POS = [50 10 200 50];
 end
 
 hfn = fieldnames(handles);
@@ -66,7 +66,7 @@ for ifn = 1:numel(hfn)
         set(handles.(hfn{ifn}), 'FontSize', FONT);
     end
 end
-set(handles.main, 'Position',POS);
+%set(handles.main, 'Position',POS);
 
 
 
