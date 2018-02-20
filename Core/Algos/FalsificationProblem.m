@@ -68,6 +68,7 @@ classdef FalsificationProblem < BreachProblem
             robs(NaN_idx) = inf;
             obj = min(robs);
         end     
+        
         % Nothing fancy - calls parent solve then returns falsifying params
         % if found.
         function [Xfalse, res] = solve(this)
@@ -114,7 +115,10 @@ classdef FalsificationProblem < BreachProblem
                         BrFalse.Sim();
                     end
                 end
-                
+                BrFalse.Sys.Verbose=1;
+                if isempty(BrFalse.InputGenerator.Specs)&&BrFalse.hasTraj() % TODO: change this when dealing with Input requirements/constraints
+                    BrFalse.CheckSpec(this.Spec);
+                end
             end
         end
         

@@ -30,12 +30,13 @@ classdef BreachSystem < BreachSet
         use_parallel=0     % the flag to indicate the usage of parallel computing
         ParallelTempRoot = ''   % the default temporary folder for parallel computing 
         InitFn = ''             % Initialization function 
-    end
+        end
     
     methods
         
         %% Constructor
         function this = BreachSystem(varargin)
+            InitBreach;
             this.Specs = containers.Map();
             global BreachGlobOpt;
             this.ParallelTempRoot = [BreachGlobOpt.breach_dir filesep 'Ext' filesep 'ModelsData' filesep 'ParallelTemp'];
@@ -109,9 +110,9 @@ classdef BreachSystem < BreachSet
             for ii = 1:NumWorkers 
                 dirName = ['Worker' int2str(ii)];
                 if exist(dirName, 'dir') == 7
-                    rmdir(dirName)
+                    rmdir(dirName,'s');
                 end
-                mkdir(dirName)
+                mkdir(dirName);
             end
             cd(cwd)
         end
@@ -146,7 +147,6 @@ classdef BreachSystem < BreachSet
         
         %% Parameters
         % Get and set default parameter values (defined in Sys)
-        
         function values = GetDefaultParam(this, params)
             % Get default parameter values (defined in Sys)
             values = GetParam(this.Sys,params);
@@ -171,7 +171,7 @@ classdef BreachSystem < BreachSet
             % ResetSampling
             this.P = CreateParamSet(this.Sys);
             this.CheckinDomain();
-        end
+          end
         
         %% Simulation
         function SetTime(this,tspan)
@@ -192,6 +192,7 @@ classdef BreachSystem < BreachSet
             end
             this.P = ComputeTraj(this.Sys, this.P, tspan);
             this.CheckinDomainTraj();
+            this.dispTraceStatus();
         end
         
         %% Specs
@@ -701,8 +702,7 @@ classdef BreachSystem < BreachSet
                 [X, t] = STL_Eval(this.Sys, expr_tmp_, this.P, this.P.traj, this.P.traj{1}.time);
             end
         end
-               
-        
+                   
         %% Sensitivity analysis
         function [mu, mustar, sigma] = SensiSpec(this, phi, params, ranges, opt)
             % SensiSpec Sensitivity analysis of a formula to a set of parameters
