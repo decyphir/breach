@@ -496,7 +496,6 @@ classdef BreachProblem < BreachStatus
             fval = inf*ones(1, nb_eval);
             
             fun = @(isample) this.objective_fn(x(:, isample));
-
             
             nb_iter = min(nb_eval, this.max_obj_eval);
             if this.stopping()==false
@@ -514,7 +513,7 @@ classdef BreachProblem < BreachStatus
                             this.display_status();
                         end
                     end
-                else
+                else % Parallel case 
                     
                     % Launch tasks
                     for iter = 1:nb_iter
