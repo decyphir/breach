@@ -3,13 +3,11 @@ classdef BreachDomain
     %
     %  TODO error handling when intersection of domain and enum is empty 
     % 
-    
-    % 
      
     properties
-        type='double' % can be 'int', 'bool', 'enum', 'double'
+        type='double'     % can be 'int', 'bool', 'enum', 'double'
         domain            % always be an interval, empty means singleton
-        enum               % only  used with type enum and 'bool'
+        enum              % only  used with type enum and 'bool'
     end
     
     methods

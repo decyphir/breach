@@ -38,8 +38,7 @@ function Sys = CreateExternSystem(name, vars, params, p0, simfn)
           
           for i=1:nparams
               params = {params{:} ['x' num2str(i)]};
-          
-          end          
+         end          
       end
   end
   

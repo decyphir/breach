@@ -1,4 +1,4 @@
-function [signals, params] = STL_ExtractSignals(phi)
+function [signals, params,p0] = STL_ExtractSignals(phi)
 %STL_ExtractSignals extracts names of signals and parameters involved in phi
 %
 % Synopsis: signals = STL_ExtractSignals(phi)
@@ -10,7 +10,7 @@ function [signals, params] = STL_ExtractSignals(phi)
 %  - signals: list of signals involved in phi (note: currently only detec-
 %    ted from patterns of the form signal_id[t])
 %  - params: list of parameters in the formula
-%
+%. - p0: default values for parameters
 
 st_phi = disp(phi,0);
 signals = {};
@@ -21,6 +21,8 @@ end
 sreserved = {'alw_', 'ev_','until_'};
 signals = setdiff(signals, sreserved);
 
+%% params
+if nargout>=2
 params = {};
 [~,~, ~, matches, tokens] = regexp(st_phi, '(\<\w+\>)');
 for im=1:numel(matches)
@@ -35,3 +37,16 @@ reserved = [ sreserved signals  {'alw', 'ev', 'and', 'or', '=>', 'not', 'until',
                                  'abs', 'sin', 'cos', 'exp','tan', 'norm','sqrt'}];
 params = setdiff(params, reserved);
 params = unique(params);
+
+%% p0
+if nargout>=3
+   param_struct= get_params(phi);
+   for ip = 1:numel(params) 
+      if isfield(param_struct, params{ip};
+      p0(ip) = param_struct.(params{ip});
+      else
+      p0(ip) =0;
+      end
+   end 
+    
+end
