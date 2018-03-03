@@ -26,8 +26,8 @@ classdef BreachSystem < BreachSet
     properties
         Sys                   % Legacy Breach system structure
         Specs               % A set (map) of STL formulas
-        ParamSrc=containers.Map()
-        use_parallel=0     % the flag to indicate the usage of parallel computing
+        ParamSrc = containers.Map()
+        use_parallel = 0     % the flag to indicate the usage of parallel computing
         ParallelTempRoot = ''   % the default temporary folder for parallel computing 
         InitFn = ''             % Initialization function 
         end
@@ -96,7 +96,8 @@ classdef BreachSystem < BreachSet
                 distcomp.feature( 'LocalUseMpiexec', false );   %TODO: mathworks suggested this command. it prevents calling "Mpiexec". I'm not sure the needs of that.
                 poolobj=parpool(NumWorkers); %Matlab2013b or later
             end
-            this.use_parallel = NumWorkers;
+            this.use_parallel = 1; 
+            this.Sys.use_parallel = 1;
             this.Sys.Parallel = NumWorkers;
             
             % run initialization function on all workers
@@ -128,6 +129,7 @@ classdef BreachSystem < BreachSet
             for ii = 1:length(names)
                 rmdir(names{ii}, 's');
             end      
+            this.Sys.use_parallel = 0;
             cd(cwd)
         end
         
