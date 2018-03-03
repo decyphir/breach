@@ -110,10 +110,10 @@ classdef BreachSystem < BreachSet
             cd(this.ParallelTempRoot)
             for ii = 1:NumWorkers 
                 dirName = ['Worker' int2str(ii)];
-                if exist(dirName, 'dir') == 7
-                    rmdir(dirName,'s');
+                if exist(dirName, 'dir') ~= 7
+                    mkdir(dirName);
                 end
-                mkdir(dirName);
+                
             end
             cd(cwd)
         end

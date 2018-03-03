@@ -363,19 +363,7 @@ classdef BreachProblem < BreachStatus
                     res = this.solve_basic();
                     
                 case 'global_nelder_mead'
-                    if this.search_parallel
-                        num_works = this.BrSys.Sys.Parallel;
-                        for idx = 1:num_works
-                            F(idx) = parfeval(@this.solve_global_nelder_mead, 1);
-                        end
-                        res = cell(1,num_works);
-                        for idx = 1:num_works
-                            [completedIdx, value] = fetchNext(F);
-                            res{completedIdx} = value;
-                        end
-                    else
-                        res = this.solve_global_nelder_mead();
-                    end
+                    res = this.solve_global_nelder_mead();
                     
                 case 'cmaes'
                     % adds a few more initial conditions
@@ -399,6 +387,9 @@ classdef BreachProblem < BreachStatus
                 case {'fminsearch', 'simulannealbnd'}
                     if this.search_parallel
                         num_works = this.BrSys.Sys.Parallel;
+                        %test
+                        %fun = @(x) 100*(x(1)/1000-0.95)^2 + (x(2)-20)^2 + (x(3)-37)^2;
+                        %problem.objective = fun;
                         for idx = 1:num_works
                             F(idx) = parfeval(this.solver, 4, problem);
                         end
