@@ -92,7 +92,7 @@ classdef BreachProblem < BreachStatus
     properties
         display = 'on'
         freq_update = 10 
-        use_parallel =0
+        search_parallel = 0
         max_time = 60
         time_start = tic
         time_spent = 0
@@ -153,8 +153,6 @@ classdef BreachProblem < BreachStatus
             this.Spec = phi;
             this.BrSet = BrSet.copy();
             this.BrSet.Sys.Verbose=0;
-            
-            this.use_parallel = this.BrSet.use_parallel;
                   
             % Parameter ranges
             if ~exist('params','var')
@@ -191,17 +189,12 @@ classdef BreachProblem < BreachStatus
              
             % objective function
             this.objective = @(x) (objective_wrapper(this,x));
-            
+      
             % setup default solver
             this.setup_solver();
             
             % reset display
             rfprintf_reset();
-            
-            % Setup use parallel
-            if this.use_parallel
-                  this.SetupParallel(this.use_parallel);
-            end
             
         end
         
@@ -290,20 +283,34 @@ classdef BreachProblem < BreachStatus
         
         function solver_opt = setup_fmincon(this)
             disp('Setting options for fmincon solver');
-            solver_opt = optimset('Display', 'iter');
+            solver_opt = optimoptions('fmincon', 'Display', 'iter');
             this.display = 'off';
-            solver_opt.lb = this.lb;
-            solver_opt.ub = this.ub;
+            if this.max_obj_eval < inf
+                solver_opt = optimoptions(solver_opt, 'MaxFunEvals', this.max_obj_eval);
+            end
+            if this.search_parallel 
+                solver_opt = optimoptions(solver_opt,'UseParallel', true);
+                if ~this.BrSys.use_parallel
+                    this.BrSys.SetupParallel();
+                end
+            end
             this.solver = 'fmincon';
             this.solver_options = solver_opt;
         end
         
         function solver_opt = setup_fminsearch(this)
             disp('Setting options for fminsearch solver');
-            solver_opt = optimset('Display', 'iter');
+            solver_opt = optimset('fminsearch');
+            solver_opt = optimset(solver_opt, 'Display', 'iter');
+            if this.max_obj_eval < inf
+                solver_opt = optimset(solver_opt, 'MaxFunEvals', this.max_obj_eval);
+            end
+            if this.max_time < inf
+                solver_opt = optimset(solver_opt, 'MaxTime', this.max_time);
+            end
+            solver_opt = optimset(solver_opt, 'MaxIter', numel(this.params)*200);
             this.display = 'off';
-            solver_opt.lb = this.lb;
-            solver_opt.ub = this.ub;
+            % Mathworks currently don't support parallel fminsearch 
             this.solver = 'fminsearch';
             this.solver_options = solver_opt;
         end
@@ -311,9 +318,15 @@ classdef BreachProblem < BreachStatus
         function solver_opt = setup_simulannealbnd(this)
             disp('Setting options for simulannealbnd solver');
             this.display = 'off';
-            solver_opt = optimset('Display', 'iter');
-            solver_opt.lb = this.lb;
-            solver_opt.ub = this.ub;
+            solver_opt = saoptimset('Display', 'iter');
+            if this.max_time < inf
+                solver_opt = saoptimset(solver_opt, 'MaxTime', this.max_time);
+            end
+            if this.max_obj_eval < inf
+                solver_opt = saoptimset(solver_opt, 'MaxFunEvals', this.max_obj_eval);
+            end
+            % Mathworks currently don't support parallel simulannealbnd
+            
             this.solver = 'simulannealbnd';
             this.solver_options = solver_opt;
         end
@@ -363,16 +376,32 @@ classdef BreachProblem < BreachStatus
                     
                     [x, fval, counteval, stopflag, out, bestever] = cmaes(this.objective, this.x0', [], this.solver_options);
                     res = struct('x',x, 'fval',fval, 'counteval', counteval,  'stopflag', stopflag, 'out', out, 'bestever', bestever);
-                    this.res=res;
                     
                 case 'ga'
                     res = solve_ga(this, problem);
-                    this.res = res;
                     
-                case {'fmincon', 'fminsearch', 'simulannealbnd'}
+                case 'fmincon'
                     [x,fval,exitflag,output] = feval(this.solver, problem);
-                    res =struct('x',x,'fval',fval, 'exitflag', exitflag, 'output', output);
-                    this.res=res;
+                    res = struct('x',x,'fval',fval, 'exitflag', exitflag, 'output', output);
+                
+                case {'fminsearch', 'simulannealbnd'}
+                    if this.search_parallel
+                        num_works = this.BrSys.Sys.Parallel;
+                        %test
+                        %fun = @(x) 100*(x(1)/1000-0.95)^2 + (x(2)-20)^2 + (x(3)-37)^2;
+                        %problem.objective = fun;
+                        for idx = 1:num_works
+                            F(idx) = parfeval(this.solver, 4, problem);
+                        end
+                        res = cell(1,num_works);
+                        for idx = 1:num_works
+                            [completedIdx, x, fval,exitflag,output] = fetchNext(F);
+                            res{completedIdx} = struct('x',x,'fval',fval, 'exitflag', exitflag, 'output', output);
+                        end
+                    else
+                        [x,fval,exitflag,output] = feval(this.solver, problem);
+                        res = struct('x',x,'fval',fval, 'exitflag', exitflag, 'output', output);
+                    end
                     
                 case 'optimtool'
                     problem.solver = 'fmincon';
@@ -382,12 +411,12 @@ classdef BreachProblem < BreachStatus
 
                 case 'binsearch'
                     res = solve_binsearch(this);
-                    this.res = res;
 
                 otherwise
                     res = feval(this.solver, problem);
-                    this.res = res;
+                    
             end
+            this.res = res;
             this.DispResultMsg(); 
         end
         
@@ -431,7 +460,7 @@ classdef BreachProblem < BreachStatus
         function problem = get_problem(this)
             problem =struct('objective', this.objective, ...
                 'fitnessfcn', this.objective, ... % for ga
-                'x0', this.x0, ...
+                'x0', 0.5*(this.ub - this.lb) + this.lb, ...   % not sure about the usage for reset_x0
                 'nvars', size(this.x0, 1),... % for ga
                 'solver', this.solver,...
                 'Aineq', this.Aineq,...
@@ -457,21 +486,20 @@ classdef BreachProblem < BreachStatus
         
         %% Parallel 
         function SetupParallel(this, varargin)
-           
+            this.search_parallel = 1;  
             % Create parallel pool and get number of workers
-            this.BrSys.SetupParallel(varargin{:});          
-            this.use_parallel =this.BrSys.Sys.Parallel;   
-            
-            % Disable parallel at BrSys level, to prevent ComputeTraj from performing nested parallel simulations, in case BrSys must compute several traces for each objective evaluation 
-            this.BrSys.use_parallel = 0;   
-            this.BrSys.Sys.Parallel=0;     
+            this.BrSys.SetupParallel(varargin{:});      
             
             % Disable serial logging mechanism and enable DiskCaching
             this.log_traces = 0;   
-            this.SetupDiskCaching();
+            this.SetupDiskCaching(); 
+            
+            % Possible need to change the optinmization optinion
+            this.setup_solver();
         end
         
         function StopParallel(this)
+            this.search_parallel = 0;
             this.BrSys.StopParallel();
         end
         
@@ -485,21 +513,20 @@ classdef BreachProblem < BreachStatus
             obj = min(this.robust_fn(x));
         end
         
-        function fval= objective_wrapper(this,x)
-            % objective_wrapper calls the objective function and wraps some bookkeeping
+        function fval = objective_wrapper(this,x)
             
+             % objective_wrapper calls the objective function and wraps some bookkeeping           
             if size(x,1) ~= numel(this.params)
                 x = x';
             end
             
             nb_eval =  size(x,2);
             fval = inf*ones(1, nb_eval);
-            
             fun = @(isample) this.objective_fn(x(:, isample));
-            
             nb_iter = min(nb_eval, this.max_obj_eval);
+ 
             if this.stopping()==false
-                if ~this.use_parallel
+                if ~this.search_parallel
                     for iter = 1:nb_iter
                         
                         % calling actual objective function
@@ -536,7 +563,10 @@ classdef BreachProblem < BreachStatus
                         end
                     end
                 end
+            else
+                fval = this.obj_best*ones(1, nb_eval);
             end
+            
         end
         
         function b = stopping(this)
