@@ -22,31 +22,31 @@ sreserved = {'alw_', 'ev_','until_'};
 signals = setdiff(signals, sreserved);
 
 %% params
-if nargout>=2
-params = {};
-[~,~, ~, matches, tokens] = regexp(st_phi, '(\<\w+\>)');
-for im=1:numel(matches)
-    varname = tokens{im}{1};
-    if isvarname(varname)&& ...
-            all(exist(varname) ~= [2 3 5 6])  % checks for m-files, mex files, builtin, p-files
-        params{end+1} = tokens{im}{1};
+    params = {};
+    [~,~, ~, matches, tokens] = regexp(st_phi, '(\<\w+\>)');
+    for im=1:numel(matches)
+        varname = tokens{im}{1};
+        if isvarname(varname)&& ...
+                all(exist(varname) ~= [2 3 5 6])  % checks for m-files, mex files, builtin, p-files
+            params{end+1} = tokens{im}{1};
+        end
     end
-end
 
 reserved = [ sreserved signals  {'alw', 'ev', 'and', 'or', '=>', 'not', 'until', 't', ...
-                                 'abs', 'sin', 'cos', 'exp','tan', 'norm','sqrt'}];
+    'abs', 'sin', 'cos', 'exp','tan', 'norm','sqrt'}];
 params = setdiff(params, reserved);
 params = unique(params);
 
 %% p0
 if nargout>=3
-   param_struct= get_params(phi);
-   for ip = 1:numel(params) 
-      if isfield(param_struct, params{ip};
-      p0(ip) = param_struct.(params{ip});
-      else
-      p0(ip) =0;
-      end
-   end 
-    
+    p0 = zeros(1:numel(params));
+    param_struct= get_params(phi);
+    for ip = 1:numel(params)
+        if isfield(param_struct, params{ip});
+            p0(ip) = param_struct.(params{ip});
+        else
+            p0(ip) =0;
+        end
+    end
+end
 end

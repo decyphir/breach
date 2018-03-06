@@ -788,7 +788,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                     simout= sim(mdl, this.SimCmdArgs{:});
                     [tout, X] = GetXFrom_simout(this, simout);
                 end
-            catch MException
+            catch MException % TODO keep that in status message
                 cd(cwd);
                 if numel(tspan)>1
                     tout = tspan;

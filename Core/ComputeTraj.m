@@ -140,7 +140,6 @@ ipts = 1:size(P0.pts,2);
 ii=0;
 
 switch Sys.type
-    
     case 'Extern'
         model = Sys.name;
         if Verbose==1
@@ -331,6 +330,22 @@ if do_compute
     end
     [traj.time, traj.X,traj.status] = Sys.sim(Sys, tspan, P0.pts(:,ii));
     traj.param = P0.pts(1:P0.DimP,ii)';
+    
+    % compute outputs 
+    if isfield(Sys, 'output_gens')
+        Xout = []; 
+        for io = 1:numel(Sys.output_gens)
+            og = Sys.output_gens{io};
+            % Find in_signals
+            is = FindParam(Sys, og.in_signals);
+            ip = FindParam(P0, og.in_params);
+            X_in = traj.X(is, :);
+            pts_in = P0.pts(ip,ii);
+            [val, traj.time, Xout_i] = og.eval(traj.time, X_in, pts_in);  
+            Xout = [Xout ; Xout_i];
+        end
+        traj.X(end-size(Xout,1)+1:end, :) = Xout;
+    end
     
     if use_caching % cache new trace
         cache_traj = matfile(cache_traj_filename);

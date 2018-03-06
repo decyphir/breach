@@ -703,6 +703,55 @@ classdef BreachSystem < BreachSet
             end
         end
                    
+        %% Ouputs
+        function AddOutput(this, output)
+            
+            % Checks signals needed to compute outputs 
+            chk = ismember(output.in_signals, this.Sys.ParamList(1:this.Sys.DimX)); 
+            if ~all(chk)
+                i_missing = find(~chk);
+                error('AddOutput:missing_signal', 'Signal %s needed to compute output', output{i_missing(1)});
+            end
+            
+            % Add signals
+            this.Sys.ParamList = [this.Sys.ParamList(1:this.Sys.DimX) output.out_signals this.Sys.ParamList(this.Sys.DimX+1:end) ]; 
+            
+            doms = {};
+            for sig = output.out_signals
+                doms = [doms{:} output.domains(sig{1})];
+           end
+            
+            this.Sys.p = [this.Sys.p(1:this.Sys.DimX,:); zeros(numel(output.out_signals)); this.Sys.p(this.Sys.DimX+1:end,:) ]; 
+            this.Sys.DimX = this.Sys.DimX+numel(output.out_signals);
+            this.Sys.DimP = this.Sys.DimP+numel(output.out_signals);
+            
+          
+            this.P = CreateParamSet(this.Sys); 
+            this.ResetParamSet();
+            
+            % Add parameters
+            if ~isempty(output.p0)
+                this.SetParam(output.in_params, output.p0, 'Specs');
+            end
+            
+            % Add domain
+            this.Domains = [this.Domains(1:this.Sys.DimX) doms this.Domains(this.Sys.DimX+1:end) ]; 
+            
+            % SignalRanges 
+            if ~isempty(this.SignalRanges)
+                this.SignalRanges = [this.SignalRanges ; zeros(numel(output.out_signals), 2)];
+                this.UpdateSignalRanges;
+            end
+            
+            % Add output_gen
+            if isfield(this.Sys, 'output_gens')
+                this.Sys.output_gens = {this.Sys.output_gens{:} output};
+            else
+                this.Sys.output_gens = {output};
+            end    
+            
+        end
+        
         %% Sensitivity analysis
         function [mu, mustar, sigma] = SensiSpec(this, phi, params, ranges, opt)
             % SensiSpec Sensitivity analysis of a formula to a set of parameters
