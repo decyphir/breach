@@ -1,6 +1,5 @@
 classdef output_gen < handle
 
-
     properties % all are cells of strings, except for domains
         in_signals                   % input signals needed to compute outputs 
         out_signals                 % output signals 

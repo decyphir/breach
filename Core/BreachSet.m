@@ -343,7 +343,7 @@ classdef BreachSet < BreachStatus
             
             % kept for backward compatibility with legacy stuff
             this.P.dim = i_params;
-            
+            this.CheckinDomainParam();
         end
         
         function ranges = GetParamRanges(this, params)
