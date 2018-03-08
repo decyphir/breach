@@ -36,8 +36,8 @@ if (this.solver_options.nb_local_iter>0) && (~this.stopping)
         end
         res = cell(1, num_works);
         for idx = 1:num_works
-            [completedIdx, sol, fval, exitflag, output] = fetchNext(F);
-            res{completedIdx} = struct('sol',sol, 'fval',fval, 'exitflag', exitflag,  'output', output);
+            [completedIdx, x, fval, exitflag, output] = fetchNext(F);
+            res{completedIdx} = struct('x',x, 'fval',fval, 'exitflag', exitflag,  'output', output);
         end
     else
         res = cell(1,size(X0,2));
@@ -45,7 +45,7 @@ if (this.solver_options.nb_local_iter>0) && (~this.stopping)
             x0 = X0(:,i_loc);           
             if ~this.stopping()
                 options = optimset(options, 'Display', 'off');
-                [sol, fval, exitflag, output] = optimize(...
+                [x, fval, exitflag, output] = optimize(...
                     this.objective, x0 ,this.lb,this.ub,this.Aineq,this.bineq,this.Aeq,this.beq,[],[],options,'NelderMead');
             end
        end
