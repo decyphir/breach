@@ -30,7 +30,7 @@ if isa(this, 'MaxSatProblem')
    end
 end
 
-if this.search_parallel
+if this.use_parallel
     solver_opt = gaoptimset(solver_opt,'Vectorized', 'on'); 
 end
 

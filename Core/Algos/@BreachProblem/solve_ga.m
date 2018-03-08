@@ -7,7 +7,7 @@ this.x_best = x;
 this.obj_best = fval;
 
 % TODO provide LogX as Output function for ga, run after each generation
-if this.search_parallel
+if this.use_parallel
     this.LogX(population', scores');
 end
 
