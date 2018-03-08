@@ -144,7 +144,7 @@ eval(compile_cvodes);
 % Compile blitz library
 blitz_dir = [breach_dir filesep 'Ext' filesep 'Toolboxes' filesep 'blitz'];
 cd(blitz_dir);
-CompileBlitzLib;
+%CompileBlitzLib;
 
 % Compile mydiff
 if (0) % TODO move this into a dedicated script
@@ -161,7 +161,7 @@ if (0) % TODO move this into a dedicated script
 end
 
 fprintf('Compiling online monitoring functions...\n')
-compile_stl_mex
+%compile_stl_mex
 
 addpath(breach_dir);
 savepath;

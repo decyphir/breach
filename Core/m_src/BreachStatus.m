@@ -62,7 +62,8 @@ classdef BreachStatus < handle
                 for ist = 1:n_status
                     new_st = ['[' keys{ist} ']'];
                     msg = this.statusMap(keys{ist});
-                    new_st(24:24+numel(msg)-1) = msg;
+                    %new_st(24:24+numel(msg)-1) = msg; % not sure why I had 24 here...
+                   new_st = [new_st '   ' msg]; 
                     st = [st new_st  '\n'];
                 end
                 

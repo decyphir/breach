@@ -331,8 +331,8 @@ if do_compute
     [traj.time, traj.X,traj.status] = Sys.sim(Sys, tspan, P0.pts(:,ii));
     traj.param = P0.pts(1:P0.DimP,ii)';
     
-    % compute outputs 
-    if isfield(Sys, 'output_gens')
+    % compute outputs  - should we do something when status is not right? 
+     if isfield(Sys, 'output_gens')
         Xout = []; 
         for io = 1:numel(Sys.output_gens)
             og = Sys.output_gens{io};
@@ -351,7 +351,7 @@ if do_compute
         cache_traj = matfile(cache_traj_filename);
         cache_traj.param = traj.param;
         cache_traj.time = traj.time;
-        cache_traj.status = traj.status;
+        cache_traj.status = traj.status; 
         cache_traj.X = traj.X;
         cache_traj.Properties.Writable= false;
         if ~isfield(Sys, 'StoreTracesOnDisk')||~Sys.StoreTracesOnDisk

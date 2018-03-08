@@ -386,9 +386,6 @@ classdef BreachProblem < BreachStatus
                 case {'fminsearch', 'simulannealbnd'}
                     if this.use_parallel
                         num_works = this.BrSys.Sys.Parallel;
-                        %test
-                        %fun = @(x) 100*(x(1)/1000-0.95)^2 + (x(2)-20)^2 + (x(3)-37)^2;
-                        %problem.objective = fun;
                         for idx = 1:num_works
                             F(idx) = parfeval(this.solver, 4, problem);
                         end
@@ -657,8 +654,7 @@ classdef BreachProblem < BreachStatus
             end
             fprintf('\n');
         end
-        
-        
+             
         function [BrOut, Berr, BbadU] = GetBrSet_Logged(this)
             % GetBrSet_Logged gets BreachSet object containing parameters and traces computed during optimization
             if this.log_traces

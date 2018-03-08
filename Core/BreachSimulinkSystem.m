@@ -750,6 +750,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             load_system(mdl);
             num_signals = Sys.DimX;
             params = Sys.ParamList;
+            
             for i = 1:numel(params)-num_signals
                 pname =  params{i+num_signals};
                 pval  = pts(i+num_signals);
@@ -800,6 +801,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 end
                 X = zeros(Sys.DimX, numel(tout));
                 status =-1;
+                this.addStatus(-1, MException.identifier, MException.message);
             end
             
             % FIXME: the following needs to be reviewed

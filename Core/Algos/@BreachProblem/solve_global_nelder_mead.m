@@ -27,7 +27,6 @@ if (this.solver_options.nb_local_iter>0) && (~this.stopping)
     if this.use_parallel
         num_works = this.BrSys.Sys.Parallel;
         options = optimset(options, 'Display', 'off');
-        %fun = @(x) 100*(x(1)/1000-0.95)^2 + (x(2)-20)^2 + (x(3)-37)^2;
         fun = @(x0) optimize(...
                     this.objective,x0,this.lb,this.ub,this.Aineq,this.bineq,this.Aeq,this.beq,[],[],options,'NelderMead');
         for idx = 1:num_works
