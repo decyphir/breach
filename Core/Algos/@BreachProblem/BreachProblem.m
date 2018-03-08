@@ -196,6 +196,7 @@ classdef BreachProblem < BreachStatus
             % reset display
             rfprintf_reset();
             
+            
         end
         
         function Reset_x0(this)
