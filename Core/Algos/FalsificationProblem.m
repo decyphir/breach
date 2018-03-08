@@ -44,6 +44,7 @@ classdef FalsificationProblem < BreachProblem
                     super_args{1} = Br;
                     super_args{2} = phi;
                     super_args{3} = params;
+
                 case 4
                     super_args{1} = Br;
                     super_args{2} = phi;
@@ -102,7 +103,7 @@ classdef FalsificationProblem < BreachProblem
                 (this.StopAtFalse&&this.obj_best<0);
         end
         
-        function BrFalse = GetBrSet_False(this)
+        function [BrFalse, Berr, BbadU] = GetBrSet_False(this)
             BrFalse = [];
             if this.log_traces
                 BrFalse = this.BrSet_False;
@@ -116,7 +117,20 @@ classdef FalsificationProblem < BreachProblem
                     end
                 end
                 BrFalse.Sys.Verbose=1;
-                if isempty(BrFalse.InputGenerator.Specs)&&BrFalse.hasTraj() % TODO: change this when dealing with Input requirements/constraints
+            end
+            
+            if ~isempty(BrFalse)
+                Berr =[];
+                BbadU = [];
+                [idx_ok, idx_sim_error, idx_invalid_input, st_status]  = BrFalse.GetTraceStatus();
+                
+                if ~isempty(idx_sim_error)||~isempty(idx_invalid_input)
+                    [Bok, Berr, BbadU] = FilterTraceStatus(BrFalse);
+                    BrFalse= Bok;
+                    this.disp_msg(['Warning: ' st_status],1);
+                end
+                
+                if ~isempty(idx_ok)
                     BrFalse.CheckSpec(this.Spec);
                 end
             end

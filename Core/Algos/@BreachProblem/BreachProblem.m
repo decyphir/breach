@@ -92,12 +92,12 @@ classdef BreachProblem < BreachStatus
     properties
         display = 'on'
         freq_update = 10 
-        search_parallel = 0
-        max_time = 60
+        use_parallel = 0
+        max_time = inf
         time_start = tic
         time_spent = 0
         nb_obj_eval = 0
-        max_obj_eval = inf
+        max_obj_eval = 100
     end
     
     %% Static Methods
@@ -215,7 +215,6 @@ classdef BreachProblem < BreachStatus
             end
             
             this.BrSet.SetParam(this.params, x0__,'spec');
-            
             this.x0 = unique(x0__', 'rows')';
             
         end
@@ -242,8 +241,7 @@ classdef BreachProblem < BreachStatus
             this.time_spent = 0;
             this.nb_obj_eval = 0;
         end
-        
-        
+           
         function ResetTimeSpent(this)
             this.time_spent= 0; 
             this.time_start = tic; 
@@ -289,7 +287,7 @@ classdef BreachProblem < BreachStatus
             if this.max_obj_eval < inf
                 solver_opt = optimoptions(solver_opt, 'MaxFunEvals', this.max_obj_eval);
             end
-            if this.search_parallel 
+            if this.use_parallel 
                 solver_opt = optimoptions(solver_opt,'UseParallel', true);
                 if ~this.BrSys.use_parallel
                     this.BrSys.SetupParallel();
@@ -386,7 +384,7 @@ classdef BreachProblem < BreachStatus
                     res = struct('x',x,'fval',fval, 'exitflag', exitflag, 'output', output);
                 
                 case {'fminsearch', 'simulannealbnd'}
-                    if this.search_parallel
+                    if this.use_parallel
                         num_works = this.BrSys.Sys.Parallel;
                         %test
                         %fun = @(x) 100*(x(1)/1000-0.95)^2 + (x(2)-20)^2 + (x(3)-37)^2;
@@ -486,8 +484,8 @@ classdef BreachProblem < BreachStatus
         end
         
         %% Parallel 
-        function SetupSearchParallel(this, varargin)
-            this.search_parallel = 1;  
+        function SetupParallel(this, varargin)
+            this.use_parallel = 1;  
             % Create parallel pool and get number of workers
             this.BrSys.SetupParallel(varargin{:});      
             
@@ -499,8 +497,8 @@ classdef BreachProblem < BreachStatus
             this.setup_solver();
         end
         
-        function StopSearchParallel(this)
-            this.search_parallel = 0;
+        function StopParallel(this)
+            this.use_parallel = 0;
             this.BrSys.StopParallel();
         end
         
@@ -527,7 +525,7 @@ classdef BreachProblem < BreachStatus
             nb_iter = min(nb_eval, this.max_obj_eval);
  
             if this.stopping()==false
-                if ~this.search_parallel
+                if ~this.use_parallel
                     for iter = 1:nb_iter
                         
                         % calling actual objective function
@@ -540,8 +538,14 @@ classdef BreachProblem < BreachStatus
                         if rem(this.nb_obj_eval,this.freq_update)==0
                             this.display_status();
                         end
+                 
+                        % stops if falsified or
+                        if this.stopping()
+                            break
+                        end
+                 
                     end
-                else
+                else % Parallel case 
                     
                     % Launch tasks
                     for iter = 1:nb_iter
@@ -650,6 +654,7 @@ classdef BreachProblem < BreachStatus
                 end
             end
             BrOut.Sys.Verbose=1;
+           
             Berr =[];
             BbadU = []; 
             [idx_ok, idx_sim_error, idx_invalid_input, st_status]  = BrOut.GetTraceStatus();
@@ -678,16 +683,7 @@ classdef BreachProblem < BreachStatus
                 BrBest.CheckSpec(this.Spec);
             end
         end
-        
-        function SetupLogFolder(this, fname)
-            if nargin<2
-                this.BrSys.SetupLogFolder();
-            else
-                this.BrSys.SetupLogFolder(fname);
-            end
-            this.log_traces= false;
-        end
-        
+              
         function display_status_header(this)
             fprintf(  '#calls (max:%5d)           time spent (max: %g)           best                         obj\n',...
                         this.max_obj_eval, this.max_time);           
@@ -699,12 +695,7 @@ classdef BreachProblem < BreachStatus
                 if nargin==1
                     fval = this.obj_log(end); % bof bof
                 end
-                
-%                 if this.nb_obj_eval==1
-%                     this.display_status_header();
-%                     rfprintf_reset();
-%                 end
-                
+                                
                 st__= sprintf('    %5d                   %7.1f                            %+5.5e             %+5.5e\n', ...
                     this.nb_obj_eval, this.time_spent, this.obj_best, fval);
                 switch this.display

@@ -1,3 +1,9 @@
+# Release 1.2.16
+
+## Users
+- default in BreachProblem are now max 100 obj evaluation and inf max_time  
+
+
 # Release 1.2.15
 
 ## Users 
