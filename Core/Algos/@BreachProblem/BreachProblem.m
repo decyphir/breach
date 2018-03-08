@@ -525,7 +525,7 @@ classdef BreachProblem < BreachStatus
             nb_iter = min(nb_eval, this.max_obj_eval);
  
             if this.stopping()==false
-                if ~this.use_parallel
+                if nb_iter == 1 || ~this.use_parallel
                     for iter = 1:nb_iter
                         
                         % calling actual objective function

@@ -738,6 +738,9 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             cwd = pwd;
             if this.use_parallel
                 worker_id = get(getCurrentTask(), 'ID');
+                if ~isinteger(worker_id)
+                    worker_id = 1;
+                end
                 cd([this.ParallelTempRoot filesep 'Worker' int2str(worker_id)]);
             else
                 cd(this.mdl.mdl_breach_path);
