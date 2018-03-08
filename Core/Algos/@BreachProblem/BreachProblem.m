@@ -624,22 +624,40 @@ classdef BreachProblem < BreachStatus
             end
             
             % DispResultMsg message displayed at the end of optimization
-            if this.time_spent> this.max_time
+            if this.time_spent > this.max_time
                 fprintf('\n Stopped after max_time was reached.\n');
             end
             
-            if this.nb_obj_eval> this.max_obj_eval
+            if this.nb_obj_eval > this.max_obj_eval
                 fprintf('\n Stopped after max_obj_eval was reached (maximum number of objective function evaluation.\n' );
             end
             
-            fprintf('\n ---- Best value %g found with\n', this.obj_best);
-            param_values = this.x_best;
+            if numel(this.res) > 1 
+                fprintf('\n Report from different optimization runs.\n');
+                for idx = 1:numel(this.res)
+                    fprintf('Run %d\n', idx);
+                    this.Display_Best_Results(this.res{idx}.fval, this.res{idx}.x);
+                    if this.obj_best > this.res{idx}.fval
+                        this.obj_best = this.res{idx}.fval;
+                        this.x_best = this.res{idx}.x; 
+                    end
+                end
+                fprintf('\n In summary, the best results among all runs. \n');
+            end
+
+            this.Display_Best_Results(this.obj_best, this.x_best);
+            
+        end
+        
+        function Display_Best_Results(this, best_fval, param_values)
+            fprintf('\n ---- Best value %g found with\n', best_fval);
+            
             for ip = 1:numel(this.params)
                 fprintf( '        %s = %g\n', this.params{ip},param_values(ip))
             end
             fprintf('\n');
-            
         end
+        
         
         function [BrOut, Berr, BbadU] = GetBrSet_Logged(this)
             % GetBrSet_Logged gets BreachSet object containing parameters and traces computed during optimization

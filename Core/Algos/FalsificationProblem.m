@@ -141,7 +141,7 @@ classdef FalsificationProblem < BreachProblem
             this.DispResultMsg@BreachProblem();
                     
             if ~isempty(this.X_false)
-                fprintf('Falsified with obj=%g\n', this.obj_best(end));
+                fprintf('Falsified with obj?=?%g\n', this.obj_best(end));
             else
                 fprintf('No falsifying trace found.\n');
             end
