@@ -12,7 +12,8 @@ if ~strcmp(this.display,'off')
     fprintf('Eval objective function on %d initial parameters.\n', size(X0,2));
     this.display_status_header();
 end
-res = FevalInit(this, X0);
+res_init = FevalInit(this, X0);
+res{1} = struct('x',res_init.x,'fval',res_init.f);
 this.solver_options.start_at_trial = this.solver_options.start_at_trial+this.solver_options.nb_new_trials;
 
 if (this.solver_options.nb_local_iter>0) && (~this.stopping)
@@ -22,31 +23,41 @@ if (this.solver_options.nb_local_iter>0) && (~this.stopping)
         this.display_status_header();
     end
     % Collect and sort solutions
-    [~, ibest] = sort(res.fval);
+    [~, ibest] = sort(res_init.fval);
     options = optimset(this.solver_options.local_optim_options, 'MaxIter',this.solver_options.nb_local_iter);
+    flag_Cont = true;
     if this.use_parallel
         num_works = this.BrSys.Sys.Parallel;
         options = optimset(options, 'Display', 'off');
-        %fun = @(x) 100*(x(1)/1000-0.95)^2 + (x(2)-20)^2 + (x(3)-37)^2;
-        fun = @(x0) optimize(...
-                    this.objective,x0,this.lb,this.ub,this.Aineq,this.bineq,this.Aeq,this.beq,[],[],options,'NelderMead');
-        for idx = 1:num_works
-            x0 = X0(:,idx);
-            F(idx) = parfeval(fun, 4, x0);
-        end
-        res = cell(1, num_works);
-        for idx = 1:num_works
-            [completedIdx, x, fval, exitflag, output] = fetchNext(F);
-            res{completedIdx} = struct('x',x, 'fval',fval, 'exitflag', exitflag,  'output', output);
-        end
+        while flag_Cont
+            fun = @(x0) optimize(...
+                this.objective,x0,this.lb,this.ub,this.Aineq,this.bineq,this.Aeq,this.beq,[],[],options,'NelderMead');
+            for idx = 1:num_works
+                x0 = X0(:,idx);
+                F(idx) = parfeval(fun, 4, x0);
+            end
+            for idx = 1:num_works
+                [completedIdx, x, fval, exitflag, output] = fetchNext(F); 
+                res{end+1} = struct('x',x, 'fval',fval, 'exitflag', exitflag,  'output', output);
+                % update the nb_obj_eval
+                this.nb_obj_eval = this.nb_obj_eval + output.funcCount;
+                if fval < 0 || this.nb_obj_val > this.max_obj_val
+                    cancel(F);
+                    flag_Cont = false;
+                    break;
+                end
+            end
+            
+        end 
     else
-        res = cell(1,size(X0,2));
-        for i_loc= ibest
+
+        for i_loc = ibest
             x0 = X0(:,i_loc);           
             if ~this.stopping()
                 options = optimset(options, 'Display', 'off');
                 [x, fval, exitflag, output] = optimize(...
                     this.objective, x0 ,this.lb,this.ub,this.Aineq,this.bineq,this.Aeq,this.beq,[],[],options,'NelderMead');
+                res{end+1} = struct('x',x, 'fval',fval, 'exitflag', exitflag,  'output', output);
             end
        end
     end

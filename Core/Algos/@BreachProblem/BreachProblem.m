@@ -386,9 +386,6 @@ classdef BreachProblem < BreachStatus
                 case {'fminsearch', 'simulannealbnd'}
                     if this.use_parallel
                         num_works = this.BrSys.Sys.Parallel;
-                        %test
-                        %fun = @(x) 100*(x(1)/1000-0.95)^2 + (x(2)-20)^2 + (x(3)-37)^2;
-                        %problem.objective = fun;
                         for idx = 1:num_works
                             F(idx) = parfeval(this.solver, 4, problem);
                         end
@@ -518,7 +515,6 @@ classdef BreachProblem < BreachStatus
             if size(x,1) ~= numel(this.params)
                 x = x';
             end
-            
             nb_eval =  size(x,2);
             fval = inf*ones(1, nb_eval);
             fun = @(isample) this.objective_fn(x(:, isample));
@@ -632,7 +628,7 @@ classdef BreachProblem < BreachStatus
                 fprintf('\n Stopped after max_obj_eval was reached (maximum number of objective function evaluation.\n' );
             end
             
-            if numel(this.res) > 1 
+            if numel(this.res) > 1 && this.use_parallel
                 fprintf('\n Report from different optimization runs.\n');
                 for idx = 1:numel(this.res)
                     fprintf('Run %d\n', idx);

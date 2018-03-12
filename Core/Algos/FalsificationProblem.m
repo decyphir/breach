@@ -139,9 +139,11 @@ classdef FalsificationProblem < BreachProblem
         
         function DispResultMsg(this)
             this.DispResultMsg@BreachProblem();
-                    
+            if this.use_parallel && this.obj_best < 0
+                this.X_false = this.x_best;
+            end      
             if ~isempty(this.X_false)
-                fprintf('Falsified with obj?=?%g\n', this.obj_best(end));
+                fprintf('Falsified with obj = %g\n', this.obj_best(end));
             else
                 fprintf('No falsifying trace found.\n');
             end
