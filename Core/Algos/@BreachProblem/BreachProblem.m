@@ -380,10 +380,32 @@ classdef BreachProblem < BreachStatus
                     res = solve_ga(this, problem);
                     
                 case 'fmincon'
-                    [x,fval,exitflag,output] = feval(this.solver, problem);
-                    res = struct('x',x,'fval',fval, 'exitflag', exitflag, 'output', output);
-                
-                case {'fminsearch', 'simulannealbnd'}
+                    while ~this.stopping
+                        problem.x0 = this.generate_new_x0;
+                        [x,fval,exitflag,output] = feval(this.solver, problem);
+                        res = struct('x',x,'fval',fval, 'exitflag', exitflag, 'output', output);
+                    end
+                case 'fminsearch'
+                    while ~this.stopping
+                        if this.use_parallel
+                            num_works = this.BrSys.Sys.Parallel;
+                            for idx = 1:num_works
+                                problem.x0 = this.generate_new_x0;
+                                F(idx) = parfeval(this.solver, 4, problem);
+                            end
+                            res = cell(1,num_works);
+                            for idx = 1:num_works
+                                [completedIdx, x, fval,exitflag,output] = fetchNext(F);
+                                this.nb_obj_eval = this.nb_obj_eval + output.funcCount;
+                                res{completedIdx} = struct('x',x,'fval',fval, 'exitflag', exitflag, 'output', output);
+                            end
+                        else
+                            problem.x0 = this.generate_new_x0;
+                            [x,fval,exitflag,output] = feval(this.solver, problem);
+                            res = struct('x',x,'fval',fval, 'exitflag', exitflag, 'output', output);
+                        end
+                    end
+                case 'simulannealbnd'
                     if this.use_parallel
                         num_works = this.BrSys.Sys.Parallel;
                         for idx = 1:num_works
@@ -453,10 +475,14 @@ classdef BreachProblem < BreachStatus
             
         end
         
+        function x0 = generate_new_x0(this)
+            x0 = (this.ub-this.lb).*rand(3,1) + this.lb;
+        end
+        
         function problem = get_problem(this)
             problem =struct('objective', this.objective, ...
                 'fitnessfcn', this.objective, ... % for ga
-                'x0', 0.5*(this.ub - this.lb) + this.lb, ...   % not sure about the usage for reset_x0
+                'x0', 0.5*(this.ub - this.lb) + this.lb, ...   
                 'nvars', size(this.x0, 1),... % for ga
                 'solver', this.solver,...
                 'Aineq', this.Aineq,...
@@ -515,7 +541,6 @@ classdef BreachProblem < BreachStatus
             if size(x,1) ~= numel(this.params)
                 x = x';
             end
-            
             nb_eval =  size(x,2);
             fval = inf*ones(1, nb_eval);
             fun = @(isample) this.objective_fn(x(:, isample));
@@ -629,7 +654,7 @@ classdef BreachProblem < BreachStatus
                 fprintf('\n Stopped after max_obj_eval was reached (maximum number of objective function evaluation.\n' );
             end
             
-            if numel(this.res) > 1 
+            if numel(this.res) > 1 && this.use_parallel
                 fprintf('\n Report from different optimization runs.\n');
                 for idx = 1:numel(this.res)
                     fprintf('Run %d\n', idx);
