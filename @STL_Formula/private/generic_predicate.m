@@ -28,7 +28,11 @@ end
 global BreachGlobOpt;
 eval(BreachGlobOpt.GlobVarsDeclare);
 
-dt__ = traj.time(1,2)-traj.time(1,1);
+if numel(traj.time)==1
+    dt__ = 1;    %  not sure this makes sense, will see
+else
+    dt__ = traj.time(1,2)-traj.time(1,1);
+end
 Sys = params.Sys;
 P =params.P;
 
@@ -59,8 +63,8 @@ end
 fn_ = params.fn;
 
 % don't like that... But not so trivial to remove
-traj.time = [-1e99 traj.time 1e99];          % NM: when fixing that, don't forget to change
-traj.X = [traj.X(:,1) traj.X traj.X(:,end)]; % GetTrajSensi. 
+traj.time = [-1e99 traj.time 1e99];          
+traj.X = [traj.X(:,1) traj.X traj.X(:,end)];  
  
 if isfield(traj,'XS')
     traj.XS = [traj.XS(:,1) traj.XS traj.XS(:,end)];

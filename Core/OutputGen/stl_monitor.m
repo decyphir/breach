@@ -13,17 +13,18 @@ classdef stl_monitor < output_gen
             elseif isa(formula,'STL_Formula')
                 this.formula= formula;    
             else
-                error('stl_monitor:bad_constructor_arg', 'stl_monitor constructor requires a string or STL_Formula as argument.')                  
+                error('stl_monitor:bad_constructor_arg', ...
+                         'stl_monitor constructor requires a string or STL_Formula as argument.')                  
             end                    
             
             % collect signals and params names
-            [this.in_signals, this.in_params, this.p0] = STL_ExtractSignals(this.formula);
+            [this.signals_in, this.params, this.p0] = STL_ExtractSignals(this.formula);
           
             % construct legacy structures
-            this.Sys = CreateExternSystem([this.formula_id '_Sys'], this.in_signals, this.in_params, this.p0);
+            this.Sys = CreateExternSystem([this.formula_id '_Sys'], this.signals_in, this.params, this.p0);
             this.P = CreateParamSet(this.Sys);
            
-            traj.param = zeros(1,numel(this.in_signals)+numel(this.in_params));
+            traj.param = zeros(1,numel(this.signals_in)+numel(this.params));
             traj.time = [];
             traj.X = [];
             traj.status = 0;
@@ -33,24 +34,25 @@ classdef stl_monitor < output_gen
             this.P.traj_to_compute = [];
            
             % outputs
-            this.out_signals = {get_id(this.formula)};
-            this.out_values =  {[get_id(this.formula) '_rob']};        
-           
+            this.signals = {get_id(this.formula)};
+            
             % Init domains
-            for vv =  [this.in_signals this.out_signals this.in_params this.out_values ]
+            for vv =  [this.signals_in this.signals this.params]
                 this.domains(vv{1}) = BreachDomain();
             end
             
         end
         
-        function [rob, tau, val] = eval(this, time, X, p)
+        function [tau, val] = computeSignals(this, time, X, p, tau)
+            if ~exist('tau', 'var')||isempty(tau)
+                tau = time;
+            end
             this.P.traj{1}.X = X;
             this.P.traj{1}.time = time;
             if nargin>=4&&~isempty(p)
-                this.P = SetParam(this.P, this.in_params,p);
+                P0 = SetParam(this.P, this.params,p); % really? P0 gets traj removed,..., gotta get rid of all this non-sense one day 
             end
-            [val, tau] = STL_Eval(this.Sys, this.formula, this.P,this.P.traj{1}, time);  
-            rob = val(1);
+            [val, tau] = STL_Eval(this.Sys, this.formula, P0,this.P.traj{1}, tau);  
         end
    end
 end

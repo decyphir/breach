@@ -709,23 +709,23 @@ classdef BreachSystem < BreachSet
         function AddOutput(this, output)
             
             % Checks signals needed to compute outputs 
-            chk = ismember(output.in_signals, this.Sys.ParamList(1:this.Sys.DimX)); 
+            chk = ismember(output.signals_in, this.Sys.ParamList(1:this.Sys.DimX)); 
             if ~all(chk)
                 i_missing = find(~chk);
                 error('AddOutput:missing_signal', 'Signal %s needed to compute output', output{i_missing(1)});
             end
             
             % Add signals
-            this.Sys.ParamList = [this.Sys.ParamList(1:this.Sys.DimX) output.out_signals this.Sys.ParamList(this.Sys.DimX+1:end) ]; 
+            this.Sys.ParamList = [this.Sys.ParamList(1:this.Sys.DimX) output.signals this.Sys.ParamList(this.Sys.DimX+1:end) ]; 
             
             doms = {};
-            for sig = output.out_signals
+            for sig = output.signals
                 doms = [doms{:} output.domains(sig{1})];
            end
             
-            this.Sys.p = [this.Sys.p(1:this.Sys.DimX,:); zeros(numel(output.out_signals)); this.Sys.p(this.Sys.DimX+1:end,:) ]; 
-            this.Sys.DimX = this.Sys.DimX+numel(output.out_signals);
-            this.Sys.DimP = this.Sys.DimP+numel(output.out_signals);
+            this.Sys.p = [this.Sys.p(1:this.Sys.DimX,:); zeros(numel(output.signals)); this.Sys.p(this.Sys.DimX+1:end,:) ]; 
+            this.Sys.DimX = this.Sys.DimX+numel(output.signals);
+            this.Sys.DimP = this.Sys.DimP+numel(output.signals);
             
           
             this.P = CreateParamSet(this.Sys); 
@@ -733,7 +733,7 @@ classdef BreachSystem < BreachSet
             
             % Add parameters
             if ~isempty(output.p0)
-                this.SetParam(output.in_params, output.p0, 'Specs');
+                this.SetParam(output.params, output.p0, 'Specs');
             end
             
             % Add domain
@@ -741,7 +741,7 @@ classdef BreachSystem < BreachSet
             
             % SignalRanges 
             if ~isempty(this.SignalRanges)
-                this.SignalRanges = [this.SignalRanges ; zeros(numel(output.out_signals), 2)];
+                this.SignalRanges = [this.SignalRanges ; zeros(numel(output.signals), 2)];
                 this.UpdateSignalRanges;
             end
             

@@ -3,9 +3,12 @@ classdef BreachStatus < handle
     %              of an algorithm
     
     properties
-        status = [] % unique integer id for the status 
-        statusMap = containers.Map() % map with key and msg strings describing the status.
         verbose = 1 
+    end
+    
+    properties (Hidden)
+        status = [] % unique integer id for the status
+        statusMap = containers.Map() % map with key and msg strings describing the status.
         logged_msg
         max_logged_msg=100
     end

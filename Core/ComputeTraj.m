@@ -337,11 +337,11 @@ if do_compute
         for io = 1:numel(Sys.output_gens)
             og = Sys.output_gens{io};
             % Find in_signals
-            is = FindParam(Sys, og.in_signals);
-            ip = FindParam(P0, og.in_params);
+            is = FindParam(Sys, og.signals_in);
+            ip = FindParam(P0, og.params);
             X_in = traj.X(is, :);
             pts_in = P0.pts(ip,ii);
-            [val, traj.time, Xout_i] = og.eval(traj.time, X_in, pts_in);  
+            [traj.time, Xout_i] = og.computeSignals(traj.time, X_in, pts_in);  
             Xout = [Xout ; Xout_i];
         end
         traj.X(end-size(Xout,1)+1:end, :) = Xout;
@@ -360,7 +360,6 @@ if do_compute
     end
 end
 end
-
 
 
 function err = check_u(u)

@@ -39,7 +39,7 @@ params = unique(params);
 
 %% p0
 if nargout>=3
-    p0 = zeros(1:numel(params));
+    p0 = zeros(1,numel(params));
     param_struct= get_params(phi);
     for ip = 1:numel(params)
         if isfield(param_struct, params{ip});
