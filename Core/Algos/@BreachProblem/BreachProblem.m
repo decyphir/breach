@@ -342,7 +342,8 @@ classdef BreachProblem < BreachStatus
             this.display = 'off';
             solver_opt.SaveVariables = 'off';
             solver_opt.LogModulo = 0;
-            solver_opt.DispModulo = 0;
+            %solver_opt.DispModulo = 0; % need to disable when running
+            %multiple cmaes instances
             if this.use_parallel 
                 solver_opt.EvalParallel = 'yes';
             end
