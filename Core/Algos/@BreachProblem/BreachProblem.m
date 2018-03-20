@@ -336,7 +336,16 @@ classdef BreachProblem < BreachStatus
             solver_opt.Seed = 0;
             solver_opt.LBounds = this.lb;
             solver_opt.UBounds = this.ub;
+            if this.max_obj_eval < inf
+                solver_opt.MaxFunEvals = this.max_obj_eval;
+            end
             this.display = 'off';
+            solver_opt.SaveVariables = 'off';
+            solver_opt.LogModulo = 0;
+            solver_opt.DispModulo = 0;
+            if this.use_parallel 
+                solver_opt.EvalParallel = 'yes';
+            end
             this.solver = 'cmaes';
             this.solver_options = solver_opt;
         end
@@ -367,7 +376,7 @@ classdef BreachProblem < BreachStatus
                 case 'cmaes'
                     % adds a few more initial conditions
                     nb_more = 10*numel(this.params)- size(this.x0, 2);
-                    if nb_more>inf
+                    if nb_more>inf % what is this for? Not sure
                         Px0 = CreateParamSet(this.BrSet.P, this.params,  [this.lb this.ub]);
                         Px0 = QuasiRefine(Px0, nb_more);
                         this.x0 = [this.x0' GetParam(Px0,this.params)]';
