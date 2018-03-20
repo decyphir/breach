@@ -381,9 +381,11 @@ classdef BreachProblem < BreachStatus
                     
                 case 'fmincon'
                     while ~this.stopping
-                        problem.x0 = this.generate_new_x0;
                         [x,fval,exitflag,output] = feval(this.solver, problem);
                         res = struct('x',x,'fval',fval, 'exitflag', exitflag, 'output', output);
+                        if ~this.stopping % restart
+                            problem.x0 = this.generate_new_x0;
+                        end
                     end
                 case 'fminsearch'
                     while ~this.stopping
@@ -400,9 +402,11 @@ classdef BreachProblem < BreachStatus
                                 res{completedIdx} = struct('x',x,'fval',fval, 'exitflag', exitflag, 'output', output);
                             end
                         else
-                            problem.x0 = this.generate_new_x0;
                             [x,fval,exitflag,output] = feval(this.solver, problem);
                             res = struct('x',x,'fval',fval, 'exitflag', exitflag, 'output', output);
+                            if ~this.stopping % restart
+                                problem.x0 = this.generate_new_x0;
+                            end
                         end
                     end
                 case 'simulannealbnd'
@@ -482,7 +486,7 @@ classdef BreachProblem < BreachStatus
         function problem = get_problem(this)
             problem =struct('objective', this.objective, ...
                 'fitnessfcn', this.objective, ... % for ga
-                'x0', 0.5*(this.ub - this.lb) + this.lb, ...   
+                'x0', this.x0, ...   
                 'nvars', size(this.x0, 1),... % for ga
                 'solver', this.solver,...
                 'Aineq', this.Aineq,...
@@ -491,7 +495,7 @@ classdef BreachProblem < BreachStatus
                 'beq', this.beq,...
                 'lb', this.lb,...
                 'ub', this.ub,...
-                'nonlinq', [],...
+                'nonlcon', this.constraints_fn,...
                 'intcon',[],...
                 'rngstate',[],...
                 'options', this.solver_options);
@@ -504,6 +508,10 @@ classdef BreachProblem < BreachStatus
                 end
             end
             
+        end
+       
+        function add_constraint(this, phi)
+            this.constraints_fn = @(x) (deal(-this.BrSys.GetRobustSat(phi, this.params, x, this.T_Spec), []));
         end
         
         %% Parallel 
@@ -602,7 +610,6 @@ classdef BreachProblem < BreachStatus
         end
               
         %% Misc methods
-
         function x = CheckinDomain(this,x)
           for ip = 1:numel(this.params)
                 x(ip) = this.domains(ip).checkin(x(ip));  

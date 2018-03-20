@@ -9,6 +9,8 @@ BrAFC.SetInputGen(InputGen);
 B = BrAFC.copy();
 B.SetParamRanges({'Pedal_Angle_u1', 'Pedal_Angle_u2'}, [ 0 50 ]);
 B.SetParamRanges({'Engine_Speed_u0'}, [ 900 1100 ] );
+B.SetParam({'Pedal_Angle_u1', 'Pedal_Angle_u2', 'Engine_Speed_u0'}, [25; 25; 1000 ]);
+
 STL_ReadFile('AFC_simple_spec.stl');
 
 %% Easy 
@@ -16,10 +18,15 @@ phi005= set_params(AF_alw_ok, 'tol', 0.005);
 AFC_falsif005 = FalsificationProblem(B, phi005);
 
 %% Medium
+phi01= set_params(AF_alw_ok, 'tol', 0.01);
+AFC_falsif01 = FalsificationProblem(B, phi01);
+phi02= set_params(AF_alw_ok, 'tol', 0.02);
+AFC_falsif02 = FalsificationProblem(B, phi02);
+
+%% Hard to impossible
 phi05= set_params(AF_alw_ok, 'tol', 0.05);
 AFC_falsif05 = FalsificationProblem(B, phi05);
 
-%% Hard to impossible
 phi1= set_params(AF_alw_ok, 'tol', 0.1);
 AFC_falsif1 = FalsificationProblem(B, phi1);
 

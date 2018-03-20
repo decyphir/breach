@@ -342,6 +342,7 @@ classdef BreachSystem < BreachSet
             else
                 [rob, tau] = STL_Eval(this.Sys, phi, this.P, this.P.traj,t_phi);
             end
+            
         end
         
         function [robfn, BrSys] = GetRobustSatFn(this, phi, params, t_phi)

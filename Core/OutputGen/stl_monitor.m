@@ -51,6 +51,8 @@ classdef stl_monitor < output_gen
             this.P.traj{1}.time = time;
             if nargin>=4&&~isempty(p)
                 P0 = SetParam(this.P, this.params,p); % really? P0 gets traj removed,..., gotta get rid of all this non-sense one day 
+            else 
+                P0 = this.P;
             end
             [val, tau] = STL_Eval(this.Sys, this.formula, P0,this.P.traj{1}, tau);  
         end
