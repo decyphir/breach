@@ -53,7 +53,7 @@ src_cpp = { ...
     };
 
 %% Obj files
-cxxflags = '-silent -DYYDEBUG=1 CXXFLAGS=''$CXXFLAGS -Wno-write-strings -std=c++11 -std=gnu++0x -Wno-deprecated-register''';
+cxxflags = '-silent -DYYDEBUG=1 CXXFLAGS=''$CXXFLAGS -Wno-write-strings -std=gnu++11 -std=gnu++0x -Wno-deprecated-register''';
 includes = ['-I' stlpp_dir filesep 'include'];
 prefix_cpp = [stlpp_dir filesep 'src' filesep];
 prefix_m = [stlpp_dir filesep 'src' filesep];
@@ -87,8 +87,8 @@ end
 if (compile_obj__)
     for i_src = 1:numel(src_cpp)
         cmd= sprintf('mex -c %s %s %s%s -outdir %s', cxxflags, includes,prefix_cpp, src_cpp{i_src}, obj_dir);
-%        fprintf(cmd);
-%       fprintf('\n');
+    fprintf(cmd);
+       fprintf('\n');
         eval(cmd);
     end
 end

@@ -45,6 +45,11 @@ if ~exist( [br_dir filesep 'Ext' filesep 'ModelsData'], 'dir')
     mkdir([br_dir filesep 'Ext' filesep 'ModelsData']);
 end
 
+
+%%  Make sure ModelsData/ParallelTemp exist for parallel computing
+if ~exist( [br_dir filesep 'Ext' filesep 'ModelsData' filesep 'ParallelTemp'], 'dir')
+    mkdir([br_dir filesep 'Ext' filesep 'ModelsData' filesep 'ParallelTemp']);
+end
 %% Init
 disp(['Initializing Breach from folder ' br_dir '...']);
 

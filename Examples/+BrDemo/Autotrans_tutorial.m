@@ -14,7 +14,6 @@ B.Sim(); B.PlotSignals({'throttle', 'RPM', 'speed', 'gear'});
 STL_ReadFile('Autotrans_spec.stl');
 B.PlotRobustSat(gear3_and_speed_low)
 
-
 %% Describes and generate driving scenarios 
 % We create an input generator that will alternates between acceleration and braking 
 sg = var_step_signal_gen({'throttle', 'brake'}, 5);
@@ -28,7 +27,6 @@ B.SetParamRanges({'throttle_u0','brake_u1', 'throttle_u2', 'brake_u3'}, ...
 
 % We don't specify a range for brake_u0 so that it remains constant equal
 % to 0 (by default). Same for throttle_u1, etc.
-
 B.QuasiRandomSample(10); B.Sim();
 
 %% Plot multiple simaltions result
@@ -45,6 +43,7 @@ B.PrintSpecs
 %% Falsify property
 B.ResetSampling(); % remove the 10 samples and traces, keep parameter ranges
 falsif_pb = FalsificationProblem(B, never_gear3_and_speed_low);
+falsif_pb.max_obj_eval = 1000;
 falsif_pb.max_time = 180; % give the solver three minutes to falsify the property
 falsif_pb.solve();
 

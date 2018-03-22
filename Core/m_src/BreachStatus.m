@@ -3,9 +3,12 @@ classdef BreachStatus < handle
     %              of an algorithm
     
     properties
-        status = [] % unique integer id for the status 
-        statusMap = containers.Map() % map with key and msg strings describing the status.
         verbose = 1 
+    end
+    
+    properties (Hidden)
+        status = [] % unique integer id for the status
+        statusMap = containers.Map() % map with key and msg strings describing the status.
         logged_msg
         max_logged_msg=100
     end
@@ -62,7 +65,8 @@ classdef BreachStatus < handle
                 for ist = 1:n_status
                     new_st = ['[' keys{ist} ']'];
                     msg = this.statusMap(keys{ist});
-                    new_st(24:24+numel(msg)-1) = msg;
+                    %new_st(24:24+numel(msg)-1) = msg; % not sure why I had 24 here...
+                   new_st = [new_st '   ' msg]; 
                     st = [st new_st  '\n'];
                 end
                 
