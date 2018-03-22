@@ -190,7 +190,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         end
         
         function StopParallel(this)
-            
+            this.StopParallel@BreachSystem();
             poolobj = gcp('nocreate'); % If no pool, do not create new one.
             if ~isempty(poolobj)
                 delete(poolobj);     % not sure this is doing anything
@@ -738,6 +738,9 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             cwd = pwd;
             if this.use_parallel
                 worker_id = get(getCurrentTask(), 'ID');
+                if ~isinteger(worker_id)
+                    worker_id = 1;
+                end
                 cd([this.ParallelTempRoot filesep 'Worker' int2str(worker_id)]);
             else
                 cd(this.mdl.mdl_breach_path);
@@ -747,6 +750,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             load_system(mdl);
             num_signals = Sys.DimX;
             params = Sys.ParamList;
+            
             for i = 1:numel(params)-num_signals
                 pname =  params{i+num_signals};
                 pval  = pts(i+num_signals);
@@ -788,7 +792,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                     simout= sim(mdl, this.SimCmdArgs{:});
                     [tout, X] = GetXFrom_simout(this, simout);
                 end
-            catch MException
+            catch MException % TODO keep that in status message
                 cd(cwd);
                 if numel(tspan)>1
                     tout = tspan;
@@ -797,6 +801,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 end
                 X = zeros(Sys.DimX, numel(tout));
                 status =-1;
+                this.addStatus(-1, MException.identifier, MException.message);
             end
             
             % FIXME: the following needs to be reviewed

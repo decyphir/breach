@@ -343,7 +343,7 @@ classdef BreachSet < BreachStatus
             
             % kept for backward compatibility with legacy stuff
             this.P.dim = i_params;
-            
+            this.CheckinDomainParam();
         end
         
         function ranges = GetParamRanges(this, params)
@@ -537,7 +537,15 @@ classdef BreachSet < BreachStatus
             end
             
             if ischar(signals) || iscell(signals)
-                signals = FindParam(this.P, signals);
+                [signals_idx, type] = FindParam(this.P, signals);
+                if any(type==0)
+                    not_found= find(type==0);
+                    error('GetSignalValues:sig_not_found', 'Signal %s not found.',signals{not_found(1)});
+                end
+            elseif isnumeric(signals)
+                signals_idx=signals;
+            else
+                error('GetSignalValues:signals_type', 'signals should be a string or cell of string or numeric array ')
             end
             
             if ~exist('itrajs','var')
@@ -549,10 +557,10 @@ classdef BreachSet < BreachStatus
             X = cell(nb_traj,1);
             for i_traj = 1:numel(itrajs)
                 if (~exist('t','var'))
-                    X{i_traj} = this.P.traj{itrajs(i_traj)}.X(signals,:);
+                    X{i_traj} = this.P.traj{itrajs(i_traj)}.X(signals_idx,:);
                 else
-                    X{i_traj} = interp1(this.P.traj{itrajs(i_traj)}.time, this.P.traj{itrajs(i_traj)}.X(signals,:)',t)';
-                    if numel(signals)==1
+                    X{i_traj} = interp1(this.P.traj{itrajs(i_traj)}.time, this.P.traj{itrajs(i_traj)}.X(signals_idx,:)',t)';
+                    if numel(signals_idx)==1
                         X{i_traj} = X{i_traj}';
                     end
                 end
