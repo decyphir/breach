@@ -92,12 +92,12 @@ classdef BreachProblem < BreachStatus
     properties
         display = 'on'
         freq_update = 10 
-        use_parallel =0
-        max_time = 60
+        use_parallel = 0
+        max_time = inf
         time_start = tic
         time_spent = 0
         nb_obj_eval = 0
-        max_obj_eval = inf
+        max_obj_eval = 100
     end
     
     %% Static Methods
