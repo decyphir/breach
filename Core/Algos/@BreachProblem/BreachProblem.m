@@ -466,9 +466,10 @@ classdef BreachProblem < BreachStatus
             this.BrSys.use_parallel = 0;   
             this.BrSys.Sys.Parallel=0;     
             
-            % Disable serial logging mechanism and enable DiskCaching
-            this.log_traces = 0;   
-            this.SetupDiskCaching();
+            % Enable DiskCaching
+            if this.log_traces
+                this.SetupDiskCaching();
+            end
         end
         
         function StopParallel(this)
@@ -556,11 +557,11 @@ classdef BreachProblem < BreachStatus
         function LogX(this, x, fval)
             % LogX logs values tried by the optimizer
 
-            x = this.CheckinDomain(x);
+%            x = this.CheckinDomain(x);
             this.X_log = [this.X_log x];
             this.obj_log = [this.obj_log fval];
             
-            if (this.log_traces)
+            if (this.log_traces)&&~(this.use_parallel);
                 if isempty(this.BrSet_Logged)
                     this.BrSet_Logged = this.BrSys.copy();
                 else
