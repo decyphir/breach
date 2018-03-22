@@ -94,10 +94,13 @@ for ii=1:numTrajs % we loop on every traj in case we check more than one
             if(numel(t)==1) % we handle singular times
                 val__{ii} = val(1);
             else
-                val__{ii} = interp1(time_values, val, t);
-            end
-        catch % if val is empty
-            val__{ii} = NaN(1,numel(t));
+                if isfield(BreachGlobOpt, 'disable_robust_linear_interpolation')&&BreachGlobOpt.disable_robust_linear_interpolation
+                    val__{ii} = interp1(time_values, val, t, 'previous');
+                else
+                    val__{ii} = interp1(time_values, val, t);
+                end
+            catch % if val is empty
+                val__{ii} = NaN(1,numel(t));
         end
     else
         interval = [0 traj.time(1,end)];
