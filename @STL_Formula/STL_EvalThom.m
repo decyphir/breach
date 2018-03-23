@@ -44,8 +44,12 @@ function [val__, time_values__] = STL_EvalThom(Sys, phi, P, trajs, t)
 % all subsequent computations
 
 global BreachGlobOpt;
-BreachGlobOpt.GlobVarsDeclare = ['global ', sprintf('%s ',P.ParamList{:})]; % contains parameters and IC values (can remove IC if phi is optimized)
-eval(BreachGlobOpt.GlobVarsDeclare); % These values may be used in generic_predicate and GetValues
+if ~isempty(P.ParamList)
+    BreachGlobOpt.GlobVarsDeclare = ['global ', sprintf('%s ',P.ParamList{:})]; % contains parameters and IC values (can remove IC if phi is optimized)
+    eval(BreachGlobOpt.GlobVarsDeclare); % These values may be used in generic_predicate and GetValues
+else
+    BreachGlobOpt.GlobVarsDeclare = ''; % contains parameters and IC values (can remove IC if phi is optimized)
+end
 
 ii=1;
 eval_str = [P.ParamList;num2cell(1:numel(P.ParamList))];

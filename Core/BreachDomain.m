@@ -286,13 +286,15 @@ classdef BreachDomain
                         x{ip} = dom.sample_rand(num_samples{ip});
                     elseif isequal(method{ip}, 'corners')
                         x{ip} = [dom.domain(1) dom.domain(2)]; 
+                    else
+                        error('Unknown sampling method: %s', method{ip});
                     end
                 end
                 num_x(ip) = numel(x{ip});
             end
             
             
-            % Combine new samples
+            % Combine new samples  --> this is where we need some smarts 
             if num_dom>1
                 if combine_x
                     idx = N2Nn(num_dom, num_x);
