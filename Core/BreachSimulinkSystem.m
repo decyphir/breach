@@ -475,14 +475,14 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             assignin('base','u__',zeros(1, numel(this.Sys.InputList)));
             assignin('base','tspan',tspan);
             crd = pwd;
-            cd(crd);
+            cd(breach_data_dir);
             try 
                 simout = sim(mdl_breach, this.SimCmdArgs{:});
             catch MException
                 cd(crd);
                 rethrow(MException);
             end
-            
+            cd(crd);
             %% find logged signals (including inputs and outputs)
             this.Sys.mdl= mdl_breach;
             if ~exist('signals', 'var')||isempty(signals)||isequal(signals,'all')
