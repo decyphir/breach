@@ -8,10 +8,10 @@ max_obj_eval = 500;
 % methods to fminsearch. Thus, if fminsearch converges before the max
 % cost evaluation allowed, it will restart the search from another random
 % initial state. 
-pb_se_nm = AFC_falsif03.copy();
-pb_se_nm.max_obj_eval = max_obj_eval;
+pb_se_fc = AFC_falsif03.copy();
+pb_se_fc.max_obj_eval = max_obj_eval;
 pb_se_fc.setup_solver('fmincon');
-disp('============== fmincon results ==============');
+disp('============== fmincon with multiple restarts results ==============');
 tic
 [false_fc res_fc] = pb_se_fc.solve();
 toc

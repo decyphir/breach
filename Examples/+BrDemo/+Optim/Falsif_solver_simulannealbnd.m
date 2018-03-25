@@ -4,8 +4,8 @@ BrDemo.Optim.InitAFC_Falsif()
 max_obj_eval = 500;
 
 %% Setup the solver using simulannealbnd algorithm
-pb_se_nm = AFC_falsif03.copy();
-pb_se_nm.max_obj_eval = max_obj_eval;
+pb_se_sa = AFC_falsif03.copy();
+pb_se_sa.max_obj_eval = max_obj_eval;
 pb_se_sa.setup_solver('simulannealbnd');
 disp('============== simulannealbnd results ==============');
 tic
