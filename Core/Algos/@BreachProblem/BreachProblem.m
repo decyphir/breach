@@ -428,6 +428,7 @@ classdef BreachProblem < BreachStatus
                         res = cell(1,num_works);
                         for idx = 1:num_works
                             [completedIdx, x, fval,exitflag,output] = fetchNext(F);
+                            this.nb_obj_eval = this.nb_obj_eval + output.funccount;
                             res{completedIdx} = struct('x',x,'fval',fval, 'exitflag', exitflag, 'output', output);
                         end
                     else
@@ -672,7 +673,7 @@ classdef BreachProblem < BreachStatus
             end
             
             if numel(this.res) > 1 && this.use_parallel
-                fprintf('\n Report from different optimization runs.\n');
+                fprintf('\nReports from different parallel optimization runs.\n');
                 for idx = 1:numel(this.res)
                     fprintf('Run %d\n', idx);
                     this.Display_Best_Results(this.res{idx}.fval, this.res{idx}.x);
@@ -681,7 +682,7 @@ classdef BreachProblem < BreachStatus
                         this.x_best = this.res{idx}.x; 
                     end
                 end
-                fprintf('\n In summary, the best results among all runs. \n');
+                fprintf('\nIn summary, the best results among all runs: \n');
             end
 
             this.Display_Best_Results(this.obj_best, this.x_best);

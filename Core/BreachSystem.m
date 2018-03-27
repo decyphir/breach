@@ -127,8 +127,17 @@ classdef BreachSystem < BreachSet
             % delete the path for the current folder and parent folder
             names(ismember(names,{'.', '..'})) = []; 
             for ii = 1:length(names)
-                rmdir(names{ii}, 's');
-            end      
+                for attempt = 1:4
+                    status = rmdir(names{ii}, 's');
+                    if status == 1
+                        break
+                    end
+                    pause(0.2*attempt)
+                end
+            end    
+            if status == 0
+                warning('Warning failed to clean up the temp folder for parallelism');
+            end
             this.Sys.use_parallel = 0;
             cd(cwd)
         end

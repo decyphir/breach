@@ -22,6 +22,8 @@ phi01= set_params(AF_alw_ok, 'tol', 0.01);
 AFC_falsif01 = FalsificationProblem(B, phi01);
 phi02= set_params(AF_alw_ok, 'tol', 0.02);
 AFC_falsif02 = FalsificationProblem(B, phi02);
+phi03 = set_params(AF_alw_ok, 'tol', 0.03);
+AFC_falsif03 = FalsificationProblem(B, phi03);
 
 %% Hard to impossible
 phi05= set_params(AF_alw_ok, 'tol', 0.05);

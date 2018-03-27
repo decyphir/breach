@@ -1,5 +1,5 @@
 function opt = setup_global_nelder_mead(this, gui, varargin)
-this.solver= 'global_nelder_mead';
+this.solver = 'global_nelder_mead';
 opt = struct( ...
     'use_param_set_as_init',false,...
     'start_at_trial', 0, ...
@@ -8,6 +8,9 @@ opt = struct( ...
     'local_optim_options', optimset() ...
     );
 
+if this.use_parallel
+    opt.use_parallel = true;
+end
 
 % checks with what we have already
 if isstruct(this.solver_options)
@@ -20,13 +23,13 @@ if isstruct(this.solver_options)
     end
 end
 
-if nargin>2    
+if nargin > 2
     opt = varargin2struct(opt, varargin{:});
 end
 
-if (nargin>=2)&&gui
+if (nargin >= 2)&&gui
     choices = struct( ...
-        'use_param_set_as_init','bool',...    
+        'use_param_set_as_init','bool',...
         'start_at_trial', 'int', ...
         'nb_new_trials',  'int', ...
         'nb_local_iter',  'int', ...
@@ -43,15 +46,15 @@ if (nargin>=2)&&gui
     gui_opt.local_optim_options = 'default optimset()';
     
     opt = BreachOptionGui('Choose options for solver global_nelder_mead', gui_opt, choices, tips);
-    close(opt.dlg); 
+    close(opt.dlg);
     
     return;
-%gui_opt = gu.output;
-%gui_opt.local_optim_options  = opt.local_optim_options;
-%opt = gui_opt;
+    %gui_opt = gu.output;
+    %gui_opt.local_optim_options = opt.local_optim_options;
+    %opt = gui_opt;
 end
 
 this.solver_options = opt;
 
- 
+
 end

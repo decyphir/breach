@@ -29,6 +29,7 @@ if (this.solver_options.nb_local_iter>0) && (~this.stopping)
     if this.use_parallel
         num_works = this.BrSys.Sys.Parallel;
         options = optimset(options, 'Display', 'off');
+        options = optimset(options, 'UseParallel', true);
         while flag_Cont
             fun = @(x0) optimize(...
                 this.objective,x0,this.lb,this.ub,this.Aineq,this.bineq,this.Aeq,this.beq,[],[],options,'NelderMead');
@@ -41,6 +42,7 @@ if (this.solver_options.nb_local_iter>0) && (~this.stopping)
                 res{end+1} = struct('x',x, 'fval',fval, 'exitflag', exitflag,  'output', output);
                 % update the nb_obj_eval
                 this.nb_obj_eval = this.nb_obj_eval + output.funcCount;
+                this.X_log = [this.X_log output.logs];
                 if fval < 0 || this.nb_obj_val > this.max_obj_val
                     cancel(F);
                     flag_Cont = false;
