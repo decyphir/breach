@@ -5,7 +5,8 @@ BrDemo.InitAFCparams;
 
 warning('off', 'Simulink:LoadSave:EncodingMismatch')
 mdl = 'AbstractFuelControl';
-BrAFC = BreachSimulinkSystem(mdl, 'all', [], {}, [], 'Verbose', 0);
+
+BrAFC = BreachSimulinkSystem(mdl, 'all', [], {}, [], 'Verbose', 0,'SimInModelsDataFolder', true); 
 
 
 pedal_angle_gen = pulse_signal_gen({'Pedal_Angle'}); % Generate a pulse signal for pedal angle

@@ -32,10 +32,11 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         FindTables = false
         FindStruct = false
         MaxNumTabParam
-        SimCmdArgs = {}   % argument list passed to sim command
-        InputSrc          % for each input, we match an input port or base workspace (0)
-        MdlVars           % List of variables used by the model
+        SimCmdArgs = {}       % argument list passed to sim command
+        InputSrc                     % for each input, we match an input port or base workspace (0)
+        MdlVars                      % List of variables used by the model
         SimInputsOnly=false % if true, will not run Simulink model
+        SimInModelsDataFolder=false
         mdl
         UseDiskCaching=false 
         DiskCachingRoot 
@@ -107,6 +108,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             options.FindTables = false;
             options.FindStruct  = false; 
             options.FindSignalBuilders = false;  % TODO fixme when true
+            options.SimInModelsDataFolder = false;
             options.Parallel = 'off';
             options.SimCmdArgs = {};
             options.Verbose = 1;
@@ -125,6 +127,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             this.MaxNumTabParam = options.MaxNumTabParam;
             this.SimCmdArgs = options.SimCmdArgs;
             this.verbose = options.Verbose;
+            this.SimInModelsDataFolder = options.SimInModelsDataFolder;
             
             if ~isempty(options.InitFn)
                 this.SetInitFn(options.InitFn);
@@ -474,13 +477,20 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             assignin('base','t__',0);
             assignin('base','u__',zeros(1, numel(this.Sys.InputList)));
             assignin('base','tspan',tspan);
-            crd = pwd;
-            cd(crd);
-            try 
+            if this.SimInModelsDataFolder;
+                crd = pwd;
+                cd(breach_data_dir);
+            end
+            try
                 simout = sim(mdl_breach, this.SimCmdArgs{:});
             catch MException
-                cd(crd);
+                if this.SimInModelsDataFolder;
+                    cd(crd);
+                end
                 rethrow(MException);
+            end
+            if this.SimInModelsDataFolder;
+                cd(crd);
             end
             
             %% find logged signals (including inputs and outputs)
@@ -735,17 +745,18 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             %
             
             status = 0; % optimistic default;
-            cwd = pwd;
-            if this.use_parallel
-                worker_id = get(getCurrentTask(), 'ID');
-                if ~isinteger(worker_id)
-                    worker_id = 1;
+            if this.SimInModelsDataFolder
+                cwd = pwd;
+                if this.use_parallel
+                    worker_id = get(getCurrentTask(), 'ID');
+                    if ~isinteger(worker_id)
+                        worker_id = 1;
+                    end
+                    cd([this.ParallelTempRoot filesep 'Worker' int2str(worker_id)]);
+                else
+                    cd(this.mdl.mdl_breach_path);
                 end
-                cd([this.ParallelTempRoot filesep 'Worker' int2str(worker_id)]);
-            else
-                cd(this.mdl.mdl_breach_path);
             end
-            
             mdl = Sys.mdl;
             load_system(mdl);
             num_signals = Sys.DimX;
@@ -793,7 +804,9 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                     [tout, X] = GetXFrom_simout(this, simout);
                 end
             catch MException % TODO keep that in status message
+            if this.SimInModelsDataFolder
                 cd(cwd);
+            end
                 if numel(tspan)>1
                     tout = tspan;
                 else
@@ -808,8 +821,10 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             if ~isempty(this.InputGenerator)&&this.use_precomputed_inputs==false
                 this.InputGenerator.Reset();
             end
-            cd(cwd)
-
+            
+            if this.SimInModelsDataFolder
+                cd(cwd);
+            end
         end
         
         function [tout, X] = GetXFrom_simout(this, simout)
