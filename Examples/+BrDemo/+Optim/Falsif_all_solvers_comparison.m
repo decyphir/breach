@@ -1,10 +1,8 @@
 %% Initialization
 BrDemo.Optim.InitAFC_Falsif()
-% harder requirement
-phi03 = set_params(AF_alw_ok, 'tol', 0.03);
 AFC_falsif03 = FalsificationProblem(B, phi03);
 max_obj_eval = 500;
-%% Serial falsification problem
+%% 
 pb_se_ga = AFC_falsif03.copy();
 pb_se_ga.max_obj_eval = max_obj_eval;
 pb_se_ga.max_time = inf;
