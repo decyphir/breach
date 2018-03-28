@@ -44,8 +44,12 @@ function [val__, time_values__] = STL_EvalThom(Sys, phi, P, trajs, t)
 % all subsequent computations
 
 global BreachGlobOpt;
-BreachGlobOpt.GlobVarsDeclare = ['global ', sprintf('%s ',P.ParamList{:})]; % contains parameters and IC values (can remove IC if phi is optimized)
-eval(BreachGlobOpt.GlobVarsDeclare); % These values may be used in generic_predicate and GetValues
+if ~isempty(P.ParamList)
+    BreachGlobOpt.GlobVarsDeclare = ['global ', sprintf('%s ',P.ParamList{:})]; % contains parameters and IC values (can remove IC if phi is optimized)
+    eval(BreachGlobOpt.GlobVarsDeclare); % These values may be used in generic_predicate and GetValues
+else
+    BreachGlobOpt.GlobVarsDeclare = ''; % contains parameters and IC values (can remove IC if phi is optimized)
+end
 
 ii=1;
 eval_str = [P.ParamList;num2cell(1:numel(P.ParamList))];
@@ -94,7 +98,11 @@ for ii=1:numTrajs % we loop on every traj in case we check more than one
             if(numel(t)==1) % we handle singular times
                 val__{ii} = val(1);
             else
-                val__{ii} = interp1(time_values, val, t);
+                if isfield(BreachGlobOpt, 'disable_robust_linear_interpolation')&&BreachGlobOpt.disable_robust_linear_interpolation
+                    val__{ii} = interp1(time_values, val, t, 'previous');
+                else
+                    val__{ii} = interp1(time_values, val, t);
+                end
             end
         catch % if val is empty
             val__{ii} = NaN(1,numel(t));
@@ -269,7 +277,7 @@ end
 
 % first time instant
 ind_ti = find(traj.time>=interval(1),1);
-if isempty(ind_ti) 
+if isempty(ind_ti)
     time_values = [traj.time(1,end) traj.time(1,end)+1];
     return
 end

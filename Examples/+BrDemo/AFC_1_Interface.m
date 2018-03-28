@@ -27,7 +27,7 @@ ki = 0.14;
 %%
 % They will be discovered automatically and included in the interface. 
 
-%% Creating an Interface Object
+%% Creating an Interface Object (1)
 %
 % Running the following will create a BreachSystem interface with the model:
 mdl = 'AbstractFuelControl';
@@ -42,7 +42,7 @@ BrAFC = BreachSimulinkSystem(mdl)
 BrAFC.PrintParams()
 
 
-%% Creating an Interface Object
+%% Creating an Interface Object (2)
 % 
 % Sometimes a model contains many tunable parameters. In that case, we can
 % explicitly specify those we want to tune, e.g., some PI parameters:
@@ -80,11 +80,11 @@ BrAFC.PrintSignals()
 
 %% Input Signals
 % Input signals of different types can be generated. They are defined by 
-% parameters of the form $\mathtt{input1\_u0, input1\_u1}$ etc.
+% parameters of the form input1_u0, input1_u1 etc.
 
 %% 
 % By default, input signals are simply constant and we have two inputs,  
-% which are $\mathtt{Engine\_Speed}$ and $\mathtt{Pedal\_Angle}$. Next, 
+% which are Engine_Speed and Pedal\_Angle. Next, 
 % we set their constant values: 
 BrAFC.SetParam('Engine_Speed_u0',1000)
 BrAFC.SetParam('Pedal_Angle_u0',30)
@@ -101,7 +101,7 @@ AFC_Nominal.Sim(0:.05:30); % Run Simulink simulation until time=30s
 AFC_Nominal.PlotSignals(); % plots the signals collected after the simulation
 
 
-%% Simulation with Nominal Parameters
+%% Plotting Nominal Simulation
 % The plotting methods accepts a number of arguments. The first one and
 % most useful simply allows to select which signals to plot. 
 

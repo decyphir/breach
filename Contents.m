@@ -1,4 +1,4 @@
-% Breach Toolbox v1.0-beta1
+% Breach Toolbox 
 %
 % Files
 %   InitBreach       - Initializes Breach, in particular adding paths to Breach directories

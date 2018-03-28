@@ -122,6 +122,11 @@ classdef BreachTraceSystem < BreachSystem
             this.P.traj_to_compute =  [];
             this.P.pts(this.P.DimX+1,:) = 1:nb_traces+1; % index traces
             this.Sys.tspan = traj.time;
+            if isfield(this.P, 'Xf')
+                this.P.Xf(:,end)= traj.X(:,end);
+            else
+                this.P.Xf= traj.X(:,end);
+            end
         end
         
         function AddRandomTraces(this,n_traces, n_samples, amp, end_time)

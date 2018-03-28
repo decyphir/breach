@@ -26,8 +26,8 @@ classdef BreachSystem < BreachSet
     properties
         Sys                   % Legacy Breach system structure
         Specs               % A set (map) of STL formulas
-        ParamSrc=containers.Map()
-        use_parallel=0     % the flag to indicate the usage of parallel computing
+        ParamSrc = containers.Map()
+        use_parallel = 0     % the flag to indicate the usage of parallel computing
         ParallelTempRoot = ''   % the default temporary folder for parallel computing 
         InitFn = ''             % Initialization function 
         end
@@ -109,11 +109,26 @@ classdef BreachSystem < BreachSet
             cd(this.ParallelTempRoot)
             for ii = 1:NumWorkers 
                 dirName = ['Worker' int2str(ii)];
-                if exist(dirName, 'dir') == 7
-                    rmdir(dirName,'s');
+                if exist(dirName, 'dir') ~= 7
+                    mkdir(dirName);
                 end
-                mkdir(dirName);
+                
             end
+            cd(cwd)
+        end
+        
+        % clear up the ModelsData/ParallelTemp folder
+        function StopParallel(this)
+            cwd = pwd;
+            cd(this.ParallelTempRoot)
+            folders = dir(this.ParallelTempRoot);
+            names = {folders.name};
+            % delete the path for the current folder and parent folder
+            names(ismember(names,{'.', '..'})) = []; 
+            for ii = 1:length(names)
+                rmdir(names{ii}, 's');
+            end      
+            this.Sys.use_parallel = 0;
             cd(cwd)
         end
         

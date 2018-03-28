@@ -333,7 +333,7 @@ if do_compute
     traj.param = P0.pts(1:P0.DimP,ii)';
     
     if use_caching % cache new trace
-        cache_traj = matfile(cache_traj_filename);
+        cache_traj = matfile(cache_traj_filename, 'Writable', true);
         cache_traj.param = traj.param;
         cache_traj.time = traj.time;
         cache_traj.status = traj.status;

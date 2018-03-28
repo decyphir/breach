@@ -78,7 +78,8 @@ classdef FalsificationProblem < BreachProblem
         
         % Logging
         function LogX(this, x, fval)
-            
+        %   LogX  log variable parameter value tested by optimizers
+       
             % Logging default stuff
             this.LogX@BreachProblem(x, fval);
             
@@ -86,7 +87,7 @@ classdef FalsificationProblem < BreachProblem
             [~, i_false] = find(fval<0);
             if ~isempty(i_false)
                 this.X_false = [this.X_false x(:,i_false)];                              
-                if (this.log_traces)
+                if (this.log_traces)&&~this.use_parallel
                     if isempty(this.BrSet_False)
                         this.BrSet_False = this.BrSys.copy();
                     else
@@ -97,14 +98,13 @@ classdef FalsificationProblem < BreachProblem
         end
         
         function b = stopping(this)
-            b =  (this.time_spent >= this.max_time) ||...
-                (this.nb_obj_eval>= this.max_obj_eval) ||...
-                (this.StopAtFalse&&this.obj_best<0);
+            b =  this.stopping@BreachProblem();
+            b= b||(this.StopAtFalse&&this.obj_best<0);        
         end
         
-        function BrFalse = GetBrSet_False(this)
+        function [BrFalse, BrFalse_Err, BrFalse_badU] = GetBrSet_False(this)
             BrFalse = [];
-            if this.log_traces
+            if this.log_traces&&~this.use_parallel 
                 BrFalse = this.BrSet_False;
             else
                 [~, i_false] = find(this.obj_log<0);
@@ -115,10 +115,9 @@ classdef FalsificationProblem < BreachProblem
                         BrFalse.Sim();
                     end
                 end
-                BrFalse.Sys.Verbose=1;
-                if isempty(BrFalse.InputGenerator.Specs)&&BrFalse.hasTraj() % TODO: change this when dealing with Input requirements/constraints
-                    BrFalse.CheckSpec(this.Spec);
-                end
+                
+                [BrFalse, BrFalse_Err, BrFalse_badU] = this.ExportBrSet(BrFalse);
+                
             end
         end
         

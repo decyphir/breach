@@ -147,7 +147,7 @@ good_param = Brpos.GetParam({'Pedal_Angle_base_value', 'Pedal_Angle_pulse_period
 bad_param = Brneg.GetParam({'Pedal_Angle_base_value', 'Pedal_Angle_pulse_period', 'Pedal_Angle_pulse_amp'})
 
 
-%% Monitoring a Formula on a Trace
+%% Monitoring a Formula on a Trace (1)
 % To monitor STL formulas on existing traces, one can use the
 % BreachTraceSystem class. 
 
@@ -157,7 +157,7 @@ trace = [time' x' y']; % trace is in column format, first column is time
 BrTrace = BreachTraceSystem({'x','y'}, trace); 
 figure; BrTrace.PlotSignals();
 
-%% Monitoring a Formula on a Trace (ct'd)
+%% Monitoring a Formula on a Trace (2)
 % Checks (plots) some formula on imported trace:
 figure; BrTrace.PlotRobustSat('alw (x[t] > 0) or alw (y[t]>0)');
 
