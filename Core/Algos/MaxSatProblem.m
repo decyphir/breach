@@ -64,35 +64,43 @@ classdef MaxSatProblem < BreachProblem
             this.LogX@BreachProblem(x, fval);
             
             %  Logging satisfying parameters and traces
-            if fval < 0
-                this.X_True = [this.X_True x];
-                if isempty(this.BrSet_True)
-                    this.BrSet_True = this.BrSys.copy();
-                else
-                    this.BrSet_True.Concat(this.BrSys);
-                end
-                
-                if this.StopAtTrue == true
-                    this.stopping = true;
+            [~, i_true] = find(fval>0);
+            if ~isempty(i_true)
+                this.X_true = [this.X_true x(:,i_true)];                              
+                if (this.log_traces)&&~this.use_parallel
+                    if isempty(this.BrSet_True)
+                        this.BrSet_True = this.BrSys.copy();
+                    else
+                        this.BrSet_True.Concat(this.BrSys);
+                    end
                 end
             end
-            
         end
         
-        function BrTrue = GetBrSet_True(this)
-            if this.log_traces
-                BrTrue = this.BrSet_False;
+        function b = stopping(this)
+            b =  this.stopping@BreachProblem();
+            b= b||(this.StopAtTrue&&this.obj_best>0);
+        end
+        
+        function [BrTrue, BrTrue_Err, BrTrue_badU] = GetBrSet_True(this)
+            BrTrue = [];
+            if this.log_traces&&~this.use_parallel 
+                BrTrue = this.BrSet_True;
             else
-                [~, i_true] = find(this.obj_log>=0);
-                if ~isempty(i_true)
+                [~, i_false] = find(this.obj_log<0);
+                if ~isempty(i_false)
                     BrTrue = this.BrSys.copy();
-                    BrTrue.SetParam(this.params, this.X_log(:, i_true));
-                    if ~isempty(this.BrSys.log_folder)
+                    BrTrue.SetParam(this.params, this.X_log(:, i_false));
+                    if this.BrSys.UseDiskCaching
                         BrTrue.Sim();
                     end
                 end
                 
+                [BrTrue, BrTrue_Err, BrTrue_badU] = this.ExportBrSet(BrTrue);
+                
             end
+            
+            
         end
         
        
