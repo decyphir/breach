@@ -1,3 +1,25 @@
+# Release 1.2.16
+## Users
+- printStatus now prints error message obtained during failed Simulink
+  simulation
+- New SimInModelsDataFolder option, default to false (i.e., by
+  default, Breach won't change folder for simulalink simulations
+- Changed default max_obj_eval to 100 and max_time to inf in BreachProblem
+
+## Bugfixes 
+- GetBrSet_Logged, _False, _True methods now works as expected in
+  serial and parallel (BreachTEMA Issue #33)
+- DiskCaching matfiles writable option should improve stability
+- Fixed interpolation bug in STL_EvalThom (Issue #62)
+- Fixed bug in BreachTraceSystem with useless legacy Xf field
+- ModelsData folders properly created at initialization if not
+  existant (BreachTEMA Issue #30)
+
+## Developpers
+- log_traces field for BreachProblem now consistent with serial and
+  parallel (BreachTEMA Issue #31)
+- StoreTracesOnDisk true by default for DiskCaching (BreachTEMA Issue #21)
+
 # Release 1.2.15
 
 ## Users 
