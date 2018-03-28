@@ -87,8 +87,10 @@ end
 if (compile_obj__)
     for i_src = 1:numel(src_cpp)
         cmd= sprintf('mex -c %s %s %s%s -outdir %s', cxxflags, includes,prefix_cpp, src_cpp{i_src}, obj_dir);
-    fprintf(cmd);
-       fprintf('\n');
+        if debug_level>=1
+            fprintf(cmd);
+            fprintf('\n');
+        end
         eval(cmd);
     end
 end
