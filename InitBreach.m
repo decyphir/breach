@@ -19,6 +19,7 @@ if ~force_init && isfield(BreachGlobOpt, 'breach_dir')
     end
 end
 
+
 %% remove old path, if any
 br_all_dir = which('InstallBreach', '-all');
 nb_dir = numel(br_all_dir);   
@@ -112,6 +113,11 @@ else
         BreachGlobOpt.RobustSemantics = 0;
     end
     
+    %% Some global constants
+    if ~isfield(BreachGlobOpt, 'MaxNumSamples')
+        BreachGlobOpt.MaxNumSamples=100000;
+    end
+
 end
 cd(cdr);
 

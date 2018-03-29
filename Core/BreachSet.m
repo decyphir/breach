@@ -382,7 +382,7 @@ classdef BreachSet < BreachStatus
             prop_params = this.P.ParamList(this.P.DimP+1:end);
         end
         
-            % Get the number of param vectors - -1 means P is empty
+        % Get the number of param vectors - -1 means P is empty
         function nb_pts = GetNbParamVectors(this)
             if isempty(this.P)
                 nb_pts = -1;
@@ -390,8 +390,8 @@ classdef BreachSet < BreachStatus
                 nb_pts= size(this.P.pts,2);
             end
         end
-    
-            
+        
+        
         function [params, ipr] = GetVariables(this)
             [params, ipr] = GetBoundedDomains(this);
         end
@@ -419,7 +419,7 @@ classdef BreachSet < BreachStatus
             ipr = cellfun(@(c)(~isempty(c)), {this.Domains.domain});
             params =   this.P.ParamList(ipr);
         end
-    
+        
         
         %% Signals
         function traces = GetTraces(this)
@@ -431,7 +431,7 @@ classdef BreachSet < BreachStatus
         end
         
         function [idx_ok, idx_sim_error, idx_invalid_input, st_status]  = GetTraceStatus(this)
-        % BreachSet.GetTraceStatus returns indices of ok traces, error and input invalid.    
+            % BreachSet.GetTraceStatus returns indices of ok traces, error and input invalid.
             idx_ok = [];
             idx_sim_error = [];
             idx_invalid_input = [];
@@ -477,11 +477,11 @@ classdef BreachSet < BreachStatus
             Bsim_error =[];
             Binvalid_input = [];
             [idx_ok, idx_sim_error, idx_invalid_input]  = GetTraceStatus(this);
-             
+            
             if ~isempty(idx_ok)
                 Bok = this.ExtractSubset(idx_ok);
             end
-         
+            
             if ~isempty(idx_sim_error)
                 Bsim_error = this.ExtractSubset(idx_sim_error);
             end
@@ -647,7 +647,7 @@ classdef BreachSet < BreachStatus
         end
         
         %% Sampling
-        function SampleDomain(this, params, num_samples, method, opt_multi)
+        function SampleDomain(this, params, num_samples, method, opt_multi, max_num_samples)
             % BreachSet.SampleDomain generic sampling function
             %
             % B.SampleDomain('p', 5) creates 5 samples drawn randomly
@@ -702,6 +702,13 @@ classdef BreachSet < BreachStatus
                 this.QuasiRandomSample(prod(num_samples));
                 x = this.GetParam(idx_param);
                 this.P = Pold;
+            elseif isequal(method, 'corners')
+                if exist('max_num_samples', 'var')
+                    x = sample(domains{:}, num_samples, method, max_num_samples);
+                else
+                    x = sample(domains{:}, num_samples, method);
+                end
+                
             else
                 x = sample(domains{:}, num_samples, method);
             end
@@ -731,7 +738,11 @@ classdef BreachSet < BreachStatus
                     
                 case 'combine'
                     num_new = size(x,2);
-                    idx = N2Nn(2, [num_old num_new]);
+                    if exist('max_num_samples', 'var')
+                        idx = N2Nn(2, [num_old num_new],max_num_samples);
+                    else
+                        idx = N2Nn(2, [num_old num_new]);
+                    end
                     pts = this.P.pts(:, idx(1,:));
                     pts(idx_param,:) = x(:, idx(2,:));
                     this.ResetParamSet();
@@ -761,24 +772,38 @@ classdef BreachSet < BreachStatus
         end
         
         % Get corners of parameter domain
-        function CornerSample(this)
-            if this.AppendWhenSample
-                Pold = this.P;
+        function CornerSample(this, max_num_samples)
+            
+            if nargin ==1
+                max_num_samples = inf;
             end
-            
-            this.ResetParamSet();
-            newP = this.P;
-            newP.epsi = 2*newP.epsi;
-            newP = Refine(newP,2);
-            newP.epsi = newP.epsi/2;
-            
+            bnd_params = this.GetBoundedDomains();
             if this.AppendWhenSample
-                this.P = SConcat(Pold, newP);
+                this.SampleDomain(bnd_params, 2, 'corners', 'append', max_num_samples);
             else
-                this.P = newP;
+                this.SampleDomain(bnd_params,2, 'corners', 'replace', max_num_samples);
             end
-            this.CheckinDomainParam();
-            
+            %
+            %
+            %
+            %
+            %             if this.AppendWhenSample
+            %                 Pold = this.P;
+            %             end
+            %
+            %             this.ResetParamSet();
+            %             newP = this.P;
+            %             newP.epsi = 2*newP.epsi;
+            %             newP = Refine(newP,2);
+            %             newP.epsi = newP.epsi/2;
+            %
+            %             if this.AppendWhenSample
+            %                 this.P = SConcat(Pold, newP);
+            %             else
+            %                 this.P = newP;
+            %             end
+            %             this.CheckinDomainParam();
+            %
         end
         
         function QuasiRandomSample(this, nb_sample, step)
@@ -803,8 +828,6 @@ classdef BreachSet < BreachStatus
             this.CheckinDomainParam();
         end
         
-        
-    
         
         %% Concatenation, ExtractSubset - needs some additional compatibility checks...
         function Concat(this, other)
@@ -1126,6 +1149,7 @@ classdef BreachSet < BreachStatus
                     error('Coverage for more than 2 signals is not supported');
             end
         end
+        
         %% Requirements
         
         function  SortbyRob(this)
@@ -1338,7 +1362,6 @@ classdef BreachSet < BreachStatus
             
             disp(' ')
         end
-       
         
         %% Misc
         function s= isSignal(this,params)
@@ -1406,7 +1429,7 @@ classdef BreachSet < BreachStatus
         
         
         function ResetSimulations(this)
-            % Removes computed trajectories     
+            % Removes computed trajectories
             this.P = SPurge(this.P);
             this.SignalRanges = [];
         end
@@ -1415,8 +1438,6 @@ classdef BreachSet < BreachStatus
             nb_pts = this.GetNbParamVectors();
             this.P.selected = zeros(1,nb_pts);
         end
-        
-        
         
         %%  Compare (FIXME)
         function cmp = compare(this, other)
