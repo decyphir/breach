@@ -158,6 +158,23 @@ switch Sys.type
             
             [traj.time, traj.X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
             traj.param = P0.pts(1:P0.DimP,ii)';
+            
+            if isfield(Sys, 'output_gens')
+                for io = 1:numel(Sys.output_gens)
+                    og = Sys.output_gens{io};
+                    % Find in_signals
+                    is = FindParam(Sys, og.signals_in);
+                    ip = FindParam(P0, og.params);
+                    X_in = traj.X(is, :);
+                    pts_in = P0.pts(ip,ii);
+                    [traj.time, Xout_i] = og.computeSignals(traj.time, X_in, pts_in);
+                    traj.X = [traj.X ;Xout_i ];
+                end
+            end
+            
+            
+            
+            
             Pf.traj{ii} = traj;
             Pf.Xf(:,ii) = traj.X(:,end);
             if Verbose==1
@@ -339,7 +356,7 @@ if do_compute
             % Find in_signals
             is = FindParam(Sys, og.signals_in);
             ip = FindParam(P0, og.params);
-            X_in = traj.X(is, :);
+            X_in = [traj.X(is, :); Xout] ;
             pts_in = P0.pts(ip,ii);
             [traj.time, Xout_i] = og.computeSignals(traj.time, X_in, pts_in);  
             Xout = [Xout ; Xout_i];
