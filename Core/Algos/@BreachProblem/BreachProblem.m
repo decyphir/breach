@@ -468,7 +468,7 @@ classdef BreachProblem < BreachStatus
             step = this.solver_options.start_at_trial;
             
             BrC.P = CreateParamSet(BrC.Sys,this.params,[this.lb this.ub]);
-            BrC.CornerSample();
+            BrC.CornerSample(nb_samples);
             XC = BrC.GetParam(this.params);
             nb_corners= size(XC, 2);
             qstep = step-nb_corners;
