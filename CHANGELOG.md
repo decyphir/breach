@@ -1,3 +1,8 @@
+# Release 1.2.17
+
+## Bugfix
+- Fixed fix for STL monitoring interpolation bug (Issue #62) 
+
 # Release 1.2.16
 ## Users
 - printStatus now prints error message obtained during failed Simulink
