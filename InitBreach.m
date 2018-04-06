@@ -96,6 +96,11 @@ cd(cdr);
 
 %% Init BreachGlobOpt global configuration variable
 
+ % Some global constants
+if ~isfield(BreachGlobOpt, 'MaxNumSamples')
+        BreachGlobOpt.MaxNumSamples=100000;
+end
+
 % STL Initialization
 BreachGlobOpt.disable_robust_linear_interpolation = 1;
 
