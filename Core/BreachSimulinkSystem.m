@@ -804,9 +804,9 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                     [tout, X] = GetXFrom_simout(this, simout);
                 end
             catch MException % TODO keep that in status message
-            if this.SimInModelsDataFolder
-                cd(cwd);
-            end
+                if this.SimInModelsDataFolder
+                    cd(cwd);
+                end
                 if numel(tspan)>1
                     tout = tspan;
                 else

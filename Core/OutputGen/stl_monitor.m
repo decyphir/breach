@@ -33,7 +33,7 @@ classdef stl_monitor < output_gen
             this.P.traj_ref = 1;
             this.P.traj_to_compute = [];
            
-            % outputs
+            % Outputs
             this.signals = {get_id(this.formula)};
             
             % Init domains
@@ -41,6 +41,17 @@ classdef stl_monitor < output_gen
                 this.domains(vv{1}) = BreachDomain();
             end
             
+        end
+        
+        function st = disp(this)
+            phi_id= get_id(this.formula);
+            phi_st = disp(this.formula);
+            
+            st = sprintf('STL formula %s: %s\n', phi_id, phi_st );
+            
+            if nargout ==0
+                fprintf(st);
+            end
         end
         
         function [tau, val] = computeSignals(this, time, X, p, tau)

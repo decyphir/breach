@@ -64,8 +64,9 @@ classdef BreachTraceSystem < BreachSystem
             
         end
         
-        % counts number of traces
         function  nb_traces= CountTraces(this)
+        % CountTraces counts number of traces
+
             if isfield(this.P,'traj')
                 nb_traces = numel(this.P.traj);
             else
@@ -73,9 +74,9 @@ classdef BreachTraceSystem < BreachSystem
             end
         end
         
+        function AddTrace(this, trace)
         % Add a trace, either from file or from array
         % TODO checks dimensions of signals and data
-        function AddTrace(this, trace)
             
             if ischar(trace)
                 traj = load_traj(trace);
@@ -89,7 +90,6 @@ classdef BreachTraceSystem < BreachSystem
                     traj.param = zeros(1, size(trace,2)+1);
                 end
                 
-                
             elseif isnumeric(trace)
                 traj.X = trace(:, 2:end)';
                 traj.time = trace(:,1)';
@@ -100,7 +100,7 @@ classdef BreachTraceSystem < BreachSystem
                 end
             elseif isstruct(trace)
                 traj = trace;
-                traj.param=traj.param(1:end-1);
+   %             traj.param=traj.param(1:end-1); % why? 
             end
             
             Pnew = CreateParamSet(this.Sys);
@@ -108,11 +108,15 @@ classdef BreachTraceSystem < BreachSystem
             
             nb_traces =this.CountTraces();
             
-            traj.param(end+1) = nb_traces+1;
+            if ~isfield(traj, 'param')
+                traj.param = [this.Sys.p'];
+            end
+            
+            traj.param(this.Sys.DimX+1) = nb_traces+1;
             Pnew.traj={traj};
             Pnew.traj_ref = 1;
             Pnew.traj_to_compute =  [];
-            Pnew.pts(1:Pnew.DimP,1) = traj.param';
+            Pnew.pts(1:Pnew.DimP,1) =  traj.param';
             if nb_traces == 0
                 this.P = Pnew;
             else
@@ -122,6 +126,7 @@ classdef BreachTraceSystem < BreachSystem
             this.P.traj_to_compute =  [];
             this.P.pts(this.P.DimX+1,:) = 1:nb_traces+1; % index traces
             this.Sys.tspan = traj.time;
+            
             if isfield(this.P, 'Xf')
                 this.P.Xf(:,end)= traj.X(:,end);
             else
@@ -130,7 +135,7 @@ classdef BreachTraceSystem < BreachSystem
         end
         
         function AddRandomTraces(this,n_traces, n_samples, amp, end_time)
-            
+        % AddRandomTraces Initially used to test monitoring algo    
             if ~exist('n_traces', 'var')
                 n_traces= 1;
             end
@@ -154,8 +159,7 @@ classdef BreachTraceSystem < BreachSystem
             end
             
         end
-        
-        
+            
         function st = disp(this)
             st = ['BreachTraceSystem with ' num2str(this.CountTraces()) ' traces.'];
             if nargout<1

@@ -419,8 +419,7 @@ classdef BreachSet < BreachStatus
             ipr = cellfun(@(c)(~isempty(c)), {this.Domains.domain});
             params =   this.P.ParamList(ipr);
         end
-        
-        
+                
         %% Signals
         function traces = GetTraces(this)
             % Get computed trajectories
@@ -540,7 +539,12 @@ classdef BreachSet < BreachStatus
                 [signals_idx, type] = FindParam(this.P, signals);
                 if any(type==0)
                     not_found= find(type==0);
-                    error('GetSignalValues:sig_not_found', 'Signal %s not found.',signals{not_found(1)});
+                    if ischar(signals)
+                        sig = signals;
+                    else
+                        sig = signals{not_found(1)};
+                    end
+                    error('GetSignalValues:sig_not_found', 'Signal %s not found.',sig);
                 end
             elseif isnumeric(signals)
                 signals_idx=signals;
@@ -564,7 +568,6 @@ classdef BreachSet < BreachStatus
                         X{i_traj} = X{i_traj}';
                     end
                 end
-                
             end
             if nb_traj==1
                 X = X{1};
@@ -827,8 +830,7 @@ classdef BreachSet < BreachStatus
             end
             this.CheckinDomainParam();
         end
-        
-        
+                
         %% Concatenation, ExtractSubset - needs some additional compatibility checks...
         function Concat(this, other)
             this.P = SConcat(this.P, other.P);
@@ -1150,8 +1152,7 @@ classdef BreachSet < BreachStatus
             end
         end
         
-        %% Requirements
-        
+        %% Requirements       
         function  SortbyRob(this)
             sat_values = this.GetSatValues();
             [ ~, order_rob] = sort(sum(sat_values,1));
@@ -1334,7 +1335,7 @@ classdef BreachSet < BreachStatus
                     fprintf('%s\n', this.P.ParamList{isig});
                 end
             else
-                
+                disp( 'Signals:')
                 disp('-------')
                 for isig = 1:this.P.DimX
                     fprintf('%s %s\n', this.P.ParamList{isig}, this.Domains(isig).short_disp());
@@ -1425,8 +1426,7 @@ classdef BreachSet < BreachStatus
                     this.Domains(idx_params(id)).domain = [];
                 end
             end
-        end
-        
+        end    
         
         function ResetSimulations(this)
             % Removes computed trajectories
@@ -1437,6 +1437,19 @@ classdef BreachSet < BreachStatus
         function ResetSelected(this)
             nb_pts = this.GetNbParamVectors();
             this.P.selected = zeros(1,nb_pts);
+        end
+        
+    end
+    methods (Access=protected)    
+        
+        function Xp = get_signal_from_traj(this, traj, names)
+            idx = FindParam(this.P, names); %  not fool proof, but not supposed to be used by fools
+            Xp = traj.X(idx,:);
+        end
+  
+        function traj = set_signal_in_traj(this, traj, names, Xp)
+            idx = FindParam(this.P, names); %  not fool proof, but not supposed to be used by fools
+            traj.X(idx,:) = Xp;
         end
         
         %%  Compare (FIXME)
