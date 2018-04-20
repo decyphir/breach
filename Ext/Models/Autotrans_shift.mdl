@@ -32,7 +32,7 @@ Model {
       BusOutputAsStruct	      "off"
     }
     ParameterArgumentNames  ""
-    ComputedModelVersion    "1.276"
+    ComputedModelVersion    "1.277"
     NumModelReferences	    0
     NumTestPointedSignals   4
     TestPointedSignal {
@@ -87,7 +87,7 @@ Model {
       $ObjectID		      2
       $ClassName	      "Simulink.WindowInfo"
       IsActive		      [1]
-      Location		      [833.0, 467.0, 2062.0, 1232.0]
+      Location		      [-13.0, -13.0, 3866.0, 2126.0]
       Object {
 	$PropName		"ModelBrowserInfo"
 	$ObjectID		3
@@ -111,9 +111,9 @@ Model {
 	IsActive		[1]
 	ViewObjType		"SimulinkTopLevel"
 	LoadSaveID		"0"
-	Extents			[2002.0, 949.0]
-	ZoomFactor		[1.9574665975066625]
-	Offset			[-97.897473501462059, 40.847898391812862]
+	Extents			[3806.0, 1843.0]
+	ZoomFactor		[4.1343963553530756]
+	Offset			[-76.472348484848482, 44.613774104683195]
       }
     }
   }
@@ -123,9 +123,9 @@ Model {
   ModifiedByFormat	  "%<Auto>"
   LastModifiedBy	  "donze"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "Mon Feb 12 19:48:43 2018"
-  RTWModifiedTimeStamp	  434900096
-  ModelVersionFormat	  "1.%<AutoIncrement:276>"
+  LastModifiedDate	  "Wed Apr 18 14:33:33 2018"
+  RTWModifiedTimeStamp	  445962733
+  ModelVersionFormat	  "1.%<AutoIncrement:277>"
   ConfigurationManager	  "none"
   SampleTimeColors	  on
   SampleTimeAnnotations	  off
@@ -1030,7 +1030,7 @@ Model {
   }
   System {
     Name		    "Autotrans_shift"
-    Location		    [833, 467, 2895, 1699]
+    Location		    [-13, -13, 3853, 2113]
     Open		    on
     ModelBrowserVisibility  off
     ModelBrowserWidth	    200
@@ -1042,9 +1042,9 @@ Model {
     TiledPaperMargins	    [0.500000, 0.500000, 0.500000, 0.500000]
     TiledPageScale	    1
     ShowPageBoundaries	    off
-    ZoomFactor		    "196"
+    ZoomFactor		    "413"
     ReportName		    "simulink-default.rpt"
-    SIDHighWatermark	    "123"
+    SIDHighWatermark	    "124"
     Block {
       BlockType		      Inport
       Name		      "throttle"
@@ -1634,7 +1634,7 @@ Model {
       }
       System {
 	Name			"Transmission"
-	Location		[223, 44, 1337, 1145]
+	Location		[-13, -13, 3853, 2113]
 	Open			off
 	ModelBrowserVisibility	off
 	ModelBrowserWidth	200
@@ -2579,7 +2579,7 @@ Model {
       BlockType		      Outport
       Name		      "RPM"
       SID		      "79"
-      Position		      [685, 83, 715, 97]
+      Position		      [685, 178, 715, 192]
       ZOrder		      -11
       FontSize		      14
       Port		      "2"
@@ -2643,7 +2643,7 @@ Model {
       }
       Branch {
 	ZOrder			4
-	Points			[0, -75; 255, 0]
+	Points			[0, -75; 255, 0; 0, 95]
 	Branch {
 	  ZOrder		  5
 	  DstBlock		  "RPM"
@@ -2651,7 +2651,7 @@ Model {
 	}
 	Branch {
 	  ZOrder		  6
-	  Points		  [0, 150]
+	  Points		  [0, 55]
 	  DstBlock		  "Scope"
 	  DstPort		  2
 	}
@@ -2784,7 +2784,7 @@ Model {
     Line {
       Name		      "OutputTorque"
       ZOrder		      27
-      Labels		      [0, 0]
+      Labels		      [2, 0]
       SrcBlock		      "Transmission"
       SrcPort		      2
       Points		      [28, 0; 0, 60]
@@ -3268,31 +3268,6 @@ Stateflow {
   }
   transition {
     id			    24
-    labelString		    "[speed > down_th]"
-    labelPosition	    [131.216 211.56 81.301 13.363]
-    fontSize		    10
-    arrowSize		    10
-    src {
-      id		      3
-      intersection	      [2 1 0 0.2511 174.7018 230.694 0 0]
-    }
-    dst {
-      id		      11
-      intersection	      [3 0 1 0.8059 271.5466 184.3405 0 0]
-    }
-    midPoint		    [235.8157 224.6063]
-    chart		    2
-    linkNode		    [9 23 25]
-    dataLimits		    [174.702 274.547 184.34 230.82]
-    subviewer		    2
-    slide {
-      sticky		      BOTH_STICK
-    }
-    executionOrder	    2
-    ssIdNumber		    21
-  }
-  transition {
-    id			    25
     labelString		    "after(TWAIT,tick)\n[speed <= down_th]\n{gear_state.DOWN}"
     labelPosition	    [196.136 254.598 88.631 37.417]
     fontSize		    10
@@ -3307,7 +3282,7 @@ Stateflow {
     }
     midPoint		    [244.9922 233.2938]
     chart		    2
-    linkNode		    [9 24 26]
+    linkNode		    [9 23 25]
     dataLimits		    [174.702 286.803 184.34 244.658]
     subviewer		    2
     slide {
@@ -3315,6 +3290,31 @@ Stateflow {
     }
     executionOrder	    1
     ssIdNumber		    22
+  }
+  transition {
+    id			    25
+    labelString		    "[speed > down_th]"
+    labelPosition	    [131.216 211.56 81.301 13.363]
+    fontSize		    10
+    arrowSize		    10
+    src {
+      id		      3
+      intersection	      [2 1 0 0.2511 174.7018 230.694 0 0]
+    }
+    dst {
+      id		      11
+      intersection	      [3 0 1 0.8059 271.5466 184.3405 0 0]
+    }
+    midPoint		    [235.8157 224.6063]
+    chart		    2
+    linkNode		    [9 24 26]
+    dataLimits		    [174.702 274.547 184.34 230.82]
+    subviewer		    2
+    slide {
+      sticky		      BOTH_STICK
+    }
+    executionOrder	    2
+    ssIdNumber		    21
   }
   transition {
     id			    26
