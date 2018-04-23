@@ -111,33 +111,24 @@ classdef BreachRequirement < BreachTraceSystem
             this.signals_in = this.get_signals_in();
         end
                
-        function  [traj, val] = evalTrace(this,traj)
+        function  [val, traj] = evalTrace(this,traj)
             % evalTrace evaluation function for one trace.
-            [traj,  val] = this.getRobustSignal(traj, 0); %  for each trace, we collect robustness at time 0
+            
+            traj = this.applyOutputGens(traj);
+            [val, traj] = this.getRobustSignal(traj, 0); %  computes 
             
         end
          
-        function [val, trace_vals] = Eval(this, varargin)
-            % BreachRequirement.Eval returns evaluation of the constraint -
+        function [global_val, trace_vals] = Eval(this, varargin)
+            % BreachRequirement.Eval returns evaluation of the requirement -
             % compute it for all traces available and returns min (implicit
             % conjunction)
             
             % Collect traces from context
-            [trajs] = this.getTraces(varargin{:});
-            
-            
-            % For each trace, we collect robustness at time 0, as defined by standard semantics
-            num_trajs = numel(trajs);
-            trace_vals = zeros(1, num_trajs);
-            for itraj = 1:num_trajs
-                [trajs{itraj}, trace_vals(itraj)] = this.evalTrace(trajs{itraj});
-            end
-            
-            % Update trajs
-            this.setTraces(trajs);
+            trace_vals = this.evalAllTraces(varargin{:});
             
             % A BreachRequirement must return a single value
-            val = min(trace_vals);
+            global_val = min(trace_vals);
             
         end
           
@@ -184,10 +175,9 @@ classdef BreachRequirement < BreachTraceSystem
     end
     %% Protected methods
     methods (Access=protected)
-        function trajs =getTraces(this,varargin)
-            % BreachRequirement.getTraces ---  Needs to ensure that
-            % traj.params has right number of parameters and traj.X right
-            % dimensions. It fills X with NaNs for output/robustness signals
+        function V =evalAllTraces(this,varargin)
+            % BreachRequirement.evalAllTraces collect traces and apply
+            % evalTrace
             
             switch numel(varargin)
                 case 0   %  uses this
@@ -229,6 +219,7 @@ classdef BreachRequirement < BreachTraceSystem
                     traj.time = varargin{1};
                     traj.X = NaN(this.Sys.DimX, numel(traj.time));
                     traj = this.set_signal_in_traj(traj, this.signals_in, X); 
+                    [V, traj] = this.evalTrace(traj);
                     
                     trajs = {traj};
                     
@@ -241,14 +232,20 @@ classdef BreachRequirement < BreachTraceSystem
                 if ~iscell(Xs)
                     Xs= {Xs};
                 end
+                                
+                % Initialize values to return
+                V = zeros(1,numel(Xs));
                 
-                this.ResetSimulations(); % should do  for now.
-                if size(this.P.pts, 2)>1
-                    this.Reset();
-                end
                 % collect data necessary for formla evaluation
                 for  i = 1:numel(Xs)
-                    trajs{i}.param = this.P.pts(:,1)'; 
+                    if size(this.P.pts,2) == numel(Xs)
+                        trajs{i}.param = this.P.pts(:,i)';
+                    elseif size(this.P.pts,2)==1
+                        trajs{i}.param = this.P.pts(:,1)';
+                    else 
+                        error('Something wrong with dimensions');
+                    end      
+                    
                     trajs{i}.time = B.P.traj{i}.time;
                     trajs{i}.X = NaN(this.Sys.DimX, numel(trajs{i}.time));
                     trajs{i} = this.set_signal_in_traj(trajs{i}, this.signals_in, Xs{i});
@@ -260,26 +257,45 @@ classdef BreachRequirement < BreachTraceSystem
                             warning('getTraces:suspicious_status', 'Trace %d has non-zero status, indicating potentially dubious data.', i);
                         end
                     end
+                    [V(i), trajs{i}] = this.evalTrace(trajs{i}); 
+                    
                 end
             end
-   
-            for  i = 1:numel(trajs)
-                % applies output generators
-                for iog = 1:numel(this.ogs)
-                    Xin = this.get_signal_from_traj(trajs{i}, this.ogs{iog}.signals_in);
-                    pin = trajs{i}.param(FindParam(this.P, this.ogs{iog}.params));
-                    [~ , Xout] = this.ogs{iog}.computeSignals(trajs{i}.time, Xin, pin);
-                    trajs{i} = this.set_signal_in_traj(trajs{i}, this.ogs{iog}.signals,  Xout);
-                end
-                
-                this.AddTrace(trajs{i});
-            end
-            
+    
+            this.setTraces(trajs);
             
         end
          
- 
-   %% Aux       
+        function traj = applyOutputGens(this, traj)
+        % applyOutputGen applies intermediate signals computations
+            for iog = 1:numel(this.ogs)
+                Xin = this.get_signal_from_traj(traj, this.ogs{iog}.signals_in);
+                pin = traj.param(FindParam(this.P, this.ogs{iog}.params));
+                [~ , Xout] = this.ogs{iog}.computeSignals(traj.time, Xin, pin);
+                traj = this.set_signal_in_traj(traj, this.ogs{iog}.signals,  Xout);
+            end
+            
+        end
+        
+        function [val, traj] = getRobustSignal(this,traj, tau)
+            Xin = this.get_signal_from_traj(traj, this.formula.signals_in);
+            pin = traj.param(FindParam(this.P, this.formula.params));
+            [~,  Xout] = this.formula.computeSignals(traj.time, Xin, pin);
+             traj  = this.set_signal_in_traj(traj, this.formula.signals, Xout);
+            val = interp1(traj.time,Xout, tau, 'previous');
+        end
+     
+        function setTraces(this, trajs)
+            if this.hasTraj()
+                this.P.traj =trajs;  % optimistic ... also, should fix this traj/trajs thing
+            else
+                for it= 1:numel(trajs)
+                    this.AddTrace(trajs{it});
+                end
+            end
+        end
+        
+   %% Misc       
         function checkSignalMap(this)
             % checkSignalMap warning if a signal maps to a signal that is
             % not required by requirement
@@ -306,24 +322,6 @@ classdef BreachRequirement < BreachTraceSystem
             end
             sigs_in = setdiff(sigs_in, this.formula.signals, 'stable');             % remove outputs of formula
        
-        end
-        
-        function setTraces(this, trajs)
-            if this.hasTraj()
-                this.P.traj =trajs;  % optimistic ... also, should fix this traj/trajs thing
-            else
-                for it= 1:numel(trajs)
-                    this.AddTrace(trajs{it});
-                end
-            end
-        end
-        
-        function [traj, val] = getRobustSignal(this,traj, tau)
-            Xin = this.get_signal_from_traj(traj, this.formula.signals_in);
-            pin = traj.param(FindParam(this.P, this.formula.params));
-            [~,  Xout] = this.formula.computeSignals(traj.time, Xin, pin);
-             traj  = this.set_signal_in_traj(traj, this.formula.signals, Xout);
-            val = interp1(traj.time,Xout, tau, 'previous');
         end
         
         function traj = set_signal_in_traj(this, traj, names, Xout)
