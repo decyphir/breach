@@ -145,19 +145,57 @@ classdef BreachRequirement < BreachTraceSystem
         function PrintFormula(this)
             
             phi = this.formula.formula;
-            
-            st = sprintf(['Formula:\n'  '%s : %s'], get_id(phi), disp(phi,1));
-            
-            st = sprintf([st '\n\nPredicates:\n']);
-            
-            predicates = STL_ExtractPredicates(phi);
-            for ip = 1:numel(predicates)
-                st =   sprintf([ st '%s: %s\n' ], get_id(predicates(ip)), disp(predicates(ip)));
+            st = sprintf(['--- FORMULA ---\n'  '%s := %s'], get_id(phi), disp(phi,1));
+           
+            if ~strcmp(get_type(phi),'predicate')
+                st = [st '\n  where\n'];
+                predicates = STL_ExtractPredicates(phi);
+                for ip = 1:numel(predicates)
+                    st =   sprintf([ st '%s := %s \n' ], get_id(predicates(ip)), disp(predicates(ip)));
+                end
+                st = [st '\n'];
             end
             
             if nargout ==0
                 fprintf(st);
             end
+            
+        end
+        
+        function PrintSignals(this)
+            disp( '---- SIGNALS IN ----')
+            for isig = 1:numel(this.signals_in)
+                sig = this.signals_in{isig};
+                if this.sigMap.isKey(sig)
+                    fprintf('%s --> %s\n', sig , this.sigMap(sig));
+                else
+                    fprintf('%s\n', sig);
+                end        
+            end
+            fprintf('\n');
+           disp( '---- SIGNALS  OUT ----')
+           for iog = 1:numel(this.ogs)
+               signals_in_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.ogs{iog}.signals_in, 'UniformOutput', false));
+               signals_in_st = ['{' signals_in_st(1:end-2) '}'];
+               signals_out_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.ogs{iog}.signals, 'UniformOutput', false));
+               signals_out_st = ['{' signals_out_st(1:end-2) '}'];
+               fprintf('%s --> %s\n',signals_in_st, signals_out_st);
+           end
+   
+           keys = this.sigMap.keys;
+           for ik = 1:numel(keys)
+               if ~ismember(keys{ik}, this.signals_in)  % internal mapping
+                    fprintf('%s --> %s\n', keys{ik} , this.sigMap(keys{ik}));
+               end
+           end
+           
+        fprintf('\n');    
+        end
+           
+        function PrintAll(this)
+            this.PrintFormula();
+            this.PrintSignals();
+            this.PrintParams();
             
         end
         
