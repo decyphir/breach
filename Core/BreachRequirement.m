@@ -264,27 +264,36 @@ classdef BreachRequirement < BreachTraceSystem
             
             if exist('B', 'var')
                 if isa(B,'struct')
-                    if isfield(B,'names')
-                        % get time
-                        idx_time = find(strcmpi(B.names, 'TIME'),1);
-                        time = B.values(idx_time,:);
-                        
-                        % get signal values
-                        Xs = zeros(numel(this.signals_in),numel(time));
-                        for isig = 1:numel(this.signals_in)
-                            idx_sig = find(strcmp(B.names, this.signals_in{isig}),1);
-                            Xs(isig,:) = B.values(idx_sig,:);
-                        end
-                        
-                        traj.status = 0;
-                        traj.param = this.P.pts(:,1)';
-                        traj.time = time;
-                        traj.X = NaN(this.Sys.DimX, numel(traj.time));
-                        traj = this.set_signal_in_traj(traj, this.signals_in, Xs);
-                        [V, traj] = this.evalTrace(traj);
-                        trajs = {traj};
-                        
+                    if isfield(B, 'time')   % get time
+                        time = B.time;
                     end
+                    
+                    % get signal values
+                    Xs = zeros(numel(this.signals_in),numel(time));
+                    for isig = 1:numel(this.signals_in)
+                        idx_sig = find(strcmp(B.inputs.names, this.signals_in{isig}),1);
+                        if isempty(idx_sig)
+                            idx_sig = find(strcmp(B.outputs.names, this.signals_in{isig}),1);
+                            if isempty(idx_sig)
+                                error('BreachRequirement:signal_not_found', 'Signal %s not found', this.signals_in{isig});
+                            else
+                                Xs(isig,:) = B.outputs.values(idx_sig,:);
+                            end
+                        else
+                            Xs(isig,:) = B.inputs.values(idx_sig,:);
+                        end
+                         
+                    end
+                    
+                    traj.status = 0;
+                    traj.param = this.P.pts(:,1)';
+                    traj.time = time;
+                    traj.X = NaN(this.Sys.DimX, numel(traj.time));
+                    traj = this.set_signal_in_traj(traj, this.signals_in, Xs);
+                    [V, traj] = this.evalTrace(traj);
+                    trajs = {traj};
+                    
+                   
                 else
                     Xs = B.GetSignalValues(this.signals_in);
                     if ~iscell(Xs)
