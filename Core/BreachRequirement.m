@@ -19,8 +19,12 @@ classdef BreachRequirement < BreachTraceSystem
             else
                 %% work out arguments
                 if ~isempty(formula)
-                    if isa(formula, 'char')||isa(formula, 'STL_Formula')
+                    if isa(formula, 'char')||isa(formula, 'STL_Formula')                        
                         monitor = stl_monitor(formula);
+                        if strcmp(get_type(monitor.formula), '=>')
+                            monitor = stl_A_implies_B_monitor(formula);
+                        end
+                    
                     elseif isa(a, 'stl_monitor')
                         monitor = formula;
                     end
@@ -115,7 +119,7 @@ classdef BreachRequirement < BreachTraceSystem
             % evalTrace evaluation function for one trace.
             
             traj = this.applyOutputGens(traj);
-            [val, traj] = this.getRobustSignal(traj, 0); %  computes 
+            [val, traj] = this.getRobustSignal(traj, 0); %  computes robustness, return at time per usual STL semantics 
             
         end
          
@@ -132,6 +136,15 @@ classdef BreachRequirement < BreachTraceSystem
             
         end
           
+        function PlotDiagnosis(this)
+        % Proof of concept version
+            traj = this.P.traj{1};
+            Xin = this.get_signal_from_traj(traj, this.formula.signals_in);
+            pin = traj.param(FindParam(this.P, this.formula.params));
+            this.formula.plot_diagnosis(traj.time, Xin, pin);
+        end
+        
+        
         %% Display
         function st = disp(this)
             signals_in_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.signals_in, 'UniformOutput', false));
