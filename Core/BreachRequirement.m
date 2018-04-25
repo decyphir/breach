@@ -136,6 +136,15 @@ classdef BreachRequirement < BreachTraceSystem
             
         end
           
+        function PlotDiagnosis(this)
+        % Proof of concept version
+            traj = this.P.traj{1};
+            Xin = this.get_signal_from_traj(traj, this.formula.signals_in);
+            pin = traj.param(FindParam(this.P, this.formula.params));
+            this.formula.plot_diagnosis(traj.time, Xin, pin);
+        end
+        
+        
         %% Display
         function st = disp(this)
             signals_in_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.signals_in, 'UniformOutput', false));
