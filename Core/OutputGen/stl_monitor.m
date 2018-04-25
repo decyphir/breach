@@ -53,7 +53,7 @@ classdef stl_monitor < output_gen
                 fprintf(st);
             end
         end
-        
+     
         function [tau, val] = computeSignals(this, time, X, p, tau)
             if ~exist('tau', 'var')||isempty(tau)
                 tau = time;
@@ -67,5 +67,17 @@ classdef stl_monitor < output_gen
             end
             [val, tau] = STL_Eval(this.Sys, this.formula, P0,this.P.traj{1}, tau);  
         end
-   end
+        
+        function h= plot_diagnosis(this, time, X, p )
+        % to be completed 
+            [tau, val] = this.computeSignals(time, X, p);
+            stairs(tau, val);
+            grid on;
+            title(sprintf('%s', disp(this.formula)))
+            highlight_truth_intervals(tau,val);
+            
+        end
+
+        
+    end
 end
