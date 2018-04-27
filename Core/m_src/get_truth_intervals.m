@@ -6,7 +6,6 @@ true_intrvls =[];
 false_intrvls =[];
 
 if all(true_vals)
-
   true_intrvls = [1 numel(val)];
 elseif any(true_vals)
     idx_start = find(diff([0.5 true_vals]));
