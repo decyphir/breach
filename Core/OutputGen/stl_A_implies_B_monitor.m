@@ -30,20 +30,20 @@ classdef stl_A_implies_B_monitor < stl_monitor
                 ax(1) = subplot(3,1,1);
                 stairs(tauA, valA);
                 grid on;
-                title(sprintf('pre: %s', disp(this.pre)))
+                title(sprintf('pre: %s', disp(this.pre)), 'Interpreter', 'None');
                 highlight_truth_intervals(tauA,valA);
                 
                 ax(2) = subplot(3,1,2);
                 stairs(tauB, valB)
                 grid on;
-                title(sprintf('post: %s', disp(this.post)))
+                title(sprintf('post: %s', disp(this.post)), 'Interpreter', 'None');
                 highlight_truth_intervals(tauB,valB);
                 ax(3) =subplot(3,1,3);
                 linkaxes(ax,'x');
             else
                 %stairs(tau, val);
                 grid on;
-                title(sprintf('%s', disp(this.formula)))
+                title(sprintf('%s', get_id(this.formula)), 'Interpreter', 'None');
                 highlight_truth_intervals(tau,val);
                 highlight_truth_intervals(tauA,valA, 'g', 0, [0.6 0 0.6], 0.3);
                 ax = gca;
