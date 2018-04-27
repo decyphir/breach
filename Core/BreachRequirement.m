@@ -144,18 +144,21 @@ classdef BreachRequirement < BreachTraceSystem
         end
           
         function PlotDiagnosis(this)
-        % Proof of concept version
+            % Proof of concept version
             traj = this.P.traj{1};
-            Xin = this.get_signal_from_traj(traj, this.formulas{1}.signals_in);
-            pin = traj.param(FindParam(this.P, this.formulas{1}.params));
-        
+            
             num_phi = numel(this.formulas);
             for ifo = 1:num_phi
                 subplot(num_phi,1,ifo)
                 hold on;
-                this.PlotSignals(this.signals_in,[], 'b',true);  % on same axis
+                this.PlotSignals(this.formulas{ifo}.signals_in,[], [],true);  % on same axis
+                Xin = this.get_signal_from_traj(traj, this.formulas{ifo}.signals_in);
+                pin = traj.param(FindParam(this.P, this.formulas{ifo}.params));
                 ax(ifo) = this.formulas{ifo}.plot_diagnosis(traj.time, Xin, pin, 'compact');
             end
+            
+            linkaxes(ax, 'x');
+            
         end
         
         
