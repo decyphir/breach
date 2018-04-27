@@ -30,12 +30,13 @@ function trace = save_result_rename(trace, varargin)
             
     function rename(sig_old, sig_new)
         idx =strcmp(sig_old, trace.outputs.names);
-        if ~isempty(idx)
-            trace.output.names{idx} = sig_new;
+        if any(idx)
+            trace.outputs.names{idx} = sig_new;
         end
         idx =strcmp(sig_old, trace.inputs.names);
-        if ~isempty(idx)
-            trace.input.names{idx} = sig_new;
+        if any(idx)
+            trace.inputs.names{idx} = sig_new;
         end
         
     end
+end

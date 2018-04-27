@@ -744,21 +744,23 @@ classdef BreachSystem < BreachSet
             
             % Add parameters
             pdoms = {};
-            for par = output.params
-                if output.domains.isKey(par{1})
-                    pdoms = [pdoms output.domains(par{1})];
-                else
-                    pdoms = [pdoms BreachDomain()];
+            [params, ipar]  =setdiff(output.params, this.P.ParamList, 'stable');
+            if ~isempty(params)
+                for par = params
+                    if output.domains.isKey(par{1})
+                        pdoms = [pdoms output.domains(par{1})];
+                    else
+                        pdoms = [pdoms BreachDomain()];
+                    end
                 end
+                
+                this.Sys.p = [this.Sys.p ;output.p0(ipar)'];
+                this.Sys.ParamList = [this.Sys.ParamList params];
+                this.Sys.DimP = this.Sys.DimP+numel(params);
+                
+                % Add domain
+                this.Domains = [this.Domains pdoms ];
             end
-            
-            this.Sys.p = [this.Sys.p ;output.p0'];
-            this.Sys.ParamList = [this.Sys.ParamList output.params];
-            this.Sys.DimP = this.Sys.DimP+numel(output.params);
-            
-            % Add domain
-            this.Domains = [this.Domains pdoms ];
-            
             this.P = CreateParamSet(this.Sys);
             this.ResetParamSet();
             

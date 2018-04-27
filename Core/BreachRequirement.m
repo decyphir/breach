@@ -34,7 +34,7 @@ classdef BreachRequirement < BreachTraceSystem
                     elseif isa(a, 'stl_monitor')
                         monitor = formula;
                     end
-                    signals = [signals monitor.signals_in];
+                    signals = [signals setdiff(monitor.signals_in, signals, 'stable')];
                     monitors = [monitors {monitor}];
                 end
                 
@@ -43,7 +43,7 @@ classdef BreachRequirement < BreachTraceSystem
                         ogs = {ogs};
                     end
                     for iogs = 1:numel(ogs)
-                        signals = [signals ogs{iogs}.signals_in ];
+                        signals = [signals setdiff(ogs{iogs}.signals_in, signals,'stable')];
                     end
                 end
             end
@@ -143,18 +143,32 @@ classdef BreachRequirement < BreachTraceSystem
             
         end
           
-        function PlotDiagnosis(this)
-            % Proof of concept version
+        function PlotDiagnosis(this, idx_formulas)
+            
+            if ~exist('idx_formulas','var')||isempty(idx_formulas)
+                num_phi = numel(this.formulas);
+                idx_formulas = 1:num_phi;
+            else
+                num_phi = numel(idx_formulas);
+            end
+            
             traj = this.P.traj{1};
             
-            num_phi = numel(this.formulas);
-            for ifo = 1:num_phi
+            sigs_in = this.signals_in;
+            for is = 1:numel(sigs_in)
+                if this.sigMap.isKey(sigs_in{is})
+                    sigs_in{is} = this.sigMap(sigs_in{is});
+                end
+            end
+            
+            for ifo =1:numel(idx_formulas)
                 subplot(num_phi,1,ifo)
                 hold on;
-                this.PlotSignals(this.formulas{ifo}.signals_in,[], [],true);  % on same axis
-                Xin = this.get_signal_from_traj(traj, this.formulas{ifo}.signals_in);
-                pin = traj.param(FindParam(this.P, this.formulas{ifo}.params));
-                ax(ifo) = this.formulas{ifo}.plot_diagnosis(traj.time, Xin, pin, 'compact');
+                this.PlotSignals(sigs_in,[], [],true);  % on same axis
+                legend(this.signals_in, 'Interpreter', 'None');
+                Xin = this.get_signal_from_traj(traj, this.formulas{idx_formulas(ifo)}.signals_in);
+                pin = traj.param(FindParam(this.P, this.formulas{idx_formulas(ifo)}.params));
+                ax(ifo) = this.formulas{idx_formulas(ifo)}.plot_diagnosis(traj.time, Xin, pin, 'compact');
             end
             
             linkaxes(ax, 'x');
