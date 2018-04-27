@@ -1,4 +1,4 @@
-function trace = save_result_rename(trace, varargin)
+function trace = breach_result_rename(trace, varargin)
 
         arg_err_msg = 'Argument should be a list of pairs of signal names, or two cells of signal names with same size.';
             switch nargin
