@@ -6,7 +6,6 @@ classdef BreachRequirement < BreachTraceSystem
     properties
         ogs  % output generators
         formulas
-        sigMap = containers.Map()
         signals_in
     end
     
@@ -243,17 +242,6 @@ classdef BreachRequirement < BreachTraceSystem
             this.PrintFormula();
             this.PrintSignals();
             this.PrintParams();
-            
-        end
-        
-        function PrintSigMap(this)
-            st = 'Signals Map:\n';
-            
-            keys  = this.sigMap.keys;
-            for ip = 1:numel(keys)
-                st =   sprintf([ st '%s ---> %s\n' ],keys{ip}, this.sigMap(keys{ip}));
-            end
-            fprintf(st);
             
         end
         

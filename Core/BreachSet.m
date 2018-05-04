@@ -37,6 +37,7 @@ classdef BreachSet < BreachStatus
         SignalRanges % ranges of values taken by each signal variable
         AppendWhenSample=false % when true, sampling appends new param vectors, otherwise replace.
         log_folder
+        sigMap = containers.Map()
     end
     
     methods (Hidden=true)
@@ -421,6 +422,68 @@ classdef BreachSet < BreachStatus
         end
                 
         %% Signals
+        
+        function this= SetSignalMap(this, varargin)
+            % SetSignalMap defines aliases for signals - used by GetSignalValues 
+            %
+            % Input:  a map or a list of pairs or two cells
+            
+            this.ResetSigMap();
+            
+            arg_err_msg = 'Argument should be a containers.Map object, or a list of pairs of signal names, or two cells of signal names with same size.';
+            switch nargin
+                case 2
+                    if ~isa(varargin{1}, 'containers.Map')
+                        error('SetSignalMap:wrong_arg', arg_err_msg);
+                    else
+                        this.sigNamesMap = varargin{1};
+                    end
+                case 3
+                    if iscell(varargin{2})
+                        if ~iscell(varargin{2})||(numel(varargin{1}) ~= numel(varargin{2}))
+                            error('SetSignalMap:wrong_arg', arg_err_msg);
+                        end
+                        for is = 1:numel(varargin{2})
+                            this.sigMap(varargin{1}{is}) = varargin{2}{is};
+                        end
+                    else
+                        if ischar(varargin{1})&&ischar(varargin{2})
+                            this.sigMap(varargin{1}) = varargin{2};
+                        else
+                            error('SetSignalMap:wrong_arg', arg_err_msg);
+                        end
+                    end
+                otherwise
+                    for is = 1:numel(varargin)/2
+                        try
+                            this.sigMap(varargin{2*is-1}) = varargin{2*is};
+                        catch
+                            error('SetSignalMap:wrong_arg', arg_err_msg);
+                        end
+                    end
+            end
+            
+            if this.verbose >= 2
+                this.PrintSigMap();
+            end
+            
+        end
+        
+        function ResetSigMap(this)
+            this.sigMap = containers.Map();
+        end
+
+        function PrintSigMap(this)
+            st = 'Signals Map:\n';
+            
+            keys  = this.sigMap.keys;
+            for ip = 1:numel(keys)
+                st =   sprintf([ st '%s ---> %s\n' ],keys{ip}, this.sigMap(keys{ip}));
+            end
+            fprintf(st);
+            
+        end
+     
         function traces = GetTraces(this)
             % Get computed trajectories
             traces= [];
@@ -535,12 +598,24 @@ classdef BreachSet < BreachStatus
                 error('GetTrajValues:NoTrajField','Compute/import trajectories first.')
             end
             
-            if ischar(signals) || iscell(signals)
+            if ischar(signals)
+                signals = {signals};
+            end
+            
+            if iscell(signals)
+                % Replace with sigMap
+                for is = 1:numel(signals)
+                    while this.sigMap.isKey(signals{is}) % recursive, allow alias of alias 
+                        signals{is} = this.sigMap(signals{is});
+                    end
+                end
+                
                 [signals_idx, type] = FindParam(this.P, signals);
                 if any(type==0)
                     not_found= find(type==0);
                     if ischar(signals)
                         sig = signals;
+                        
                     else
                         sig = signals{not_found(1)};
                     end
@@ -1330,13 +1405,11 @@ classdef BreachSet < BreachStatus
         function PrintSignals(this)
             if isempty(this.SignalRanges)
                 disp( '---- SIGNALS ----')
-                %disp( '-------')
                 for isig = 1:this.P.DimX
                     fprintf('%s\n', this.P.ParamList{isig});
                 end
             else
                 disp( '---- SIGNALS ----')
-                %disp('-------')
                 for isig = 1:this.P.DimX
                     fprintf('%s %s\n', this.P.ParamList{isig}, this.Domains(isig).short_disp());
                 end
@@ -1348,14 +1421,12 @@ classdef BreachSet < BreachStatus
             nb_pts= this.GetNbParamVectors();
             if (nb_pts<=1)
                 disp('-- PARAMETERS --')
-                %disp('----------')
                 for ip = this.P.DimX+1:numel(this.P.ParamList)
                     fprintf('%s=%g       %s',this.P.ParamList{ip},this.P.pts(ip,1), this.Domains(ip).short_disp(1));
                     fprintf('\n');
                 end
             else
                 fprintf('-- PARAMETERS -- (%d vectors):\n',nb_pts);
-                %disp('-------------------------');
                 for ip = this.P.DimX+1:numel(this.P.ParamList)
                     fprintf('%s     %s\n',this.P.ParamList{ip}, this.Domains(ip).short_disp(1));
                 end
