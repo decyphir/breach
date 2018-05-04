@@ -20,6 +20,8 @@ classdef BreachSignalsPlot < handle
                 if ischar(signals)
                     signals = {signals};
                 end
+            else
+                signals = {BrSet.P.ParamList{1}};
             end
             
             for is = 1:numel(signals)
@@ -159,6 +161,8 @@ classdef BreachSignalsPlot < handle
                 elseif ax > numel(this.Axes) 
                     this.AddAxes(); 
                     ax =this.Axes(end);
+                else
+                    ax = this.Axes(ax);
                 end
             end    
             if ~isa(ax, 'matlab.graphics.axis.Axes')
@@ -172,6 +176,9 @@ classdef BreachSignalsPlot < handle
         end
         
         function HighlightFalse(this, sig, ax)
+            if nargin<3
+                ax = this.Axes(1);
+            end
             axes(ax);
             hold on;
             traj = this.BrSet.P.traj{1};
