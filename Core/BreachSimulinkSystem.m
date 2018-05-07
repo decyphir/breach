@@ -37,6 +37,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         MdlVars                      % List of variables used by the model
         SimInputsOnly=false % if true, will not run Simulink model
         SimInModelsDataFolder=false
+        StopAtSimulinkError=false
         mdl
         UseDiskCaching=false 
         DiskCachingRoot 
@@ -815,6 +816,9 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 X = zeros(Sys.DimX, numel(tout));
                 status =-1;
                 this.addStatus(-1, MException.identifier, MException.message);
+                if this.StopAtSimulinkError
+                    rethrow(MException);
+                end
             end
             
             % FIXME: the following needs to be reviewed

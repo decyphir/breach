@@ -125,8 +125,9 @@ classdef BreachRequirement < BreachTraceSystem
             % evalTrace evaluation function for one trace.
             
             traj = this.applyOutputGens(traj);
-            [val, traj] = this.getRobustSignal(traj, 0); %  computes robustness, return at time per usual STL semantics 
-            
+            %[val, traj] = this.getRobustSignal(traj,0); %  computes robustness, return at time per usual STL semantics 
+            [val, traj] = this.getRobustSignal(traj); %  computes robustness, return at time per usual STL semantics
+            val = min(val, [], 2)';  % TEMPORARY: implicit alw 
         end
          
         function [global_val, trace_vals] = Eval(this, varargin)
@@ -298,7 +299,7 @@ classdef BreachRequirement < BreachTraceSystem
             end
             
             if exist('B', 'var')
-                if isa(B,'struct')
+                if isa(B,'struct')   % reading one struct obtained from a SaveResult command 
                     if isfield(B, 'time')   % get time
                         time = B.time;
                     end
@@ -336,7 +337,7 @@ classdef BreachRequirement < BreachTraceSystem
                     end
                     
                     % Initialize values to return
-                    V = zeros(1,numel(Xs));
+                    V = zeros(numel(Xs), numel(this.formulas));
                     
                     % collect data necessary for formla evaluation
                     for  i = 1:numel(Xs)
@@ -359,7 +360,7 @@ classdef BreachRequirement < BreachTraceSystem
                                 warning('getTraces:suspicious_status', 'Trace %d has non-zero status, indicating potentially dubious data.', i);
                             end
                         end
-                        [V(i), trajs{i}] = this.evalTrace(trajs{i});
+                        [V(i,:), trajs{i}] = this.evalTrace(trajs{i});
                     end
                 end
             end
@@ -385,7 +386,11 @@ classdef BreachRequirement < BreachTraceSystem
                 pin = traj.param(FindParam(this.P, this.formulas{ifo}.params));
                 [~,  Xout] = this.formulas{ifo}.computeSignals(traj.time, Xin, pin);
                 traj  = this.set_signal_in_traj(traj, this.formulas{ifo}.signals, Xout);
-                val(ifo) = interp1(traj.time,Xout, tau, 'previous');
+                if nargin<3
+                    val(ifo,:) = Xout;
+                else
+                    val(ifo,:) = interp1(traj.time,Xout, tau, 'previous');
+                end
             end
         end
      

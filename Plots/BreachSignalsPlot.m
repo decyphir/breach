@@ -4,18 +4,19 @@ classdef BreachSignalsPlot < handle
         BrSet
         Fig
         Axes
+        itraj
     end
     
     methods
         
-        function this = BreachSignalsPlot(BrSet, signals)
+        function this = BreachSignalsPlot(BrSet, signals, itraj)
             if nargin == 0
                 return;
             end
             
             this.BrSet = BrSet;
             this.Fig = figure;
-            
+            this.itraj = itraj;
             if exist('signals','var')
                 if ischar(signals)
                     signals = {signals};
@@ -181,7 +182,7 @@ classdef BreachSignalsPlot < handle
             end
             axes(ax);
             hold on;
-            traj = this.BrSet.P.traj{1};
+            traj = this.BrSet.P.traj{this.itraj};
             idx = FindParam(this.BrSet.P, sig);
             tau = traj.time;
             val = traj.X(idx,:);
@@ -198,7 +199,7 @@ classdef BreachSignalsPlot < handle
         function plot_signal(this, sig, ax)
             axes(ax);
             hold on;
-            traj = this.BrSet.P.traj{1}; 
+            traj = this.BrSet.P.traj{this.itraj}; 
             idx = FindParam(this.BrSet.P, sig);
             plot(traj.time , traj.X(idx,:), 'DisplayName', sig);
             l = legend('-DynamicLegend');
