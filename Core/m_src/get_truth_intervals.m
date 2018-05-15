@@ -27,4 +27,16 @@ else
     false_intrvls = [1 numel(val)];
 end
 
+% remove NaNs intervals
+remove_nan = [];
+for ifalse = 1:size(false_intrvls,1)
+    if all(isnan(val(false_intrvls(ifalse,1):false_intrvls(ifalse,2)-1)))
+        remove_nan(end+1) = ifalse;
+    end
+end
+
+if ~isempty(remove_nan)
+    false_intrvls(remove_nan,:) = [];
+end
+
 end

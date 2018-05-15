@@ -330,8 +330,7 @@ classdef BreachOpenSystem < BreachSystem
         
         function PrintSignals(this)
             if isempty(this.SignalRanges)
-                disp( 'Signals:')
-                disp( '-------')
+                disp( '---  SIGNALS  ---')
                 for isig = 1:this.Sys.DimX
                     if any(strcmp(this.Sys.ParamList{isig}, this.Sys.InputList))
                         fprintf('%s %s (Input)\n', this.Sys.ParamList{isig}, this.Domains(isig).short_disp(1));
@@ -341,8 +340,7 @@ classdef BreachOpenSystem < BreachSystem
                 end
             else
                 
-                fprintf('Signals (in range estimated over %d simulations):\n', numel(this.P.traj))
-                disp('-------')
+                fprintf('---  SIGNALS  ---\n')
                 for isig = 1:this.Sys.DimX-this.Sys.DimU
                     fprintf('%s in  [%g, %g]\n', this.Sys.ParamList{isig}, this.SignalRanges(isig,1),this.SignalRanges(isig,2));
                 end

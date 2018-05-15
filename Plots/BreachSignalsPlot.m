@@ -10,13 +10,21 @@ classdef BreachSignalsPlot < handle
     methods
         
         function this = BreachSignalsPlot(BrSet, signals, itraj)
-            if nargin == 0
+            
+            switch nargin
+                case 0
                 return;
+                case 1
+                    signals = BrSet.P.ParamList{1};
+                    itraj = 1;
+                case 2
+                    itraj = 1;
             end
             
             this.BrSet = BrSet;
             this.Fig = figure;
             this.itraj = itraj;
+            
             if exist('signals','var')
                 if ischar(signals)
                     signals = {signals};
@@ -33,7 +41,7 @@ classdef BreachSignalsPlot < handle
         end
                
         function AddAxes(this, pos)
-        % AddAxe add new axe at specified position
+        % AddAxes add new axe at specified position
             if nargin==1
                 pos = numel(this.Axes)+1;
             end
@@ -72,7 +80,6 @@ classdef BreachSignalsPlot < handle
             uimenu(cm, 'Label', 'Add Above', 'Callback', @(o,e)ctxtfn_add_axes_above(ax,o,e));
             uimenu(cm, 'Label', 'Add Below', 'Callback', @(o,e)ctxtfn_add_axes_below(ax, o,e));
             uimenu(cm, 'Label', 'Delete', 'Callback', @(o,e)ctxtfn_delete_axes(ax, o,e));
-           
            
             for is = 1:this.BrSet.P.DimX
                 sig= this.BrSet.P.ParamList{is};

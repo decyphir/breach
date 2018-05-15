@@ -4,9 +4,12 @@ classdef BreachRequirement < BreachTraceSystem
     % implemented.
     
     properties
+        BrSet
         ogs  % output generators
         formulas
         signals_in
+        traces_vals % results for individual traces & formulas
+        val            % summary evaluation for all traces & formulas
     end
     
     methods
@@ -20,23 +23,8 @@ classdef BreachRequirement < BreachTraceSystem
                 if ~iscell(formulas)
                     formulas=  {formulas};
                 end
-                signals = {};
-                monitors = {};
-                for ifo = 1:numel(formulas)
-                    formula = formulas{ifo};
-                    if isa(formula, 'char')||isa(formula, 'STL_Formula')
-                        monitor = stl_monitor(formula);
-                        if strcmp(get_type(monitor.formula), '=>')
-                            monitor = stl_A_implies_B_monitor(formula);
-                        end
-                        
-                    elseif isa(a, 'stl_monitor')
-                        monitor = formula;
-                    end
-                    signals = [signals setdiff(monitor.signals_in, signals, 'stable')];
-                    monitors = [monitors {monitor}];
-                end
                 
+                [signals, monitors] = get_monitors(formulas);
                 if  exist('ogs', 'var')&&~isempty(ogs)
                     if ~iscell(ogs)
                         ogs = {ogs};
@@ -63,9 +51,9 @@ classdef BreachRequirement < BreachTraceSystem
             end
             % Figure out what signals are required input signals
             this.ResetSigMap();
-            
+              
         end
-        
+                
         function this= SetSignalMap(this, varargin)
             % SetSignalMap maps signal names to signals needed for requirement
             % evaluation
@@ -123,59 +111,35 @@ classdef BreachRequirement < BreachTraceSystem
                
         function  [val, traj] = evalTrace(this,traj)
             % evalTrace evaluation function for one trace.
-            
             traj = this.applyOutputGens(traj);
-            %[val, traj] = this.getRobustSignal(traj,0); %  computes robustness, return at time per usual STL semantics 
             [val, traj] = this.getRobustSignal(traj); %  computes robustness, return at time per usual STL semantics
-            val = min(val, [], 2)';  % TEMPORARY: implicit alw 
+
         end
          
-        function [global_val, trace_vals] = Eval(this, varargin)
+        function [global_val, traces_vals] = Eval(this, varargin)
             % BreachRequirement.Eval returns evaluation of the requirement -
             % compute it for all traces available and returns min (implicit
             % conjunction)
             
             % Collect traces from context and eval them
-            trace_vals = this.evalAllTraces(varargin{:});
+            traces_vals = this.evalAllTraces(varargin{:});
+            this.traces_vals = traces_vals;
             
             % A BreachRequirement must return a single value
-            global_val = min(min(trace_vals));
-            
+            global_val = min(min(traces_vals));
+            this.val = global_val;
         end
           
-        function PlotDiagnosis(this, idx_formulas)
-            
-            if ~exist('idx_formulas','var')||isempty(idx_formulas)
-                num_phi = numel(this.formulas);
-                idx_formulas = 1:num_phi;
-            else
-                num_phi = numel(idx_formulas);
+        function F = PlotDiagnosis(this, idx_formulas)
+            if nargin<2
+                idx_formulas = 1;
             end
-            
-            traj = this.P.traj{1};
-            
-            sigs_in = this.signals_in;
-            for is = 1:numel(sigs_in)
-                if this.sigMap.isKey(sigs_in{is})
-                    sigs_in{is} = this.sigMap(sigs_in{is});
-                end
-            end
-            
+            F = BreachSignalsPlot(this, {}); % empty
             for ifo =1:numel(idx_formulas)
-                subplot(num_phi,1,ifo)
-                hold on;
-                this.PlotSignals(sigs_in,[], [],true);  % on same axis
-                legend(this.signals_in, 'Interpreter', 'None');
-                Xin = this.get_signal_from_traj(traj, this.formulas{idx_formulas(ifo)}.signals_in);
-                pin = traj.param(FindParam(this.P, this.formulas{idx_formulas(ifo)}.params));
-                ax(ifo) = this.formulas{idx_formulas(ifo)}.plot_diagnosis(traj.time, Xin, pin, 'compact');
+                this.formulas{idx_formulas(ifo)}.plot_diagnosis(F);
             end
-            
-            linkaxes(ax, 'x');
-            
         end
-        
-        
+             
         %% Display
         function st = disp(this)
             signals_in_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.signals_in, 'UniformOutput', false));
@@ -188,25 +152,11 @@ classdef BreachRequirement < BreachTraceSystem
         
         function PrintFormula(this)
             
-            st = sprintf(['--- FORMULAS ---\n']);
+           fprintf(['--- FORMULAS ---\n']);
            for ifo = 1:numel(this.formulas)
-            phi = this.formulas{ifo}.formula;
-            st = sprintf([st  '%s := %s'], get_id(phi), disp(phi,1));
-            
-            if ~strcmp(get_type(phi),'predicate')
-                st = [st '\n  where\n'];
-                predicates = STL_ExtractPredicates(phi);
-                for ip = 1:numel(predicates)
-                    st =   sprintf([ st '%s := %s \n' ], get_id(predicates(ip)), disp(predicates(ip)));
-                end
-                st = [st '\n'];
-            end
-           end
-           
-            if nargout ==0
-                fprintf(st);
-            end
-            
+               this.formulas{ifo}.disp();
+           end   
+           fprintf('\n');
         end
         
         function PrintSignals(this)
@@ -243,12 +193,12 @@ classdef BreachRequirement < BreachTraceSystem
             this.PrintFormula();
             this.PrintSignals();
             this.PrintParams();
-            
         end
         
     end
     %% Protected methods
     methods (Access=protected)
+        
         function V =evalAllTraces(this,varargin)
             % BreachRequirement.evalAllTraces collect traces and apply
             % evalTrace
@@ -295,11 +245,38 @@ classdef BreachRequirement < BreachTraceSystem
                     [V, traj] = this.evalTrace(traj);
                     
                     trajs = {traj};
+                
+                case 3 % B, params, values --> assigns values to parameters in B
+                    B = varargin{1};
+                    params = varargin{2};
+                    values = varargin{3}; 
+                    if ischar(params)
+                        params = {params};
+                    end
+                    
+                    % Distribute parameters to  system and requirements 
+                    [params_sys, i_sys] = intersect(params, B.GetParamList());
+                    [params_req, i_req] = intersect(params, this.GetParamList());
+                    if (numel(i_sys)+numel(i_req)) ~= numel(params) % parameter not found
+                           params_not_found = setdiff(params, union(param_sys,param_req));
+                           error('Parameter %s not found either as system or requirement parameter.', params_not_found{1});
+                    end
+                    
+                    if ~isempty(params_sys)
+                        B.SetParam(params_sys,values(i_sys,:));
+                    end
+                    B.Sim(); % FIXME - need be smarter: in particular when dealing with input constraints
+                    
+                    if ~isempty(params_req)
+                        this.SetParam(params_req, values(i_req,:));
+                    end
                     
             end
             
+            
             if exist('B', 'var')
-                if isa(B,'struct')   % reading one struct obtained from a SaveResult command 
+                this.BrSet = B;
+                if isa(B,'struct')   % reading one struct obtained from a SaveResult command - TODO convert into BreachSet here 
                     if isfield(B, 'time')   % get time
                         time = B.time;
                     end
@@ -330,7 +307,7 @@ classdef BreachRequirement < BreachTraceSystem
                     trajs = {traj};
                     
                    
-                else
+                else  % here we need to handle pre-conditions, input requirements, etc
                     Xs = B.GetSignalValues(this.signals_in);
                     if ~iscell(Xs)
                         Xs= {Xs};
@@ -366,7 +343,7 @@ classdef BreachRequirement < BreachTraceSystem
             end
             
             this.setTraces(trajs);
-            
+            this.val = V;
         end
          
         function traj = applyOutputGens(this, traj)
@@ -380,17 +357,12 @@ classdef BreachRequirement < BreachTraceSystem
             
         end
         
-        function [val, traj] = getRobustSignal(this,traj, tau)
+        function [val, traj] = getRobustSignal(this,traj)
             for ifo = 1:numel(this.formulas)
                 Xin = this.get_signal_from_traj(traj, this.formulas{ifo}.signals_in);
                 pin = traj.param(FindParam(this.P, this.formulas{ifo}.params));
-                [~,  Xout] = this.formulas{ifo}.computeSignals(traj.time, Xin, pin);
+                [val(ifo),  Xout] = this.formulas{ifo}.eval(traj.time, Xin, pin);
                 traj  = this.set_signal_in_traj(traj, this.formulas{ifo}.signals, Xout);
-                if nargin<3
-                    val(ifo,:) = Xout;
-                else
-                    val(ifo,:) = interp1(traj.time,Xout, tau, 'previous');
-                end
             end
         end
      
@@ -404,7 +376,7 @@ classdef BreachRequirement < BreachTraceSystem
             end
         end
         
-   %% Misc       
+ %% Misc       
         function checkSignalMap(this)
             % checkSignalMap warning if a signal maps to a signal that is
             % not required by requirement

@@ -808,8 +808,7 @@ classdef BreachSystem < BreachSet
         
         %% Printing
         function PrintSpecs(this)
-            disp('Specifications:')
-            disp('--------------')
+            disp('--- SPECIFICATIONS ---')
             keys = this.Specs.keys;
             for is = 1:numel(keys)
                 prop_name = keys{is};
@@ -831,7 +830,9 @@ classdef BreachSystem < BreachSet
             this.UpdateSignalRanges();
             this.PrintSignals();
             this.PrintParams();
-            this.PrintSpecs();
+            if ~isempty(this.Specs)
+                this.PrintSpecs();
+            end
         end
         
         function st = disp(this)

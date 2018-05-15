@@ -24,9 +24,6 @@ classdef BreachProblem < BreachStatus
     %   BrSet          -  BreachSet used as (initial) domain for optimization
     %   BrSys          -  BreachSystem used by the solver to compute new
     %                     traces or new satifaction values
-    %   robust_fn      -  the robust satisfaction function, returns an array
-    %                     of values if BrSys has more than one parameter vector/trace
-    %   objective_fn   -  default: minimum of robust_fn.
     %   solver         -  default: 'basic', use list_solvers to get a list of available solvers
     %   solver_options -  option structure for the solver. See each solver
     %                     help to know available options (E.g., for matlab solvers, this is
@@ -150,7 +147,12 @@ classdef BreachProblem < BreachStatus
         %% Constructor
         function this = BreachProblem(BrSet, phi, params, ranges)
             
+            if ~isa(phi, 'BreachRequirement')
+                phi = BreachRequirement(phi);
+            end
+            
             this.Spec = phi;
+            
             this.BrSet = BrSet.copy();
             this.BrSet.Sys.Verbose=0;
                   
@@ -184,7 +186,10 @@ classdef BreachProblem < BreachStatus
             this.Reset_x0();
             
             % robustness
-            [this.robust_fn, this.BrSys] = this.BrSet.GetRobustSatFn(phi, this.params, this.T_Spec);
+            % [this.robust_fn, this.BrSys] =  this.BrSet.GetRobustSatFn(phi, this.params, this.T_Spec);
+            this.BrSys = this.BrSet.copy(); 
+            this.robust_fn = @(x) (phi.Eval(this.BrSys, this.params, x));
+            
             this.BrSys.Sys.Verbose=0;
              
             % objective function
@@ -196,25 +201,23 @@ classdef BreachProblem < BreachStatus
             % reset display
             rfprintf_reset();
             
-            
         end
         
         function Reset_x0(this)
-            phi_params = get_params(this.Spec);
             
             x0__ = zeros(numel(this.params), size(this.BrSet.P.pts,2));
             for ip = 1:numel(this.params)
                 x0__ip =  this.BrSet.GetParam(this.params{ip});
-                if ~isempty(x0__ip)
-                    x0__(ip,:) = x0__ip;
-                elseif isfield(phi_params,this.params{ip})
-                    x0__(ip,:) = phi_params.(this.params{ip});
-                else
-                    error('BreachProblem:unknown_param', ['Parameter ' this.params{ip} ' is neither a system parameter nor a property parameter.']);
+                if isempty(x0__ip)
+                    x0__ip =  this.Spec.GetParam(this.params{ip});
                 end
+                if isempty(x0__ip)
+                    error('BreachProblem:unknown_param', ['Parameter ' this.params{ip} ' is neither a system parameter nor a requirement parameter.']);
+                end
+                x0__(ip,:) = x0__ip;
             end
             
-            this.BrSet.SetParam(this.params, x0__,'spec');
+            this.BrSet.SetParam(this.params, x0__,'spec');  % not sure this is useful anymore, if ever
             this.x0 = unique(x0__', 'rows')';
             
         end
@@ -230,7 +233,8 @@ classdef BreachProblem < BreachStatus
             rfprintf_reset();
             
             % robustness
-            [this.robust_fn, this.BrSys] = BrSet.GetRobustSatFn(this.Spec, this.params, this.T_Spec);
+            this.BrSys = this.BrSet.copy(); 
+            this.robust_fn = @(x) (phi.Eval(this.BrSys, this.params, x));
             
             this.BrSet_Best = [];
             this.BrSet_Logged = [];

@@ -1257,7 +1257,7 @@ classdef BreachSet < BreachStatus
             end
             
             % Additional options
-            options = struct('FolderName', []);
+            options = struct('FolderName', '','IncludesOnlySignals', [], 'ExcludeSignals', []);
             options = varargin2struct(options, varargin{:});
             
             if isempty(options.FolderName)
@@ -1285,6 +1285,11 @@ classdef BreachSet < BreachStatus
             summary.filenames = {};
             summary.paths = {};
             for it = i_traces
+                
+                % check status
+                if isfield(this.P.traj{it}, 'status')&&(this.P.traj{it}.status~=0)
+                    warning('SaveResults:suspicious_trace','Trace %d has suspicious status, likely resulting from simulation error.', it)  
+                end
                 
                 % params
                 traces(it).params.names = param_names;
@@ -1325,11 +1330,18 @@ classdef BreachSet < BreachStatus
         
         function [success, msg, msg_id] = SaveResults(this, folder_name, varargin)
             % Additional options
+            if ~exist('folder_name', 'var')
+                folder_name = '';
+            end
             options = struct('FolderName', folder_name, 'SaveBreachSystem', true, 'ExportToExcel', false, 'ExcelFileName', 'Results.xlsx');
             options = varargin2struct(options, varargin{:});
             
             if isempty(options.FolderName)
-                options.FolderName = [this.mdl.name '_Results_' datestr(now, 'dd_mm_yyyy_HHMM')];
+                try
+                    options.FolderName = [this.mdl.name '_Results_' datestr(now, 'dd_mm_yyyy_HHMM')];
+                catch
+                    options.FolderName = [this.whoamI '_Results_' datestr(now, 'dd_mm_yyyy_HHMM')];
+                end
             end
             
             folder_name = options.FolderName;
