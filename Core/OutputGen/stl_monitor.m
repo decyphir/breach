@@ -66,10 +66,9 @@ classdef stl_monitor < output_gen
             F.AddSignal(this.predicates);
         end
         
-        function [v, Xout] = eval(this, t, X__,p__)
-            this.assign_params(p__);
-            [~, Xout] = this.computeSignals(t, X,p__);
-            v = X__(end,1);
+        function [v, Xout] = eval(this, t, X,p)
+            [~, Xout] = this.computeSignals(t, X,p);
+            v = X(end,1);
         end
         
         function st = disp(this)
