@@ -24,6 +24,10 @@ end
                 monitor = alw_monitor(formula);
             case {'ev', 'eventually'}
                 monitor  = ev_monitor(formula);
+            case {'until'}
+            otherwise  % default to top alw - dangerous and temporary, will need more checks and templates ...  
+               alw_formula = STL_Formula(['alw_' get_id(monitor.formula)], ['alw ' get_id(monitor.formula)]); 
+                monitor = alw_monitor(alw_formula);
         end
         
     end
