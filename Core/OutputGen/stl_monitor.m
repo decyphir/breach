@@ -99,6 +99,12 @@ for ip = 1:numel(this.params)
 end
 end
 
+function get_horizon(this__)
+    this.assign_params();
+    get_interval(this__.formula);
+    
+end
+
 function init_P(this)
 % init_P construct legacy structure from signals and
 % parameters names
