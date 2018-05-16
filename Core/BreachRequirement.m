@@ -276,7 +276,7 @@ classdef BreachRequirement < BreachTraceSystem
             
             if exist('B', 'var')
                 this.BrSet = B;
-                if isa(B,'struct')   % reading one struct obtained from a SaveResult command - TODO convert into BreachSet here 
+                if isa(B,'struct')   % reading one struct obtained from a SaveResult command 
                     if isfield(B, 'time')   % get time
                         time = B.time;
                     end

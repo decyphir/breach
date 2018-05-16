@@ -16,6 +16,12 @@ classdef BreachTraceSystem < BreachSystem
                 for is = 1:ndim
                     signal_names{is} = ['x' num2str(is)];
                 end
+            elseif isstruct(signals)&&all(isfield(signals, {'time', 'outputs', 'inputs'}))
+                trace1 = signals;
+                signal_names = [trace1.outputs.names, trace1.inputs.names];
+            elseif isstruct(signals)&&all(isfield(signals, {'signals', 'time'}))
+                trace1 = signals;
+                signal_names = trace1.signals.names;
             elseif ischar(signals)
                 if exist(signals, 'file')
                     [~, ~, ext] = fileparts(signals);
@@ -53,6 +59,9 @@ classdef BreachTraceSystem < BreachSystem
             this.Sys = CreateExternSystem('TraceObject', signal_names, {'trace_id'},1);
             this.P = CreateParamSet(this.Sys);
             
+            if exist('trace1', 'var')
+                this.AddTrace(trace1);
+            end
             if exist('trace', 'var')
                 this.AddTrace(trace);
             end
@@ -89,18 +98,50 @@ classdef BreachTraceSystem < BreachSystem
                 else
                     traj.param = zeros(1, size(trace,2)+1);
                 end
-                
+            elseif isstruct(trace)   
+                if all(isfield(trace,{'time', 'X'}))
+                    traj= trace;
+                elseif all(isfield(trace,{'time', 'outputs', 'inputs'})) %  reading one struct obtained from a SaveResult 
+                    traj.time= trace.time;
+                    signals = this.GetSignalNames();
+                    traj.X = zeros(numel(signals),numel(traj.time));
+                    for isig = 1:numel(signals)
+                        idx_sig = find(strcmp(trace.inputs.names, signals),1);
+                        if isempty(idx_sig)
+                            idx_sig = find(strcmp(trace.outputs.names, signals{isig}),1);
+                            if isempty(idx_sig)
+                                error('BreachTraceSystem:signal_not_found', 'Signal %s not found', signals{isig});
+                            else
+                                traj.X(isig,:) = trace.outputs.values(idx_sig,:);
+                            end
+                        else
+                            traj.X(isig,:) = trace.inputs.values(idx_sig,:);
+                        end
+                    end
+                    traj.param = zeros(1, size(traj.X,2)+1);
+            
+                  elseif all(isfield(trace,{'time', 'signals'})) %  reading one struct obtained from a SaveResult 
+                    traj.time= trace.time;
+                    signals = this.GetSignalNames();
+                    traj.X = zeros(numel(signals),numel(traj.time));
+                    for isig = 1:numel(signals)
+                        idx_sig = find(strcmp(trace.signals.names, signals{isig}),1);
+                            if isempty(idx_sig)
+                                error('BreachTraceSystem:signal_not_found', 'Signal %s not found', signals{isig});
+                                traj.X(isig,:) = trace.signals.values(idx_sig,:);
+                            end
+                    end
+                    traj.param = zeros(1, size(traj.X,1)+1);
+            
+                end
             elseif isnumeric(trace)
                 traj.X = trace(:, 2:end)';
                 traj.time = trace(:,1)';
                 if size(trace,1) >=1
                     traj.param = trace(1,2:end);
                 else
-                    traj.param = zeros(1, size(trace,2)-1);
+                    traj.param = zeros(1, size(trace,2)+1);
                 end
-            elseif isstruct(trace)
-                traj = trace;
-   %             traj.param=traj.param(1:end-1); % why? 
             end
             
             Pnew = CreateParamSet(this.Sys);
