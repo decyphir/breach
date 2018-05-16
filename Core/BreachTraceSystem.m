@@ -106,7 +106,7 @@ classdef BreachTraceSystem < BreachSystem
                     signals = this.GetSignalNames();
                     traj.X = zeros(numel(signals),numel(traj.time));
                     for isig = 1:numel(signals)
-                        idx_sig = find(strcmp(trace.inputs.names, signals),1);
+                        idx_sig = find(strcmp(trace.inputs.names, signals{isig}),1);
                         if isempty(idx_sig)
                             idx_sig = find(strcmp(trace.outputs.names, signals{isig}),1);
                             if isempty(idx_sig)
@@ -118,8 +118,7 @@ classdef BreachTraceSystem < BreachSystem
                             traj.X(isig,:) = trace.inputs.values(idx_sig,:);
                         end
                     end
-                    traj.param = zeros(1, size(traj.X,2)+1);
-            
+                    
                   elseif all(isfield(trace,{'time', 'signals'})) %  reading one struct obtained from a SaveResult 
                     traj.time= trace.time;
                     signals = this.GetSignalNames();
@@ -131,8 +130,7 @@ classdef BreachTraceSystem < BreachSystem
                                 traj.X(isig,:) = trace.signals.values(idx_sig,:);
                             end
                     end
-                    traj.param = zeros(1, size(traj.X,1)+1);
-            
+                    
                 end
             elseif isnumeric(trace)
                 traj.X = trace(:, 2:end)';

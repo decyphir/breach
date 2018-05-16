@@ -184,9 +184,10 @@ classdef BreachSignalsPlot < handle
         end
         
         function HighlightFalse(this, sig, ax)
-            if nargin<3
-                ax = this.Axes(1);
+            if ~exist('ax', 'var')||isempty(ax)
+                ax = this.Axes(end);
             end
+           
             axes(ax);
             hold on;
             traj = this.BrSet.P.traj{this.itraj};

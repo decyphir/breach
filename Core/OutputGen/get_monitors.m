@@ -16,8 +16,8 @@ for itfo = 1:numel(formulas)
     monitors = [monitors {monitor}];
 end
 
-
     function find_template()
+        p0 = monitor.p0;
         
         switch (get_type(monitor.formula))
             case  {'alw', 'always'}
@@ -25,10 +25,11 @@ end
             case {'ev', 'eventually'}
                 monitor  = ev_monitor(formula);
             case {'until'}
-            otherwise  % default to top alw - dangerous and temporary, will need more checks and templates ...  
-               alw_formula = STL_Formula(['alw_' get_id(monitor.formula)], ['alw ' get_id(monitor.formula)]); 
+            otherwise  % default to top alw - dangerous and temporary, will need more checks and templates ...
+                alw_formula = STL_Formula(['alw_' get_id(monitor.formula)], ['alw ' get_id(monitor.formula)]);
                 monitor = alw_monitor(alw_formula);
         end
+        monitor.p0 = p0;
         
     end
 end
