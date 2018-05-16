@@ -137,6 +137,7 @@ classdef BreachRequirement < BreachTraceSystem
             F = BreachSignalsPlot(this, {}); % empty
             for ifo =1:numel(idx_formulas)
                 this.formulas{idx_formulas(ifo)}.plot_diagnosis(F);
+                title(this.formulas{idx_formulas(ifo)}.formula_id, 'Interpreter', 'None')
             end
         end
              

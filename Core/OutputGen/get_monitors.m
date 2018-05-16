@@ -16,8 +16,8 @@ for itfo = 1:numel(formulas)
     monitors = [monitors {monitor}];
 end
 
-
     function find_template()
+        p0 = monitor.p0;
         
         switch (get_type(monitor.formula))
             case  {'alw', 'always'}

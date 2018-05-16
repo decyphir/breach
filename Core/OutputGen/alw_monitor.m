@@ -41,6 +41,7 @@ classdef alw_monitor < stl_monitor
         
         function plot_diagnosis(this, F)
             % Assumes F has data about this formula 
+            
             F.AddSignals(this.signals_in);
             sig= this.signals{end};
             F.HighlightFalse(sig);
