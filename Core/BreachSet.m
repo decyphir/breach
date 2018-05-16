@@ -1415,18 +1415,11 @@ classdef BreachSet < BreachStatus
         end
         
         function PrintSignals(this)
-            if isempty(this.SignalRanges)
-                disp( '---- SIGNALS ----')
+            disp( '---- SIGNALS ----')
                 for isig = 1:this.P.DimX
                     fprintf('%s\n', this.P.ParamList{isig});
                 end
-            else
-                disp( '---- SIGNALS ----')
-                for isig = 1:this.P.DimX
-                    fprintf('%s %s\n', this.P.ParamList{isig}, this.Domains(isig).short_disp());
-                end
-            end
-            disp(' ')
+                fprintf('\n')
         end
         
         function PrintParams(this)

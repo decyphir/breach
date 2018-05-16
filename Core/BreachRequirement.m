@@ -275,73 +275,45 @@ classdef BreachRequirement < BreachTraceSystem
             
             
             if exist('B', 'var')
+                if isa(B,'struct')   % reading one struct obtained from a SaveResult command
+                    B = BreachTraceSystem(B);
+                end  % here we need to handle pre-conditions, input requirements, etc
+           
                 this.BrSet = B;
-                if isa(B,'struct')   % reading one struct obtained from a SaveResult command 
-                    if isfield(B, 'time')   % get time
-                        time = B.time;
+                Xs = B.GetSignalValues(this.signals_in);
+                if ~iscell(Xs)
+                    Xs= {Xs};
+                end
+                
+                % Initialize values to return
+                V = zeros(numel(Xs), numel(this.formulas));
+                
+                % collect data necessary for formla evaluation
+                for  i = 1:numel(Xs)
+                    if size(this.P.pts,2) == numel(Xs)
+                        trajs{i}.param = this.P.pts(:,i)';
+                    elseif size(this.P.pts,2)==1
+                        trajs{i}.param = this.P.pts(:,1)';
+                    else
+                        error('Something wrong with dimensions');
                     end
                     
-                    % get signal values
-                    Xs = zeros(numel(this.signals_in),numel(time));
-                    for isig = 1:numel(this.signals_in)
-                        idx_sig = find(strcmp(B.inputs.names, this.signals_in{isig}),1);
-                        if isempty(idx_sig)
-                            idx_sig = find(strcmp(B.outputs.names, this.signals_in{isig}),1);
-                            if isempty(idx_sig)
-                                error('BreachRequirement:signal_not_found', 'Signal %s not found', this.signals_in{isig});
-                            else
-                                Xs(isig,:) = B.outputs.values(idx_sig,:);
-                            end
-                        else
-                            Xs(isig,:) = B.inputs.values(idx_sig,:);
-                        end
-                         
-                    end
+                    trajs{i}.time = B.P.traj{i}.time;
+                    trajs{i}.X = NaN(this.Sys.DimX, numel(trajs{i}.time));
+                    trajs{i} = this.set_signal_in_traj(trajs{i}, this.signals_in, Xs{i});
                     
-                    traj.status = 0;
-                    traj.param = this.P.pts(:,1)';
-                    traj.time = time;
-                    traj.X = NaN(this.Sys.DimX, numel(traj.time));
-                    traj = this.set_signal_in_traj(traj, this.signals_in, Xs);
-                    [V, traj] = this.evalTrace(traj);
-                    trajs = {traj};
-                    
-                   
-                else  % here we need to handle pre-conditions, input requirements, etc
-                    Xs = B.GetSignalValues(this.signals_in);
-                    if ~iscell(Xs)
-                        Xs= {Xs};
-                    end
-                    
-                    % Initialize values to return
-                    V = zeros(numel(Xs), numel(this.formulas));
-                    
-                    % collect data necessary for formla evaluation
-                    for  i = 1:numel(Xs)
-                        if size(this.P.pts,2) == numel(Xs)
-                            trajs{i}.param = this.P.pts(:,i)';
-                        elseif size(this.P.pts,2)==1
-                            trajs{i}.param = this.P.pts(:,1)';
-                        else
-                            error('Something wrong with dimensions');
-                        end
+                    if isfield(B.P.traj{i}, 'status')
+                        status = B.P.traj{i}.status;
                         
-                        trajs{i}.time = B.P.traj{i}.time;
-                        trajs{i}.X = NaN(this.Sys.DimX, numel(trajs{i}.time));
-                        trajs{i} = this.set_signal_in_traj(trajs{i}, this.signals_in, Xs{i});
-                        
-                        if isfield(B.P.traj{i}, 'status')
-                            status = B.P.traj{i}.status;
-                            
-                            if status~=0
-                                warning('getTraces:suspicious_status', 'Trace %d has non-zero status, indicating potentially dubious data.', i);
-                            end
+                        if status~=0
+                            warning('getTraces:suspicious_status', 'Trace %d has non-zero status, indicating potentially dubious data.', i);
                         end
-                        [V(i,:), trajs{i}] = this.evalTrace(trajs{i});
                     end
+                    [V(i,:), trajs{i}] = this.evalTrace(trajs{i});
                 end
             end
-            
+        
+        
             this.setTraces(trajs);
             this.val = V;
         end
