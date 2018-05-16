@@ -16,22 +16,18 @@ classdef BreachRequirement < BreachTraceSystem
         
         function this = BreachRequirement(formulas, ogs)
             
-            if nargin==0
-                return
-            else
-                %% work out arguments
-                if ~iscell(formulas)
-                    formulas=  {formulas};
+            %% work out arguments
+            if ~iscell(formulas)
+                formulas=  {formulas};
+            end
+            
+            [signals, monitors] = get_monitors(formulas);
+            if  exist('ogs', 'var')&&~isempty(ogs)
+                if ~iscell(ogs)
+                    ogs = {ogs};
                 end
-                
-                [signals, monitors] = get_monitors(formulas);
-                if  exist('ogs', 'var')&&~isempty(ogs)
-                    if ~iscell(ogs)
-                        ogs = {ogs};
-                    end
-                    for iogs = 1:numel(ogs)
-                        signals = [signals setdiff(ogs{iogs}.signals_in, signals,'stable')];
-                    end
+                for iogs = 1:numel(ogs)
+                    signals = [signals setdiff(ogs{iogs}.signals_in, signals,'stable')];
                 end
             end
             this = this@BreachTraceSystem(signals);
