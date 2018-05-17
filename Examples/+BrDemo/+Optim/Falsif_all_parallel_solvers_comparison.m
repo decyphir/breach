@@ -12,7 +12,9 @@ disp('============== parallel genetic algorithm results ==============');
 tic
 [false_ga res_ga] = pb_par_ga.solve(); 
 toc
-
+%%
+% parallelism of the ga solver is using vectorization, the logX works 
+size(pb_par_ga.X_log)
 %%
 pb_par_fc = AFC_falsif03.copy();
 pb_par_fc.max_obj_eval = max_obj_eval;
@@ -24,7 +26,10 @@ disp('============== parallel fmincon with multiple restart results ============
 tic
 [false_fc res_fc] = pb_par_fc.solve();
 
-
+%%
+% parallelism of the ga solver is using native parallel support from Mathowrks
+% the logX works 
+size(pb_par_ga.X_log)
 
 
 %%
@@ -48,7 +53,9 @@ disp('============== parallel simulannealbnd results ==============');
 tic
 [false_sa res_sa] = pb_par_sa.solve();
 toc
-
+%%
+% The logX function does not work
+size(pb_par_sa.X_log)
 %%
 pb_par_fs = AFC_falsif03.copy();
 pb_par_fs.max_obj_eval = max_obj_eval;
@@ -69,7 +76,9 @@ disp('============== parallel fminsearch results ==============');
 tic
 [false_fs res_fs] = pb_par_fs.solve();
 
-
+%%
+% The logX function does not work
+size(pb_par_fs.X_log)
 %% 
 phi03 = set_params(AF_alw_ok, 'tol', 0.03);
 pb_par_nm = FalsificationProblem(B, phi03);
@@ -85,7 +94,10 @@ disp('============== parallel Nelder-Mead with multiple restart results ========
 tic
 [false_nm res_nm] = pb_par_nm.solve();
 toc
-
+%%
+% The function returning the tried parameters is implemented by changing 
+% the interface of NM solver engine
+size(pb_par_nm.X_log)
 %%
 pb_par_cs = AFC_falsif03.copy();
 pb_par_cs.max_obj_eval = max_obj_eval;
@@ -99,3 +111,6 @@ tic
 [false_cs res_cs] = pb_par_cs.solve();
 toc
 pb_par_cs.StopParallel();
+%%
+% The logX function does not work
+size(pb_par_cs.X_log)
