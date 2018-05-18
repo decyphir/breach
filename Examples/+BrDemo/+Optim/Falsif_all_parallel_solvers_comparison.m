@@ -29,7 +29,7 @@ tic
 %%
 % parallelism of the ga solver is using native parallel support from Mathowrks
 % the logX works 
-size(pb_par_ga.X_log)
+size(pb_par_fc.X_log)
 
 
 %%
@@ -82,6 +82,7 @@ size(pb_par_fs.X_log)
 %% 
 phi03 = set_params(AF_alw_ok, 'tol', 0.03);
 pb_par_nm = FalsificationProblem(B, phi03);
+pb_par_nm.SetupDiskCaching();
 pb_par_nm.max_obj_eval = 100;
 pb_par_nm.display = 'off';
 pb_par_nm.SetupParallel();
@@ -97,10 +98,13 @@ toc
 %%
 % The function returning the tried parameters is implemented by changing 
 % the interface of NM solver engine
+% However, the number of traces in the cached folder is way more than the
+% one logged.
 size(pb_par_nm.X_log)
 %%
 pb_par_cs = AFC_falsif03.copy();
 pb_par_cs.max_obj_eval = max_obj_eval;
+pb_par_cs.SetupDiskCaching();
 % For the cmaes solver, the parallelism is implemented by running children 
 % exploraion in parallel which means falsificaiton has only one search 
 % instance but simulations needed during children exploraion run in parallel)
@@ -112,5 +116,6 @@ tic
 toc
 pb_par_cs.StopParallel();
 %%
-% The logX function does not work
+% The logX function work however, the number of caches traces are more than
+% logged. 
 size(pb_par_cs.X_log)
