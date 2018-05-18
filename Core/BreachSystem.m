@@ -126,6 +126,7 @@ classdef BreachSystem < BreachSet
             names = {folders.name};
             % delete the path for the current folder and parent folder
             names(ismember(names,{'.', '..'})) = [];
+            status = 0;
             for ii = 1:length(names)
                 for attempt = 1:4
                     status = rmdir(names{ii}, 's');
