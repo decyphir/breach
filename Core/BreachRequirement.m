@@ -126,17 +126,145 @@ classdef BreachRequirement < BreachTraceSystem
             this.val = global_val;
         end
           
-        function F = PlotDiagnosis(this, idx_formulas)
+        function F = PlotDiagnosis(this, idx_formulas, itraj)
             if nargin<2
                 idx_formulas = 1;
             end
-            F = BreachSignalsPlot(this, {}); % empty
+            if nargin<3
+                itraj=1;
+            end
+            F = BreachSignalsPlot(this, {}, itraj); % empty
             for ifo =1:numel(idx_formulas)
                 this.formulas{idx_formulas(ifo)}.plot_diagnosis(F);
                 title(this.formulas{idx_formulas(ifo)}.formula_id, 'Interpreter', 'None')
             end
         end
-             
+        
+        function summary = GetSummary(this)
+            summary.statement = sprintf('%d traces evaluated', this.CountTraces());
+            summary.num_traces_evaluated =size(this.traces_vals,1);
+            
+            if summary.num_traces_evaluated>0
+                summary.val = this.val;
+                summary.traces_vals = this.traces_vals;
+                summary.num_requirements = size(this.traces_vals,2);
+                if summary.num_requirements == 1
+                    summary.statement = sprintf([summary.statement ' on %s requirement'], summary.num_requirements);
+                else
+                    summary.statement = sprintf([summary.statement ' on %d requirements'], summary.num_requirements);
+                end
+                summary.num_traces_violations = sum( any(this.traces_vals<0, 2) );
+                summary.statement = sprintf([summary.statement ', %d traces have violations'], summary.num_traces_violations);
+                summary.num_total_violations =  sum( sum(this.traces_vals<0) );
+                if  summary.num_total_violations == 1
+                    summary.statement = sprintf([summary.statement ', %d requirement violation.' ], summary.num_traces_violations);
+                elseif summary.num_total_violations >1
+                    summary.statement = sprintf([summary.statement ', %d requirement violations total.' ], summary.num_traces_violations);
+                else
+                    summary.statement = [summary.statement '.'];
+                end
+            else
+                summary.statement = [summary.statement '.'];
+            end
+            summary.num_violations_per_trace =sum(this.traces_vals<0 , 2 )';
+            [~,idxm ] = sort(summary.num_violations_per_trace, 2, 'descend');
+            summary.idx_traces_with_most_violations = idxm;
+            
+        end
+        
+        function values = GetParam(this, params, ip)
+        % GetParam if not found, look into BrSet   
+            [idx, ifound] = FindParam(this.P, params);
+            if ~exist('ip', 'var')
+                ip = 1:size(this.P.pts,2);
+            end
+            
+            if all(ifound)
+                values = GetParam(this.P,idx);
+                values = values(:, ip);
+            else
+                if ischar(params)
+                    params = {params};
+                end
+                idx_req=  ifound~=0;
+                idx_data = ifound==0; 
+                params_req = params(idx_req);
+                params_data = params(idx_data);
+                values(idx_req,:) = this.GetParam(params_req, ip);
+                values(idx_data,:) = this.BrSet.GetParam(params_data, ip);
+            end
+        end
+         
+        function X = GetSignalValues(this,varargin)
+            % GetSignalValues if not found, look into BrSet
+            signals = varargin{1};
+            if ischar(signals)
+                signals = {signals};
+            end
+            [~, ifound] = FindParam(this.P, signals);
+            
+            if all(ifound)
+                X = this.GetSignalValues@BreachTraceSystem(varargin{:});
+            else
+                idx_req = ifound~=0;
+                idx_data = ifound==0;
+                signals_req = signals(idx_req);
+                signals_data = signals(idx_data);
+                if any(idx_req)
+                    values_req = GetSignalValues@BreachTraceSystem(this,signals_req, varargin{2:end});
+                    if iscell(values_req)
+                        nb_traj =numel(values_req);
+                    else
+                        nb_traj =1;
+                    end
+                end
+                if any(idx_data)
+                    values_data = this.BrSet.GetSignalValues(signals_data, varargin{2:end});
+                    if iscell(values_data)
+                        nb_traj =numel(values_req);
+                    else
+                        nb_traj =1;
+                    end
+                end
+                if nb_traj>1
+                    X = cell(nb_traj,1);
+                    for iv = 1:nb_traj
+                        if any(idx_req)
+                            X{iv}(idx_req,:) = values_req{iv};
+                        end
+                        if any(idx_data)
+                            X{iv}(idx_data,:) = values_data{iv};
+                        end
+                    end
+                else
+                    if any(idx_req)
+                        X(idx_req,:) = values_req;
+                    end
+                    if any(idx_data)
+                        X(idx_data,:) = values_data;
+                    end
+                    
+                end
+                
+            end
+            
+        end
+        
+        function dom  = GetDomain(this, param)
+            if ischar(param)
+                param =  {param};
+            end
+            [idx, found] = FindParam(this.P, param);
+            for i = 1:numel(idx) 
+                if found(i)
+                    dom(i) = this.Domains(idx(i));
+                else
+                    [idx_BrSet, found_BrSet] = FindParam(this.BrSet.P, param(i));
+                    dom(i) = this.BrSet.Domains(idx_BrSet);
+                end
+            end
+        end
+        
         %% Display
         function st = disp(this)
             signals_in_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.signals_in, 'UniformOutput', false));
@@ -145,6 +273,8 @@ classdef BreachRequirement < BreachTraceSystem
             if nargout == 0
                 fprintf(st);
             end
+            summary = this.GetSummary();
+            disp(summary.statement);
         end
         
         function PrintFormula(this)
@@ -192,7 +322,37 @@ classdef BreachRequirement < BreachTraceSystem
             this.PrintParams();
         end
         
+        
+        
+        function atts = get_signal_attributes(this, sig)
+            % returns nature to be included in signature
+            % should req_input, additional_test_data_signal,
+        atts = {}; 
+        if this.is_a_requirement(sig)
+            atts =[atts {'requirement'}];
+        end
+        if this.is_a_predicate(sig)
+            atts =[atts {'predicate'}];
+        end
+        if this.is_a_model_input(sig)
+            atts =[atts {'model_input'}];
+        end
+        if this.is_a_model_output(sig)
+            atts =[atts {'model_output'}];
+        end
+        
+        end
+        
+        function signals = GetSignalNames(this)
+            if ~isempty(this.BrSet)
+                signals = [this.BrSet.GetSignalNames() this.P.ParamList(1:this.P.DimX)];
+            else
+                signals = [this.P.ParamList(1:this.P.DimX)];
+            end
+        end
+        
     end
+    
     %% Protected methods
     methods (Access=protected)
         
@@ -390,9 +550,42 @@ classdef BreachRequirement < BreachTraceSystem
                 end
                 
             end
-            
              
         end
+        
+        function b = is_a_requirement(this, sig)
+            b = false;
+            for ifo = 1:numel(this.formulas)
+                if strcmp(sig, get_id(this.formulas{ifo}.formula))
+                    b = true;
+                end
+            end
+        end
+        
+        function b = is_a_predicate(this, sig)
+            b = (STL_CheckID(sig) ==1);
+        end
+        
+        function b = is_a_model_input(this, sig)
+            b = false;
+            if ~isempty(this.BrSet)
+                atts = this.BrSet.get_signal_attributes(sig);
+                if ismember('input', atts)
+                    b= true;
+                end
+            end
+        end
+        
+        function b = is_a_model_output(this, sig)
+            b = false;
+            if ~isempty(this.BrSet)
+                atts = this.BrSet.get_signal_attributes(sig);
+                if ismember('output', atts)
+                    b= true;
+                end
+            end
+        end
+        
     end
     
 end

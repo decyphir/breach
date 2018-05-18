@@ -26,9 +26,14 @@ classdef stl_monitor < output_gen
             % Outputs
             if ~strcmp(get_type(this.formula), 'predicate')
                 this.signals = {};
-                this.predicates = STL_ExtractPredicates(this.formula);
-                this.predicates = num2cell(this.predicates);
-                for ip = 1:numel(this.predicates)
+                preds = STL_ExtractPredicates(this.formula);
+                for ip = 1:numel(preds)
+                    if ~STL_CheckID(get_id(preds(ip)))   % predicate does not exist as formula, create it
+                        pred = STL_Formula( STL_NewID([get_id(this.formula) '_predicate_']));
+                    else
+                        pred = preds(ip);
+                    end
+                    this.predicates{ip} = pred;
                     this.signals = [this.signals {get_id(this.predicates{ip})}];
                 end
                 this.signals =  [this.signals {get_id(this.formula)}];
@@ -77,9 +82,9 @@ classdef stl_monitor < output_gen
             
             if ~strcmp(get_type(phi),'predicate')
                 st = [st '  where\n'];
-                predicates = STL_ExtractPredicates(phi);
-                for ip = 1:numel(predicates)
-                    st =   sprintf([ st '%s := %s \n' ], get_id(predicates(ip)), disp(predicates(ip)));
+                preds = STL_ExtractPredicates(phi);
+                for ip = 1:numel(preds)
+                    st =   sprintf([ st '%s := %s \n' ], disp(preds(ip)));
                 end
             end
             

@@ -9,8 +9,11 @@ classdef alw_monitor < stl_monitor
             subphi = get_children(this.formula);
             subphi = subphi{1};
             this.formula = subphi;
-            this.signals = [this.signals(1:end-1) get_id(subphi)];
-            this.interval = get_interval(formula); 
+            this.signals = this.signals(1:end-1);
+            if ~strcmp(get_type(subphi), 'predicate') 
+                this.signals{end+1} = get_id(subphi);
+            end
+            this.interval = get_interval(formula);
             this.init_P();
         end
         

@@ -340,7 +340,7 @@ classdef BreachOpenSystem < BreachSystem
                 end
             else
                 
-                fprintf('---  SIGNALS  ---\n')
+                fprintf('---  SIGNALS  --- (%d traces)\n', numel(this.P.traj));
                 for isig = 1:this.Sys.DimX-this.Sys.DimU
                     fprintf('%s in  [%g, %g]\n', this.Sys.ParamList{isig}, this.SignalRanges(isig,1),this.SignalRanges(isig,2));
                 end
@@ -351,8 +351,18 @@ classdef BreachOpenSystem < BreachSystem
             disp(' ')
         end
         
+        function atts = get_signal_attributes(this, sig)
+            % returns nature to be included in signature
+            % should req_input, additional_test_data_signal,
+            if ismember(sig, this.InputGenerator.P.ParamList(1:this.InputGenerator.P.DimX))
+                atts = {'input'};
+            elseif ismember(sig, this.P.ParamList(1:this.P.DimX))
+                atts= {'output'};
+            else
+                atts ={};
+            end
+        end
     end
-    
 end
 
 

@@ -1209,6 +1209,56 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
         end
         
+        function summary = GetSummary(this)
+            summary = GetSummary@BreachSet(this);
+            summary.model_info = this.mdl;
+            
+                        % parameter names
+            param_names = this.GetSysParamList();
+            
+            % input signal names
+            signal_names= this.GetSignalNames();
+            idx =  this.GetInputSignalsIdx();
+            input_names = signal_names(idx);
+            
+            % input param names
+            idxp = this.GetParamsInputIdx();
+            input_params = this.P.ParamList(idxp);
+            
+            % signal generators
+            for is  = 1:numel(input_names)
+                signal_gen_types{is} = class(this.InputGenerator.GetSignalGenFromSignalName(input_names{is}));
+            end
+            
+            % signal names
+            signal_names = setdiff(signal_names, input_names);
+            
+            % system parameters (non-input)
+            sysparams_names = setdiff(param_names, input_params);
+            
+            if isfield(this.P,'props_names')
+                spec_names = this.P.props_names;
+            end
+            
+            summary.test_params.names = this.GetBoundedDomains();
+            summary.input_generators = signal_gen_types;
+            summary.test_params.values = this.GetParam(summary.test_params.names);
+            summary.const_params.names = setdiff( this.P.ParamList(this.P.DimX+1:end), this.GetBoundedDomains())';
+            summary.const_params.values = this.GetParam(summary.const_params.names,1)';
+   
+            if isfield(this.P, 'props')
+                summary.specs.names = spec_names;
+                if ~options.PreserveTracesOrdering
+                    this.SortbyRob();
+                    this.SortbySat();
+                end
+                summary.specs.rob = this.GetSatValues();
+                summary.specs.sat = summary.specs.rob>=0;
+                summary.num_sat = - sum( ~summary.specs.sat, 1  );
+            end
+            
+        end
+        
         function [success, msg, msg_id] = SaveResults(this, folder_name, varargin)
             % BreachSimulinkSystem.SaveResults
             

@@ -5,8 +5,11 @@ signals = {};
 monitors = {};
 for itfo = 1:numel(formulas)
     formula = formulas{itfo};
+    if ischar(formula)
+        formula = STL_Formula(STL_NewID('req'), formula);
+    end
     
-    if isa(formula, 'char')||isa(formula, 'STL_Formula')
+    if isa(formula, 'STL_Formula')
         monitor = stl_monitor(formula);
     elseif isa(formula, 'stl_monitor')
         monitor = formula;

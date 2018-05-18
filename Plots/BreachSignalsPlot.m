@@ -13,7 +13,7 @@ classdef BreachSignalsPlot < handle
             
             switch nargin
                 case 0
-                return;
+                    return;
                 case 1
                     signals = BrSet.P.ParamList{1};
                     itraj = 1;
@@ -39,28 +39,28 @@ classdef BreachSignalsPlot < handle
             
             
         end
-               
+        
         function AddAxes(this, pos)
-        % AddAxes add new axe at specified position
+            % AddAxes add new axe at specified position
             if nargin==1
                 pos = numel(this.Axes)+1;
             end
             num_ax_old = numel(this.Axes);
             if numel(this.Axes)>0
                 Xlim = get(this.Axes(1),'XLim');
-            end 
+            end
             for ia = 1:num_ax_old;
-              if ia < pos 
-                  subplot(num_ax_old+1, 1, ia, this.Axes(ia))
-              else
-                  subplot(num_ax_old+1, 1, ia+1, this.Axes(ia))
-              end
+                if ia < pos
+                    subplot(num_ax_old+1, 1, ia, this.Axes(ia))
+                else
+                    subplot(num_ax_old+1, 1, ia+1, this.Axes(ia))
+                end
             end
             
             ax = subplot(num_ax_old+1, 1, pos);
             axes(ax);
             grid on;
-                  
+            
             if exist('Xlim', 'var')
                 set(ax, 'XLim', Xlim);
             end
@@ -71,30 +71,59 @@ classdef BreachSignalsPlot < handle
             end
             
             cm = uicontextmenu;
-            m_top_sigs = uimenu(cm, 'Label', 'Plot signal');
-   
-            if isa(this.BrSet, 'BreachRequirement')
-                m_top_phis = uimenu(cm, 'Label', 'Highlight false intervals');
-            end
             
-            uimenu(cm, 'Label', 'Add Above', 'Callback', @(o,e)ctxtfn_add_axes_above(ax,o,e));
-            uimenu(cm, 'Label', 'Add Below', 'Callback', @(o,e)ctxtfn_add_axes_below(ax, o,e));
-            uimenu(cm, 'Label', 'Delete', 'Callback', @(o,e)ctxtfn_delete_axes(ax, o,e));
-           
+            % all signals
+            m_top_sigs = uimenu(cm, 'Label', 'Plot');
+            m_sig = uimenu(m_top_sigs, 'Label', 'signal');
             for is = 1:this.BrSet.P.DimX
                 sig= this.BrSet.P.ParamList{is};
-                uimenu(m_top_sigs, 'Label', sig, 'Callback', @(o,e)ctxtfn_add_signal(ax,sig,o,e));
+                uimenu(m_sig, 'Label', sig, 'Callback', @(o,e)ctxtfn_add_signal(ax,sig,o,e));
             end
             
-            if isa(this.BrSet, 'BreachRequirement')
-            
-                for is = 1:numel(this.BrSet.formulas)
-                    sig= get_id(this.BrSet.formulas{is}.formula);
-                    uimenu(m_top_phis, 'Label', sig, 'Callback', @(o,e)ctxtfn_highlight_false(ax,sig,o,e));
+            %  signals by attributes
+            [signature, ~,~, signal_attributes]  = this.BrSet.GetSignature();
+            for iatt = 1:numel(signal_attributes) % build uimenu for attributes
+                att =signal_attributes{iatt};
+                f = [att 's_idx'];
+                signals_att = unique(signature.signals(signature.(f)));
+                m = uimenu(m_top_sigs, 'Label',  att);
+                for is = 1:numel(signals_att)
+                    sig= signals_att{is};
+                    uimenu(m, 'Label', sig, 'Callback', @(o,e)ctxtfn_add_signal(ax,sig,o,e));
                 end
             end
             
+            if ismember('requirement',signal_attributes)
+                m = uimenu(cm, 'Label', 'Highlight false intervals');
+                att ='requirement';
+                f = [att 's_idx'];
+                signals_att = signature.signals(signature.(f));
+                for is = 1:numel(signals_att)
+                    sig= signals_att{is};
+                    uimenu(m, 'Label', sig, 'Callback', @(o,e)ctxtfn_highlight_false(ax,sig,o,e));
+                end
+                if ismember('predicate',signal_attributes)
+                    att = 'predicate';
+                    f = [att 's_idx'];
+                    signals_att = signature.signals(signature.(f));
+                    for is = 1:numel(signals_att)
+                        sig= signals_att{is};
+                        uimenu(m, 'Label', sig, 'Callback', @(o,e)ctxtfn_highlight_false(ax,sig,o,e));
+                    end
+                    
+                end
+            end
+            uimenu(cm, 'Label', 'Add axes above','Separator', 'on', 'Callback', @(o,e)ctxtfn_add_axes_above(ax,o,e));
+            uimenu(cm, 'Label', 'Add axes below', 'Callback', @(o,e)ctxtfn_add_axes_below(ax, o,e));
+            uimenu(cm, 'Label', 'Reset axes','Separator', 'on', 'Callback', @(o,e)ctxtfn_reset_axes(ax, o,e));
+            uimenu(cm, 'Label', 'Delete axes', 'Callback', @(o,e)ctxtfn_delete_axes(ax, o,e));
+            
+            
             set(this.Axes(pos), 'UIContextMenu', cm);
+            
+            % default to horizontal zoom mode
+            h = zoom;
+            set(h,'Motion','horizontal','Enable','off');
             
             function ctxtfn_add_axes_above(ax, ~,~)
                 for ia = 1:numel(this.Axes)
@@ -122,37 +151,40 @@ classdef BreachSignalsPlot < handle
                 end
                 this.DeleteAxes(ia);
             end
-           
+            
+            function ctxtfn_reset_axes(ax, ~,~)
+                cla(ax);
+                title('');
+                legend off;
+            end
+            
             function ctxtfn_add_signal(ax, sig, ~,~)
                 this.plot_signal(sig, ax);
+                this.update_legend(ax);
             end
             
             function ctxtfn_highlight_false(ax, sig, ~,~)
                 this.HighlightFalse(sig, ax);
             end
-           
-            
-            
-            
             
         end
         
         function DeleteAxes(this, pos)
-        % DeleteAxe Remove axe  at specified position
+            % DeleteAxe Remove axe  at specified position
             
             num_ax_old = numel(this.Axes);
             this.Axes(pos).delete;
             this.Axes = [this.Axes(1:pos-1) this.Axes(pos+1:end)];
             
             for ia = 1:num_ax_old-1;
-                    subplot(num_ax_old-1, 1, ia, this.Axes(ia))
+                subplot(num_ax_old-1, 1, ia, this.Axes(ia))
             end
             
             figure(this.Fig);
             linkaxes(this.Axes, 'x');
             
         end
-    
+        
         function AddSignals(this,sigs, ax)
             if ischar(sigs)
                 sigs = {sigs};
@@ -163,16 +195,16 @@ classdef BreachSignalsPlot < handle
             end
             
             if isnumeric(ax)
-                if ax==0 
+                if ax==0
                     this.AddAxes(1);
                     ax = this.Axes(1);
-                elseif ax > numel(this.Axes) 
-                    this.AddAxes(); 
+                elseif ax > numel(this.Axes)
+                    this.AddAxes();
                     ax =this.Axes(end);
                 else
                     ax = this.Axes(ax);
                 end
-            end    
+            end
             if ~isa(ax, 'matlab.graphics.axis.Axes')
                 error('Argument should be an Axes object or an index.')
             end
@@ -181,37 +213,70 @@ classdef BreachSignalsPlot < handle
                 sig = sigs{is};
                 this.plot_signal(sig, ax);
             end
+            this.update_legend(ax);
+            
+            
         end
         
         function HighlightFalse(this, sig, ax)
             if ~exist('ax', 'var')||isempty(ax)
                 ax = this.Axes(end);
             end
-           
+            
             axes(ax);
             hold on;
             traj = this.BrSet.P.traj{this.itraj};
             idx = FindParam(this.BrSet.P, sig);
             tau = traj.time;
             val = traj.X(idx,:);
-            highlight_truth_intervals(tau,val, 'g', 0, 'r', 0.3);
-            l = legend('-DynamicLegend');
-            set(l, 'Interpreter', 'None');
+            int_false = highlight_truth_intervals(tau,val, 'g', 0, 'r', 0.3);
+            set(ax,'UserData', int_false);
+            
+            this.update_legend(ax);
             
         end
         
     end
-     
+    
     methods (Access=protected)
+        
+        function update_legend(this, ax)
+            c = get(ax, 'Children');
+            num_patch = 0;
+            idx=0;
+            remove_c_idx = [];
+            remove_l_idx = [];
+            for ic = numel(c):-1:1
+                idx = idx+1;
+                if isa(c(ic),'matlab.graphics.primitive.Patch')
+                    if num_patch>0
+                        remove_c_idx(end+1) = ic;
+                        remove_l_idx(end+1) = idx;
+                    else
+                        patch_idx = ic;
+                    end
+                    num_patch = num_patch+1;
+                end
+            end
+            l = legend('-DynamicLegend');
+            
+            if num_patch>0
+                set(c(patch_idx),'DisplayName' ,['Falsifications (' num2str(num_patch) ')']);
+                c(remove_c_idx) = [];
+                st = l.String();
+                st(remove_l_idx) = [];
+                l = legend(flipud(c), st);
+            end
+            
+            set(l, 'Interpreter', 'None');
+        end
         
         function plot_signal(this, sig, ax)
             axes(ax);
             hold on;
-            traj = this.BrSet.P.traj{this.itraj}; 
-            idx = FindParam(this.BrSet.P, sig);
-            plot(traj.time , traj.X(idx,:), 'DisplayName', sig);
-            l = legend('-DynamicLegend');
-            set(l, 'Interpreter', 'None');
+            time = this.BrSet.P.traj{this.itraj}.time;
+            sig_values = this.BrSet.GetSignalValues(sig, this.itraj);
+            l = plot(time , sig_values, 'DisplayName', sig);
         end
         
     end

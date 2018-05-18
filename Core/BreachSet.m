@@ -1244,7 +1244,7 @@ classdef BreachSet < BreachStatus
         function [summary, traces] = ExportTracesToStruct(this,i_traces, varargin)
             % BreachSet.ExportTracesToStruct
             
-            summary = [];
+            summary = this.GetSummary();
             traces = [];
             if ~this.hasTraj()
                 error('Breach:ExportTrace:no_trace', 'No trace to export - run Sim command first');
@@ -1276,10 +1276,6 @@ classdef BreachSet < BreachStatus
                 spec_names = this.P.props_names;
             end
             
-            summary.date = datestr(now);
-            summary.num_traces = num_traces;
-            summary.params.names = param_names;
-            summary.params.values = this.GetParam(summary.params.names);
             
             %% traces
             summary.filenames = {};
@@ -1318,6 +1314,123 @@ classdef BreachSet < BreachStatus
                 end
             end
             
+        end
+        
+        function [signature, signals, params, signal_attributes] = GetSignature(this, signals, params)
+            %  GetSignature returns information about signals and parameters 
+         
+            % gets signals signature
+            if ~exist('signals', 'var')||isempty('signals')
+                signals = this.GetSignalNames();
+            else
+                unknown = setdiff(signals, this.GetSignalNames()); 
+                if ~isempty(unknown)
+                    error('GetSignature:signal_unknown', 'Signal %s unknown.', unknown{1});
+                end
+            end
+            [signature, signal_attributes] = this.GetSignalSignature(signals);
+            
+            % gets params signature
+            if ~exist('params', 'var')||isempty('params')
+                params = this.GetParamList();
+            else
+                unknown = setdiff(params, this.GetParamList()); 
+                if ~isempty(unknown)
+                    error('GetSignature:param_unknown', 'Parameter %s unknown.', unknown{1});
+                end
+            end
+            sigp = this.GetParamSignature(params);
+            
+            f = fieldnames(sigp);
+            for i = 1:length(f)
+                signature.(f{i}) = sigp.(f{i});
+            end
+        end
+        
+        function [sigs, signal_attributes] = GetSignalSignature(this, signals)
+            if ischar(signals)
+                signals= {signals};
+            end
+            sigs.signals = signals;
+            signal_attributes = {};
+            for is = 1:numel(signals)
+                sig= signals{is};
+                dom = this.GetDomain(sig);
+                sigs.signal_types{is}  = dom.type;
+                %  Add attributes indexes
+                atts = this.get_signal_attributes(sig);
+                for ia = 1:numel(atts)
+                    f = [atts{ia} 's_idx'];
+                    if ~isfield(sigs, f)
+                        signal_attributes = [signal_attributes {atts{ia}}];
+                        sigs.(f) = is;
+                    else
+                        sigs.(f)(end+1) = is;
+                    end
+                end
+            end
+        end
+        
+        function sigp = GetParamSignature(this, params)
+            sigp.params=params;
+            for ip = 1:numel(params)
+                par  =params(ip);
+                dom = this.GetDomain(par);
+                sigp.param_types{ip}  = dom.type ;
+
+                %  Add attributes indexes
+                atts = this.get_param_attributes(par);
+                for ia = 1:numel(atts)
+                    f = [atts{ia} 's_idx'];
+                    if ~isfield(sigp, f)
+                        sigp.(f) = ip;
+                    else
+                        sigp.(f)(end+1) = ip;
+                    end
+                end
+            end
+          end
+        
+        function traces = ExportTraces(this, varargin)
+            [signature, signals, params] = this.GetSignature(varargin{:});
+            num_traces = numel(this.P.traj);
+            
+            param_values = this.GetParam(params);
+            for it = 1:num_traces
+                traj = this.P.traj{it};
+                if isfield(traj, 'status')
+                    traces{it}.status = traj.status;
+                end
+                traces{it}.signature = signature;
+                traces{it}.param = [zeros(1,numel(signals)) param_values(:,it)'];
+                traces{it}.time = traj.time;
+                
+                for is = 1:numel(signals)
+                    traces{it}.X(is,:) = this.GetSignalValues(signals{is});
+                end
+            end
+        end
+        
+        function summary = GetSummary(this)
+            
+            num_traces = numel(this.P.traj);
+
+            % parameter names
+            param_names = this.GetSysParamList();
+            
+            % input signal names
+            signal_names = this.GetSignalList();
+            
+            if isfield(this.P,'props_names')
+                spec_names = this.P.props_names;
+            end
+            
+            
+            summary.date = datestr(now);
+            summary.num_traces = num_traces;
+            summary.params.names = param_names;
+            summary.params.values = this.GetParam(summary.params.names);
+        
             if isfield(this.P, 'props')
                 summary.specs.names = spec_names;
                 this.SortbyRob();
@@ -1326,7 +1439,32 @@ classdef BreachSet < BreachStatus
                 summary.specs.sat = summary.specs.rob>=0;
                 summary.num_sat = - sum( ~summary.specs.sat, 1  );
             end
+        
+        
         end
+        
+        function b = is_variable(this, par)
+            b = false ;
+            [~, f] = FindParam(this.P, par);
+            if f
+                dom = this.GetDomain(par);
+                b = ~isempty(dom.domain);
+            end
+        end
+        
+        function att = get_signal_attributes(this, sig)
+            % returns nature to be included in signature
+            att = {};
+        end
+
+        function att = get_param_attributes(this, par)
+            % returns nature to be included in signature
+            att = {};
+            if this.is_variable(par)
+                att = [att {'variable'}];
+            end
+        end
+
         
         function [success, msg, msg_id] = SaveResults(this, folder_name, varargin)
             % Additional options
