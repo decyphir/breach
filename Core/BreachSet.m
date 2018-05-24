@@ -583,7 +583,7 @@ classdef BreachSet < BreachStatus
         
         function SigNames = GetSignalNames(this)
             % Get signal names - same as GetSignalList
-            SigNames = this.P.ParamList(1:this.P.DimX);
+            SigNames = this.GetSignalList();
         end
         
         function [signals, idx] = GetSignalList(this)
@@ -1241,6 +1241,66 @@ classdef BreachSet < BreachStatus
         end
         
         %% Printing/Exporting
+        function [success, msg, msg_id] = SaveResults(this, folder_name, varargin)
+            % Additional options
+            if ~exist('folder_name', 'var')
+                folder_name = '';
+            end
+            options = struct('FolderName', folder_name, 'SaveBreachSystem', true, 'ExportToExcel', false, 'ExcelFileName', 'Results.xlsx');
+            options = varargin2struct(options, varargin{:});
+            
+            if isempty(options.FolderName)
+                try
+                    options.FolderName = [this.mdl.name '_Results_' datestr(now, 'dd_mm_yyyy_HHMM')];
+                catch
+                    options.FolderName = [this.whoamI '_Results_' datestr(now, 'dd_mm_yyyy_HHMM')];
+                end
+            end
+            
+            folder_name = options.FolderName;
+            [success,msg,msg_id] = mkdir(folder_name);
+            trace_folder_name = [folder_name filesep 'traces'];
+            [success,msg,msg_id] = mkdir(trace_folder_name);
+            
+            if success == 1
+                if isequal(msg_id, 'MATLAB:MKDIR:DirectoryExists')
+                    this.disp_msg(['Saving in existing result folder at ' folder_name]);
+                else
+                    this.disp_msg(['Created result folder at ' folder_name]);
+                end
+                this.log_folder = folder_name;
+            else
+                error(['Couldn''t create folder'  folder_name '.']);
+            end
+            
+            if ~this.hasTraj()
+                error('Breach:SaveResult:no_trace', 'No trace to save - run Sim command first');
+                return;
+            end
+            
+            [summary, traces] = this.ExportTracesToStruct();
+            %saving summary
+            summary_filename = [folder_name filesep 'summary'];
+            save(summary_filename,'-struct', 'summary');
+            
+            if  options.SaveBreachSystem
+                breachsys_filename  = [folder_name filesep 'breach_system'];
+                breachsys_name = this.whoamI;
+                evalin('base', ['save(''' breachsys_filename ''', ''' breachsys_name  ''', ''-v7.3'');'] );
+            end
+            
+            for it=1:numel(traces)
+                trace_filename = [trace_folder_name filesep num2str(it) '.mat'];
+                trace = traces(it);
+                save(trace_filename,'-struct', 'trace');
+            end
+            
+            if options.ExportToExcel
+                this.ExportToExcel(options.ExcelFileName);
+            end
+        end
+        
+        
         function [summary, traces] = ExportTracesToStruct(this,i_traces, varargin)
             % BreachSet.ExportTracesToStruct
             
@@ -1316,28 +1376,28 @@ classdef BreachSet < BreachStatus
             
         end
         
-        function [signature, signals, params, signal_attributes] = GetSignature(this, signals, params)
+        function [signature, signals, params] = GetSignature(this, signal_list, param_list)
             %  GetSignature returns information about signals and parameters 
-         
+            
             % gets signals signature
-            if ~exist('signals', 'var')||isempty('signals')
-                signals = this.GetSignalNames();
-            else
-                unknown = setdiff(signals, this.GetSignalNames()); 
-                if ~isempty(unknown)
-                    error('GetSignature:signal_unknown', 'Signal %s unknown.', unknown{1});
-                end
+            if ~exist('signal_list', 'var')||isempty(signal_list)
+                signal_list = this.GetSignalList();
             end
-            [signature, signal_attributes] = this.GetSignalSignature(signals);
+            
+            [signals, unknown] = this.expand_signal_name(signal_list);
+            if ~isempty(unknown)
+                error('GetSignature:signal_unknown', 'Signal %s unknown.', unknown{1});
+            end
+            signature = this.GetSignalSignature(signals);
             
             % gets params signature
-            if ~exist('params', 'var')||isempty('params')
-                params = this.GetParamList();
-            else
-                unknown = setdiff(params, this.GetParamList()); 
-                if ~isempty(unknown)
-                    error('GetSignature:param_unknown', 'Parameter %s unknown.', unknown{1});
-                end
+            if ~exist('param_list', 'var')||isempty(param_list)
+                param_list = this.GetParamList();
+            end
+
+            [params, unknown] = this.expand_param_name(param_list);
+            if ~isempty(unknown)
+                error('GetSignature:param_unknown', 'Parameter %s unknown.', unknown{1});
             end
             sigp = this.GetParamSignature(params);
             
@@ -1347,22 +1407,26 @@ classdef BreachSet < BreachStatus
             end
         end
         
-        function [sigs, signal_attributes] = GetSignalSignature(this, signals)
-            if ischar(signals)
+        function sigs = GetSignalSignature(this, signals)
+           if nargin <=1
+                signals = this.GetSignalList(); 
+           end
+                
+           if ischar(signals)
                 signals= {signals};
             end
             sigs.signals = signals;
-            signal_attributes = {};
+            sigs.signal_attributes = {};
             for is = 1:numel(signals)
                 sig= signals{is};
                 dom = this.GetDomain(sig);
                 sigs.signal_types{is}  = dom.type;
                 %  Add attributes indexes
                 atts = this.get_signal_attributes(sig);
+                sigs.signal_attributes = union(sigs.signal_attributes, atts);
                 for ia = 1:numel(atts)
                     f = [atts{ia} 's_idx'];
                     if ~isfield(sigs, f)
-                        signal_attributes = [signal_attributes {atts{ia}}];
                         sigs.(f) = is;
                     else
                         sigs.(f)(end+1) = is;
@@ -1372,14 +1436,19 @@ classdef BreachSet < BreachStatus
         end
         
         function sigp = GetParamSignature(this, params)
+            
+            if nargin<=1
+                params = this.GetParamList();
+            end
             sigp.params=params;
+            sigp.param_attributes ={};
             for ip = 1:numel(params)
                 par  =params(ip);
                 dom = this.GetDomain(par);
                 sigp.param_types{ip}  = dom.type ;
-
                 %  Add attributes indexes
                 atts = this.get_param_attributes(par);
+                sigp.param_attributes = union(sigp.param_attributes, atts); 
                 for ia = 1:numel(atts)
                     f = [atts{ia} 's_idx'];
                     if ~isfield(sigp, f)
@@ -1388,26 +1457,60 @@ classdef BreachSet < BreachStatus
                         sigp.(f)(end+1) = ip;
                     end
                 end
+                
             end
-          end
+        end
         
-        function traces = ExportTraces(this, varargin)
-            [signature, signals, params] = this.GetSignature(varargin{:});
+        function traces = ExportTraces(this, signals, params, varargin)
+            
+            if ~exist('signals','var')
+                signals = {}; % means all
+            end
+            if ~exist('params','var')||isempty(params)
+                params = {}; % means all
+            end
+            
+            % Options
+            options = struct('WriteToFolder','');
+            options = varargin2struct(options, varargin{:});
+            
+            if ~isempty(options.WriteToFolder)
+                if ~exist(options.WriteToFolder,'dir' )
+                    [success, err_msg] = mkdir(options.WriteToFolder);
+                    if ~success
+                        error('Folder creation failed with error:\n %s', err_msg);
+                    end
+                end
+                dir_traces = options.WriteToFolder;
+            else
+                dir_traces = '';
+            end
+                
+            [signature, signals, params] = this.GetSignature(signals, params);
             num_traces = numel(this.P.traj);
             
             param_values = this.GetParam(params);
             for it = 1:num_traces
                 traj = this.P.traj{it};
+                
+                if ~isempty(dir_traces)
+                    traces{it} = matfile([dir_traces filesep num2str(it) '.mat'], 'Writable',true);
+                end
+                
                 if isfield(traj, 'status')
                     traces{it}.status = traj.status;
                 end
                 traces{it}.signature = signature;
                 traces{it}.param = [zeros(1,numel(signals)) param_values(:,it)'];
                 traces{it}.time = traj.time;
-                
+                traces{it}.X = zeros(numel(signals), numel(traj.time));
                 for is = 1:numel(signals)
-                    traces{it}.X(is,:) = this.GetSignalValues(signals{is});
+                    traces{it}.X(is,:) = this.GetSignalValues(signals{is}, it);
                 end
+                
+               if ~isempty(dir_traces)
+                   traces{it}.Properties.Writable= false; 
+               end
             end
         end
         
@@ -1457,71 +1560,61 @@ classdef BreachSet < BreachStatus
             att = {};
         end
 
-        function att = get_param_attributes(this, par)
+        function atts = get_param_attributes(this, param)
             % returns nature to be included in signature
-            att = {};
-            if this.is_variable(par)
-                att = [att {'variable'}];
+            atts = {};
+            if this.is_variable(param)
+                atts = [atts {'variable'}];
+            else
+               atts = [atts {'const'}];
             end
         end
 
+        function [sig_names, unknown] =  expand_signal_name(this, signals)
+            % expand_signal_name expands a string into a set of signal names by attribute or regular expression search
+            sig_names = {};
+            unknown = {};
+            if ischar(signals)
+                signals = {signals};
+            end
+            S = this.GetSignalSignature();
+            
+            for isig = 1:numel(signals)
+                sig = signals{isig};
+                if ismember(sig,S.signals)  % is a signal name already
+                    sig_names = [sig_names {sig}];
+                elseif ismember(sig, S.signal_attributes)  % attribute
+                    sig_names = [sig_names S.signals(S.([sig 's_idx'])) ];
+                else  % regexp search
+                    sig_names = [sig_names S.signals(cellfun(@(c)(~isempty(c)),  regexp(S.signals,sig)))];
+                    if isempty(sig_names)
+                        unknown = [unknown sig];
+                    end
+                end
+            end
+        end
         
-        function [success, msg, msg_id] = SaveResults(this, folder_name, varargin)
-            % Additional options
-            if ~exist('folder_name', 'var')
-                folder_name = '';
+        function [param_names, unknown] =  expand_param_name(this, params)
+            % expand_signal_name expands a string into a set of signal names by attribute or regular expression search
+            param_names = {};
+            unknown = {};
+            if ischar(params)
+                params = {params};
             end
-            options = struct('FolderName', folder_name, 'SaveBreachSystem', true, 'ExportToExcel', false, 'ExcelFileName', 'Results.xlsx');
-            options = varargin2struct(options, varargin{:});
+            S = this.GetParamSignature();
             
-            if isempty(options.FolderName)
-                try
-                    options.FolderName = [this.mdl.name '_Results_' datestr(now, 'dd_mm_yyyy_HHMM')];
-                catch
-                    options.FolderName = [this.whoamI '_Results_' datestr(now, 'dd_mm_yyyy_HHMM')];
+            for ipar = 1:numel(params)
+                param = params{ipar};
+                if ismember(param,S.params)  % is a signal name already
+                    param_names = [param_names {param}];
+                elseif ismember(param, S.param_attributes)  % attribute
+                    param_names = [param_names S.params(S.([param 's_idx'])) ];
+                else  % regexp search
+                    param_names = [param_names S.params(cellfun(@(c)(~isempty(c)),  regexp(S.params,param)))];
+                    if isempty(param_names)
+                        unknown = [unknown param];
+                    end
                 end
-            end
-            
-            folder_name = options.FolderName;
-            [success,msg,msg_id] = mkdir(folder_name);
-            trace_folder_name = [folder_name filesep 'traces'];
-            [success,msg,msg_id] = mkdir(trace_folder_name);
-            
-            if success == 1
-                if isequal(msg_id, 'MATLAB:MKDIR:DirectoryExists')
-                    this.disp_msg(['Saving in existing result folder at ' folder_name]);
-                else
-                    this.disp_msg(['Created result folder at ' folder_name]);
-                end
-                this.log_folder = folder_name;
-            else
-                error(['Couldn''t create folder'  folder_name '.']);
-            end
-            
-            if ~this.hasTraj()
-                error('Breach:SaveResult:no_trace', 'No trace to save - run Sim command first');
-                return;
-            end
-            
-            [summary, traces] = this.ExportTracesToStruct();
-            %saving summary
-            summary_filename = [folder_name filesep 'summary'];
-            save(summary_filename,'-struct', 'summary');
-            
-            if  options.SaveBreachSystem
-                breachsys_filename  = [folder_name filesep 'breach_system'];
-                breachsys_name = this.whoamI;
-                evalin('base', ['save(''' breachsys_filename ''', ''' breachsys_name  ''', ''-v7.3'');'] );
-            end
-            
-            for it=1:numel(traces)
-                trace_filename = [trace_folder_name filesep num2str(it) '.mat'];
-                trace = traces(it);
-                save(trace_filename,'-struct', 'trace');
-            end
-            
-            if options.ExportToExcel
-                this.ExportToExcel(options.ExcelFileName);
             end
         end
         

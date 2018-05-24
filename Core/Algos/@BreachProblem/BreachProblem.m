@@ -705,16 +705,13 @@ classdef BreachProblem < BreachStatus
              
         function [BrOut, Berr, BbadU] = GetBrSet_Logged(this)
             % GetBrSet_Logged gets BreachSet object containing parameters and traces computed during optimization
-            if this.log_traces&&~this.use_parallel  % when this is true, BrSet_Logged is already a BreachSet with traces
-                BrOut = this.BrSet_Logged;
-            else
+            BrOut = this.BrSet_Logged;
+            if isempty(BrOut)
                 BrOut = this.BrSys.copy();
                 BrOut.ResetSimulations();
                 BrOut.SetParam(this.params, this.X_log);
-                if this.BrSys.UseDiskCaching
-                    BrOut.Sim(); 
-                end
-            end
+                BrOut.Sim();
+             end
             
             [BrOut, Berr, BbadU] = this.ExportBrSet(BrOut); 
             
@@ -731,19 +728,28 @@ classdef BreachProblem < BreachStatus
             BrBest =  this.ExportBrSet(BrBest);
             
         end
-                
+              
+         function summary = SaveResults(this, varargin)
+            BLog = this.GetBrSet_Logged();   
+            summary = BLog.SaveResults(varargin{:});
+        end
+            
+    end
+    
+    methods (Access=protected)
+        
         function display_status_header(this)
             fprintf(  '#calls (max:%5d)           time spent (max: %g)           best                         obj\n',...
-                        this.max_obj_eval, this.max_time);           
+                this.max_obj_eval, this.max_time);
         end
         
         function display_status(this,fval)
             
-            if ~strcmp(this.display,'off')              
+            if ~strcmp(this.display,'off')
                 if nargin==1
                     fval = this.obj_log(end); % bof bof
                 end
-
+                
                 st__= sprintf('    %5d                   %7.1f                            %+5.5e             %+5.5e\n', ...
                     this.nb_obj_eval, this.time_spent, this.obj_best, fval);
                 switch this.display
@@ -754,33 +760,25 @@ classdef BreachProblem < BreachStatus
                 end
             end
         end
-
-        function new = copy(this)
-            % copy operator for BreachSet, works with R2010b or newer.
-            objByteArray = getByteStreamFromArray(this);
-            new = getArrayFromByteStream(objByteArray);
-        end
         
-    end
-    
-    methods (Access=protected)
-        
-        function [BrOut, Berr,  BbadU] = ExportBrSet(this,BrOut)
+        function [BrOut, Berr,  BbadU] = ExportBrSet(this,B)
             % ExportBrSet prepares a BreachSet such as best, logged, etc to be
             % returned
-            BrOut.Sys.Verbose=1;
-            Berr =[];
+            B.Sys.Verbose=1;
+            Berr = [];
             BbadU = [];
-            [idx_ok, idx_sim_error, idx_invalid_input, st_status]  = BrOut.GetTraceStatus();
+            [idx_ok, idx_sim_error, idx_invalid_input, st_status]  = B.GetTraceStatus();
             
             if ~isempty(idx_sim_error)||~isempty(idx_invalid_input)
-                [Bok, Berr, BbadU] = FilterTraceStatus(BrOut);
-                BrOut= Bok;
+                [B, Berr, BbadU] = FilterTraceStatus(B);
                 this.disp_msg(['Warning: ' st_status],1);
             end
             
-            if ~isempty(idx_ok)&&BrOut.hasTraj();
-                BrOut.CheckSpec(this.Spec);
+            if ~isempty(idx_ok)&&B.hasTraj();
+                BrOut = this.Spec.copy();
+                BrOut.ResetSimulations();
+                BrOut.BrSet = [];
+                BrOut.Eval(B);
             end
         end
         

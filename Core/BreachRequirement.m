@@ -47,9 +47,9 @@ classdef BreachRequirement < BreachTraceSystem
             end
             % Figure out what signals are required input signals
             this.ResetSigMap();
-              
+            
         end
-                
+        
         function this= SetSignalMap(this, varargin)
             % SetSignalMap maps signal names to signals needed for requirement
             % evaluation
@@ -93,7 +93,7 @@ classdef BreachRequirement < BreachTraceSystem
             
             this.checkSignalMap();
             this.signals_in = this.get_signals_in();
-      
+            
             if this.verbose >= 2
                 this.PrintSigMap();
             end
@@ -104,14 +104,14 @@ classdef BreachRequirement < BreachTraceSystem
             this.sigMap = containers.Map();
             this.signals_in = this.get_signals_in();
         end
-               
+        
         function  [val, traj] = evalTrace(this,traj)
             % evalTrace evaluation function for one trace.
             traj = this.applyOutputGens(traj);
             [val, traj] = this.getRobustSignal(traj); %  computes robustness, return at time per usual STL semantics
-
+            
         end
-         
+        
         function [global_val, traces_vals] = Eval(this, varargin)
             % BreachRequirement.Eval returns evaluation of the requirement -
             % compute it for all traces available and returns min (implicit
@@ -125,7 +125,7 @@ classdef BreachRequirement < BreachTraceSystem
             global_val = min(min(traces_vals));
             this.val = global_val;
         end
-          
+        
         function F = PlotDiagnosis(this, idx_formulas, itraj)
             if nargin<2
                 idx_formulas = 1;
@@ -141,7 +141,13 @@ classdef BreachRequirement < BreachTraceSystem
         end
         
         function summary = GetSummary(this)
-            summary.statement = sprintf('%d traces evaluated', this.CountTraces());
+            
+            if this.CountTraces()==1
+                summary.statement = sprintf('%d trace evaluated', this.CountTraces());
+            else
+                summary.statement = sprintf('%d traces evaluated', this.CountTraces());
+            end
+            
             summary.num_traces_evaluated =size(this.traces_vals,1);
             
             if summary.num_traces_evaluated>0
@@ -149,7 +155,7 @@ classdef BreachRequirement < BreachTraceSystem
                 summary.traces_vals = this.traces_vals;
                 summary.num_requirements = size(this.traces_vals,2);
                 if summary.num_requirements == 1
-                    summary.statement = sprintf([summary.statement ' on %s requirement'], summary.num_requirements);
+                    summary.statement = sprintf([summary.statement ' on %d requirement'], summary.num_requirements);
                 else
                     summary.statement = sprintf([summary.statement ' on %d requirements'], summary.num_requirements);
                 end
@@ -173,7 +179,7 @@ classdef BreachRequirement < BreachTraceSystem
         end
         
         function values = GetParam(this, params, ip)
-        % GetParam if not found, look into BrSet   
+            % GetParam if not found, look into BrSet
             [idx, ifound] = FindParam(this.P, params);
             if ~exist('ip', 'var')
                 ip = 1:size(this.P.pts,2);
@@ -187,14 +193,14 @@ classdef BreachRequirement < BreachTraceSystem
                     params = {params};
                 end
                 idx_req=  ifound~=0;
-                idx_data = ifound==0; 
+                idx_data = ifound==0;
                 params_req = params(idx_req);
                 params_data = params(idx_data);
                 values(idx_req,:) = this.GetParam(params_req, ip);
                 values(idx_data,:) = this.BrSet.GetParam(params_data, ip);
             end
         end
-         
+        
         function X = GetSignalValues(this,varargin)
             % GetSignalValues if not found, look into BrSet
             signals = varargin{1};
@@ -221,7 +227,7 @@ classdef BreachRequirement < BreachTraceSystem
                 if any(idx_data)
                     values_data = this.BrSet.GetSignalValues(signals_data, varargin{2:end});
                     if iscell(values_data)
-                        nb_traj =numel(values_req);
+                        nb_traj =numel(values_data);
                     else
                         nb_traj =1;
                     end
@@ -255,7 +261,7 @@ classdef BreachRequirement < BreachTraceSystem
                 param =  {param};
             end
             [idx, found] = FindParam(this.P, param);
-            for i = 1:numel(idx) 
+            for i = 1:numel(idx)
                 if found(i)
                     dom(i) = this.Domains(idx(i));
                 else
@@ -279,11 +285,11 @@ classdef BreachRequirement < BreachTraceSystem
         
         function PrintFormula(this)
             
-           fprintf(['--- FORMULAS ---\n']);
-           for ifo = 1:numel(this.formulas)
-               this.formulas{ifo}.disp();
-           end   
-           fprintf('\n');
+            fprintf(['--- FORMULAS ---\n']);
+            for ifo = 1:numel(this.formulas)
+                this.formulas{ifo}.disp();
+            end
+            fprintf('\n');
         end
         
         function PrintSignals(this)
@@ -294,64 +300,144 @@ classdef BreachRequirement < BreachTraceSystem
                     fprintf('%s --> %s\n', sig , this.sigMap(sig));
                 else
                     fprintf('%s\n', sig);
-                end        
+                end
             end
             fprintf('\n');
-           disp( '---- SIGNALS  OUT ----')
-           for iog = 1:numel(this.ogs)
-               signals_in_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.ogs{iog}.signals_in, 'UniformOutput', false));
-               signals_in_st = ['{' signals_in_st(1:end-2) '}'];
-               signals_out_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.ogs{iog}.signals, 'UniformOutput', false));
-               signals_out_st = ['{' signals_out_st(1:end-2) '}'];
-               fprintf('%s --> %s\n',signals_in_st, signals_out_st);
-           end
-   
-           keys = this.sigMap.keys;
-           for ik = 1:numel(keys)
-               if ~ismember(keys{ik}, this.signals_in)  % internal mapping
+            disp( '---- SIGNALS  OUT ----')
+            for iog = 1:numel(this.ogs)
+                signals_in_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.ogs{iog}.signals_in, 'UniformOutput', false));
+                signals_in_st = ['{' signals_in_st(1:end-2) '}'];
+                signals_out_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.ogs{iog}.signals, 'UniformOutput', false));
+                signals_out_st = ['{' signals_out_st(1:end-2) '}'];
+                fprintf('%s --> %s\n',signals_in_st, signals_out_st);
+            end
+            
+            keys = this.sigMap.keys;
+            for ik = 1:numel(keys)
+                if ~ismember(keys{ik}, this.signals_in)  % internal mapping
                     fprintf('%s --> %s\n', keys{ik} , this.sigMap(keys{ik}));
-               end
-           end
-           
-        fprintf('\n');    
+                end
+            end
+            
+            fprintf('\n');
         end
-           
+        
         function PrintAll(this)
             this.PrintFormula();
             this.PrintSignals();
             this.PrintParams();
         end
         
-        
-        
-        function atts = get_signal_attributes(this, sig)
+        function  atts = get_signal_attributes(this, sig)
             % returns nature to be included in signature
             % should req_input, additional_test_data_signal,
-        atts = {}; 
-        if this.is_a_requirement(sig)
-            atts =[atts {'requirement'}];
-        end
-        if this.is_a_predicate(sig)
-            atts =[atts {'predicate'}];
-        end
-        if this.is_a_model_input(sig)
-            atts =[atts {'model_input'}];
-        end
-        if this.is_a_model_output(sig)
-            atts =[atts {'model_output'}];
-        end
-        
-        end
-        
-        function signals = GetSignalNames(this)
+            atts = {};
+            
             if ~isempty(this.BrSet)
-                signals = [this.BrSet.GetSignalNames() this.P.ParamList(1:this.P.DimX)];
-            else
-                signals = [this.P.ParamList(1:this.P.DimX)];
+                atts = this.BrSet.get_signal_attributes(sig);
+            end
+            
+            if this.is_a_requirement(sig)
+                atts =union(atts, {'requirement'});
+            end
+            if this.is_a_predicate(sig)
+                atts =union(atts, {'predicate'});
+            end
+            
+        end
+        
+        function  atts = get_param_attributes(this, param)
+            % returns nature to be included in signature
+            % should req_input, additional_test_data_signal,
+            atts = {};
+            if ~isempty(this.BrSet)
+                atts = this.BrSet.get_param_attributes(param);
+            end
+            
+            if ismember(param, this.P.ParamList(this.P.DimX+1:end))
+                atts =[atts {'req_param'}];
             end
         end
         
+        function signals = GetSignalList(this)
+            if ~isempty(this.BrSet)
+                signals = union(this.BrSet.GetSignalList(), this.P.ParamList(1:this.P.DimX), 'stable');
+            else
+                signals = this.P.ParamList(1:this.P.DimX);
+            end
+        end
+        
+        function params = GetParamList(this)
+            if ~isempty(this.BrSet)
+                params = union(this.BrSet.GetParamList(), this.P.ParamList(this.P.DimX+1:end), 'stable');
+            else
+                params = [this.P.ParamList(this.P.DimX+1:end)];
+            end
+        end
+        
+         function [summary, success, msg, msg_id] = SaveResults(this, folder_name, varargin)
+            % Additional options
+            if ~exist('folder_name', 'var')
+                folder_name = '';
+            end
+            options = struct('FolderName', folder_name, 'ExportToExcel', false, 'ExcelFileName', 'Results.xlsx', ...
+                'IncludeSignals', [],  'IncludeParams', []);
+            options = varargin2struct(options, varargin{:});
+            
+            if isempty(options.FolderName)
+                try
+                    options.FolderName = [this.BrSet.mdl.name '_Results_' datestr(now, 'dd_mm_yyyy_HHMM')];
+                catch
+                    options.FolderName = ['Req_Results_' datestr(now, 'dd_mm_yyyy_HHMM')];
+                end
+            end
+            
+            folder_name = options.FolderName;
+            [success,msg,msg_id] = mkdir(folder_name);
+            if ~success
+                   error('Failed to create folder %s, received error id [%s], with message ''%s''', folder_name,msg_id, msg); 
+            end
+            trace_folder_name = [folder_name filesep 'traces'];
+            [success,msg,msg_id] = mkdir(trace_folder_name);
+            
+            if success == 1
+                if isequal(msg_id, 'MATLAB:MKDIR:DirectoryExists')
+                    this.disp_msg(['Saving in existing result folder at ' folder_name]);
+                else
+                    this.disp_msg(['Created result folder at ' folder_name]);
+                end
+                this.log_folder = folder_name;
+            else
+                error(['Couldn''t create folder'  folder_name '.']);
+            end
+            
+            if ~this.hasTraj()
+                error('Breach:SaveResult:no_trace', 'No trace to save - run Eval command first');
+                return;
+            end
+            
+            summary = this.GetSummary();
+            summary_filename = [folder_name filesep 'summary'];
+            tr = this.ExportTraces(options.IncludeSignals, options.IncludeParams, 'WriteToFolder', [folder_name filesep 'traces']);
+            summary.traces_list = cell(1,numel(tr));
+            for it = 1:numel(tr)
+                summary.traces_list{it} = tr{it}.Properties.Source;
+            end
+            
+            i_false = find(summary.num_violations_per_trace>0);
+            summary.false_traces_files = cell(1, numel(i_false));
+            for it = 1:numel(i_false)
+                summary.false_traces_files{it} = tr{i_false(it)}.Properties.Source;
+            end
+            
+            save(summary_filename,'-struct', 'summary');
+             
+        end
+        
     end
+    
+    
+    
     
     %% Protected methods
     methods (Access=protected)
@@ -389,7 +475,7 @@ classdef BreachRequirement < BreachTraceSystem
                     if  size(X,2) ~= numel(time)
                         error('BreachRequirement:data_inconsistent','X (second argument) should  be an array of same length as time (first arguement).');
                     end
-           
+                    
                     if numel(this.signals_in) ~= size(X,1)
                         error('BreachRequirement:data_inconsistent', 'data is inconsistent with formula' );
                     end
@@ -398,25 +484,25 @@ classdef BreachRequirement < BreachTraceSystem
                     traj.param = this.P.pts(:,1)';
                     traj.time = varargin{1};
                     traj.X = NaN(this.Sys.DimX, numel(traj.time));
-                    traj = this.set_signal_in_traj(traj, this.signals_in, X); 
+                    traj = this.set_signal_in_traj(traj, this.signals_in, X);
                     [V, traj] = this.evalTrace(traj);
                     
                     trajs = {traj};
-                
+                    
                 case 3 % B, params, values --> assigns values to parameters in B
                     B = varargin{1};
                     params = varargin{2};
-                    values = varargin{3}; 
+                    values = varargin{3};
                     if ischar(params)
                         params = {params};
                     end
                     
-                    % Distribute parameters to  system and requirements 
+                    % Distribute parameters to  system and requirements
                     [params_sys, i_sys] = intersect(params, B.GetParamList());
-                    [params_req, i_req] = intersect(params, this.GetParamList());
+                    [params_req, i_req] = intersect(params, this.P.ParamList(this.P.DimX+1:this.P.DimP));
                     if (numel(i_sys)+numel(i_req)) ~= numel(params) % parameter not found
-                           params_not_found = setdiff(params, union(param_sys,param_req));
-                           error('Parameter %s not found either as system or requirement parameter.', params_not_found{1});
+                        params_not_found = setdiff(params, union(params_sys,params_req));
+                        error('Parameter %s not found either as system or requirement parameter.', params_not_found{1});
                     end
                     
                     if ~isempty(params_sys)
@@ -435,7 +521,7 @@ classdef BreachRequirement < BreachTraceSystem
                 if isa(B,'struct')   % reading one struct obtained from a SaveResult command
                     B = BreachTraceSystem(B);
                 end  % here we need to handle pre-conditions, input requirements, etc
-           
+                
                 this.BrSet = B;
                 Xs = B.GetSignalValues(this.signals_in);
                 if ~iscell(Xs)
@@ -469,14 +555,13 @@ classdef BreachRequirement < BreachTraceSystem
                     [V(i,:), trajs{i}] = this.evalTrace(trajs{i});
                 end
             end
-        
-        
+            
             this.setTraces(trajs);
             this.val = V;
         end
-         
+        
         function traj = applyOutputGens(this, traj)
-        % applyOutputGen applies intermediate signals computations
+            % applyOutputGen applies intermediate signals computations
             for iog = 1:numel(this.ogs)
                 Xin = this.get_signal_from_traj(traj, this.ogs{iog}.signals_in);
                 pin = traj.param(FindParam(this.P, this.ogs{iog}.params));
@@ -494,7 +579,7 @@ classdef BreachRequirement < BreachTraceSystem
                 traj  = this.set_signal_in_traj(traj, this.formulas{ifo}.signals, Xout);
             end
         end
-     
+        
         function setTraces(this, trajs)
             if this.hasTraj()
                 this.P.traj =trajs;  % optimistic ... also, should fix this traj/trajs thing
@@ -505,7 +590,8 @@ classdef BreachRequirement < BreachTraceSystem
             end
         end
         
- %% Misc       
+        %% Misc
+       
         function checkSignalMap(this)
             % checkSignalMap warning if a signal maps to a signal that is
             % not required by requirement
@@ -522,7 +608,7 @@ classdef BreachRequirement < BreachTraceSystem
             end
             
         end
-         
+        
         function sigs_in = get_signals_in(this)
             
             sigs_in = setdiff([this.GetSignalNames() this.sigMap.keys],  this.sigMap.values, 'stable');     % remove 'outputs' of signal maps
@@ -531,26 +617,26 @@ classdef BreachRequirement < BreachTraceSystem
                 sigs_in = setdiff(sigs_in, this.ogs{iogs}.signals, 'stable');      % remove outputs of signals generators
             end
             for ifo = 1:numel(this.formulas)
-            sigs_in = setdiff(sigs_in, this.formulas{ifo}.signals, 'stable');             % remove outputs of formula
+                sigs_in = setdiff(sigs_in, this.formulas{ifo}.signals, 'stable');             % remove outputs of formula
             end
         end
         
         function traj = set_signal_in_traj(this, traj, names, Xout)
             % update names with sigMap
-           
+            
             for i_sig = 1:numel(names)
                 [idx1, stat] = FindParam(this.P,  names{i_sig});
                 if stat == 1 % signal not found
-                    traj.X(idx1, :) = Xout(i_sig,:); 
+                    traj.X(idx1, :) = Xout(i_sig,:);
                 end
                 
                 if this.sigMap.isKey(names{i_sig})
                     idx2  = FindParam(this.P, this.sigMap(names{i_sig}));
-                    traj.X(idx2, :) = Xout(i_sig,:); 
+                    traj.X(idx2, :) = Xout(i_sig,:);
                 end
                 
             end
-             
+            
         end
         
         function b = is_a_requirement(this, sig)

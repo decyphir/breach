@@ -81,9 +81,14 @@ classdef BreachSignalsPlot < handle
             end
             
             %  signals by attributes
-            [signature, ~,~, signal_attributes]  = this.BrSet.GetSignature();
-            for iatt = 1:numel(signal_attributes) % build uimenu for attributes
-                att =signal_attributes{iatt};
+            try
+                signature = this.BrSet.P.traj{this.itraj}.signature;
+            catch
+                signature  = this.BrSet.GetSignature();
+            end
+            
+            for iatt = 1:numel(signature.signal_attributes) % build uimenu for attributes
+                att =signature.signal_attributes{iatt};
                 f = [att 's_idx'];
                 signals_att = unique(signature.signals(signature.(f)));
                 m = uimenu(m_top_sigs, 'Label',  att);
@@ -93,24 +98,19 @@ classdef BreachSignalsPlot < handle
                 end
             end
             
-            if ismember('requirement',signal_attributes)
+            if ismember('requirement',signature.signal_attributes)
                 m = uimenu(cm, 'Label', 'Highlight false intervals');
                 att ='requirement';
                 f = [att 's_idx'];
-                signals_att = signature.signals(signature.(f));
+                signals_att = unique(signature.signals(signature.(f)));
+                if ismember('predicate',signature.signal_attributes)
+                    att = 'predicate';
+                    f = [att 's_idx'];
+                    signals_att = unique([signals_att signature.signals(signature.(f))]);
+                end
                 for is = 1:numel(signals_att)
                     sig= signals_att{is};
                     uimenu(m, 'Label', sig, 'Callback', @(o,e)ctxtfn_highlight_false(ax,sig,o,e));
-                end
-                if ismember('predicate',signal_attributes)
-                    att = 'predicate';
-                    f = [att 's_idx'];
-                    signals_att = signature.signals(signature.(f));
-                    for is = 1:numel(signals_att)
-                        sig= signals_att{is};
-                        uimenu(m, 'Label', sig, 'Callback', @(o,e)ctxtfn_highlight_false(ax,sig,o,e));
-                    end
-                    
                 end
             end
             uimenu(cm, 'Label', 'Add axes above','Separator', 'on', 'Callback', @(o,e)ctxtfn_add_axes_above(ax,o,e));
@@ -166,7 +166,6 @@ classdef BreachSignalsPlot < handle
             function ctxtfn_highlight_false(ax, sig, ~,~)
                 this.HighlightFalse(sig, ax);
             end
-            
         end
         
         function DeleteAxes(this, pos)
@@ -181,8 +180,9 @@ classdef BreachSignalsPlot < handle
             end
             
             figure(this.Fig);
-            linkaxes(this.Axes, 'x');
-            
+            if ~isempty(this.Axes)
+                linkaxes(this.Axes, 'x');
+            end
         end
         
         function AddSignals(this,sigs, ax)

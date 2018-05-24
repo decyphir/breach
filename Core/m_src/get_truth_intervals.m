@@ -1,7 +1,7 @@
 function [true_intrvls, false_intrvls] = get_truth_intervals(val)
 % get_truth_intervals assumes piecewise constant
 
-true_vals = (val > 0);
+true_vals = (val > 0|isnan(val));  % NaN true by default
 true_intrvls =[];
 false_intrvls =[];
 
@@ -18,7 +18,7 @@ elseif any(true_vals)
         false_intrvls = idx_intrvls(1:2:end,:);
     end
     
-    if val(end)>0&&~all(val>0)
+    if true_vals(end)>0&&~all(true_vals>0)
         true_intrvls(end+1,:) = [false_intrvls(end,2) numel(val)];
     else
         false_intrvls(end+1,:) = [true_intrvls(end,2) numel(val)];

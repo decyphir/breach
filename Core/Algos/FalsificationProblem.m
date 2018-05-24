@@ -88,6 +88,7 @@ classdef FalsificationProblem < BreachProblem
             [~, i_false] = find(fval<0);
             if ~isempty(i_false)
                 this.X_false = [this.X_false x(:,i_false)];                              
+                this.obj_false = [this.obj_false fval];
                 if (this.log_traces)&&~this.use_parallel
                     if isempty(this.BrSet_False)
                         this.BrSet_False = this.BrSys.copy();
@@ -121,7 +122,6 @@ classdef FalsificationProblem < BreachProblem
                 
             end
         end
-        
         
         function DispResultMsg(this)
             this.DispResultMsg@BreachProblem();

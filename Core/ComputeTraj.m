@@ -176,7 +176,7 @@ switch Sys.type
             
             
             Pf.traj{ii} = traj;
-            Pf.Xf(:,ii) = traj.X(:,end);
+            Pf.Xf(:,ii) = zeros(Pf.DimX,1);
             if Verbose==1
                 if(numel(ipts)>1)
                     rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
@@ -230,7 +230,7 @@ switch Sys.type
             
             Pf.traj = trajs;
             for ii=ipts
-                Pf.Xf(:,ii) = Pf.traj{ii}.X(:,end);
+                Pf.Xf(:,ii) = zeros(Pf.DimX,1);
             end
             
             if Verbose>=1
@@ -252,7 +252,7 @@ switch Sys.type
             end
             Pf.traj = trajs;
             for ii=ipts
-                Pf.Xf(:,ii) = Pf.traj{ii}.X(:,end);
+                Pf.Xf(:,ii) = zeros(Pf.DimX,1);
             end
             if Verbose>=1
                 if(numel(ipts)>1)
@@ -328,15 +328,11 @@ if  use_caching
     hash_traj = DataHash({Sys.ParamList, p, tspan});
     cache_traj_filename = [Sys.DiskCachingFolder filesep 'traj_' hash_traj '.mat'];
     if exist(cache_traj_filename, 'file')
-        if isfield(Sys, 'StoreTracesOnDisk')&&~Sys.StoreTracesOnDisk
-            traj = load(cache_traj_filename);
-        else
-            traj = matfile(cache_traj_filename);
-        end
         do_compute = 0;
     else
         do_compute = 1;
     end
+    traj = matfile(cache_traj_filename,  'Writable', true);
 end
 
 if do_compute
@@ -365,16 +361,8 @@ if do_compute
     end
     
     if use_caching % cache new trace
-        cache_traj = matfile(cache_traj_filename, 'Writable', true);
-        cache_traj.param = traj.param;
-        cache_traj.time = traj.time;
-        cache_traj.status = traj.status; 
-        cache_traj.X = traj.X;
-        cache_traj.Properties.Writable = false;
-        if ~isfield(Sys, 'StoreTracesOnDisk')||~Sys.StoreTracesOnDisk
-            traj = cache_traj;
-        end
-    end
+        traj.Properties.Writable = false;
+     end
 end
 end
 

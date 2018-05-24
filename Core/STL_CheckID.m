@@ -1,6 +1,7 @@
-function b = STL_CheckID(id)
+function [b, phi] = STL_CheckID(id)
 % 0 doesn't exist, 1 predicate, 2 formula
 b=0; 
+phi = [];
 InitBreach
 global BreachGlobOpt;
 
@@ -11,6 +12,7 @@ if isfield(BreachGlobOpt, 'STLDB')
        else
            b=2;
        end
+        phi = BreachGlobOpt.STLDB(id);
     end
 end
     
