@@ -1,3 +1,10 @@
+# Release 1.3.beta1
+- New class BreachRequirement with hybrid and generic requirement
+  evaluation support
+- New plotting class BreachSignalsPlot
+- Improvements in solver support for BreachProblem
+
+
 # Release 1.2.17
 
 ## Bugfix
