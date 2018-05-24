@@ -58,6 +58,20 @@ evalin('base','InitBreach');
 global BreachGlobOpt
 
 % test if formula already exists
+if (nargin==1)
+    if isa(varargin{1}, 'STL_Formula')
+        phi = varargin{1};
+        return;
+    elseif ischar(varargin{1})
+        [b, phi] = STL_CheckID(varargin{1});
+        if b
+            return;
+        else
+            error('%s not a formula', varargin{1});
+        end
+    end
+end
+
 if(nargin==2)
     % here we copy a formula 
     if isa(varargin{2},'STL_Formula')

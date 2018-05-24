@@ -37,6 +37,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         MdlVars                      % List of variables used by the model
         SimInputsOnly=false % if true, will not run Simulink model
         SimInModelsDataFolder=false
+        StopAtSimulinkError=false
         mdl
         UseDiskCaching=false 
         DiskCachingRoot 
@@ -103,7 +104,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         
         function SetupOptions(this, varargin)
             % handles additional options for model interfacing
-            options.UseDiskCaching = false;     % Let's see... 
+            options.UseDiskCaching = false;     
             options.FindScopes = false;
             options.FindTables = false;
             options.FindStruct  = false; 
@@ -804,9 +805,9 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                     [tout, X] = GetXFrom_simout(this, simout);
                 end
             catch MException % TODO keep that in status message
-            if this.SimInModelsDataFolder
-                cd(cwd);
-            end
+                if this.SimInModelsDataFolder
+                    cd(cwd);
+                end
                 if numel(tspan)>1
                     tout = tspan;
                 else
@@ -815,6 +816,9 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 X = zeros(Sys.DimX, numel(tout));
                 status =-1;
                 this.addStatus(-1, MException.identifier, MException.message);
+                if this.StopAtSimulinkError
+                    rethrow(MException);
+                end
             end
             
             % FIXME: the following needs to be reviewed
@@ -1005,6 +1009,12 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         end
         
         %% Misc
+        function S = GetSignature(this, varargin)
+            S = GetSignature@BreachOpenSystem(this, varargin{:});
+            S.mdl_info = this.mdl;
+            
+        end
+        
         function OpenMdl(this)
             open_system(this.mdl.name);
         end
@@ -1205,7 +1215,57 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
         end
         
-        function [success, msg, msg_id] = SaveResults(this, folder_name, varargin)
+        function summary = GetSummary(this)
+            summary = GetSummary@BreachSet(this);
+            summary.model_info = this.mdl;
+            
+                        % parameter names
+            param_names = this.GetSysParamList();
+            
+            % input signal names
+            signal_names= this.GetSignalNames();
+            idx =  this.GetInputSignalsIdx();
+            input_names = signal_names(idx);
+            
+            % input param names
+            idxp = this.GetParamsInputIdx();
+            input_params = this.P.ParamList(idxp);
+            
+            % signal generators
+            for is  = 1:numel(input_names)
+                signal_gen_types{is} = class(this.InputGenerator.GetSignalGenFromSignalName(input_names{is}));
+            end
+            
+            % signal names
+            signal_names = setdiff(signal_names, input_names);
+            
+            % system parameters (non-input)
+            sysparams_names = setdiff(param_names, input_params);
+            
+            if isfield(this.P,'props_names')
+                spec_names = this.P.props_names;
+            end
+            
+            summary.test_params.names = this.GetBoundedDomains();
+            summary.input_generators = signal_gen_types;
+            summary.test_params.values = this.GetParam(summary.test_params.names);
+            summary.const_params.names = setdiff( this.P.ParamList(this.P.DimX+1:end), this.GetBoundedDomains())';
+            summary.const_params.values = this.GetParam(summary.const_params.names,1)';
+   
+            if isfield(this.P, 'props')
+                summary.specs.names = spec_names;
+                if ~options.PreserveTracesOrdering
+                    this.SortbyRob();
+                    this.SortbySat();
+                end
+                summary.specs.rob = this.GetSatValues();
+                summary.specs.sat = summary.specs.rob>=0;
+                summary.num_sat = - sum( ~summary.specs.sat, 1  );
+            end
+            
+        end
+        
+        function [success, msg, msg_id, folder_name] = SaveResults(this, folder_name, varargin)
             % BreachSimulinkSystem.SaveResults
             
             if nargin<2
@@ -1215,7 +1275,8 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             options = varargin2struct(options, varargin{:});
             
             if isempty(options.FolderName)
-                options.FolderName = [this.mdl.name '_Results_' datestr(now, 'dd_mm_yyyy_HHMM')];
+                folder_name = [this.mdl.name '_Results_' datestr(now, 'dd_mm_yyyy_HHMM')];
+                options.FolderName = folder_name;
             end
             
             folder_name = options.FolderName;
@@ -1245,7 +1306,12 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             save(summary_filename,'-struct', 'summary');
             
             if  options.SaveBreachSystem
-                breachsys_name = this.whoamI;
+                if ischar(options.SaveBreachSystem)
+                    breachsys_name = options.SaveBreachSystem;
+                else
+                    breachsys_name = this.whoamI;
+                end
+                
                 breachsys_filename  = [folder_name filesep breachsys_name];
                 % Need to move cache into result folder 
                 if this.UseDiskCaching
@@ -1263,7 +1329,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                         this.P.traj{it} = matfile(dest);
                     end
                 end
-                evalin('base', ['save(''' breachsys_filename ''', ''' breachsys_name  ''', ''-v7.3'');'] ); % I should have written here why I'm using v7.3
+                evalin('caller', ['save(''' breachsys_filename ''', ''' breachsys_name  ''', ''-v7.3'');'] ); % I should have written here why I'm using v7.3
             end
             
             for it=1:numel(traces)

@@ -291,11 +291,7 @@ end
 
 % Last time instant
 if(interval(end)==inf)
-    if isempty(ind_ti)
-        time_values = [time_values time_values(1,end)+1];
-    else
         time_values = [time_values traj.time(1,ind_ti:end)];
-    end
 else
     ind_tf = find(traj.time >= interval(end),1);
     if isempty(ind_tf)

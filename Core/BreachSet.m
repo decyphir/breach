@@ -37,6 +37,7 @@ classdef BreachSet < BreachStatus
         SignalRanges % ranges of values taken by each signal variable
         AppendWhenSample=false % when true, sampling appends new param vectors, otherwise replace.
         log_folder
+        sigMap = containers.Map()
     end
     
     methods (Hidden=true)
@@ -382,7 +383,7 @@ classdef BreachSet < BreachStatus
             prop_params = this.P.ParamList(this.P.DimP+1:end);
         end
         
-            % Get the number of param vectors - -1 means P is empty
+        % Get the number of param vectors - -1 means P is empty
         function nb_pts = GetNbParamVectors(this)
             if isempty(this.P)
                 nb_pts = -1;
@@ -390,8 +391,8 @@ classdef BreachSet < BreachStatus
                 nb_pts= size(this.P.pts,2);
             end
         end
-    
-            
+        
+        
         function [params, ipr] = GetVariables(this)
             [params, ipr] = GetBoundedDomains(this);
         end
@@ -419,9 +420,70 @@ classdef BreachSet < BreachStatus
             ipr = cellfun(@(c)(~isempty(c)), {this.Domains.domain});
             params =   this.P.ParamList(ipr);
         end
-    
-        
+                
         %% Signals
+        
+        function this= SetSignalMap(this, varargin)
+            % SetSignalMap defines aliases for signals - used by GetSignalValues 
+            %
+            % Input:  a map or a list of pairs or two cells
+            
+            this.ResetSigMap();
+            
+            arg_err_msg = 'Argument should be a containers.Map object, or a list of pairs of signal names, or two cells of signal names with same size.';
+            switch nargin
+                case 2
+                    if ~isa(varargin{1}, 'containers.Map')
+                        error('SetSignalMap:wrong_arg', arg_err_msg);
+                    else
+                        this.sigNamesMap = varargin{1};
+                    end
+                case 3
+                    if iscell(varargin{2})
+                        if ~iscell(varargin{2})||(numel(varargin{1}) ~= numel(varargin{2}))
+                            error('SetSignalMap:wrong_arg', arg_err_msg);
+                        end
+                        for is = 1:numel(varargin{2})
+                            this.sigMap(varargin{1}{is}) = varargin{2}{is};
+                        end
+                    else
+                        if ischar(varargin{1})&&ischar(varargin{2})
+                            this.sigMap(varargin{1}) = varargin{2};
+                        else
+                            error('SetSignalMap:wrong_arg', arg_err_msg);
+                        end
+                    end
+                otherwise
+                    for is = 1:numel(varargin)/2
+                        try
+                            this.sigMap(varargin{2*is-1}) = varargin{2*is};
+                        catch
+                            error('SetSignalMap:wrong_arg', arg_err_msg);
+                        end
+                    end
+            end
+            
+            if this.verbose >= 2
+                this.PrintSigMap();
+            end
+            
+        end
+        
+        function ResetSigMap(this)
+            this.sigMap = containers.Map();
+        end
+
+        function PrintSigMap(this)
+            st = 'Signals Map:\n';
+            
+            keys  = this.sigMap.keys;
+            for ip = 1:numel(keys)
+                st =   sprintf([ st '%s ---> %s\n' ],keys{ip}, this.sigMap(keys{ip}));
+            end
+            fprintf(st);
+            
+        end
+     
         function traces = GetTraces(this)
             % Get computed trajectories
             traces= [];
@@ -431,7 +493,7 @@ classdef BreachSet < BreachStatus
         end
         
         function [idx_ok, idx_sim_error, idx_invalid_input, st_status]  = GetTraceStatus(this)
-        % BreachSet.GetTraceStatus returns indices of ok traces, error and input invalid.    
+            % BreachSet.GetTraceStatus returns indices of ok traces, error and input invalid.
             idx_ok = [];
             idx_sim_error = [];
             idx_invalid_input = [];
@@ -477,11 +539,11 @@ classdef BreachSet < BreachStatus
             Bsim_error =[];
             Binvalid_input = [];
             [idx_ok, idx_sim_error, idx_invalid_input]  = GetTraceStatus(this);
-             
+            
             if ~isempty(idx_ok)
                 Bok = this.ExtractSubset(idx_ok);
             end
-         
+            
             if ~isempty(idx_sim_error)
                 Bsim_error = this.ExtractSubset(idx_sim_error);
             end
@@ -521,7 +583,7 @@ classdef BreachSet < BreachStatus
         
         function SigNames = GetSignalNames(this)
             % Get signal names - same as GetSignalList
-            SigNames = this.P.ParamList(1:this.P.DimX);
+            SigNames = this.GetSignalList();
         end
         
         function [signals, idx] = GetSignalList(this)
@@ -536,11 +598,28 @@ classdef BreachSet < BreachStatus
                 error('GetTrajValues:NoTrajField','Compute/import trajectories first.')
             end
             
-            if ischar(signals) || iscell(signals)
+            if ischar(signals)
+                signals = {signals};
+            end
+            
+            if iscell(signals)
+                % Replace with sigMap
+                for is = 1:numel(signals)
+                    while this.sigMap.isKey(signals{is}) % recursive, allow alias of alias 
+                        signals{is} = this.sigMap(signals{is});
+                    end
+                end
+                
                 [signals_idx, type] = FindParam(this.P, signals);
                 if any(type==0)
                     not_found= find(type==0);
-                    error('GetSignalValues:sig_not_found', 'Signal %s not found.',signals{not_found(1)});
+                    if ischar(signals)
+                        sig = signals;
+                        
+                    else
+                        sig = signals{not_found(1)};
+                    end
+                    error('GetSignalValues:sig_not_found', 'Signal %s not found.',sig);
                 end
             elseif isnumeric(signals)
                 signals_idx=signals;
@@ -564,7 +643,6 @@ classdef BreachSet < BreachStatus
                         X{i_traj} = X{i_traj}';
                     end
                 end
-                
             end
             if nb_traj==1
                 X = X{1};
@@ -647,7 +725,7 @@ classdef BreachSet < BreachStatus
         end
         
         %% Sampling
-        function SampleDomain(this, params, num_samples, method, opt_multi)
+        function SampleDomain(this, params, num_samples, method, opt_multi, max_num_samples)
             % BreachSet.SampleDomain generic sampling function
             %
             % B.SampleDomain('p', 5) creates 5 samples drawn randomly
@@ -702,6 +780,13 @@ classdef BreachSet < BreachStatus
                 this.QuasiRandomSample(prod(num_samples));
                 x = this.GetParam(idx_param);
                 this.P = Pold;
+            elseif isequal(method, 'corners')
+                if exist('max_num_samples', 'var')
+                    x = sample(domains{:}, num_samples, method, max_num_samples);
+                else
+                    x = sample(domains{:}, num_samples, method);
+                end
+                
             else
                 x = sample(domains{:}, num_samples, method);
             end
@@ -731,7 +816,11 @@ classdef BreachSet < BreachStatus
                     
                 case 'combine'
                     num_new = size(x,2);
-                    idx = N2Nn(2, [num_old num_new]);
+                    if exist('max_num_samples', 'var')
+                        idx = N2Nn(2, [num_old num_new],max_num_samples);
+                    else
+                        idx = N2Nn(2, [num_old num_new]);
+                    end
                     pts = this.P.pts(:, idx(1,:));
                     pts(idx_param,:) = x(:, idx(2,:));
                     this.ResetParamSet();
@@ -761,24 +850,38 @@ classdef BreachSet < BreachStatus
         end
         
         % Get corners of parameter domain
-        function CornerSample(this)
-            if this.AppendWhenSample
-                Pold = this.P;
+        function CornerSample(this, max_num_samples)
+            
+            if nargin ==1
+                max_num_samples = inf;
             end
-            
-            this.ResetParamSet();
-            newP = this.P;
-            newP.epsi = 2*newP.epsi;
-            newP = Refine(newP,2);
-            newP.epsi = newP.epsi/2;
-            
+            bnd_params = this.GetBoundedDomains();
             if this.AppendWhenSample
-                this.P = SConcat(Pold, newP);
+                this.SampleDomain(bnd_params, 2, 'corners', 'append', max_num_samples);
             else
-                this.P = newP;
+                this.SampleDomain(bnd_params,2, 'corners', 'replace', max_num_samples);
             end
-            this.CheckinDomainParam();
-            
+            %
+            %
+            %
+            %
+            %             if this.AppendWhenSample
+            %                 Pold = this.P;
+            %             end
+            %
+            %             this.ResetParamSet();
+            %             newP = this.P;
+            %             newP.epsi = 2*newP.epsi;
+            %             newP = Refine(newP,2);
+            %             newP.epsi = newP.epsi/2;
+            %
+            %             if this.AppendWhenSample
+            %                 this.P = SConcat(Pold, newP);
+            %             else
+            %                 this.P = newP;
+            %             end
+            %             this.CheckinDomainParam();
+            %
         end
         
         function QuasiRandomSample(this, nb_sample, step)
@@ -802,10 +905,7 @@ classdef BreachSet < BreachStatus
             end
             this.CheckinDomainParam();
         end
-        
-        
-    
-        
+                
         %% Concatenation, ExtractSubset - needs some additional compatibility checks...
         function Concat(this, other)
             this.P = SConcat(this.P, other.P);
@@ -1126,8 +1226,8 @@ classdef BreachSet < BreachStatus
                     error('Coverage for more than 2 signals is not supported');
             end
         end
-        %% Requirements
         
+        %% Requirements       
         function  SortbyRob(this)
             sat_values = this.GetSatValues();
             [ ~, order_rob] = sort(sum(sat_values,1));
@@ -1141,95 +1241,20 @@ classdef BreachSet < BreachStatus
         end
         
         %% Printing/Exporting
-        function [summary, traces] = ExportTracesToStruct(this,i_traces, varargin)
-            % BreachSet.ExportTracesToStruct
-            
-            summary = [];
-            traces = [];
-            if ~this.hasTraj()
-                error('Breach:ExportTrace:no_trace', 'No trace to export - run Sim command first');
-                return;
-            end
-            
-            num_traces = numel(this.P.traj);
-            if nargin==1
-                i_traces = 1:num_traces;
-            end
-            
-            % Additional options
-            options = struct('FolderName', []);
-            options = varargin2struct(options, varargin{:});
-            
-            if isempty(options.FolderName)
-                options.FolderName = ['Import_Results_' datestr(now, 'dd_mm_yyyy_HHMM')];
-            end
-            
-            %% Common stuff
-            
-            % parameter names
-            param_names = this.GetSysParamList();
-            
-            % input signal names
-            signal_names = this.GetSignalList();
-            
-            if isfield(this.P,'props_names')
-                spec_names = this.P.props_names;
-            end
-            
-            summary.date = datestr(now);
-            summary.num_traces = num_traces;
-            summary.params.names = param_names;
-            summary.params.values = this.GetParam(summary.params.names);
-            
-            %% traces
-            summary.filenames = {};
-            summary.paths = {};
-            for it = i_traces
-                
-                % params
-                traces(it).params.names = param_names;
-                traces(it).params.values = this.GetParam(param_names,it)';
-                
-                % time
-                traces(it).time = this.P.traj{it}.time;
-                
-                % input signals
-                traces(it).signals.names = signal_names;
-                traces(it).signals.values =  this.GetSignalValues(signal_names, it);
-                
-                % specifications
-                if isfield(this.P,'props_names')
-                    traces(it).specs.ids = spec_names;
-                    for ip = 1:numel(this.P.props_names)
-                        traces(it).specs.stl_formula{ip} = disp(this.P.props(ip));
-                        traces(it).specs.stl_formula_full{ip} = disp(this.P.props(ip),0);
-                        params = get_params(this.P.props(ip));
-                        traces(it).specs.params(ip).names = fieldnames(params);
-                        traces(it).specs.params(ip).values = this.GetParam(fieldnames(params), it)';
-                        traces(it).specs.rob(ip).time =this.P.props_values(ip, it).tau;
-                        traces(it).specs.rob(ip).values =  this.P.props_values(ip, it).val;
-                        traces(it).specs.status(ip) =  this.P.props_values(ip, it).val(1)>=0;
-                    end
-                end
-            end
-            
-            if isfield(this.P, 'props')
-                summary.specs.names = spec_names;
-                this.SortbyRob();
-                this.SortbySat();
-                summary.specs.rob = this.GetSatValues();
-                summary.specs.sat = summary.specs.rob>=0;
-                summary.num_sat = - sum( ~summary.specs.sat, 1  );
-            end
-        end
-        
         function [success, msg, msg_id] = SaveResults(this, folder_name, varargin)
             % Additional options
+            if ~exist('folder_name', 'var')
+                folder_name = '';
+            end
             options = struct('FolderName', folder_name, 'SaveBreachSystem', true, 'ExportToExcel', false, 'ExcelFileName', 'Results.xlsx');
             options = varargin2struct(options, varargin{:});
             
             if isempty(options.FolderName)
-                options.FolderName = [this.mdl.name '_Results_' datestr(now, 'dd_mm_yyyy_HHMM')];
+                try
+                    options.FolderName = [this.mdl.name '_Results_' datestr(now, 'dd_mm_yyyy_HHMM')];
+                catch
+                    options.FolderName = [this.whoamI '_Results_' datestr(now, 'dd_mm_yyyy_HHMM')];
+                end
             end
             
             folder_name = options.FolderName;
@@ -1275,6 +1300,324 @@ classdef BreachSet < BreachStatus
             end
         end
         
+        
+        function [summary, traces] = ExportTracesToStruct(this,i_traces, varargin)
+            % BreachSet.ExportTracesToStruct
+            
+            summary = this.GetSummary();
+            traces = [];
+            if ~this.hasTraj()
+                error('Breach:ExportTrace:no_trace', 'No trace to export - run Sim command first');
+                return;
+            end
+            
+            num_traces = numel(this.P.traj);
+            if nargin==1
+                i_traces = 1:num_traces;
+            end
+            
+            % Additional options
+            options = struct('FolderName', '','IncludesOnlySignals', [], 'ExcludeSignals', []);
+            options = varargin2struct(options, varargin{:});
+            
+            if isempty(options.FolderName)
+                options.FolderName = ['Import_Results_' datestr(now, 'dd_mm_yyyy_HHMM')];
+            end
+            
+            %% Common stuff
+            
+            % parameter names
+            param_names = this.GetSysParamList();
+            
+            % input signal names
+            signal_names = this.GetSignalList();
+            
+            if isfield(this.P,'props_names')
+                spec_names = this.P.props_names;
+            end
+            
+            
+            %% traces
+            summary.filenames = {};
+            summary.paths = {};
+            for it = i_traces
+                
+                % check status
+                if isfield(this.P.traj{it}, 'status')&&(this.P.traj{it}.status~=0)
+                    warning('SaveResults:suspicious_trace','Trace %d has suspicious status, likely resulting from simulation error.', it)  
+                end
+                
+                % params
+                traces(it).params.names = param_names;
+                traces(it).params.values = this.GetParam(param_names,it)';
+                
+                % time
+                traces(it).time = this.P.traj{it}.time;
+                
+                % input signals
+                traces(it).signals.names = signal_names;
+                traces(it).signals.values =  this.GetSignalValues(signal_names, it);
+                
+                % specifications
+                if isfield(this.P,'props_names')
+                    traces(it).specs.ids = spec_names;
+                    for ip = 1:numel(this.P.props_names)
+                        traces(it).specs.stl_formula{ip} = disp(this.P.props(ip));
+                        traces(it).specs.stl_formula_full{ip} = disp(this.P.props(ip),0);
+                        params = get_params(this.P.props(ip));
+                        traces(it).specs.params(ip).names = fieldnames(params);
+                        traces(it).specs.params(ip).values = this.GetParam(fieldnames(params), it)';
+                        traces(it).specs.rob(ip).time =this.P.props_values(ip, it).tau;
+                        traces(it).specs.rob(ip).values =  this.P.props_values(ip, it).val;
+                        traces(it).specs.status(ip) =  this.P.props_values(ip, it).val(1)>=0;
+                    end
+                end
+            end
+            
+        end
+        
+        function [signature, signals, params] = GetSignature(this, signal_list, param_list)
+            %  GetSignature returns information about signals and parameters 
+            
+            % gets signals signature
+            if ~exist('signal_list', 'var')||isempty(signal_list)
+                signal_list = this.GetSignalList();
+            end
+            
+            [signals, unknown] = this.expand_signal_name(signal_list);
+            if ~isempty(unknown)
+                error('GetSignature:signal_unknown', 'Signal %s unknown.', unknown{1});
+            end
+            signature = this.GetSignalSignature(signals);
+            
+            % gets params signature
+            if ~exist('param_list', 'var')||isempty(param_list)
+                param_list = this.GetParamList();
+            end
+
+            [params, unknown] = this.expand_param_name(param_list);
+            if ~isempty(unknown)
+                error('GetSignature:param_unknown', 'Parameter %s unknown.', unknown{1});
+            end
+            sigp = this.GetParamSignature(params);
+            
+            f = fieldnames(sigp);
+            for i = 1:length(f)
+                signature.(f{i}) = sigp.(f{i});
+            end
+        end
+        
+        function sigs = GetSignalSignature(this, signals)
+           if nargin <=1
+                signals = this.GetSignalList(); 
+           end
+                
+           if ischar(signals)
+                signals= {signals};
+            end
+            sigs.signals = signals;
+            sigs.signal_attributes = {};
+            for is = 1:numel(signals)
+                sig= signals{is};
+                dom = this.GetDomain(sig);
+                sigs.signal_types{is}  = dom.type;
+                %  Add attributes indexes
+                atts = this.get_signal_attributes(sig);
+                sigs.signal_attributes = union(sigs.signal_attributes, atts);
+                for ia = 1:numel(atts)
+                    f = [atts{ia} 's_idx'];
+                    if ~isfield(sigs, f)
+                        sigs.(f) = is;
+                    else
+                        sigs.(f)(end+1) = is;
+                    end
+                end
+            end
+        end
+        
+        function sigp = GetParamSignature(this, params)
+            
+            if nargin<=1
+                params = this.GetParamList();
+            end
+            sigp.params=params;
+            sigp.param_attributes ={};
+            for ip = 1:numel(params)
+                par  =params(ip);
+                dom = this.GetDomain(par);
+                sigp.param_types{ip}  = dom.type ;
+                %  Add attributes indexes
+                atts = this.get_param_attributes(par);
+                sigp.param_attributes = union(sigp.param_attributes, atts); 
+                for ia = 1:numel(atts)
+                    f = [atts{ia} 's_idx'];
+                    if ~isfield(sigp, f)
+                        sigp.(f) = ip;
+                    else
+                        sigp.(f)(end+1) = ip;
+                    end
+                end
+                
+            end
+        end
+        
+        function traces = ExportTraces(this, signals, params, varargin)
+            
+            if ~exist('signals','var')
+                signals = {}; % means all
+            end
+            if ~exist('params','var')||isempty(params)
+                params = {}; % means all
+            end
+            
+            % Options
+            options = struct('WriteToFolder','');
+            options = varargin2struct(options, varargin{:});
+            
+            if ~isempty(options.WriteToFolder)
+                if ~exist(options.WriteToFolder,'dir' )
+                    [success, err_msg] = mkdir(options.WriteToFolder);
+                    if ~success
+                        error('Folder creation failed with error:\n %s', err_msg);
+                    end
+                end
+                dir_traces = options.WriteToFolder;
+            else
+                dir_traces = '';
+            end
+                
+            [signature, signals, params] = this.GetSignature(signals, params);
+            num_traces = numel(this.P.traj);
+            
+            param_values = this.GetParam(params);
+            for it = 1:num_traces
+                traj = this.P.traj{it};
+                
+                if ~isempty(dir_traces)
+                    traces{it} = matfile([dir_traces filesep num2str(it) '.mat'], 'Writable',true);
+                end
+                
+                if isfield(traj, 'status')
+                    traces{it}.status = traj.status;
+                end
+                traces{it}.signature = signature;
+                traces{it}.param = [zeros(1,numel(signals)) param_values(:,it)'];
+                traces{it}.time = traj.time;
+                traces{it}.X = zeros(numel(signals), numel(traj.time));
+                for is = 1:numel(signals)
+                    traces{it}.X(is,:) = this.GetSignalValues(signals{is}, it);
+                end
+                
+               if ~isempty(dir_traces)
+                   traces{it}.Properties.Writable= false; 
+               end
+            end
+        end
+        
+        function summary = GetSummary(this)
+            
+            num_traces = numel(this.P.traj);
+
+            % parameter names
+            param_names = this.GetSysParamList();
+            
+            % input signal names
+            signal_names = this.GetSignalList();
+            
+            if isfield(this.P,'props_names')
+                spec_names = this.P.props_names;
+            end
+            
+            
+            summary.date = datestr(now);
+            summary.num_traces = num_traces;
+            summary.params.names = param_names;
+            summary.params.values = this.GetParam(summary.params.names);
+        
+            if isfield(this.P, 'props')
+                summary.specs.names = spec_names;
+                this.SortbyRob();
+                this.SortbySat();
+                summary.specs.rob = this.GetSatValues();
+                summary.specs.sat = summary.specs.rob>=0;
+                summary.num_sat = - sum( ~summary.specs.sat, 1  );
+            end
+        
+        
+        end
+        
+        function b = is_variable(this, par)
+            b = false ;
+            [~, f] = FindParam(this.P, par);
+            if f
+                dom = this.GetDomain(par);
+                b = ~isempty(dom.domain);
+            end
+        end
+        
+        function att = get_signal_attributes(this, sig)
+            % returns nature to be included in signature
+            att = {};
+        end
+
+        function atts = get_param_attributes(this, param)
+            % returns nature to be included in signature
+            atts = {};
+            if this.is_variable(param)
+                atts = [atts {'variable'}];
+            else
+               atts = [atts {'const'}];
+            end
+        end
+
+        function [sig_names, unknown] =  expand_signal_name(this, signals)
+            % expand_signal_name expands a string into a set of signal names by attribute or regular expression search
+            sig_names = {};
+            unknown = {};
+            if ischar(signals)
+                signals = {signals};
+            end
+            S = this.GetSignalSignature();
+            
+            for isig = 1:numel(signals)
+                sig = signals{isig};
+                if ismember(sig,S.signals)  % is a signal name already
+                    sig_names = [sig_names {sig}];
+                elseif ismember(sig, S.signal_attributes)  % attribute
+                    sig_names = [sig_names S.signals(S.([sig 's_idx'])) ];
+                else  % regexp search
+                    sig_names = [sig_names S.signals(cellfun(@(c)(~isempty(c)),  regexp(S.signals,sig)))];
+                    if isempty(sig_names)
+                        unknown = [unknown sig];
+                    end
+                end
+            end
+        end
+        
+        function [param_names, unknown] =  expand_param_name(this, params)
+            % expand_signal_name expands a string into a set of signal names by attribute or regular expression search
+            param_names = {};
+            unknown = {};
+            if ischar(params)
+                params = {params};
+            end
+            S = this.GetParamSignature();
+            
+            for ipar = 1:numel(params)
+                param = params{ipar};
+                if ismember(param,S.params)  % is a signal name already
+                    param_names = [param_names {param}];
+                elseif ismember(param, S.param_attributes)  % attribute
+                    param_names = [param_names S.params(S.([param 's_idx'])) ];
+                else  % regexp search
+                    param_names = [param_names S.params(cellfun(@(c)(~isempty(c)),  regexp(S.params,param)))];
+                    if isempty(param_names)
+                        unknown = [unknown param];
+                    end
+                end
+            end
+        end
+        
         function ExportToExcel(this, excel_file)
             [summary, traces] = this.ExportTracesToStruct();
             global BreachGlobOpt
@@ -1303,34 +1646,23 @@ classdef BreachSet < BreachStatus
         end
         
         function PrintSignals(this)
-            if isempty(this.SignalRanges)
-                disp( 'Signals:')
-                disp( '-------')
+            disp( '---- SIGNALS ----')
                 for isig = 1:this.P.DimX
                     fprintf('%s\n', this.P.ParamList{isig});
                 end
-            else
-                
-                disp('-------')
-                for isig = 1:this.P.DimX
-                    fprintf('%s %s\n', this.P.ParamList{isig}, this.Domains(isig).short_disp());
-                end
-            end
-            disp(' ')
+                fprintf('\n')
         end
         
         function PrintParams(this)
             nb_pts= this.GetNbParamVectors();
             if (nb_pts<=1)
-                disp('Parameters:')
-                disp('----------')
+                disp('-- PARAMETERS --')
                 for ip = this.P.DimX+1:numel(this.P.ParamList)
                     fprintf('%s=%g       %s',this.P.ParamList{ip},this.P.pts(ip,1), this.Domains(ip).short_disp(1));
                     fprintf('\n');
                 end
             else
-                fprintf('Parameters (%d vectors):\n',nb_pts);
-                disp('-------------------------');
+                fprintf('-- PARAMETERS -- (%d vectors):\n',nb_pts);
                 for ip = this.P.DimX+1:numel(this.P.ParamList)
                     fprintf('%s     %s\n',this.P.ParamList{ip}, this.Domains(ip).short_disp(1));
                 end
@@ -1338,7 +1670,6 @@ classdef BreachSet < BreachStatus
             
             disp(' ')
         end
-       
         
         %% Misc
         function s= isSignal(this,params)
@@ -1402,11 +1733,10 @@ classdef BreachSet < BreachStatus
                     this.Domains(idx_params(id)).domain = [];
                 end
             end
-        end
-        
+        end    
         
         function ResetSimulations(this)
-            % Removes computed trajectories     
+            % Removes computed trajectories
             this.P = SPurge(this.P);
             this.SignalRanges = [];
         end
@@ -1416,7 +1746,18 @@ classdef BreachSet < BreachStatus
             this.P.selected = zeros(1,nb_pts);
         end
         
+    end
+    methods (Access=protected)    
         
+        function Xp = get_signal_from_traj(this, traj, names)
+            idx = FindParam(this.P, names); %  not fool proof, but not supposed to be used by fools
+            Xp = traj.X(idx,:);
+        end
+  
+        function traj = set_signal_in_traj(this, traj, names, Xp)
+            idx = FindParam(this.P, names); %  not fool proof, but not supposed to be used by fools
+            traj.X(idx,:) = Xp;
+        end
         
         %%  Compare (FIXME)
         function cmp = compare(this, other)

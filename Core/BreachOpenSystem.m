@@ -330,8 +330,7 @@ classdef BreachOpenSystem < BreachSystem
         
         function PrintSignals(this)
             if isempty(this.SignalRanges)
-                disp( 'Signals:')
-                disp( '-------')
+                disp( '---  SIGNALS  ---')
                 for isig = 1:this.Sys.DimX
                     if any(strcmp(this.Sys.ParamList{isig}, this.Sys.InputList))
                         fprintf('%s %s (Input)\n', this.Sys.ParamList{isig}, this.Domains(isig).short_disp(1));
@@ -341,8 +340,7 @@ classdef BreachOpenSystem < BreachSystem
                 end
             else
                 
-                fprintf('Signals (in range estimated over %d simulations):\n', numel(this.P.traj))
-                disp('-------')
+                fprintf('---  SIGNALS  --- (%d traces)\n', numel(this.P.traj));
                 for isig = 1:this.Sys.DimX-this.Sys.DimU
                     fprintf('%s in  [%g, %g]\n', this.Sys.ParamList{isig}, this.SignalRanges(isig,1),this.SignalRanges(isig,2));
                 end
@@ -350,11 +348,32 @@ classdef BreachOpenSystem < BreachSystem
                     fprintf('%s (Input) in  [%g, %g]\n', this.Sys.ParamList{isig}, this.SignalRanges(isig,1),this.SignalRanges(isig,2));
                 end
             end
-            disp(' ')
+            disp(' ');
         end
         
+        function atts = get_signal_attributes(this, sig)
+            % returns nature to be included in signature
+            % should req_input, additional_test_data_signal,
+            if ismember(sig, this.InputGenerator.P.ParamList(1:this.InputGenerator.P.DimX))
+                atts = {'model_input'};
+            elseif ismember(sig, this.P.ParamList(1:this.P.DimX))
+                atts= {'model_output'};
+            else
+                atts ={};
+            end
+        end
+        
+        function atts = get_param_attributes(this, param)
+            % returns nature to be included in signature
+            % should req_input, additional_test_data_signal,
+            atts = get_param_attributes@BreachSet(this, param);
+            
+            if ismember(param, this.InputGenerator.P.ParamList(this.InputGenerator.P.DimX+1:end))
+                atts = [atts {'input_param'}];
+            else
+                atts = [atts {'model_param'}];
+            end
+        end
     end
-    
 end
-
 

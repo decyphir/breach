@@ -22,6 +22,9 @@ function [index, type] =  FindParam(S, param)
 %           signal, 2 if param, 3 if other
 %
 
+index = [];
+type = [];    
+
 % check inputs
 if ~isfield(S,'ParamList')
     error('FindParam:noParamList','No parameter list ...');

@@ -237,13 +237,21 @@ classdef BreachDomain
             % next ones are num_samples and then method
             num_samples = varargin{i};
             
-            try
-                method = varargin{i+1};
+            if numel(varargin)>i
+                i = i+1;
+                method = varargin{i};
             end
             
             if ~exist('method','var')||isempty(method)
                 method = 'rand';
             end
+            
+            % Last one is max_num_samples
+            if numel(varargin)>i
+                i = i+1;
+                max_num_samples = varargin{i};
+            end
+            
             
             % if all is selected, combine new samples
             combine_x=0;
@@ -297,7 +305,11 @@ classdef BreachDomain
             % Combine new samples  --> this is where we need some smarts 
             if num_dom>1
                 if combine_x
-                    idx = N2Nn(num_dom, num_x);
+                    if  exist('max_num_samples','var')
+                        idx = N2Nn(num_dom, num_x, max_num_samples);
+                    else
+                        idx = N2Nn(num_dom, num_x);
+                    end
                     for ip = 1:num_dom
                         new_x(ip,:) = x{ip}(1, idx(ip,:));
                     end
