@@ -140,6 +140,8 @@ classdef BreachTraceSystem < BreachSystem
                 else
                     traj.param = zeros(1, size(trace,2)+1);
                 end
+            elseif isa(trace, 'matlab.io.MatFile')
+                traj = trace;
             end
             
             Pnew = CreateParamSet(this.Sys);
@@ -147,7 +149,7 @@ classdef BreachTraceSystem < BreachSystem
             
             nb_traces =this.CountTraces();
             
-            if ~isfield(traj, 'param')
+            if ~isfield(traj, 'param')&&~isa(trace, 'matlab.io.MatFile')
                 traj.param = [this.Sys.p'];
             end
             
@@ -167,7 +169,7 @@ classdef BreachTraceSystem < BreachSystem
             this.Sys.tspan = traj.time;
             
             if isfield(this.P, 'Xf')
-                this.P.Xf(:,end)= traj.X(:,end);
+                this.P.Xf(:,end+1)= traj.X(:,end);
             else
                 this.P.Xf= traj.X(:,end);
             end

@@ -216,6 +216,10 @@ classdef BreachSystem < BreachSet
             elseif ischar(varargin{1})
                 phi_id = MakeUniqueID([this.Sys.name '_spec'],  BreachGlobOpt.STLDB.keys);
                 phi = STL_Formula(phi_id, varargin{1});
+            elseif isa(varargin{1}, 'BreachRequirement')
+                phi = STL_Formula(varargin{1}.formulas{1}.formula_id); % some imperfect attempt backward compatibility
+            else
+                error('Argument not a formula.');
             end
             
             % checks signal compatibility
@@ -255,6 +259,10 @@ classdef BreachSystem < BreachSet
                 else
                     spec = this.AddSpec(spec);
                 end
+            end
+            
+            if isa(spec, 'BreachRequirement')
+                spec = STL_Formula(spec.formulas{1}.formula_id); % backward compatibility
             end
             
             if ~exist('t_spec', 'var')
@@ -408,6 +416,10 @@ classdef BreachSystem < BreachSet
             end
             
             [valu, pvalu, val, pval] = this.GetSatValues(phi, params);
+            if isa(phi, 'BreachRequirement')
+                phi = phi.formulas{1}.formula_id; 
+            end
+            
             if isempty(valu)
                 warning('PlotSatParams:SpecNotEval','The specification has not yet been evaluated - use CheckSpec');
             end
@@ -586,6 +598,11 @@ classdef BreachSystem < BreachSet
             % for parameters params. pval is a set of unique column vectors, and for each vector, val can have multiple values.
             % pvalm can have repeated vectors.
             
+            if nargin>1
+                if isa(spec, 'BreachRequirement')
+                    spec = STL_Formula(spec.formulas{1}.formula_id); % backward compatibility
+                end
+            end
             spec_monitored = isfield(this.P, 'props');
             if spec_monitored
                 if nargin >= 2

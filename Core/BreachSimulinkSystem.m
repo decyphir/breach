@@ -104,7 +104,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         
         function SetupOptions(this, varargin)
             % handles additional options for model interfacing
-            options.UseDiskCaching = false;     % Let's see... 
+            options.UseDiskCaching = false;     
             options.FindScopes = false;
             options.FindTables = false;
             options.FindStruct  = false; 
@@ -1009,6 +1009,12 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         end
         
         %% Misc
+        function S = GetSignature(this, varargin)
+            S = GetSignature@BreachOpenSystem(this, varargin{:});
+            S.mdl_info = this.mdl;
+            
+        end
+        
         function OpenMdl(this)
             open_system(this.mdl.name);
         end
@@ -1259,7 +1265,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             
         end
         
-        function [success, msg, msg_id] = SaveResults(this, folder_name, varargin)
+        function [success, msg, msg_id, folder_name] = SaveResults(this, folder_name, varargin)
             % BreachSimulinkSystem.SaveResults
             
             if nargin<2
@@ -1269,7 +1275,8 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             options = varargin2struct(options, varargin{:});
             
             if isempty(options.FolderName)
-                options.FolderName = [this.mdl.name '_Results_' datestr(now, 'dd_mm_yyyy_HHMM')];
+                folder_name = [this.mdl.name '_Results_' datestr(now, 'dd_mm_yyyy_HHMM')];
+                options.FolderName = folder_name;
             end
             
             folder_name = options.FolderName;
@@ -1299,7 +1306,12 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             save(summary_filename,'-struct', 'summary');
             
             if  options.SaveBreachSystem
-                breachsys_name = this.whoamI;
+                if ischar(options.SaveBreachSystem)
+                    breachsys_name = options.SaveBreachSystem;
+                else
+                    breachsys_name = this.whoamI;
+                end
+                
                 breachsys_filename  = [folder_name filesep breachsys_name];
                 % Need to move cache into result folder 
                 if this.UseDiskCaching
@@ -1317,7 +1329,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                         this.P.traj{it} = matfile(dest);
                     end
                 end
-                evalin('base', ['save(''' breachsys_filename ''', ''' breachsys_name  ''', ''-v7.3'');'] ); % I should have written here why I'm using v7.3
+                evalin('caller', ['save(''' breachsys_filename ''', ''' breachsys_name  ''', ''-v7.3'');'] ); % I should have written here why I'm using v7.3
             end
             
             for it=1:numel(traces)
