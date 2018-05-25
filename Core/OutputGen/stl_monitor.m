@@ -29,7 +29,7 @@ classdef stl_monitor < output_gen
                 preds = STL_ExtractPredicates(this.formula);
                 for ip = 1:numel(preds)
                     if ~STL_CheckID(get_id(preds(ip)))   % predicate does not exist as formula, create it
-                        pred = STL_Formula( STL_NewID([get_id(this.formula) '_predicate_']));
+                        pred = STL_Formula( STL_NewID([get_id(this.formula) '_predicate_']),get_st(preds(ip)));
                     else
                         pred = preds(ip);
                     end
