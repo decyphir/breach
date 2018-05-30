@@ -5,43 +5,43 @@ classdef BreachRequirement < BreachTraceSystem
     
     properties
         BrSet
-        ogs  % output generators
-        formulas
+        postprocess_signal_gens            % output generators
+        req_monitors
         signals_in
-        traces_vals % results for individual traces & formulas
-        val            % summary evaluation for all traces & formulas
+        traces_vals % results for individual traces & req_monitors
+        val             % summary evaluation for all traces & req_monitors
     end
     
     methods
         
-        function this = BreachRequirement(formulas, ogs)
+        function this = BreachRequirement(req_monitors, postprocess_signal_gens)
             
             %% work out arguments
-            if ~iscell(formulas)
-                formulas=  {formulas};
+            if ~iscell(req_monitors)
+                req_monitors=  {req_monitors};
             end
             
-            [signals, monitors] = get_monitors(formulas);
-            if  exist('ogs', 'var')&&~isempty(ogs)
-                if ~iscell(ogs)
-                    ogs = {ogs};
+            [signals, monitors] = get_monitors(req_monitors);
+            if  exist('postprocess_signal_gens', 'var')&&~isempty(postprocess_signal_gens)
+                if ~iscell(postprocess_signal_gens)
+                    postprocess_signal_gens = {postprocess_signal_gens};
                 end
-                for iogs = 1:numel(ogs)
-                    signals = [signals setdiff(ogs{iogs}.signals_in, signals,'stable')];
+                for ippsg = 1:numel(postprocess_signal_gens)
+                    signals = [signals setdiff(postprocess_signal_gens{ippsg}.signals_in, signals,'stable')];
                 end
             end
             this = this@BreachTraceSystem(signals);
             
             % Add output gens
-            if exist('ogs', 'var')&&~isempty(ogs)
-                this.ogs = ogs;
-                for iogs = 1:numel(ogs)
-                    this.AddOutput(ogs{iogs});
+            if exist('postprocess_signal_gens', 'var')&&~isempty(postprocess_signal_gens)
+                this.postprocess_signal_gens = postprocess_signal_gens;
+                for ippsg = 1:numel(postprocess_signal_gens)
+                    this.AddOutput(postprocess_signal_gens{ippsg});
                 end
             end
             
             % Add formula monitor
-            this.formulas = monitors;
+            this.req_monitors = monitors;
             for ifo = 1:numel(monitors)
                 this.AddOutput(monitors{ifo});
             end
@@ -108,6 +108,8 @@ classdef BreachRequirement < BreachTraceSystem
         function  [val, traj] = evalTrace(this,traj)
             % evalTrace evaluation function for one trace.
             traj = this.applyOutputGens(traj);
+            
+            
             [val, traj] = this.getRobustSignal(traj); %  computes robustness, return at time per usual STL semantics
             
         end
@@ -126,17 +128,17 @@ classdef BreachRequirement < BreachTraceSystem
             this.val = global_val;
         end
         
-        function F = PlotDiagnosis(this, idx_formulas, itraj)
+        function F = PlotDiagnosis(this, idx_req_monitors, itraj)
             if nargin<2
-                idx_formulas = 1;
+                idx_req_monitors = 1;
             end
             if nargin<3
                 itraj=1;
             end
             F = BreachSignalsPlot(this, {}, itraj); % empty
-            for ifo =1:numel(idx_formulas)
-                this.formulas{idx_formulas(ifo)}.plot_diagnosis(F);
-                title(this.formulas{idx_formulas(ifo)}.formula_id, 'Interpreter', 'None')
+            for ifo =1:numel(idx_req_monitors)
+                this.req_monitors{idx_req_monitors(ifo)}.plot_diagnosis(F);
+                title(this.req_monitors{idx_req_monitors(ifo)}.formula_id, 'Interpreter', 'None')
             end
         end
         
@@ -286,8 +288,8 @@ classdef BreachRequirement < BreachTraceSystem
         function PrintFormula(this)
             
             fprintf(['--- FORMULAS ---\n']);
-            for ifo = 1:numel(this.formulas)
-                this.formulas{ifo}.disp();
+            for ifo = 1:numel(this.req_monitors)
+                this.req_monitors{ifo}.disp();
             end
             fprintf('\n');
         end
@@ -304,10 +306,10 @@ classdef BreachRequirement < BreachTraceSystem
             end
             fprintf('\n');
             disp( '---- SIGNALS  OUT ----')
-            for iog = 1:numel(this.ogs)
-                signals_in_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.ogs{iog}.signals_in, 'UniformOutput', false));
+            for iog = 1:numel(this.postprocess_signal_gens)
+                signals_in_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.postprocess_signal_gens{iog}.signals_in, 'UniformOutput', false));
                 signals_in_st = ['{' signals_in_st(1:end-2) '}'];
-                signals_out_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.ogs{iog}.signals, 'UniformOutput', false));
+                signals_out_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.postprocess_signal_gens{iog}.signals, 'UniformOutput', false));
                 signals_out_st = ['{' signals_out_st(1:end-2) '}'];
                 fprintf('%s --> %s\n',signals_in_st, signals_out_st);
             end
@@ -529,7 +531,7 @@ classdef BreachRequirement < BreachTraceSystem
                 end
                 
                 % Initialize values to return
-                V = zeros(numel(Xs), numel(this.formulas));
+                V = zeros(numel(Xs), numel(this.req_monitors));
                 
                 % collect data necessary for formla evaluation
                 for  i = 1:numel(Xs)
@@ -562,21 +564,21 @@ classdef BreachRequirement < BreachTraceSystem
         
         function traj = applyOutputGens(this, traj)
             % applyOutputGen applies intermediate signals computations
-            for iog = 1:numel(this.ogs)
-                Xin = this.get_signal_from_traj(traj, this.ogs{iog}.signals_in);
-                pin = traj.param(FindParam(this.P, this.ogs{iog}.params));
-                [~ , Xout] = this.ogs{iog}.computeSignals(traj.time, Xin, pin);
-                traj = this.set_signal_in_traj(traj, this.ogs{iog}.signals,  Xout);
+            for iog = 1:numel(this.postprocess_signal_gens)
+                Xin = this.get_signal_from_traj(traj, this.postprocess_signal_gens{iog}.signals_in);
+                pin = traj.param(FindParam(this.P, this.postprocess_signal_gens{iog}.params));
+                [~ , Xout] = this.postprocess_signal_gens{iog}.computeSignals(traj.time, Xin, pin);
+                traj = this.set_signal_in_traj(traj, this.postprocess_signal_gens{iog}.signals,  Xout);
             end
             
         end
         
         function [val, traj] = getRobustSignal(this,traj)
-            for ifo = 1:numel(this.formulas)
-                Xin = this.get_signal_from_traj(traj, this.formulas{ifo}.signals_in);
-                pin = traj.param(FindParam(this.P, this.formulas{ifo}.params));
-                [val(ifo),  Xout] = this.formulas{ifo}.eval(traj.time, Xin, pin);
-                traj  = this.set_signal_in_traj(traj, this.formulas{ifo}.signals, Xout);
+            for ifo = 1:numel(this.req_monitors)
+                Xin = this.get_signal_from_traj(traj, this.req_monitors{ifo}.signals_in);
+                pin = traj.param(FindParam(this.P, this.req_monitors{ifo}.params));
+                [val(ifo),  Xout] = this.req_monitors{ifo}.eval(traj.time, Xin, pin);
+                traj  = this.set_signal_in_traj(traj, this.req_monitors{ifo}.signals, Xout);
             end
         end
         
@@ -613,11 +615,11 @@ classdef BreachRequirement < BreachTraceSystem
             
             sigs_in = setdiff([this.GetSignalNames() this.sigMap.keys],  this.sigMap.values, 'stable');     % remove 'outputs' of signal maps
             
-            for iogs = 1:numel(this.ogs)
-                sigs_in = setdiff(sigs_in, this.ogs{iogs}.signals, 'stable');      % remove outputs of signals generators
+            for ipostprocess_signal_gens = 1:numel(this.postprocess_signal_gens)
+                sigs_in = setdiff(sigs_in, this.postprocess_signal_gens{ipostprocess_signal_gens}.signals, 'stable');      % remove outputs of signals generators
             end
-            for ifo = 1:numel(this.formulas)
-                sigs_in = setdiff(sigs_in, this.formulas{ifo}.signals, 'stable');             % remove outputs of formula
+            for ifo = 1:numel(this.req_monitors)
+                sigs_in = setdiff(sigs_in, this.req_monitors{ifo}.signals, 'stable');             % remove outputs of formula
             end
         end
         
@@ -641,8 +643,8 @@ classdef BreachRequirement < BreachTraceSystem
         
         function b = is_a_requirement(this, sig)
             b = false;
-            for ifo = 1:numel(this.formulas)
-                if strcmp(sig, get_id(this.formulas{ifo}.formula))
+            for ifo = 1:numel(this.req_monitors)
+                if strcmp(sig, get_id(this.req_monitors{ifo}.formula))
                     b = true;
                 end
             end

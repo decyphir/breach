@@ -20,6 +20,7 @@ function [P, val] =  SplotSat(Sys, P, phis, depth, tau, ipts)
 %  - val : quantitative satisfaction of properties
 %
 
+InitBreach;
 global BreachGlobOpt
 
 
@@ -115,11 +116,11 @@ for np = npb+1:nb_phis+npb
         %plot(phi_tspan*time_mult, phi_val);
         %stairs(phi_tspan*time_mult, (phi_val>0)*max(abs(phi_val))/2,'-r');
         tsc = phi_tspan*time_mult;
-        plot_style = 'plot';
+        plot_style = 'stairs';
         
         if isfield(BreachGlobOpt, 'disable_robust_linear_interpolation')
-            if BreachGlobOpt.disable_robust_linear_interpolation==1
-                plot_style = 'stairs';
+            if BreachGlobOpt.disable_robust_linear_interpolation==0
+                plot_style = 'plot';
             end
         end
         

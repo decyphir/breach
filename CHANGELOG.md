@@ -1,3 +1,19 @@
+# Release 1.3.beta2
+
+- Renamed ogs into postprocess_signal_gen and formulas into
+  req_monitors in BreachRequirement class
+- STL_Eval more robust to NaN and Inf values 
+- SplotSat now default to stairs plots until specified otherwise as
+  global option
+
+
+## Bugfixes
+- STL_Formula copy bug resulting in stl_monitor not working 
+- Display bug that was showing Nobody as name for BreachSimulinkSystem sometimes
+- stl_monitor.eval not returning the correct value in X
+- parameter lost from STL formula to stl_monitor
+
+
 # Release 1.3.beta1
 - New class BreachRequirement with hybrid and generic requirement
   evaluation support
@@ -5,9 +21,15 @@
 - Improvements in solver support for BreachProblem
 
 
+# Release 1.2.18
+
+- STL_Eval more robust to NaN and Inf values 
+- SplotSat now default to stairs plots until specified otherwise as
+  global option, also run InitBreach
+
 # Release 1.2.17
 
-## Bugfix
+## Bugfixes
 - Fixed fix for STL monitoring interpolation bug (Issue #62) 
 
 # Release 1.2.16

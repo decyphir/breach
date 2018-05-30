@@ -29,7 +29,7 @@ classdef stl_monitor < output_gen
                 preds = STL_ExtractPredicates(this.formula);
                 for ip = 1:numel(preds)
                     if ~STL_CheckID(get_id(preds(ip)))   % predicate does not exist as formula, create it
-                        pred = STL_Formula( STL_NewID([get_id(this.formula) '_predicate_']));
+                        pred = STL_Formula( STL_NewID([get_id(this.formula) '_predicate_']), preds(ip));
                     else
                         pred = preds(ip);
                     end
@@ -73,7 +73,7 @@ classdef stl_monitor < output_gen
         
         function [v, Xout] = eval(this, t, X,p)
             [~, Xout] = this.computeSignals(t, X,p);
-            v = X(end,1);
+            v = Xout(end,1);
         end
         
         function st = disp(this)
@@ -81,11 +81,18 @@ classdef stl_monitor < output_gen
             st = sprintf(['%s := %s\n'], get_id(phi), disp(phi,1));
             
             if ~strcmp(get_type(phi),'predicate')
-                st = [st '  where\n'];
+                st_pred = [];
                 preds = STL_ExtractPredicates(phi);
                 for ip = 1:numel(preds)
-                    st =   sprintf([ st '%s := %s \n' ], disp(preds(ip)));
+                    id = get_id(preds(ip));
+                    if STL_CheckID(id)
+                        if isempty(st_pred)
+                            st_pred = '  where \n';
+                        end
+                        st_pred =   sprintf([ st_pred '%s := %s \n' ],id,disp(preds(ip)));
+                    end
                 end
+                st = [st st_pred];
             end
             
             if nargout == 0

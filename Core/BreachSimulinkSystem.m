@@ -1381,7 +1381,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             name = this.whoamI; 
             
             [~,~, ~, st_status]  = GetTraceStatus(this); 
-            if isequal(name, '__Nobody__')
+            if isequal(name, 'Nobody__')
                 st = ['BreachSimulinkSystem interfacing model ' this.mdl.name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' unique traces.'];
             else
                 st = ['BreachSimulinkSystem ' name ' interfacing model ' this.mdl.name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' unique traces.'];
