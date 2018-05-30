@@ -11,7 +11,7 @@
 - STL_Formula copy bug resulting in stl_monitor not working 
 - Display bug that was showing Nobody as name for BreachSimulinkSystem sometimes
 - stl_monitor.eval not returning the correct value in X
-
+- parameter lost from STL formula to stl_monitor
 
 
 # Release 1.3.beta1
@@ -20,6 +20,12 @@
 - New plotting class BreachSignalsPlot
 - Improvements in solver support for BreachProblem
 
+
+# Release 1.2.18
+
+- STL_Eval more robust to NaN and Inf values 
+- SplotSat now default to stairs plots until specified otherwise as
+  global option, also run InitBreach
 
 # Release 1.2.17
 
