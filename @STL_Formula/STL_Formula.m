@@ -75,6 +75,7 @@ end
 if(nargin==2)
     % here we copy a formula 
     if isa(varargin{2},'STL_Formula')
+        phi = varargin{2};
         phi.id = varargin{1};
         phistruct = struct(phi);
         BreachGlobOpt.STLDB(phi.id) = phi;
@@ -86,7 +87,7 @@ if(nargin==2)
         phi = BreachGlobOpt.STLDB(st_trimmed);
         return;
     end
-    else 
+    else
        error('STL_Formula:Bad_argument_type', 'Second argument should be a string or a formula.');
     end
 end
