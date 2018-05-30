@@ -1,3 +1,9 @@
+# Release 1.2.18
+
+- STL_Eval more robust to NaN and Inf values 
+- SplotSat now default to stairs plots until specified otherwise as
+  global option, also run InitBreach
+
 # Release 1.2.17
 
 ## Bugfix
