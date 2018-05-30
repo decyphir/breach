@@ -241,33 +241,31 @@ classdef BreachSignalsPlot < handle
     methods (Access=protected)
         
         function update_legend(this, ax)
-            c = get(ax, 'Children');
+            l = legend('-DynamicLegend');
+            c = flipud(get(ax, 'Children'));
             num_patch = 0;
-            idx=0;
-            remove_c_idx = [];
-            remove_l_idx = [];
-            for ic = numel(c):-1:1
-                idx = idx+1;
-                if isa(c(ic),'matlab.graphics.primitive.Patch')
-                    if num_patch>0
-                        remove_c_idx(end+1) = ic;
-                        remove_l_idx(end+1) = idx;
-                    else
-                        patch_idx = ic;
+            lc = [];
+            st = {};
+            for idx = 1:numel(c)
+                if isa(c(idx),'matlab.graphics.primitive.Patch')
+                    if num_patch==0
+                        lc(end+1) = c(idx);
+                        patch_idx = numel(lc);
+                        st{end+1} = 'F';
                     end
                     num_patch = num_patch+1;
+                else
+                    lc(end+1) = c(idx);
+                    st{end+1} = get(c(idx), 'DisplayName');
                 end
+                    
             end
-            l = legend('-DynamicLegend');
             
             if num_patch>0
-                set(c(patch_idx),'DisplayName' ,['Falsifications (' num2str(num_patch) ')']);
-                c(remove_c_idx) = [];
-                st = l.String();
-                st(remove_l_idx) = [];
-                l = legend(flipud(c), st);
+                set(lc(patch_idx),'DisplayName' ,['Falsifications (' num2str(num_patch) ')']);
+                st{patch_idx} = get(lc(patch_idx),'DisplayName'); 
             end
-            
+            l= legend(lc,st);
             set(l, 'Interpreter', 'None');
         end
         
