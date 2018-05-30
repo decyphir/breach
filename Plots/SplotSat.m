@@ -20,6 +20,7 @@ function [P, val] =  SplotSat(Sys, P, phis, depth, tau, ipts)
 %  - val : quantitative satisfaction of properties
 %
 
+InitBreach;
 global BreachGlobOpt
 
 
