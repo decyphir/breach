@@ -33,6 +33,7 @@ end
                if hor==0
                    alw_formula = STL_Formula(['alw_' get_id(monitor.formula)], ['alw ' get_id(monitor.formula)]);
                    monitor = alw_monitor(alw_formula);
+                   monitor.p0 = p0;
                end
         end
     end
