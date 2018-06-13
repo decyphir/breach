@@ -19,9 +19,19 @@ classdef BreachTraceSystem < BreachSystem
             elseif isstruct(signals)&&all(isfield(signals, {'time', 'outputs', 'inputs'}))
                 trace1 = signals;
                 signal_names = [trace1.outputs.names, trace1.inputs.names];
-            elseif isstruct(signals)&&all(isfield(signals, {'signals', 'time'}))
-                trace1 = signals;
-                signal_names = trace1.signals.names;
+            elseif isstruct(signals)
+                if all(isfield(signals, {'signals', 'time'})) % traj with signal names
+                    trace1 = signals;
+                    signal_names = trace1.signals.names;
+                elseif all(isfield(signals,  {'time', 'X'})) % traj, but no signal names
+                   trace1 = signals;
+                   ndim = size(trace1.X,1);
+                   signal_names = cell(1,ndim);
+                   for is = 1:ndim
+                       signal_names{is} = ['x' num2str(is)];
+                   end
+                end
+                
             elseif ischar(signals)
                 if exist(signals, 'file')
                     [~, ~, ext] = fileparts(signals);
@@ -149,7 +159,7 @@ classdef BreachTraceSystem < BreachSystem
             
             nb_traces =this.CountTraces();
             
-            if ~isfield(traj, 'param')&&~isa(trace, 'matlab.io.MatFile')
+            if ~isfield(traj, 'param')&&~isa(traj, 'matlab.io.MatFile')
                 traj.param = [this.Sys.p'];
             end
             
@@ -192,6 +202,7 @@ classdef BreachTraceSystem < BreachSystem
             
             dimx = this.Sys.DimX;
             dimp = this.Sys.DimP;
+            
             for it = 1:n_traces
                 traj.time = linspace(0,end_time,n_samples);
                 traj.X = amp*rand([dimx n_samples])-amp*rand();
@@ -201,6 +212,12 @@ classdef BreachTraceSystem < BreachSystem
             
         end
             
+        function Sim(varargin)
+        % BreachTraceSystem.Sim(varargin) does nothing - traces are added
+        % using AddTrace method
+         
+        end
+        
         function st = disp(this)
             st = ['BreachTraceSystem with ' num2str(this.CountTraces()) ' traces.'];
             if nargout<1

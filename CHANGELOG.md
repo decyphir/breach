@@ -1,5 +1,15 @@
-# Release 1.3.beta2
+# Release 1.3.beta3
+- DiskCaching for BreachProblem now save runs in the cache folders (Issue #29)
+- skip computation of previously computed objective values in a BreachProblem in serial mode 
+- fixed bug in BreachProblem.ResetObjective 
+- alias appear in list in context menu BreachSignalsPlot
+- Printing for requirement streamlined
+- Printing signals now displays attributes and aliases 
+- initial implementation of preconditions in BreachRequirement
+- refactoring of BreachRequirement evalAllTraces, eliminate duplicates of input signals 
+- support for multiple signal mappings/aliases 
 
+# Release 1.3.beta2
 - Renamed ogs into postprocess_signal_gen and formulas into
   req_monitors in BreachRequirement class
 - STL_Eval more robust to NaN and Inf values 

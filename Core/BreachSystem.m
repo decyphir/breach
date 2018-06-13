@@ -736,13 +736,6 @@ classdef BreachSystem < BreachSet
         %% Ouputs
         function AddOutput(this, output)
             
-            % Checks signals needed to compute outputs
-            chk = ismember(output.signals_in, this.Sys.ParamList(1:this.Sys.DimX));
-            if ~all(chk)
-                i_missing = find(~chk);
-                error('AddOutput:missing_signal', 'Signal %s needed to compute output', output.signals_in{i_missing(1)});
-            end
-            
             % Add signals
             this.Sys.ParamList = [this.Sys.ParamList(1:this.Sys.DimX) output.signals this.Sys.ParamList(this.Sys.DimX+1:end) ];
             

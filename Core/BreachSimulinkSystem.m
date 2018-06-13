@@ -39,9 +39,10 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         SimInModelsDataFolder=false
         StopAtSimulinkError=false
         mdl
-        UseDiskCaching=false 
         DiskCachingRoot 
+        UseDiskCaching=false   %  set by SetupDiskCaching
     end
+    
     
     methods
         
@@ -136,28 +137,6 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             
         end
             
-        function SetupLogFolder(this, folder_name)
-            % SetupLogFolder creates a folder to log traces
-            
-            mdl.checksum_hash = DataHash(this.mdl.checksum);
-            if nargin<2
-                st = datestr(now,'ddmmyy-HHMM');
-                folder_name = [this.Sys.Dir filesep this.mdl.name '-' st];
-            end
-            [success,msg,msg_id] = mkdir(folder_name);
-            if success == 1
-                if isequal(msg_id, 'MATLAB:MKDIR:DirectoryExists')
-                    this.disp_msg(['Using existing logging folder at ' folder_name]);
-                else
-                    this.disp_msg(['Created logging folder at ' folder_name]);
-                end
-                this.log_folder = folder_name;
-            else
-                error(['Couldn''t create folder'  folder_name '.']);
-            end
-            
-        end
-        
         function SetupParallel(this, NumWorkers, varargin)
         % BreachSimulinkSystem.SetupParallel     
 
@@ -1219,7 +1198,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             summary = GetSummary@BreachSet(this);
             summary.model_info = this.mdl;
             
-                        % parameter names
+            % parameter names
             param_names = this.GetSysParamList();
             
             % input signal names
@@ -1371,17 +1350,17 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
             
         end
-        
+    
         function  st = disp(this)
             if isfield(this.P, 'traj')
                 nb_traj = numel(this.P.traj);
             else
                 nb_traj = 0;
             end
-            name = this.whoamI; 
+            [name, name_found] = this.whoamI; 
             
             [~,~, ~, st_status]  = GetTraceStatus(this); 
-            if isequal(name, 'Nobody__')
+            if ~name_found
                 st = ['BreachSimulinkSystem interfacing model ' this.mdl.name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' unique traces.'];
             else
                 st = ['BreachSimulinkSystem ' name ' interfacing model ' this.mdl.name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' unique traces.'];

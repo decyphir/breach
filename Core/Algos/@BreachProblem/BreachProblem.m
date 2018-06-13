@@ -234,7 +234,7 @@ classdef BreachProblem < BreachStatus
             
             % robustness
             this.BrSys = this.BrSet.copy(); 
-            this.robust_fn = @(x) (phi.Eval(this.BrSys, this.params, x));
+            this.robust_fn = @(x) (this.Spec.Eval(this.BrSys, this.params, x));
             
             this.BrSet_Best = [];
             this.BrSet_Logged = [];
@@ -401,6 +401,7 @@ classdef BreachProblem < BreachStatus
                             problem.x0 = this.generate_new_x0;
                         end
                     end
+                    
                 case 'fminsearch'
                     while ~this.stopping
                         if this.use_parallel
@@ -455,6 +456,21 @@ classdef BreachProblem < BreachStatus
             end
             this.res = res;
             this.DispResultMsg(); 
+        
+            %% Saving run in cache folder
+            this.SaveInCache();
+        
+        end
+        
+        function SaveInCache(this)
+            if this.BrSys.UseDiskCaching
+                FileSave = [this.BrSys.DiskCachingRoot filesep class(this) '_Runs.mat'];
+                if ~exist(FileSave, 'file')
+                    evalin('base', ['save(''' FileSave ''',''' this.whoamI ''');']);
+                else
+                    evalin('base', ['save(' FileSave ',''-append''', this.whoamI ');']);
+                end
+            end
         end
         
         %% Utility functions for solvers
@@ -561,23 +577,40 @@ classdef BreachProblem < BreachStatus
         end
         
         function fval = objective_wrapper(this,x)
-            
              % objective_wrapper calls the objective function and wraps some bookkeeping           
-            if size(x,1) ~= numel(this.params)
+             
+             if size(x,1) ~= numel(this.params)
                 x = x';
-            end
+             end
+             
+        
             nb_eval =  size(x,2);
             fval = inf*ones(1, nb_eval);
             fun = @(isample) this.objective_fn(x(:, isample));
             nb_iter = min(nb_eval, this.max_obj_eval);
- 
+     
             if this.stopping()==false
                 if nb_iter == 1 || ~this.use_parallel
                     for iter = 1:nb_iter
-                        
-                        % calling actual objective function
-                        fval(iter) = fun(iter);
-                        
+
+                        % checks whether x has already been computed or not
+                        % can do better, but will do for now
+                        if ~isempty(this.X_log)
+                            xi = x(:, iter);
+                            idx = find(sum(abs(this.X_log-repmat(xi, 1, size(this.X_log, 2)))) == 0,1);
+                        else
+                            idx=[];
+                        end
+                        if ~isempty(idx)
+                            if  ~isempty(this.BrSet_Logged)
+                                this.BrSys.P = Sselect(this.BrSet_Logged.P,idx);
+                            end
+                            fval(iter) = this.obj_log(idx);
+                        else
+                            % calling actual objective function
+                            fval(iter) = fun(iter);
+                        end
+
                         % logging and updating best
                         this.LogX(x(:, iter), fval(iter));
                         
@@ -658,7 +691,7 @@ classdef BreachProblem < BreachStatus
             % Timing and num_eval       
             this.nb_obj_eval= numel(this.obj_log);
             this.time_spent = toc(this.time_start);
-            
+           
         end
         
         function DispResultMsg(this)

@@ -610,12 +610,11 @@ classdef BreachSet < BreachStatus
                     end
                 end
                 
-                [signals_idx, type] = FindParam(this.P, signals);
+                [signals_idx, type] = this.FindSignalsIdx(signals);
                 if any(type==0)
                     not_found= find(type==0);
                     if ischar(signals)
                         sig = signals;
-                        
                     else
                         sig = signals{not_found(1)};
                     end
@@ -648,6 +647,23 @@ classdef BreachSet < BreachStatus
                 X = X{1};
             end
         end
+        
+        function [idx, ifound] = FindSignalsIdx(this, signals)
+            % resolve sigMap
+            if ~isempty(this.sigMap)
+                if ischar(signals)
+                    signals = {signals};
+                end
+                for isig = 1:numel(signals)
+                    while this.sigMap.isKey(signals{isig})
+                        signals{isig} = this.sigMap(signals{isig});
+                    end
+                end
+            end
+            [idx, ifound] = FindParam(this.P, signals);
+        end
+       
+        
         
         function SaveSignals(this, signals, folder, name,i_trajs)
             % BreachSet SaveSignals Save signals in mat files as simple time series
@@ -861,28 +877,7 @@ classdef BreachSet < BreachStatus
             else
                 this.SampleDomain(bnd_params,2, 'corners', 'replace', max_num_samples);
             end
-            %
-            %
-            %
-            %
-            %             if this.AppendWhenSample
-            %                 Pold = this.P;
-            %             end
-            %
-            %             this.ResetParamSet();
-            %             newP = this.P;
-            %             newP.epsi = 2*newP.epsi;
-            %             newP = Refine(newP,2);
-            %             newP.epsi = newP.epsi/2;
-            %
-            %             if this.AppendWhenSample
-            %                 this.P = SConcat(Pold, newP);
-            %             else
-            %                 this.P = newP;
-            %             end
-            %             this.CheckinDomainParam();
-            %
-        end
+          end
         
         function QuasiRandomSample(this, nb_sample, step)
             % Quasi-Random Sampling
@@ -1516,8 +1511,12 @@ classdef BreachSet < BreachStatus
         
         function summary = GetSummary(this)
             
-            num_traces = numel(this.P.traj);
-
+            if this.hasTraj()
+                num_traces = numel(this.P.traj);
+            else
+                num_traces = 0;
+            end
+            
             % parameter names
             param_names = this.GetSysParamList();
             
@@ -1527,7 +1526,6 @@ classdef BreachSet < BreachStatus
             if isfield(this.P,'props_names')
                 spec_names = this.P.props_names;
             end
-            
             
             summary.date = datestr(now);
             summary.num_traces = num_traces;
@@ -1543,7 +1541,6 @@ classdef BreachSet < BreachStatus
                 summary.num_sat = - sum( ~summary.specs.sat, 1  );
             end
         
-        
         end
         
         function b = is_variable(this, par)
@@ -1554,6 +1551,8 @@ classdef BreachSet < BreachStatus
                 b = ~isempty(dom.domain);
             end
         end
+        
+        
         
         function att = get_signal_attributes(this, sig)
             % returns nature to be included in signature
@@ -1592,6 +1591,7 @@ classdef BreachSet < BreachStatus
                     end
                 end
             end
+            sig_names = unique(sig_names, 'stable');
         end
         
         function [param_names, unknown] =  expand_param_name(this, params)
@@ -1648,9 +1648,34 @@ classdef BreachSet < BreachStatus
         function PrintSignals(this)
             disp( '---- SIGNALS ----')
                 for isig = 1:this.P.DimX
-                    fprintf('%s\n', this.P.ParamList{isig});
+                    fprintf('%s %s\n', this.P.ParamList{isig}, this.get_signal_attributes_string(this.P.ParamList{isig}));
                 end
                 fprintf('\n')
+        end
+        
+        function PrintAliases(this)
+            if ~isempty(this.sigMap)
+                disp( '---- ALIASES ----')
+                keys = this.sigMap.keys();
+                for ik = 1:numel(keys)
+                    fprintf('%s --> %s\n', keys{ik}, this.sigMap(keys{ik}));
+                end
+                fprintf('\n')
+            end
+        end
+        
+        
+        function st = get_signal_attributes_string(this, sig) 
+            atts = this.get_signal_attributes(sig);
+            if isempty(atts)
+                st = '';
+            else
+                st  = '(';
+                for ia = 1:numel(atts)-1
+                    st = sprintf([st '%s,'], atts{ia});
+                end
+                st = sprintf([st '%s)'], atts{end});
+            end
         end
         
         function PrintParams(this)
@@ -1749,12 +1774,12 @@ classdef BreachSet < BreachStatus
     end
     methods (Access=protected)    
         
-        function Xp = get_signal_from_traj(this, traj, names)
+        function Xp = get_signals_from_traj(this, traj, names)
             idx = FindParam(this.P, names); %  not fool proof, but not supposed to be used by fools
             Xp = traj.X(idx,:);
         end
   
-        function traj = set_signal_in_traj(this, traj, names, Xp)
+        function traj = set_signals_in_traj(this, traj, names, Xp)
             idx = FindParam(this.P, names); %  not fool proof, but not supposed to be used by fools
             traj.X(idx,:) = Xp;
         end

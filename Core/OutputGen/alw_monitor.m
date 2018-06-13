@@ -11,7 +11,8 @@ classdef alw_monitor < stl_monitor
             this.formula = subphi;
             this.signals = this.signals(1:end-1);
             if ~strcmp(get_type(subphi), 'predicate') 
-                this.signals{end+1} = get_id(subphi);
+                this.signals{end+1} = [get_id(subphi) '_violation'];
+                this.signals{end+1} = [get_id(subphi) '_satisfaction'];
             end
             this.interval = get_interval(formula);
             this.init_P();
@@ -20,7 +21,8 @@ classdef alw_monitor < stl_monitor
         function [v, Xout] = eval(this, t, X,p)
             [~, Xout] = this.computeSignals(t, X,p);
             idx  = this.get_time_idx_interval(t,p);
-            Xout(end, ~idx) = NaN;
+            Xout(end-1,:) = Xout(end,:)<0;         % violation flags
+            Xout(end-1:end, ~idx) = NaN;
             v = min(Xout(end,idx));
         end
         

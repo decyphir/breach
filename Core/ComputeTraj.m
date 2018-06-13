@@ -88,8 +88,18 @@ end
 
 % if no trajectories to compute, we return the param set itself
 if(isfield(P0, 'traj_to_compute') && isempty(P0.traj_to_compute))
-    Pf = P0;
-    return;
+    if isfield(P0, 'traj')&&isfield(P0, 'traj_ref') 
+        for ipts = 1:size(P0.pts,2)
+            if ~isequal( tspan(end), P0.traj{P0.traj_ref(ipts)}.time(1,end))
+                P0.traj_to_compute(ipts) = 1:numel(size(P0.pts,2));
+                break;
+            end
+        end
+        if isempty(P0.traj_to_compute)
+            Pf = P0;
+            return;
+        end
+    end
 end
 
 if ~isfield(Sys, 'type')
@@ -171,9 +181,6 @@ switch Sys.type
                     traj.X = [traj.X ;Xout_i ];
                 end
             end
-            
-            
-            
             
             Pf.traj{ii} = traj;
             Pf.Xf(:,ii) = zeros(Pf.DimX,1);

@@ -40,7 +40,7 @@ classdef BreachSignalsPlot < handle
             
         end
         
-        function AddAxes(this, pos)
+        function ax = AddAxes(this, pos)
             % AddAxes add new axe at specified position
             if nargin==1
                 pos = numel(this.Axes)+1;
@@ -85,6 +85,18 @@ classdef BreachSignalsPlot < handle
                 signature = this.BrSet.P.traj{this.itraj}.signature;
             catch
                 signature  = this.BrSet.GetSignature();
+            end
+            
+            % Aliases
+
+            if ~isempty(this.BrSet.sigMap)
+                att = 'aliases';
+                keys = this.BrSet.sigMap.keys();
+                m = uimenu(m_top_sigs, 'Label',  att);
+                for is = 1:numel(keys)
+                    sig= keys{is};
+                    uimenu(m, 'Label', sig, 'Callback', @(o,e)ctxtfn_add_signal(ax,sig,o,e));
+                end
             end
             
             for iatt = 1:numel(signature.signal_attributes) % build uimenu for attributes
@@ -262,7 +274,7 @@ classdef BreachSignalsPlot < handle
             end
             
             if num_patch>0
-                set(lc(patch_idx),'DisplayName' ,['Falsifications (' num2str(num_patch) ')']);
+                set(lc(patch_idx),'DisplayName' ,['Violations (' num2str(num_patch) ')']);
                 st{patch_idx} = get(lc(patch_idx),'DisplayName'); 
             end
             l= legend(lc,st);
@@ -274,8 +286,9 @@ classdef BreachSignalsPlot < handle
             hold on;
             time = this.BrSet.P.traj{this.itraj}.time;
             sig_values = this.BrSet.GetSignalValues(sig, this.itraj);
-            l = plot(time , sig_values, 'DisplayName', sig);
+            if ~isempty(sig_values)
+                l = plot(time , sig_values, 'DisplayName', sig);
+            end
         end
-        
     end
 end

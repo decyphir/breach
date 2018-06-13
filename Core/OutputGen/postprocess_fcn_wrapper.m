@@ -32,16 +32,7 @@ classdef postprocess_fcn_wrapper < output_gen
                 eval_st = [eval_st ',p(' num2str(ip) ')'];
             end
             eval_st = [eval_st ');'];
-            try
-                eval(eval_st);
-            catch ME1 % try signature without time as first argument 
-                try 
-                    eval_st = regexprep(eval_st, 'time,','');
-                    eval(eval_st);
-                catch
-                   rethrow(ME1);  
-                end
-            end
+            eval(eval_st);
         end
         
         
