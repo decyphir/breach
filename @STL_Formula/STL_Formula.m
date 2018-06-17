@@ -58,9 +58,24 @@ evalin('base','InitBreach');
 global BreachGlobOpt
 
 % test if formula already exists
+if (nargin==1)
+    if isa(varargin{1}, 'STL_Formula')
+        phi = varargin{1};
+        return;
+    elseif ischar(varargin{1})
+        [b, phi] = STL_CheckID(varargin{1});
+        if b
+            return;
+        else
+            error('%s not a formula', varargin{1});
+        end
+    end
+end
+
 if(nargin==2)
     % here we copy a formula 
     if isa(varargin{2},'STL_Formula')
+        phi = varargin{2};
         phi.id = varargin{1};
         phistruct = struct(phi);
         BreachGlobOpt.STLDB(phi.id) = phi;
@@ -72,7 +87,7 @@ if(nargin==2)
         phi = BreachGlobOpt.STLDB(st_trimmed);
         return;
     end
-    else 
+    else
        error('STL_Formula:Bad_argument_type', 'Second argument should be a string or a formula.');
     end
 end
@@ -298,6 +313,7 @@ switch(numel(varargin))
         end
         
         % parse operator
+       %% test predicate 
 
         [success, st1, st2] = parenthesisly_balanced_split(st, '<=');
         if success
@@ -369,7 +385,15 @@ switch(numel(varargin))
             return
         end
         
-        % Last possibility, the formula already exists - note: in that case
+        
+        %% Maybe expression defined without >0
+        if isempty(regexp(st,'[>< ]','once'))
+            st = [st '>0'];
+            phi = STL_Parse(phi, st);
+            return;
+        end
+     
+        %% Last possibility, the formula already exists - note: in that case
         % we ignore id and use the id of existing formula
         try
             st = regexprep(st,'[()\s]','');
@@ -550,7 +574,7 @@ if (diff1 ~=0)
         
         % checks if there is nothing but blanks before enclosing par.
         pre_st1 = st1(1:idx_left_par1(diff1));
-        if ~isempty(regexp(pre_st1, '[^\(\s]'))
+        if ~isempty(regexp(pre_st1, '[^\(\s]','once'))
             success= 0;
             return;
         end

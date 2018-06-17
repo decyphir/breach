@@ -19,6 +19,7 @@ if ~force_init && isfield(BreachGlobOpt, 'breach_dir')
     end
 end
 
+
 %% remove old path, if any
 br_all_dir = which('InstallBreach', '-all');
 nb_dir = numel(br_all_dir);   
@@ -66,6 +67,7 @@ list_path = { ...
     [br_dir filesep 'Core' filesep 'm_src'], ...
     [br_dir filesep 'Core' filesep 'Algos'], ...
     [br_dir filesep 'Core' filesep 'SignalGen'], ...
+    [br_dir filesep 'Core' filesep 'OutputGen'], ...
     [br_dir filesep 'Params'], ...
     [br_dir filesep 'Params' filesep 'm_src'], ...
     [br_dir filesep 'Params' filesep 'm_src' filesep 'sobolqr'], ...
@@ -93,6 +95,11 @@ addpath(list_path{:});
 cd(cdr);
 
 %% Init BreachGlobOpt global configuration variable
+
+ % Some global constants
+if ~isfield(BreachGlobOpt, 'MaxNumSamples')
+        BreachGlobOpt.MaxNumSamples=100000;
+end
 
 % STL Initialization
 BreachGlobOpt.disable_robust_linear_interpolation = 1;

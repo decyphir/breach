@@ -10,3 +10,10 @@ AF_ok := not (AF_above_ref or AF_below_ref)
 param t_start=10, t_end=40
 AF_alw_ok := alw_[t_start, t_end] (AF_ok)
 
+# A => B type formula
+param t_0=1
+control_mode_check := (controller_mode[t] == 1)
+AF_ok_controller := alw_[t_0, t_end] (control_mode_check => AF_ok)
+
+# generic check, computed by postprocessing function 
+AF_ok_check := alw_[t_0, t_end] (check[t]>0  => AF_ok)

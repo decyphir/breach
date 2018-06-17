@@ -1,10 +1,8 @@
 %% Breach demo: analysis of an Automatic transmission controller
 
-
 %% Interface Automatic Transmission model with Breach 
 B = BreachSimulinkSystem('Autotrans_shift');
 B.PrintAll % print available signals and parameters 
-
 
 %% Running one simulation
 B.SetTime(0:.01:30); B.SetParam({'throttle_u0'}, 100);

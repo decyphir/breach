@@ -8,7 +8,7 @@ function [sol, fval, exitflag, output] = ...
 % sol = OPTIMIZE(..., x0, lb, ub)
 % sol = OPTIMIZE(..., ub, A, b) 
 % sol = OPTIMIZE(..., b, Aeq, beq) 
-% sol = OPTIMIZE(..., beq, nonlcon) 
+% sol = OPTIMIZE(..., beq, nonlcon)
 % sol = OPTIMIZE(..., nonlcon, strictness) 
 % sol = OPTIMIZE(..., strictness, options) 
 % sol = OPTIMIZE(..., options, algorithm) 
@@ -138,6 +138,8 @@ function [sol, fval, exitflag, output] = ...
 %           output.funcCount   Number of function evaluations 
 %           output.iterations  Number of iterations 
 %           output.message     Exit message
+%           output.logs        parameters tried during optimization (in
+%           parallel)
 %
 %       Since OPTIMIZE handles constrained problems, the following 
 %       fields were added:
@@ -789,7 +791,8 @@ function [sol, fval, exitflag, output] = ...
         VSfactor_inside_contract  = beta^(1/N);
         VSfactor_outside_contract = (alpha*beta)^(1/N);
         VSfactor_shrink           = delta;        
-        
+        % logs
+        logs = [];
         % check for output functions
         outputfcn = false;
         if ~isempty(options.OutputFcn) 
@@ -807,6 +810,7 @@ function [sol, fval, exitflag, output] = ...
         if (narg == 2) || isempty(options), options = optimset; end
         reltol_x = optimget(options, 'TolX', 1e-12);
         reltol_f = optimget(options, 'TolFun', 1e-12);
+        parallel_f = optimget(options,'UseParallel', false);
         max_evaluations = optimget(options, 'MaxFunEvals', 200*N);
         max_iterations  = optimget(options, 'MaxIter', 1e4);
         display = optimget(options, 'Display', 'off');
@@ -819,7 +823,9 @@ function [sol, fval, exitflag, output] = ...
         
         % function is known to be ``vectorized''
         f = funfcn(x);    evaluations = N+1;        
-        
+        if parallel_f
+            logs = [logs, x]
+        end
          % first evaluate output function        
         if outputfcn
             optimValues.iteration = iterations;
@@ -890,6 +896,9 @@ function [sol, fval, exitflag, output] = ...
             xr = C + alpha*(C - x(:, end));
             fr = funfcn(xr);
             evaluations = evaluations + 1;
+            if parallel_f
+                logs = [logs, xr]
+            end
             
             % accept the reflection point
             if fr < f(end-1)
@@ -901,7 +910,9 @@ function [sol, fval, exitflag, output] = ...
                     xe = C + gamma*(xr - C);
                     fe = funfcn(xe);
                     evaluations = evaluations + 1;
-                    
+                    if parallel_f
+                        logs = [logs, xe]
+                    end
                     % accept expand
                     if (fe < f(1))
                         op = 'expand';
@@ -932,6 +943,9 @@ function [sol, fval, exitflag, output] = ...
                 end
                 fc = funfcn(xc);
                 evaluations = evaluations + 1;
+                if parallel_f
+                    logs = [logs, xc]
+                end
                 
                 % accept contraction
                 if fc < min(fr, f(end))
@@ -964,6 +978,9 @@ function [sol, fval, exitflag, output] = ...
                     x = xones + delta*(x - xones);
                     f = funfcn(x);
                     evaluations = evaluations + N + 1;
+                    if parallel_f
+                        logs = [logs, x]
+                    end
                     volume_ratio = VSfactor_shrink * volume_ratio;
                 end
             end            
@@ -1006,6 +1023,9 @@ function [sol, fval, exitflag, output] = ...
         end
         if exitflag == -1
             output.message = sprintf('Optimization terminated by user-provded output function.\n');
+        end
+        if parallel_f
+            output.logs = logs;
         end
     end % NelderMead
     

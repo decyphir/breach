@@ -38,9 +38,12 @@ classdef BreachOpenSystem < BreachSystem
             end
             
             if ~exist('tspan','var')
-                tspan = this.Sys.tspan;
+                if this.hasTraj()
+                    tspan = this.P.traj{1}.time;
+                else
+                    tspan = this.Sys.tspan;
+                end
             end
-            
             Sys = this.Sys;
             if exist('U','var') % in this case, the InputGenerator becomes a trace object
                 % TODO: handles multiple input signals - or use an
@@ -299,26 +302,27 @@ classdef BreachOpenSystem < BreachSystem
         end
         
         % not sure why I need a special Concat operator here.
-        function this = Concat(this,other)
-            
-            if isa(this.InputGenerator, 'BreachTraceSystem')
-                % TODO Concat other with more than one trace...
-                trace = [other.InputGenerator.P.traj{1}.time' other.InputGenerator.P.traj{1}.X'];
-                this.InputGenerator.AddTrace(trace);
-                % Using SetParam here erases the trajectory...
-                i_trace_id = FindParam(other.P, 'trace_id');
-                other.P.pts(i_trace_id,1) = numel(this.P.traj)+1;
-                other.P.traj{1}.param(i_trace_id) = numel(this.P.traj)+1;
-                this.P = SConcat(this.P, other.P);
-            elseif isa(this.InputGenerator, 'BreachSystem')
-                this.InputGenerator.P= SConcat(this.InputGenerator.P, other.InputGenerator.P);
-                this.P = SConcat(this.P,other.P);
-            else % ignore InputGenerator .. 
-                this.P = SConcat(this.P,other.P);
-            end
-            
-        end
-        
+        % my guess is I don't 
+%         function this = Concat(this,other)
+%             
+%             if isa(this.InputGenerator, 'BreachTraceSystem')
+%                 % TODO Concat other with more than one trace...
+%                 trace = [other.InputGenerator.P.traj{1}.time' other.InputGenerator.P.traj{1}.X'];
+%                 this.InputGenerator.AddTrace(trace);
+%                 % Using SetParam here erases the trajectory...
+%                 i_trace_id = FindParam(other.P, 'trace_id');
+%                 other.P.pts(i_trace_id,1) = numel(this.P.traj)+1;
+%                 other.P.traj{1}.param(i_trace_id) = numel(this.P.traj)+1;
+%                 this.P = SConcat(this.P, other.P);
+%             elseif isa(this.InputGenerator, 'BreachSystem')
+%                 this.InputGenerator.P= SConcat(this.InputGenerator.P, other.InputGenerator.P);
+%                 this.P = SConcat(this.P,other.P);
+%             else % ignore InputGenerator .. 
+%                 this.P = SConcat(this.P,other.P);
+%             end
+%             
+%         end
+%         
         function hsi = SetInputGenGUI(this)
             hsi=  signal_gen_gui(this);
         end
@@ -330,31 +334,52 @@ classdef BreachOpenSystem < BreachSystem
         
         function PrintSignals(this)
             if isempty(this.SignalRanges)
-                disp( 'Signals:')
-                disp( '-------')
+                disp( '---  SIGNALS  ---')
                 for isig = 1:this.Sys.DimX
-                    if any(strcmp(this.Sys.ParamList{isig}, this.Sys.InputList))
-                        fprintf('%s %s (Input)\n', this.Sys.ParamList{isig}, this.Domains(isig).short_disp(1));
-                    else
-                        fprintf('%s %s\n', this.Sys.ParamList{isig}, this.Domains(isig).short_disp(1));
-                    end
+                    fprintf('%s %s\n', this.P.ParamList{isig}, this.get_signal_attributes_string(this.P.ParamList{isig}));
                 end
             else
-                
-                fprintf('Signals (in range estimated over %d simulations):\n', numel(this.P.traj))
-                disp('-------')
-                for isig = 1:this.Sys.DimX-this.Sys.DimU
-                    fprintf('%s in  [%g, %g]\n', this.Sys.ParamList{isig}, this.SignalRanges(isig,1),this.SignalRanges(isig,2));
-                end
-                for isig =  this.Sys.DimX-this.Sys.DimU+1:this.Sys.DimX
-                    fprintf('%s (Input) in  [%g, %g]\n', this.Sys.ParamList{isig}, this.SignalRanges(isig,1),this.SignalRanges(isig,2));
+                fprintf('---  SIGNALS  --- (%d traces)\n', numel(this.P.traj));
+                for isig = 1:this.Sys.DimX
+                    fprintf('%s %s in  [%g, %g]\n', this.Sys.ParamList{isig}, this.get_signal_attributes_string(this.P.ParamList{isig}),this.SignalRanges(isig,1),this.SignalRanges(isig,2));
                 end
             end
-            disp(' ')
+            disp(' ');
+            if ~isempty(this.sigMap)
+                this.PrintAliases();
+            end
         end
         
+        function atts = get_signal_attributes(this, sig)
+            % returns nature to be included in signature
+            % should req_input, additional_test_data_signal,
+            while this.sigMap.isKey(sig)
+                if isempty(atts)
+                     atts = {'alias'};   
+                end
+                sig = this.sigMap(sig);
+            end
+            
+            if ismember(sig, this.InputGenerator.P.ParamList(1:this.InputGenerator.P.DimX))
+                atts = {'model_input'};
+            elseif ismember(sig, this.P.ParamList(1:this.P.DimX))
+                atts= {'model_output'};
+            else
+                atts ={};
+            end
+        end
+        
+        function atts = get_param_attributes(this, param)
+            % returns nature to be included in signature
+            % should req_input, additional_test_data_signal,
+            atts = get_param_attributes@BreachSet(this, param);
+            
+            if ismember(param, this.InputGenerator.P.ParamList(this.InputGenerator.P.DimX+1:end))
+                atts = [atts {'input_param'}];
+            else
+                atts = [atts {'model_param'}];
+            end
+        end
     end
-    
 end
-
 

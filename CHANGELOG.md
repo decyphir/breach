@@ -1,3 +1,47 @@
+# Release 1.3.beta4 
+- BreachSamplesPlot provides interactive plots of BreachRequirement
+  results
+- BreachProblem saves runs in cache folders when DiskCaching is
+  enabled
+- runs of falsification problems can be loaded using
+  FalsificationProblem.load_runs static method  
+- bugfix for alw A=>B template and plot_diagnosis now separates A and
+  A=>B on two axes
+
+
+# Release 1.3.beta3
+- DiskCaching for BreachProblem now save runs in the cache folders (Issue #29)
+- skip computation of previously computed objective values in a BreachProblem in serial mode 
+- fixed bug in BreachProblem.ResetObjective 
+- alias appear in list in context menu BreachSignalsPlot
+- Printing for requirement streamlined
+- Printing signals now displays attributes and aliases 
+- initial implementation of preconditions in BreachRequirement
+- refactoring of BreachRequirement evalAllTraces, eliminate duplicates of input signals 
+- support for multiple signal mappings/aliases 
+
+# Release 1.3.beta2
+- Renamed ogs into postprocess_signal_gen and formulas into
+  req_monitors in BreachRequirement class
+- STL_Eval more robust to NaN and Inf values 
+- SplotSat now default to stairs plots until specified otherwise as
+  global option
+
+
+## Bugfixes
+- STL_Formula copy bug resulting in stl_monitor not working 
+- Display bug that was showing Nobody as name for BreachSimulinkSystem sometimes
+- stl_monitor.eval not returning the correct value in X
+- parameter lost from STL formula to stl_monitor
+
+
+# Release 1.3.beta1
+- New class BreachRequirement with hybrid and generic requirement
+  evaluation support
+- New plotting class BreachSignalsPlot
+- Improvements in solver support for BreachProblem
+
+
 # Release 1.2.18
 
 - STL_Eval more robust to NaN and Inf values 
@@ -6,7 +50,7 @@
 
 # Release 1.2.17
 
-## Bugfix
+## Bugfixes
 - Fixed fix for STL monitoring interpolation bug (Issue #62) 
 
 # Release 1.2.16

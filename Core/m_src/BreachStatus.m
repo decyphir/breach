@@ -15,14 +15,27 @@ classdef BreachStatus < handle
     
     methods
         
-        function  my_name = whoamI(this)
+        function  [my_name, name_found] = whoamI(this, default)
+            name_found = false;
             S = evalin('base', 'who');
-            my_name= '__Nobody__'; 
+            if ~exist('default', 'var')
+                my_name= 'Nobody__';
+            else
+                my_name = default;
+            end
             for iv = 1:numel(S)
               if isequal(evalin('base', S{iv}), this)
-                  my_name = S{iv};
+                  if ~strcmp(S{iv}, 'ans')
+                      name_found = true;
+                      my_name = S{iv};
+                  end
               end
             end
+                
+        end
+        
+        function name = gen_name(this)
+            name = [class(this) '_' datestr(now, 'mm_dd_yyyy_HHMM')];
         end
         
         function new = copy(this)

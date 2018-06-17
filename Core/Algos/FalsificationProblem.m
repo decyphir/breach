@@ -20,6 +20,16 @@ classdef FalsificationProblem < BreachProblem
         StopAtFalse=true
     end
     
+    methods (Static)
+        function load_runs(folder, run)
+            if nargin==1
+                evalin('base', ['load(''' folder filesep 'FalsificationProblem_Runs'');']);
+            elseif nargin==2
+                evalin('base', ['load(''' folder filesep 'FalsificationProblem_Runs'','''  run   ''');']);
+            end
+        end
+    end
+    
     methods
         
         % Constructor calls parent constructor
@@ -44,6 +54,7 @@ classdef FalsificationProblem < BreachProblem
                     super_args{1} = Br;
                     super_args{2} = phi;
                     super_args{3} = params;
+
                 case 4
                     super_args{1} = Br;
                     super_args{2} = phi;
@@ -87,6 +98,7 @@ classdef FalsificationProblem < BreachProblem
             [~, i_false] = find(fval<0);
             if ~isempty(i_false)
                 this.X_false = [this.X_false x(:,i_false)];                              
+                this.obj_false = [this.obj_false fval];
                 if (this.log_traces)&&~this.use_parallel
                     if isempty(this.BrSet_False)
                         this.BrSet_False = this.BrSys.copy();
@@ -121,12 +133,13 @@ classdef FalsificationProblem < BreachProblem
             end
         end
         
-        
         function DispResultMsg(this)
             this.DispResultMsg@BreachProblem();
-                    
+            if this.use_parallel && this.obj_best < 0
+                this.X_false = this.x_best;
+            end      
             if ~isempty(this.X_false)
-                fprintf('Falsified with obj=%g\n', this.obj_best(end));
+                fprintf('Falsified with obj = %g\n', this.obj_best(end));
             else
                 fprintf('No falsifying trace found.\n');
             end

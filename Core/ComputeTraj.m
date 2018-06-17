@@ -88,8 +88,18 @@ end
 
 % if no trajectories to compute, we return the param set itself
 if(isfield(P0, 'traj_to_compute') && isempty(P0.traj_to_compute))
-    Pf = P0;
-    return;
+    if isfield(P0, 'traj')&&isfield(P0, 'traj_ref') 
+        for ipts = 1:size(P0.pts,2)
+            if ~isequal( tspan(end), P0.traj{P0.traj_ref(ipts)}.time(1,end))
+                P0.traj_to_compute(ipts) = 1:numel(size(P0.pts,2));
+                break;
+            end
+        end
+        if isempty(P0.traj_to_compute)
+            Pf = P0;
+            return;
+        end
+    end
 end
 
 if ~isfield(Sys, 'type')
@@ -140,7 +150,6 @@ ipts = 1:size(P0.pts,2);
 ii=0;
 
 switch Sys.type
-    
     case 'Extern'
         model = Sys.name;
         if Verbose==1
@@ -159,8 +168,22 @@ switch Sys.type
             
             [traj.time, traj.X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
             traj.param = P0.pts(1:P0.DimP,ii)';
+            
+            if isfield(Sys, 'output_gens')
+                for io = 1:numel(Sys.output_gens)
+                    og = Sys.output_gens{io};
+                    % Find in_signals
+                    is = FindParam(Sys, og.signals_in);
+                    ip = FindParam(P0, og.params);
+                    X_in = traj.X(is, :);
+                    pts_in = P0.pts(ip,ii);
+                    [traj.time, Xout_i] = og.computeSignals(traj.time, X_in, pts_in);
+                    traj.X = [traj.X ;Xout_i ];
+                end
+            end
+            
             Pf.traj{ii} = traj;
-            Pf.Xf(:,ii) = traj.X(:,end);
+            Pf.Xf(:,ii) = zeros(Pf.DimX,1);
             if Verbose==1
                 if(numel(ipts)>1)
                     rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
@@ -214,7 +237,7 @@ switch Sys.type
             
             Pf.traj = trajs;
             for ii=ipts
-                Pf.Xf(:,ii) = Pf.traj{ii}.X(:,end);
+                Pf.Xf(:,ii) = zeros(Pf.DimX,1);
             end
             
             if Verbose>=1
@@ -236,7 +259,7 @@ switch Sys.type
             end
             Pf.traj = trajs;
             for ii=ipts
-                Pf.Xf(:,ii) = Pf.traj{ii}.X(:,end);
+                Pf.Xf(:,ii) = zeros(Pf.DimX,1);
             end
             if Verbose>=1
                 if(numel(ipts)>1)
@@ -312,15 +335,11 @@ if  use_caching
     hash_traj = DataHash({Sys.ParamList, p, tspan});
     cache_traj_filename = [Sys.DiskCachingFolder filesep 'traj_' hash_traj '.mat'];
     if exist(cache_traj_filename, 'file')
-        if isfield(Sys, 'StoreTracesOnDisk')&&~Sys.StoreTracesOnDisk
-            traj = load(cache_traj_filename);
-        else
-            traj = matfile(cache_traj_filename);
-        end
         do_compute = 0;
     else
         do_compute = 1;
     end
+    traj = matfile(cache_traj_filename,  'Writable', true);
 end
 
 if do_compute
@@ -332,20 +351,27 @@ if do_compute
     [traj.time, traj.X,traj.status] = Sys.sim(Sys, tspan, P0.pts(:,ii));
     traj.param = P0.pts(1:P0.DimP,ii)';
     
-    if use_caching % cache new trace
-        cache_traj = matfile(cache_traj_filename, 'Writable', true);
-        cache_traj.param = traj.param;
-        cache_traj.time = traj.time;
-        cache_traj.status = traj.status;
-        cache_traj.X = traj.X;
-        cache_traj.Properties.Writable= false;
-        if ~isfield(Sys, 'StoreTracesOnDisk')||~Sys.StoreTracesOnDisk
-            traj = cache_traj;
+    % compute outputs  - should we do something when status is not right? 
+     if isfield(Sys, 'output_gens')
+        Xout = []; 
+        for io = 1:numel(Sys.output_gens)
+            og = Sys.output_gens{io};
+            % Find in_signals
+            is = FindParam(Sys, og.signals_in);
+            ip = FindParam(P0, og.params);
+            X_in = [traj.X(is, :); Xout] ;
+            pts_in = P0.pts(ip,ii);
+            [traj.time, Xout_i] = og.computeSignals(traj.time, X_in, pts_in);  
+            Xout = [Xout ; Xout_i];
         end
+        traj.X(end-size(Xout,1)+1:end, :) = Xout;
     end
+    
+    if use_caching % cache new trace
+        traj.Properties.Writable = false;
+     end
 end
 end
-
 
 
 function err = check_u(u)

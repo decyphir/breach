@@ -7,8 +7,8 @@ BrDemo.InitAFC();
 BrAFC
 
 %% Creating a Falsification Problem
-% Given a specification $\varphi$ and some parameter range, we want to find a
-% parameter value for which the system violates $\varphi$.
+% Given a requirement R and some parameter range, we want to find a
+% parameter value for which the system violates R.
 
 %% 
 % First we create the parameter search domain and load specifications. 
@@ -124,7 +124,6 @@ falsif_pb3 = FalsificationProblem(AFC_Falsify, AF_alw_ok2,{'Pedal_Angle_pulse_pe
 falsif_pb3.setup_solver('cmaes');
 
 %% Running CMAES
-
 falsif_pb3.solver_options.MaxFunEvals = 100; % max number of simulations 
 falsif_pb3.solve();
 
