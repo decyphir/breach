@@ -51,14 +51,16 @@ classdef from_file_signal_gen < signal_gen
             % with.
             
             itime =find(strcmpi(vars, 'time'), 1);
-            if isempty(itime)
-                error('The file must contain a 1D array named ''time'' (case insensitive) with properly ordered time samples.');
-            else
-                time = st.(vars{itime});
-                this.time_var_name = vars{itime};
-                if any(diff(time)<0)
+             if isempty(itime)
+                itime = find(strcmpi(vars, 'ecutime'),1);
+                if isempty(itime)
                     error('The file must contain a 1D array named ''time'' (case insensitive) with properly ordered time samples.');
                 end
+            end
+            time = st.(vars{itime});
+            this.time_var_name = vars{itime};
+            if any(diff(time)<0)
+                error('The file must contain a 1D array named ''time'' (case insensitive) with properly ordered time samples.');
             end
             
             % Next is detecting all parameters- we're looking for

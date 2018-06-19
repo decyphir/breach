@@ -12,7 +12,6 @@ classdef alw_A_implies_B_monitor < alw_monitor
                 error('formula is not of type alw A => B');
             end
             subphis = get_children(subphi{1});
-            
             this.pre  = subphis{1};
             this.post = subphis{2}; 
             

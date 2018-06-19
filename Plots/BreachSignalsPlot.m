@@ -110,9 +110,9 @@ classdef BreachSignalsPlot < handle
                 end
             end
             
-            if ismember('requirement',signature.signal_attributes)
+            if ismember('quant_sat_signal',signature.signal_attributes)
                 m = uimenu(cm, 'Label', 'Highlight false intervals');
-                att ='requirement';
+                att ='quant_sat_signal';
                 f = [att 's_idx'];
                 signals_att = unique(signature.signals(signature.(f)));
                 if ismember('predicate',signature.signal_attributes)

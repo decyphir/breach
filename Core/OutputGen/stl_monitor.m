@@ -69,7 +69,7 @@ classdef stl_monitor < output_gen
             % Assumes F has data about this formula
             if ~isempty(this.predicates)
                 F.AddAxes();
-                F.AddSignal(this.predicates);
+                F.AddSignals(this.predicates);
             end
         end
         

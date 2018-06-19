@@ -16,7 +16,6 @@ classdef BreachRequirement < BreachTraceSystem
     
     properties (Access=protected)
         eval_precond_only= false  % when true, does what it says 
-        sigMapInv = containers.Map()
     end
     
     methods
@@ -76,58 +75,25 @@ classdef BreachRequirement < BreachTraceSystem
             
         end
         
-        function this= SetSignalMap(this, varargin)
+        function this = SetSignalMap(this, varargin)
             % SetSignalMap maps signal names to signals needed for requirement
             % evaluation
             %
             % Input:  a map or a list of pairs or two cells
             
-            arg_err_msg = 'Argument should be a containers.Map object, or a list of pairs of signal names, or two cells of signal names with same size.';
-            switch nargin
-                case 2
-                    if ~isa(varargin{1}, 'containers.Map')
-                        error('SetSignalMap:wrong_arg', arg_err_msg);
-                    else
-                        this.sigNamesMap = varargin{1};
-                    end
-                case 3
-                    if iscell(varargin{2})
-                        if ~iscell(varargin{2})||(numel(varargin{1}) ~= numel(varargin{2}))
-                            error('SetSignalMap:wrong_arg', arg_err_msg);
-                        end
-                        for is = 1:numel(varargin{2})
-                            this.sigMap(varargin{1}{is}) = varargin{2}{is};
-                            this.sigMapInv( varargin{2}{is} ) = varargin{1}{is}; 
-                        end
-                    else
-                        if ischar(varargin{1})&&ischar(varargin{2})
-                            this.sigMap(varargin{1}) = varargin{2};
-                            this.sigMapInv(varargin{2}) = varargin{1};
-                        else
-                            error('SetSignalMap:wrong_arg', arg_err_msg);
-                        end
-                    end
-                otherwise
-                    for is = 1:numel(varargin)/2
-                        try
-                            this.sigMap(varargin{2*is-1}) = varargin{2*is};
-                            this.sigMapInv(varargin{2*is}) = varargin{2*is-1};
-                        catch
-                            error('SetSignalMap:wrong_arg', arg_err_msg);
-                        end
-                    end
-            end
-            
-            this.signals_in = this.get_signals_in();
+            this = SetSignalMap@BreachSet(this,varargin{:});
             
             if this.verbose >= 2
                 this.PrintSigMap();
             end
-            
+         
+            this.signals_in = this.get_signals_in();
+         
         end
         
         function ResetSigMap(this)
             this.sigMap = containers.Map();
+            this.sigMapInv = containers.Map();
             this.signals_in = this.get_signals_in();
         end
         
@@ -202,15 +168,22 @@ classdef BreachRequirement < BreachTraceSystem
         
         function summary = GetSummary(this)
             
+            summary = GetStatement(this);
+            summary.signature = this.GetSignature();
+            summary.num_violations_per_trace =sum(this.traces_vals<0 , 2 )';
+            [~,idxm ] = sort(summary.num_violations_per_trace, 2, 'descend');
+            summary.idx_traces_with_most_violations = idxm;
+            
+        end
+        
+        function summary = GetStatement(this)
+          
             if this.CountTraces()==1
                 summary.statement = sprintf('%d trace evaluated', this.CountTraces());
             else
                 summary.statement = sprintf('%d traces evaluated', this.CountTraces());
             end
-            
-            summary.signature = this.GetSignature();
             summary.num_traces_evaluated =size(this.traces_vals,1);
-            
             summary.requirements.names = cell(1,numel(this.req_monitors));
             for ir = 1:numel(this.req_monitors)
                 summary.requirements.names{ir} = this.req_monitors{ir}.formula_id;
@@ -239,11 +212,8 @@ classdef BreachRequirement < BreachTraceSystem
             else
                 summary.statement = [summary.statement '.'];
             end
-            summary.num_violations_per_trace =sum(this.traces_vals<0 , 2 )';
-            [~,idxm ] = sort(summary.num_violations_per_trace, 2, 'descend');
-            summary.idx_traces_with_most_violations = idxm;
-            
         end
+        
         
         function values = GetParam(this, params, ip)
             % GetParam if not found, look into BrSet
@@ -269,7 +239,6 @@ classdef BreachRequirement < BreachTraceSystem
         end
         
         function [idx, ifound, idxB, ifoundB] = FindSignalsIdx(this, signals )
-           
             if ischar(signals)
                 signals = {signals};
             end
@@ -279,7 +248,7 @@ classdef BreachRequirement < BreachTraceSystem
             if any(~ifound)   % if not a signal of the requirement, look into BrSet (system) signals
                 idx_not_found = find(~ifound);
                 for isig = 1:numel(idx_not_found)
-                    s0 = signals{isig};
+                    s0 = signals{idx_not_found(isig)};
                     aliases = {s0};  % compute all aliases for s
                     s = s0;
                     while (this.sigMap.isKey(s))
@@ -304,7 +273,6 @@ classdef BreachRequirement < BreachTraceSystem
                      end
                 end
             end
-            
         end
         
         function [X, idxR] = GetSignalValues(this,varargin)
@@ -356,9 +324,7 @@ classdef BreachRequirement < BreachTraceSystem
                         X(ifoundB==1,:) = values_data;
                     end
                 end
-                
             end
-            
         end
         
         function dom  = GetDomain(this, param)
@@ -369,9 +335,15 @@ classdef BreachRequirement < BreachTraceSystem
             for i = 1:numel(idx)
                 if found(i)
                     dom(i) = this.Domains(idx(i));
-                else
+                elseif ~isempty(this.BrSet)
                     [idx_BrSet, found_BrSet] = FindParam(this.BrSet.P, param(i));
-                    dom(i) = this.BrSet.Domains(idx_BrSet);
+                    if found_BrSet
+                        dom(i) = this.BrSet.Domains(idx_BrSet);
+                    else
+                        dom(i) = BreachDomain();
+                    end
+                else
+                    dom(i) = BreachDomain();
                 end
             end
         end
@@ -384,7 +356,7 @@ classdef BreachRequirement < BreachTraceSystem
             if nargout == 0
                 fprintf(st);
             end
-            summary = this.GetSummary();
+            summary = this.GetStatement();
             disp(summary.statement);
         end
         
@@ -408,7 +380,7 @@ classdef BreachRequirement < BreachTraceSystem
             disp( '---- SIGNALS IN ----')
             for isig = 1:numel(this.signals_in)
                 sig = this.signals_in{isig};
-                fprintf('%s\n', sig);
+                fprintf('%s %s\n', sig, this.get_signal_attributes_string(sig));
             end
             fprintf('\n');
             disp( '---- SIGNALS  OUT ----')
@@ -447,16 +419,20 @@ classdef BreachRequirement < BreachTraceSystem
             % should req_input, additional_test_data_signal,
             atts = {};
             
+             if this.is_a_data_in(sig)
+                    atts =union(atts, {'data_in'});
+             end
+            
             [idx, found, idxB, foundB ] = this.FindSignalsIdx(sig);
             
             if foundB
                 sig = this.BrSet.P.ParamList{idxB};
-                atts = this.BrSet.get_signal_attributes(sig);
+                atts = union(atts, this.BrSet.get_signal_attributes(sig));
             elseif found        
                 sig = this.P.ParamList{idx};
                 
                 if this.is_a_requirement(sig)
-                    atts =union(atts, {'requirement'});
+                    atts =union(atts, {'quant_sat_signal'});
                 end
           
                 if this.is_a_violation_signal(sig)
@@ -472,7 +448,7 @@ classdef BreachRequirement < BreachTraceSystem
                 end
                 
                 if this.is_a_req_in(sig)
-                    atts =union(atts, {'req_in'});
+                    atts =union(atts, {'requirement_in'});
                 end
                 
                 if this.is_a_postprocess_in(sig)
@@ -483,7 +459,7 @@ classdef BreachRequirement < BreachTraceSystem
                     atts =union(atts, {'postprocess_out'});
                 end
             else
-                error('Signal %s unknown.', sig);
+                atts = union(atts, {'unlinked'});
             end
         end
         
@@ -500,14 +476,15 @@ classdef BreachRequirement < BreachTraceSystem
             end
         end
         
-        
-        
         function signals = GetSignalList(this)
             if ~isempty(this.BrSet)
-                signals = union(this.BrSet.GetSignalList(), this.P.ParamList(1:this.P.DimX), 'stable');
+                signals = union(this.BrSet.P.ParamList(1:this.BrSet.P.DimX), this.P.ParamList(1:this.P.DimX), 'stable');
             else
                 signals = this.P.ParamList(1:this.P.DimX);
             end
+            % adds in aliases
+            signals = union(signals, this.getAliases(signals), 'stable');
+                     
         end
         
         function SetupDiskCaching(this)
@@ -582,6 +559,141 @@ classdef BreachRequirement < BreachTraceSystem
              
         end
         
+        function aliases = getAliases(this, signals)
+            if ischar(signals)
+                signals = {signals};
+            end
+            
+            aliases = signals;
+            sig_queue = signals;
+            
+            while ~isempty(sig_queue)
+                sig = sig_queue{1};
+                sig_queue = sig_queue(2:end);
+                if this.sigMap.isKey(sig)
+                    nu_sig = this.sigMap(sig);
+                    check_nusig()
+                end
+                if this.sigMapInv.isKey(sig)
+                    nu_sig = this.sigMapInv(sig);
+                    check_nusig()
+                end
+                if ~isempty(this.BrSet)
+                    if this.BrSet.sigMap.isKey(sig)
+                        nu_sig = this.BrSet.sigMap(sig);
+                        check_nusig()
+                    end
+                    if this.BrSet.sigMapInv.isKey(sig)
+                        nu_sig = this.BrSet.sigMapInv(sig);
+                        check_nusig()
+                    end
+                end
+            end
+            
+            for  invkey = this.sigMapInv.keys()
+                sig = this.sigMapInv(invkey{1});
+                if ismember(sig,aliases)
+                    aliases = union(aliases, invkey{1});
+                end
+            end
+            if ~isempty(this.BrSet)
+                for  invkey = this.BrSet.sigMapInv.keys()
+                    sig = this.BrSet.sigMapInv(invkey{1});
+                    if ismember(sig,aliases)
+                        aliases = union(aliases, invkey{1});
+                    end
+                end
+            end
+            
+            function check_nusig()
+                if ~ismember(nu_sig, aliases)
+                    aliases = [aliases {nu_sig}];
+                    sig_queue = [sig_queue nu_sig];
+                end
+            end
+        end
+        
+        function PrintAliases(this)
+            if ~isempty(this.sigMap)
+                disp( '---- ALIASES ----')
+                keys = union(this.sigMap.keys(), this.sigMapInv.keys());
+                printed ={};
+                for ik = 1:numel(keys)
+                    if this.sigMap.isKey(keys{ik})
+                        sig =  this.sigMap(keys{ik});
+                    else
+                        sig =this.sigMapInv(keys{ik});
+                    end
+                    
+                    [idx, found, idx_B, found_B] = this.FindSignalsIdx(sig);
+                    if found
+                        sig = this.P.ParamList{idx};
+                        aliases = setdiff(this.getAliases(sig), sig);
+                        al_st = cell2mat(cellfun(@(c) ([ c ', ']), aliases, 'UniformOutput', false));
+                        al_st = al_st(1:end-2);
+                    elseif found_B
+                        sig = this.BrSet.P.ParamList{idx_B};
+                        aliases = setdiff(this.getAliases(sig), sig);
+                        al_st = cell2mat(cellfun(@(c) ([ c ', ']), aliases, 'UniformOutput', false));
+                        al_st = [al_st(1:end-2) ' (model or test data)'];
+                    else
+                        aliases = setdiff(this.getAliases(sig), sig);
+                        al_st = cell2mat(cellfun(@(c) ([ c ', ']), aliases, 'UniformOutput', false));
+                        al_st = [al_st(1:end-2) ' (not linked to data)' ];
+                    end
+                    if ~ismember(sig, printed)
+                        fprintf('%s <--> %s\n', sig, al_st )
+                        printed = [printed {sig} aliases];
+                    end
+                end
+                fprintf('\n')
+            end
+        end
+         
+        
+           function sigs_in = get_signals_in(this)
+            sigs_in = {};
+            all_sigs_in =  {};
+            for ipostprocess_signal_gens = 1:numel(this.postprocess_signal_gens)
+                all_sigs_in = setdiff(union(all_sigs_in,this.postprocess_signal_gens{ipostprocess_signal_gens}.signals_in, 'stable'), this.postprocess_signal_gens{ipostprocess_signal_gens}.signals, 'stable');      % remove outputs of signals generators
+            end
+            
+            for ifo = 1:numel(this.req_monitors)
+                all_sigs_in = setdiff(union(all_sigs_in,this.req_monitors{ifo}.signals_in, 'stable' ), this.req_monitors{ifo}.signals, 'stable');             % remove outputs of formula
+            end
+            
+            for ifo = 1:numel(this.precond_monitors)
+                all_sigs_in = setdiff(union(all_sigs_in, this.precond_monitors{ifo}.signals_in, 'stable'), this.precond_monitors{ifo}.signals, 'stable');             % remove outputs of formula
+            end
+            
+            % got all sigs_in which are not sigs out 
+            [~, found] = this.FindSignalsIdx(all_sigs_in);
+            all_sigs_in = all_sigs_in(found==0);
+          
+            if size(all_sigs_in,1)>1
+                all_sigs_in = all_sigs_in';
+            end
+            
+            reps_sigs_in = all_sigs_in(1);
+            aliases = this.getAliases(all_sigs_in{1});
+            for is = 1:numel(all_sigs_in)
+                if ~ismember(all_sigs_in{is}, aliases)
+                    reps_sigs_in= union(reps_sigs_in, all_sigs_in(is));
+                    aliases = union(aliases, this.getAliases(all_sigs_in(is)));
+                end
+            end
+           
+            
+            for is = 1:numel(reps_sigs_in) % remove postprocess_out
+               s  = this.get_signal_attributes(reps_sigs_in{is});
+               if ~ismember('postprocess_out', s)
+                  sigs_in=union(sigs_in, reps_sigs_in{is});
+               end
+           end
+         
+            
+        end
+     
     end
     
     
@@ -774,23 +886,6 @@ classdef BreachRequirement < BreachTraceSystem
         
         end
         
-        function aliases = getAliases(this, signals) 
-            aliases = {};
-            for isig = 1:numel(signals)
-                    s0 = signals{isig};
-                    aliases = union(aliases, {s0});  % compute all aliases for s
-                    s = s0;
-                    while (this.sigMap.isKey(s))
-                        s = this.sigMap(s);
-                        aliases = union(aliases, {s} );
-                    end
-                    s = s0;
-                    while (this.sigMapInv.isKey(s))
-                        s = this.sigMapInv(s);
-                        aliases = union(aliases, {s} );
-                    end
-            end
-        end
         
         function  [time, Xout] = postprocessSignals(this, pp, time, Xin, pin)
             % postprocessSignals applies intermediate signals computations
@@ -815,29 +910,6 @@ classdef BreachRequirement < BreachTraceSystem
         
         %% Misc
         
-        function sigs_in = get_signals_in(this)
-            
-            sigs_in =  {};
-            for ipostprocess_signal_gens = 1:numel(this.postprocess_signal_gens)
-                sigs_in = setdiff(union(sigs_in,this.postprocess_signal_gens{ipostprocess_signal_gens}.signals_in, 'stable'), this.postprocess_signal_gens{ipostprocess_signal_gens}.signals, 'stable');      % remove outputs of signals generators
-            end
-            
-            for ifo = 1:numel(this.req_monitors)
-                sigs_in = setdiff(union(sigs_in,this.req_monitors{ifo}.signals_in, 'stable' ), this.req_monitors{ifo}.signals, 'stable');             % remove outputs of formula
-            end
-            
-            for ifo = 1:numel(this.precond_monitors)
-                sigs_in = setdiff(union(sigs_in, this.precond_monitors{ifo}.signals_in, 'stable'), this.precond_monitors{ifo}.signals, 'stable');             % remove outputs of formula
-            end
-            
-            % got all sigs_in which are not sigs out 
-            [~, found] = this.FindSignalsIdx(sigs_in);
-            sigs_in = sigs_in(found==0);
-            if size(sigs_in,1)>1
-                sigs_in = sigs_in';
-            end
-            
-        end
         
         function traj = set_signals_in_traj(this, traj, names, Xout)
             % update names with sigMap
@@ -857,10 +929,16 @@ classdef BreachRequirement < BreachTraceSystem
             
         end
         
+        function b = is_a_data_in(this, sig)
+            b = false;
+            aliases = this.getAliases(sig);
+            b = ~isempty(intersect(aliases,this.signals_in));
+        end
+        
         function b = is_a_requirement(this, sig)
             b = false;
             for ifo = 1:numel(this.req_monitors)
-                if strcmp(sig, [get_id(this.req_monitors{ifo}.formula) '_satisfaction' ])||...
+                if strcmp(sig, [this.req_monitors{ifo}.formula_id '_quant_sat' ])||...
                         strcmp(sig, [get_id(this.req_monitors{ifo}.formula) ])
                     b = true;
                 end
@@ -870,7 +948,7 @@ classdef BreachRequirement < BreachTraceSystem
         function b = is_a_violation_signal(this, sig)
             b = false;
             for ifo = 1:numel(this.req_monitors)
-                if strcmp(sig, [get_id(this.req_monitors{ifo}.formula) '_violation' ])
+                if strcmp(sig, [this.req_monitors{ifo}.formula_id '_violation' ])
                     b = true;
                 end
             end
