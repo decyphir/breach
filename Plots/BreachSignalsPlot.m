@@ -235,7 +235,7 @@ classdef BreachSignalsPlot < handle
             
         end
         
-        function HighlightFalse(this, sig, ax)
+        function int_false= HighlightFalse(this, sig, ax)
             if ~exist('ax', 'var')||isempty(ax)
                 ax = this.Axes(end);
             end
@@ -248,7 +248,6 @@ classdef BreachSignalsPlot < handle
             val = traj.X(idx,:);
             int_false = highlight_truth_intervals(tau,val, 'g', 0, 'r', 0.3);
             set(ax,'UserData', int_false);
-            
             this.update_legend(ax);
             
         end

@@ -81,14 +81,14 @@ if(nargin==2)
         BreachGlobOpt.STLDB(phi.id) = phi;
         return;
     elseif ischar(varargin{2}) % here we reference an existing formula 
-    st = varargin{2};
-    st_trimmed = regexprep(st,'[()\s]','');
-    if isKey(BreachGlobOpt.STLDB,st_trimmed)
-        phi = BreachGlobOpt.STLDB(st_trimmed);
-        return;
-    end
+        st = varargin{2};
+        st_trimmed = regexprep(st,'[()\s]','');
+        if isKey(BreachGlobOpt.STLDB,st_trimmed)
+            phi = BreachGlobOpt.STLDB(st_trimmed);
+            return;
+        end
     else
-       error('STL_Formula:Bad_argument_type', 'Second argument should be a string or a formula.');
+        error('STL_Formula:Bad_argument_type', 'Second argument should be a string or a formula.');
     end
 end
 

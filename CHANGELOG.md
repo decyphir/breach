@@ -1,3 +1,7 @@
+# Release 1.3.2
+
+- plot_diagnosis now considers alw (A => ev_[] B) types of formulas 
+
 # Release 1.3.1
 
 - initial support of preconditions in BreachRequirement 
