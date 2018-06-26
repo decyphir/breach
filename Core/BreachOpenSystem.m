@@ -353,19 +353,19 @@ classdef BreachOpenSystem < BreachSystem
         function atts = get_signal_attributes(this, sig)
             % returns nature to be included in signature
             % should req_input, additional_test_data_signal,
-            while this.sigMap.isKey(sig)
-                if isempty(atts)
-                     atts = {'alias'};   
-                end
-                sig = this.sigMap(sig);
+            
+            atts = {};
+            [idx, found] = this.FindSignalsIdx(sig);
+            if found
+            sig = this.P.ParamList{idx}; 
+            else
+                atts = union(atts, {'unknown'});
             end
             
             if ismember(sig, this.InputGenerator.P.ParamList(1:this.InputGenerator.P.DimX))
-                atts = {'model_input'};
+                atts = union(atts,{'model_input'});
             elseif ismember(sig, this.P.ParamList(1:this.P.DimX))
-                atts= {'model_output'};
-            else
-                atts ={};
+                atts = union(atts, {'model_output'});
             end
         end
         

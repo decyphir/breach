@@ -136,6 +136,12 @@ for np = npb+1:nb_phis+npb
 %    fprintf('\n');
 end
 xlabel('time');
+ax = get(gcf, 'Children');
+ax = ax(arrayfun(@(c)(isa(c,'matlab.graphics.axis.Axes')), ax)==1);
+linkaxes(ax, 'x');
+h = zoom;
+set(h,'Motion','horizontal','Enable','off');
+            
 
 end
 

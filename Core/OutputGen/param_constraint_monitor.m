@@ -17,7 +17,7 @@ classdef param_constraint_monitor < stl_monitor  % maybe should be the other way
         
         function [v, Xout] = eval(this, t, X,p)
            if nargout >1
-            Xout = X; 
+               Xout = X;
            end
            this.assign_params(p);
            expr = get_expr(this.formula);

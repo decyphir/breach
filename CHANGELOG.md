@@ -1,3 +1,24 @@
+# Release 1.3.1
+
+- initial support of preconditions in BreachRequirement 
+- stl_monitor plot_diagnosis method calls SplotSat
+- BreachSamplesPlot plots sum when all true, all false or only one req
+
+## Bugfixes
+
+- bugfix for SaveInCache Falsification_runs for second and subsequent runs
+- bugfix for index when computing signal signature with aliases
+
+# Release 1.3.0
+
+- BreachSamplesPlot plots bars and number of satisfied and violated
+  requirement
+- Alias (signal mapping) support fixed and improved
+- Performance improvement for ExportTraces/SaveResults
+- stl_monitor now should provide quant_sat and violation signals
+  implemented for alw_monitor and alw_A_implies_B
+
+
 # Release 1.3.beta4 
 - BreachSamplesPlot provides interactive plots of BreachRequirement
   results

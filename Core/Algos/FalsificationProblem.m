@@ -74,10 +74,21 @@ classdef FalsificationProblem < BreachProblem
         
         function obj = objective_fn(this,x)
             % For falsification, default objective_fn is simply robust satisfaction of the least
-            robs = this.robust_fn(x);
+            this.robust_fn(x);
+            robs = min(this.Spec.traces_vals,[], 2);
+            if (~isempty(this.Spec.traces_vals_precond))
+                for itr = 1:size(this.Spec.traces_vals_precond,1)
+                    precond_rob = min(this.Spec.traces_vals_precond(itr,:));
+                    if  precond_rob<0
+                        robs(itr)= -precond_rob;
+                    end
+                end
+            end
+            
             NaN_idx = isnan(robs); % if rob is undefined, make it inf to ignore it
             robs(NaN_idx) = inf;
             obj = min(robs);
+            
         end     
         
         % Nothing fancy - calls parent solve then returns falsifying params

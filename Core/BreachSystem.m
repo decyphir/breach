@@ -395,7 +395,7 @@ classdef BreachSystem < BreachSet
                 tau = [];
             end
             
-            if ~exist('depth','var')
+            if ~exist('depth','var')||isempty(depth)
                 depth = inf;
             end
             

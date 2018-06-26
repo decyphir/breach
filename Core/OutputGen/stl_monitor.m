@@ -1,6 +1,7 @@
-classdef stl_monitor < output_gen
+classdef stl_monitor < req_monitor
     
     properties
+        P0
         P
         Sys
         formula
@@ -45,37 +46,56 @@ classdef stl_monitor < output_gen
             
         end
         
-        function [tau, Xout] = computeSignals(this, t, X, p, tau)
-            if ~exist('tau', 'var')||isempty(tau)
-                tau = t;
-            end
-            this.P.traj{1}.X = X;
-            this.P.traj{1}.time = t;
-            if nargin>=4&&~isempty(p)
-                P0 = SetParam(this.P, this.params,p); % really? P0 gets traj removed,..., gotta get rid of all this non-sense one day
-            else
-                P0 = this.P;
-            end
-            Xout = zeros(numel(this.signals), numel(tau));
-            Xout(end,:) = STL_Eval(this.Sys, this.formula, P0,this.P.traj{1}, tau);
+        function [time, Xout] = computeSignals(this, time, X, p)
+            this.init_tXp(time,X,p); 
+            
+            Xout = zeros(numel(this.signals), numel(time));
+            
+            % compute predicate values
             if ~isempty(this.predicates)
                 for ip = 1:numel(this.predicates)
-                    Xout(ip,:) = STL_Eval(this.Sys, this.predicates{ip}, P0,this.P.traj{1}, tau);
+                    [time, Xout(ip,:)] = this.get_standard_rob(this.predicates{ip}, time);
                 end
             end
+            
+            % compute robustnes of top formula
+            [time, Xout(end,:)] = this.get_standard_rob(this.formula, time);
+            
         end
         
         function plot_diagnosis(this, F)
             % Assumes F has data about this formula
-            if ~isempty(this.predicates)
-                F.AddAxes();
-                F.AddSignals(this.predicates);
+            F.BrSet.PlotRobustSat(this.formula,[],[],F.itraj);
+            
+%             if ~isempty(this.predicates)
+%                 F.AddAxes();
+%                 F.AddSignals(get_id(this.predicates{1}));
+%             end
+        end
+        
+        function [v, t, Xout] = eval(this, t, X,p)
+            [t, Xout] = this.computeSignals(t, X,p);
+            v = Xout(end,1); 
+        end
+        
+        function init_tXp(this, t, X, p) 
+            this.P.traj{1}.time = t;
+            
+            if isempty(this.signals_in)
+                this.P.traj{1}.X = 0*t;
+            else
+                this.P.traj{1}.X = X;
+            end
+            
+            if nargin>=4&&~isempty(p)
+                this.P0 = SetParam(this.P, this.params,p); 
+            else
+                this.P0 = this.P;
             end
         end
         
-        function [v, Xout] = eval(this, t, X,p)
-            [~, Xout] = this.computeSignals(t, X,p);
-            v = Xout(end,1);
+        function [time, rob] = get_standard_rob(this, phi, time)
+            [rob, time] = STL_Eval(this.Sys, phi, this.P0,this.P.traj{1},time);
         end
         
         function st = disp(this)
@@ -121,10 +141,16 @@ classdef stl_monitor < output_gen
         function init_P(this)
             % init_P construct legacy structure from signals and
             % parameters names
-            this.Sys = CreateExternSystem([this.formula_id '_Sys'], this.signals_in, this.params, this.p0);
+            if isempty(this.signals_in)
+                sigs = {'dumx'};
+            else
+                sigs= this.signals_in;
+            end
+            
+            this.Sys = CreateExternSystem([this.formula_id '_Sys'], sigs, this.params, this.p0);
             this.P = CreateParamSet(this.Sys);
             
-            traj.param = zeros(1,numel(this.signals_in)+numel(this.params));
+            traj.param = zeros(1,numel(sigs)+numel(this.params));
             traj.time = [];
             traj.X = [];
             traj.status = 0;

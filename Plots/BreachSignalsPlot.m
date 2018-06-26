@@ -40,6 +40,8 @@ classdef BreachSignalsPlot < handle
             
         end
         
+        
+        
         function ax = AddAxes(this, pos)
             % AddAxes add new axe at specified position
             if nargin==1
@@ -69,8 +71,16 @@ classdef BreachSignalsPlot < handle
             if numel(this.Axes)>1
                 linkaxes(this.Axes, 'x');
             end
-            
+            ax = this.AddAxesContextMenu(ax);
+            % default to horizontal zoom mode
+            h = zoom;
+            set(h,'Motion','horizontal','Enable','off');
+        
+        end
+        
+        function ax = AddAxesContextMenu(this, ax)
             cm = uicontextmenu;
+            set(ax, 'UIContextMenu', cm);
             
             % all signals
             m_top_sigs = uimenu(cm, 'Label', 'Plot');
@@ -129,13 +139,7 @@ classdef BreachSignalsPlot < handle
             uimenu(cm, 'Label', 'Add axes below', 'Callback', @(o,e)ctxtfn_add_axes_below(ax, o,e));
             uimenu(cm, 'Label', 'Reset axes','Separator', 'on', 'Callback', @(o,e)ctxtfn_reset_axes(ax, o,e));
             uimenu(cm, 'Label', 'Delete axes', 'Callback', @(o,e)ctxtfn_delete_axes(ax, o,e));
-            
-            
-            set(this.Axes(pos), 'UIContextMenu', cm);
-            
-            % default to horizontal zoom mode
-            h = zoom;
-            set(h,'Motion','horizontal','Enable','off');
+                
             
             function ctxtfn_add_axes_above(ax, ~,~)
                 for ia = 1:numel(this.Axes)
@@ -179,6 +183,7 @@ classdef BreachSignalsPlot < handle
                 this.HighlightFalse(sig, ax);
             end
         end
+       
         
         function DeleteAxes(this, pos)
             % DeleteAxe Remove axe  at specified position

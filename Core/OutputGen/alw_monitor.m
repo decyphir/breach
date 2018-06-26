@@ -17,7 +17,7 @@ classdef alw_monitor < stl_monitor
             this.init_P();
         end
         
-        function [v, Xout] = eval(this, t, X,p)
+        function [v, t, Xout] = eval(this, t, X,p)
             [~, Xout] = this.computeSignals(t, X,p);
             idx  = this.get_time_idx_interval(t,p);
             Xout(end-1,:) = Xout(end,:)<0;         % violation flags

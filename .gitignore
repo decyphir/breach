@@ -34,3 +34,5 @@ wiki/
 @STL_Formula/private/matlab.mat
 @STL_Formula/private/plot_bug.m
 @STL_Formula/private/recomp.m
+Ext/ModelsData
+/Examples/docrun_backup.mat

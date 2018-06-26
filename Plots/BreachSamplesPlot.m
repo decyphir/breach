@@ -49,41 +49,56 @@ classdef BreachSamplesPlot < handle
             % satisfied requirements
             vals_pos = vals';
             vals_pos(vals'<=0) = 0;
-            %vals_pos_sum = sum(vals_pos,1);
             
             % falsified requirements
             vals_neg = vals';
             vals_neg(vals'>=0) = 0;
-            %vals_neg_sum = sum(vals_neg,1);
-          
-%         pos_pts = all_pts(vals_pos_sum>0|~vals_neg_sum<0);
-%         neg_pts = all_pts(vals_neg_sum<0);
-%         vals_pos = vals_pos(:,vals_pos_sum>0|~vals_neg_sum<0);
-%         vals_neg =   vals_neg(:,vals_neg_sum<0);
+             
+            % idx pos and neg
+            num_vals_pos = sum(vals_pos>=0&vals_neg==0,1);
+            num_vals_neg = sum(vals_neg<0,1);
+            idx_pos = num_vals_pos  >0;
+            idx_neg = num_vals_neg >0; 
             
-            plot_num();
+            % Attempt to pick the most interesting plot  
             
+            if size(vals_pos,1)==1|| (all(idx_pos)&&(~any(idx_neg))) ||(all(idx_neg)&&(~any(idx_pos)) )  % only one requirement or all positive or all negative
+                plot_sum();
+            else
+                plot_num();
+            end
+                
             function plot_sum()
-                plot(all_pts, sum(vals_pos) ,'.g', 'MarkerSize', 30);
+                if any(idx_pos)
+                    y_pos = sum(vals_pos(:,idx_pos),1);
+                    plot(all_pts(idx_pos),y_pos,'.g', 'MarkerSize', 20);
+                end
+                
                 hold on;
-                plot(all_pts,sum(vals_neg ),'.r', 'MarkerSize', 30);
+                if any(idx_neg)
+                    y_neg = sum(vals_neg(:, idx_neg),1);
+                    plot(all_pts(idx_neg),y_neg,'.r', 'MarkerSize', 20);
+                end
                 grid on;
-                xlabel Samples;
+            xlabel('idx trace');
                 set(gca, 'Xtick', []);
                 ylabel('Cumulative satisfactions/violations');
             end
      
             function plot_num()
-                y_pos = sum(vals_pos>=0&vals_neg==0);
-                bar(all_pts, y_pos ,0.1,'g');
+                if any(idx_pos)
+                    y_pos = num_vals_pos(idx_pos);
+                    bar(all_pts(idx_pos), y_pos ,0.1,'g');
+                end
                 hold on;
-                y_neg = -sum(vals_neg<0);
-                bar(all_pts, y_neg,0.1,'r');
+                if any(idx_neg)
+                    y_neg = -num_vals_neg(idx_neg);
+                    bar(all_pts(idx_neg),y_neg,0.1,'r');
+                end
                 grid on;
-                xlabel('idx trace');
+            xlabel('idx trace');
                 ylabel('Num. requirement falsified/satisfied');
                 set(gca, 'YLim', [min(y_neg)-.1, max(y_pos)+.1],  'Ytick', [ceil(min(y_neg)-.1):1:floor(max(y_pos)+.1)]);
-            
             end   
             h = title('Left click on data to get details, right click to plot signals/diagnosis', 'FontWeight', 'normal', 'FontSize', 10);
            

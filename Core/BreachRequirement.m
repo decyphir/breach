@@ -348,6 +348,12 @@ classdef BreachRequirement < BreachTraceSystem
             end
         end
         
+        function PlotRobustSat(this, varargin)
+            this.BrSet.PlotRobustSat(varargin{:});
+        end
+        
+        
+        
         %% Display
         function st = disp(this)
             signals_in_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.signals_in, 'UniformOutput', false));
@@ -752,7 +758,7 @@ classdef BreachRequirement < BreachTraceSystem
                     [params_sys, i_sys] = intersect(params, B.GetParamList());
                     [params_req, i_req] = intersect(params, this.P.ParamList(this.P.DimX+1:this.P.DimP));
                  
-                    if (numel(i_sys)+numel(i_req)) ~= numel(params) % parameter not found
+                    if (numel(union(params_sys,params_req))) ~= numel(params) % parameter not found
                         params_not_found = setdiff(params, union(params_sys,params_req));
                         error('Parameter %s not found either as system or requirement parameter.', params_not_found{1});
                     end
@@ -771,16 +777,33 @@ classdef BreachRequirement < BreachTraceSystem
                 B = BreachTraceSystem(B);
            end  % here we need to handle pre-conditions, input requirements, etc
            
-           % Sim 
+           this.BrSet = B;
+           
            if this.eval_precond_only   % find what needs to be computed
                sigs_need = {};
                for ipr = 1:numel(this.precond_monitors)
-                    sigs_need  = union(sigs_need, this.precond_monitors{ipr}.signals_in);
+                   sigs_need  = union(sigs_need, this.precond_monitors{ipr}.signals_in);
                end
            else
                sigs_need = this.signals_in;
            end
-             
+           
+           if ~isempty(this.precond_monitors)
+               for req = this.precond_monitors
+                   if ~isempty(req{1}.signals_in)
+                       all_inputs_req = true;
+                       for sig = req{1}.signals_in
+                           if ~this.is_a_model_input(sig{1})
+                               all_input_req = false;
+                               break
+                           end
+                       end
+                       if all_inputs_req
+                           B.AddInputSpec(req{1}.formula_id);
+                       end
+                   end
+               end
+           end
            %  checks whether we need only input signals
            all_inputs = true; 
            for is =1:numel(sigs_need)
@@ -793,6 +816,7 @@ classdef BreachRequirement < BreachTraceSystem
            if all_inputs
                B.SimInputsOnly = true;
            end
+           
            % compute traces 
            if this.use_parallel
                B.SetupParallel();
@@ -831,7 +855,7 @@ classdef BreachRequirement < BreachTraceSystem
             this.getBrSet(varargin{:});
             
             num_traj = numel(this.BrSet.P.traj);
-            traces_vals = NaN;
+            traces_vals = nan(num_traj, numel(this.req_monitors));        
             traces_vals_precond = nan(num_traj, numel(this.precond_monitors));        
             % eval pre conditions
             if ~isempty(this.precond_monitors)
@@ -846,13 +870,16 @@ classdef BreachRequirement < BreachTraceSystem
             
             % eval requirement 
             for it = 1:num_traj
-                time = this.P.traj{it}.time;
-                for ipre = 1:numel(this.req_monitors)    
-                    req = this.req_monitors{ipre};
-                    traces_vals(it, ipre)  = eval_req();
+                if any(traces_vals_precond(it,:)<0)
+                    traces_vals(it, :)  = NaN;
+                else
+                    time = this.P.traj{it}.time;
+                    for ipre = 1:numel(this.req_monitors)
+                        req = this.req_monitors{ipre};
+                        traces_vals(it, ipre)  = eval_req();
+                    end
                 end
             end
-            
             this.traces_vals_precond = traces_vals_precond;
             this.traces_vals = traces_vals;
 
@@ -861,7 +888,11 @@ classdef BreachRequirement < BreachTraceSystem
                 idx_sig_req = FindParam(this.P, req.signals); 
                 idx_par_req = FindParam(this.P, req.params);
                 p_in = this.P.traj{it}.param(1, idx_par_req);
-                Xin = this.GetSignalValues(req.signals_in, it);
+                if ~isempty(req.signals_in)
+                    Xin = this.GetSignalValues(req.signals_in, it);
+                else
+                    Xin = [];
+                end
                 % checks if a signal is missing (need postprocess)
                 while any(isnan(Xin))    
                     % should do only one iteration if postprocessing function are 
@@ -877,15 +908,16 @@ classdef BreachRequirement < BreachTraceSystem
                     Xin = this.GetSignalValues(req.signals_in, it);
                 end
                 if ~isempty(idx_sig_req)
-                    [val , this.P.traj{it}.time, this.P.traj{it}.X( idx_sig_req,:)] ...
+                    [val , this.P.traj{it}.time, Xout] ...
                         = this.evalRequirement(req, time, Xin, p_in);
+                this.P.traj{it}.X( idx_sig_req,:) = Xout;
+                
                 else
                     val  = this.evalRequirement(req, time, Xin, p_in);
                 end
             end
         
         end
-        
         
         function  [time, Xout] = postprocessSignals(this, pp, time, Xin, pin)
             % postprocessSignals applies intermediate signals computations
@@ -895,7 +927,7 @@ classdef BreachRequirement < BreachTraceSystem
         function [val, time, Xout] = evalRequirement(this, req, time, Xin, pin)
             % evalRequirement eval one requirement (usually one STL formula
             % monitor) on one trace, i.e., writes related signals and returns evaluations 
-            [val,  Xout] = req.eval(time, Xin, pin);
+            [val, time,  Xout] = req.eval(time, Xin, pin);
         end
         
         function setTraces(this, trajs_req)

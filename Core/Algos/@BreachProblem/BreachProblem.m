@@ -469,7 +469,7 @@ classdef BreachProblem < BreachStatus
                 if ~exist(FileSave, 'file')
                     evalin('base', ['save(''' FileSave ''',''' this.whoamI ''');']);
                 else
-                    evalin('base', ['save(' FileSave ',''-append''', this.whoamI ');']);
+                    evalin('base', ['save(''' FileSave ''',''-append'',''', this.whoamI ''');']);
                 end
             end
         end
