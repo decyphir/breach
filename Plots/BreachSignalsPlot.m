@@ -232,7 +232,6 @@ classdef BreachSignalsPlot < handle
             end
             this.update_legend(ax);
             
-            
         end
         
         function int_false= HighlightFalse(this, sig, ax)

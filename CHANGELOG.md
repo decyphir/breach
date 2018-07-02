@@ -1,3 +1,13 @@
+# Release 1.3.3
+
+- Fixed violation signals for alw (A => ev_[] B) types of requirements
+- BrDemo are now all working with BreachRequirement class
+- BreachProblem supports pre-conditions of BreachRequirement, treated
+  as hard constraint for optimization
+- Simulation is correctly skipped when pre-conditions on inputs only are not
+  satisfied 
+- overshoot requirement example added as alw (A=> ev_[] B) example for AFC
+  
 # Release 1.3.2
 
 - plot_diagnosis now considers alw (A => ev_[] B) types of formulas 

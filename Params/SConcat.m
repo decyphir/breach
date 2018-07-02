@@ -198,13 +198,19 @@ end
 
 
 if(isfield(P,'pts') && isfield(P2,'pts'))  % case where P.pts or P2.pts are empty already considered
-    % for pts in P, we set to 0 the params of P2\P
+    % for pts in P, we set params of P2\P to last values in P2
     newParams=setdiff(P2.ParamList,P.ParamList,'stable');
-    P=SetParam(P,newParams,zeros(1,numel(newParams)));
+    if ~isempty(newParams)
+        val = GetParam(P2, newParams);
+        P=SetParam(P,newParams,val(end,:));
+    end
     
-    % for pts in P2, we set to 0 the params of P\P2
+    % for pts in P2, we set the params of P\P2 to last value in P
     newParams=setdiff(P.ParamList,P2.ParamList,'stable');
-    P2=SetParam(P2,newParams,zeros(1,numel(newParams)));
+    if ~isempty(newParams)
+        val = GetParam(P, newParams);
+        P2=SetParam(P2,newParams,val(:,end));
+    end
     
     % we add P2.pts to P.pts
     P.pts = [ P.pts , P2.pts(FindParam(P2,P.ParamList),:) ];

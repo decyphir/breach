@@ -17,40 +17,46 @@ classdef alw_A_implies_B_monitor < alw_monitor
             
         end
         
+        
+        function [v, t, Xout] = eval(this, t, X,p)
+            [~, Xout] = this.computeSignals(t, X,p);
+            idx  = this.get_time_idx_interval(t,p);
+            Xout(end-1,:) = Xout(end,:)<0;         % violation flags
+            Xout(end-1:end, ~idx) = NaN;
+            if isequal(get_type(this.post), 'eventually')
+                int_post = this.get_post_interval(p);
+                if int_post(2)<inf  % prob not necessary
+                     Xout(end-1:end,:) = interp1(t,Xout(end-1:end,:)', t - int_post(2))';
+                end
+            end
+            v = min(Xout(end,idx));
+        end
+        
         function plot_diagnosis(this, F)
             % Assumes F has data about this formula 
             signals_pre = STL_ExtractSignals(this.pre);
             sig = this.signals{end};
-            
-            % plots pre intervals
+          
+            % plots pre signals
             ax1 = F.AddAxes();
             F.AddSignals(signals_pre, ax1);
-            int_false = F.HighlightFalse(sig,ax1);
             
-            %  
-            ax2 = F.AddAxes();
-            F.AddSignals(setdiff(this.signals_in, signals_pre), ax2);
-            
-            % get intervals
-            int_post = get_interval(this.post);
-            if isequal(get_type(this.post), 'eventually')||~isempty(int_post) % the following works for A=>ev[t0, t1]B 
-                itr= F.itraj;
-                p = F.BrSet.GetParam(this.params, itr);
-                this.assign_params(p);
-                int_post =eval(int_post);
-                if int_post(2)<inf
-                    for ii = 1:size(int_false,1)
-                        int_false_post(ii,: ) = [int_false(ii,1)+int_post(2) int_false(ii,2)+int_post(2)];
-                        highlight_interval(ax2, int_false_post(ii,:), 'r', 0.3 );
-                    end
-                else
-                    F.HighlightFalse(sig,ax2);
-                end
+            signals_post = setdiff(this.signals_in, signals_pre);
+            if ~isempty(signals_post)
+                % plots post intervals
+                ax2 = F.AddAxes();
+                F.AddSignals(signals_post, ax2);
+                F.HighlightFalse(sig ,ax2);
             else
-                F.HighlightFalse(sig,ax2);
+                F.HighlightFalse(sig ,ax1);
             end
         end
     
+        function int_post__ = get_post_interval(this__,p__)
+                this__.assign_params(p__);
+                int__ = get_interval(this__.post);
+                int_post__ =eval(int__);
+        end
         
     end
     

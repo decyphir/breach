@@ -34,7 +34,7 @@ max_sat_problem.solve();
 % Maybe it is not so good though.
 
 AFC_Best = max_sat_problem.GetBrSet_Best();
-AFC_Best.PlotSignals({'AF'}, [], {'LineWidth', 2});
+AFC_Best.BrSet.PlotSignals({'AF'}, [], {'LineWidth', 2});
 set(gca, 'XLim', [10 40], 'FontSize',14, 'LineWidth', 2);
 plot([0 41], (1+0.01)*[14.7 14.7],'r');
 plot([0 41], (1-0.01)*[14.7 14.7],'r');
@@ -62,7 +62,7 @@ max_sat_problem.solve();
 %% Maximizing for the New Requirement - Plot
 
 AFC_Best = max_sat_problem.GetBrSet_Best();
-AFC_Best.PlotSignals({'AF'}, [], {'LineWidth', 2});
+AFC_Best.BrSet.PlotSignals({'AF'}, [], {'LineWidth', 2});
 set(gca, 'XLim', [10 40], 'FontSize',14, 'LineWidth', 2);
 plot([0 41], (1+0.01)*[14.7 14.7],'r');
 plot([0 41], (1-0.01)*[14.7 14.7],'r');

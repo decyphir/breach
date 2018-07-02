@@ -4,7 +4,7 @@ classdef MaxSatProblem < BreachProblem
     %  FalsificationProblem Properties
     %    BrSet_True -  BreachSet updated with falsifying parameter vectors
     %                   and traces whenever some are found
-    %    X_True     -  parameter values found falsifying the formula
+    %    X_true     -  parameter values found falsifying the formula
     %    StopAtTrue - (default: true) if true, will stop as soon as a falsifying
     %                   parameter is found.
     %
@@ -15,7 +15,7 @@ classdef MaxSatProblem < BreachProblem
     
     properties
         BrSet_True
-        X_True
+        X_true
         StopAtTrue=false
     end
     
@@ -45,7 +45,7 @@ classdef MaxSatProblem < BreachProblem
         
         function ResetObjective(this)
             ResetObjective@BreachProblem(this);
-            this.X_True = [];
+            this.X_true = [];
             this.BrSet_True = [];
         end
         
@@ -54,7 +54,7 @@ classdef MaxSatProblem < BreachProblem
         % if found.
         function [XTrue, res] = solve(this)
             res = solve@BreachProblem(this);
-            XTrue = this.X_True;
+            XTrue = this.X_true;
         end
         
         % Logging

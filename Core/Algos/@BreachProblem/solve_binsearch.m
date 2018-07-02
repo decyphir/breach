@@ -1,7 +1,7 @@
 function res = solve_binsearch(this)
 
 Sys = this.BrSys.Sys;
-phi = this.Spec;
+phi = STL_Formula(this.Spec.req_monitors{1}.formula_id);
 P = this.BrSet.P;
 opt = this.solver_options;
 

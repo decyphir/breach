@@ -52,7 +52,8 @@ else
 end
 
 ii=1;
-eval_str = [P.ParamList;num2cell(1:numel(P.ParamList))];
+num_dim = size(P.pts,1); 
+eval_str = [P.ParamList(1:num_dim);num2cell(1:num_dim)];
 eval_str = sprintf('%s=P.pts(%d,ii);',eval_str{:});
 eval(eval_str);
 

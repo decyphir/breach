@@ -133,6 +133,9 @@ props_values(1:size(P.pts,2)) = deal(struct()); % Temporary line containing the 
 for np = 1:numel(phis) % for each property
     
     phi = phis(np);  % phi = current formula
+    if isa(phi, 'BreachRequirement')
+        phi = STL_Formula(phi.req_monitors{1}.formula_id);
+    end
     phi_name =  get_id(phi);
     i_phi = find_prop(P,phi_name);
     

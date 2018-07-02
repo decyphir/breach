@@ -3,6 +3,11 @@ function [signals, monitors] = get_monitors(formulas)
 
 signals = {};
 monitors = {};
+if ~iscell(formulas)
+    formulas = {formulas};
+end
+
+
 for itfo = 1:numel(formulas)
     formula = formulas{itfo};
     if ischar(formula)

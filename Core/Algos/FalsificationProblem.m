@@ -126,22 +126,17 @@ classdef FalsificationProblem < BreachProblem
         end
         
         function [BrFalse, BrFalse_Err, BrFalse_badU] = GetBrSet_False(this)
-            BrFalse = [];
-            if this.log_traces&&~this.use_parallel 
-                BrFalse = this.BrSet_False;
-            else
+            BrFalse = this.BrSet_False;
+            if isempty(BrFalse)
                 [~, i_false] = find(this.obj_log<0);
                 if ~isempty(i_false)
                     BrFalse = this.BrSys.copy();
                     BrFalse.SetParam(this.params, this.X_log(:, i_false));
-                    if this.BrSys.UseDiskCaching
-                        BrFalse.Sim();
-                    end
+                    BrFalse.Sim();
                 end
-                
-                [BrFalse, BrFalse_Err, BrFalse_badU] = this.ExportBrSet(BrFalse);
-                
             end
+            
+            [BrFalse, BrFalse_Err, BrFalse_badU] = this.ExportBrSet(BrFalse);
         end
         
         function DispResultMsg(this)

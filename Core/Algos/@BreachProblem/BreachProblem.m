@@ -60,7 +60,7 @@ classdef BreachProblem < BreachStatus
         Spec
         T_Spec=0
         constraints_fn    % constraints function
-        robust_fn   % base robustness function - typically the robust satisfaction of some property by some trace
+        robust_fn           % base robustness function - typically the robust satisfaction of some property by some trace
     end
     
     % properties related to the function to minimize
@@ -234,7 +234,7 @@ classdef BreachProblem < BreachStatus
             rfprintf_reset();
             
             % robustness
-            this.BrSys = this.BrSet.copy(); 
+            this.BrSys = BrSet.copy(); 
             this.robust_fn = @(x) (this.Spec.Eval(this.BrSys, this.params, x));
             
             this.BrSet_Best = [];
@@ -583,7 +583,6 @@ classdef BreachProblem < BreachStatus
              if size(x,1) ~= numel(this.params)
                 x = x';
              end
-             
         
             nb_eval =  size(x,2);
             fval = inf*ones(1, nb_eval);
@@ -657,7 +656,7 @@ classdef BreachProblem < BreachStatus
         
         function b = stopping(this)
             b =  (this.time_spent > this.max_time) ||...
-                    (this.nb_obj_eval> this.max_obj_eval) ;
+                    (this.nb_obj_eval> this.max_obj_eval);
         end
               
         %% Misc methods
@@ -766,26 +765,45 @@ classdef BreachProblem < BreachStatus
          function summary = SaveResults(this, varargin)
             BLog = this.GetBrSet_Logged();   
             summary = BLog.SaveResults(varargin{:});
+         end
+        
+        function Rlog = GetLog(this,varargin)
+            Rlog = this.GetBrSet_Logged(varargin{:});
         end
-            
+        
     end
     
     methods (Access=protected)
         
         function display_status_header(this)
-            fprintf(  '#calls (max:%5d)           time spent (max: %g)           best                         obj\n',...
-                this.max_obj_eval, this.max_time);
+            if ~isempty(this.Spec.precond_monitors)
+                fprintf(  '#calls (max:%5d)           time spent (max: %g)           best                         obj                    constraint\n',...
+                    this.max_obj_eval, this.max_time);
+            else
+                fprintf(  '#calls (max:%5d)           time spent (max: %g)           best                         obj\n',...
+                    this.max_obj_eval, this.max_time);
+            end
         end
         
-        function display_status(this,fval)
+        function display_status(this,fval, const_val)
             
             if ~strcmp(this.display,'off')
                 if nargin==1
                     fval = this.obj_log(end); % bof bof
+                    if ~isempty(this.Spec.precond_monitors)
+                        const_val = min(min(this.Spec.traces_vals_precond));
+                    end
                 end
                 
-                st__= sprintf('    %5d                   %7.1f                            %+5.5e             %+5.5e\n', ...
+                st__= sprintf('    %5d                        %7.1f                            %+5.5e             %+5.5e', ...
                     this.nb_obj_eval, this.time_spent, this.obj_best, fval);
+                if exist('const_val', 'var')
+                    st__ = sprintf([st__ '          %+5.5e\n'], const_val);
+                else
+                    st__ = [st__ '\n'];  
+                end
+                
+                
                 switch this.display
                     case 'on'
                         fprintf(st__);
@@ -798,9 +816,14 @@ classdef BreachProblem < BreachStatus
         function [BrOut, Berr,  BbadU] = ExportBrSet(this,B)
             % ExportBrSet prepares a BreachSet such as best, logged, etc to be
             % returned
-            B.Sys.Verbose=1;
             Berr = [];
             BbadU = [];
+            if isempty(B)
+                BrOut = [];
+                return;
+            end
+             B.Sys.Verbose=1;
+           
             [idx_ok, idx_sim_error, idx_invalid_input, st_status]  = B.GetTraceStatus();
             
             if ~isempty(idx_sim_error)||~isempty(idx_invalid_input)

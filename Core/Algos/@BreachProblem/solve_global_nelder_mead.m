@@ -43,7 +43,7 @@ if (this.solver_options.nb_local_iter>0) && (~this.stopping)
                 % update the nb_obj_eval
                 this.nb_obj_eval = this.nb_obj_eval + output.funcCount;
                 this.X_log = [this.X_log output.logs];
-                if fval < 0 || this.nb_obj_val > this.max_obj_val
+                if fval < 0 || this.nb_obj_eval > this.max_obj_eval
                     cancel(F);
                     flag_Cont = false;
                     break;

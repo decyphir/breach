@@ -34,7 +34,7 @@ AFC_falsif1 = FalsificationProblem(B, phi1);
 
 %% Requirement mining
 Bsynth = BrAFC.copy();
-Bsynth.AddSpec(AF_alw_ok)
+Bsynth.AddSpec(AF_alw_ok);
 Bsynth.SetParamRanges('tol', [0 0.1]);
 
 synth_pb = ParamSynthProblem(Bsynth, AF_alw_ok, {'tol'},  [0 0.1]);
