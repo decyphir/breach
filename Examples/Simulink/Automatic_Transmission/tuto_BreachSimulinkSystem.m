@@ -30,7 +30,7 @@ BrSys.PlotSignals();
 
 %% 
 % Change some values 
-BrSys.SetParam({'throttle_u0','dt_u0'}, [10 10]);
+BrSys.SetParam({'throttle_u0','throttle_dt0'}, [10 10]);
 BrSys.Sim();
 BrSys.PlotSignals;
 

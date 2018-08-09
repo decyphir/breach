@@ -109,11 +109,8 @@ if isfield(P, 'traj')
     Pr = Pcopy_traj(Pr,P);
 end
 
-%NM : it is better to compute the truth value of phi at time=tprop
 if tau < tspan(1)
     tspan = [tau,tspan];
-%elseif tprop > tspan(end)    % don't compute it in case it is too far from
-%    tspan = [tspan, tprop];  % the last time instant computed
 end
 
 Pr = ComputeTraj(Sys, Pr, tspan);

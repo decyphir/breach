@@ -20,6 +20,7 @@ classdef stl_monitor < req_monitor
                     'stl_monitor constructor requires a string or STL_Formula as argument.')
             end
             this.formula_id = get_id(this.formula);
+            this.name =  get_id(this.formula);
             
             % collect signals and params names
             [this.signals_in, this.params, this.p0] = STL_ExtractSignals(this.formula);
@@ -65,7 +66,7 @@ classdef stl_monitor < req_monitor
         
         function plot_diagnosis(this, F)
             % Assumes F has data about this formula
-            F.BrSet.PlotRobustSat(this.formula,[],[],F.itraj);
+            F.BrSet.PlotRobustSat(this.formula,[],[],F.ipts);
             
 %             if ~isempty(this.predicates)
 %                 F.AddAxes();

@@ -10,4 +10,3 @@ solver_opt = struct('params', {this.params},...
     'verbose', 1);
 this.solver_options = solver_opt;
 end
-

@@ -20,6 +20,6 @@ if isfield(P,'traj')
     P.traj_to_compute = setdiff(P.traj_to_compute,find(P.traj_ref~=0)); % don't keep those already computed
 end
 P.traj_to_compute = sort(reshape(P.traj_to_compute,1,[])); % set it in a line shape
-
 P.traj = P0.traj;
+
 end

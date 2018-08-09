@@ -11,7 +11,7 @@ function Sys = CreateSystem(vars, params, p0)
 %                               % used in temporal logic formulas
 %
 %   p0 = [ 0 0 ...      % default for initial values of signals 
-%          0 0 0 ];    % default for parameters p0,p1 and p2
+%          0 0 0 ]';    % default for parameters p0,p1 and p2
 %
 %   Sys = CreateSystem(vars,params, p0); % creates the Sys structure
 %

@@ -16,5 +16,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 - SUNDIALS is distributed under BSD license, see ./Core/CvodesTB++/LICENSE and   ./Ext/Toolboxes/sundials/sundialsTB/LICENSE
 - CMAES is distributed under GPL, see  ./Ext/Toolboxes/optimize/cmaes.m
 - OPTIMIZE is distributed under GPL, see  ./Ext/Toolboxes/optimize/license.txt
+- jsonlab is distributed under BSD license, see ./Ext/Toolboxes/jsonlab/LICENSE_BSD.txt
 - code for Niederreiter, Halton, Sobol sequences is distributed under LGPL license, see ./Params/m_src/niederreiter2/niederreiter2.m
 - code for DataHash function is licensed under BSD, see ./Ext/Toolboxes/DataHash/license.txt

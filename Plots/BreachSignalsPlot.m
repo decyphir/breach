@@ -4,26 +4,26 @@ classdef BreachSignalsPlot < handle
         BrSet
         Fig
         Axes
-        itraj
+        ipts
     end
     
     methods
         
-        function this = BreachSignalsPlot(BrSet, signals, itraj)
+        function this = BreachSignalsPlot(BrSet, signals, ipts)
             
             switch nargin
                 case 0
                     return;
                 case 1
                     signals = BrSet.P.ParamList{1};
-                    itraj = 1;
+                    ipts = 1;
                 case 2
-                    itraj = 1;
+                    ipts = 1;
             end
             
             this.BrSet = BrSet;
             this.Fig = figure;
-            this.itraj = itraj;
+            this.ipts = ipts;
             
             if exist('signals','var')
                 if ischar(signals)
@@ -92,7 +92,7 @@ classdef BreachSignalsPlot < handle
             
             %  signals by attributes
             try
-                signature = this.BrSet.P.traj{this.itraj}.signature;
+                signature = this.BrSet.P.traj{this.ipts}.signature;
             catch
                 signature  = this.BrSet.GetSignature();
             end
@@ -241,7 +241,7 @@ classdef BreachSignalsPlot < handle
             
             axes(ax);
             hold on;
-            traj = this.BrSet.P.traj{this.itraj};
+            traj = this.BrSet.P.traj{this.ipts};
             idx = FindParam(this.BrSet.P, sig);
             tau = traj.time;
             val = traj.X(idx,:);
@@ -287,8 +287,9 @@ classdef BreachSignalsPlot < handle
         function plot_signal(this, sig, ax)
             axes(ax);
             hold on;
-            time = this.BrSet.P.traj{this.itraj}.time;
-            sig_values = this.BrSet.GetSignalValues(sig, this.itraj);
+            itraj = this.BrSet.P.traj_ref(this.ipts);
+            time = this.BrSet.P.traj{itraj}.time;
+            sig_values = this.BrSet.GetSignalValues(sig, itraj);
             if ~isempty(sig_values)
                 l = plot(time , sig_values, 'DisplayName', sig);
             end

@@ -200,7 +200,11 @@ classdef BreachSystem < BreachSet
             evalin('base', this.InitFn);
             this.CheckinDomainParam();
             if nargin==1
-                tspan = this.Sys.tspan;
+                if this.hasTraj()
+                    tspan = [0 this.P.traj{1}.time(end)];
+                else
+                    tspan = this.Sys.tspan;
+                end
             end
             this.P = ComputeTraj(this.Sys, this.P, tspan);
             this.CheckinDomainTraj();
@@ -353,11 +357,15 @@ classdef BreachSystem < BreachSet
             
             % FIXME: this is going to break with multiple trajectories with
             % some of them containing NaN -
+              
             if any(isnan(this.P.traj{1}.X))
                 tau = t_phi;
                 rob = t_phi;
                 rob(:) = NaN;
             else
+                if ischar(phi)
+                    phi = STL_Formula('phi__tmp__', phi);
+                end
                 [rob, tau] = STL_Eval(this.Sys, phi, this.P, this.P.traj,t_phi);
             end
             

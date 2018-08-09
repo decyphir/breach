@@ -7,13 +7,16 @@ if ~iscell(formulas)
     formulas = {formulas};
 end
 
-
 for itfo = 1:numel(formulas)
     formula = formulas{itfo};
     if ischar(formula)
         formula = STL_Formula(STL_NewID('req'), formula);
     end
-    monitor = stl_monitor(formula);
+    if isa(formula, 'req_monitor')
+        monitor = formula;
+    else
+        monitor = stl_monitor(formula);
+    end
     
 %   if isa(formula, 'STL_Formula')
 %       % checks whether we have parameter constraint   % ONHOLD 
@@ -25,11 +28,13 @@ for itfo = 1:numel(formulas)
 %         end
 %     elseif isa(formula, 'stl_monitor')
 %        monitor = formula;
- %   end
- %   if ~isa(monitor, 'param_constraint_monitor')
-        find_template();
+%   end
+%   if ~isa(monitor, 'param_constraint_monitor')
+        if isa(monitor,'stl_monitor')
+            find_template();
+        end
         signals = union(signals, monitor.signals, 'stable');
-%    end
+%   end
     monitors = [monitors {monitor}];
 end
 

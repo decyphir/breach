@@ -4,7 +4,7 @@ classdef BreachTraceSystem < BreachSystem
     
     methods
         % constructor - takes signal names and an optional trace
-        function this = BreachTraceSystem(signals, trace)
+        function this = BreachTraceSystem(signals, trace, params)
             InitBreach;
             if (nargin==0)
                 return;
@@ -66,18 +66,23 @@ classdef BreachTraceSystem < BreachSystem
             end
             
             % assumes now that we have signal names
-            this.Sys = CreateExternSystem('TraceObject', signal_names, {'trace_id'},1);
+            if exist('params', 'var')&&~isempty(params)
+                this.Sys = CreateSystem(signal_names, params,zeros(numel(signal_names)+numel(params),1));
+            else
+                this.Sys = CreateSystem(signal_names, {},zeros(numel(signal_names),1));
+            end
+            
             this.P = CreateParamSet(this.Sys);
             
-            if exist('trace1', 'var')
+            if exist('trace1', 'var')&&~isempty(trace1)
                 this.AddTrace(trace1);
             end
-            if exist('trace', 'var')
+            if exist('trace', 'var')&&~isempty(trace)
                 this.AddTrace(trace);
             end
             
             %  Default domains
-            for ip = this.P.DimP
+            for ip = 1:this.P.DimP
                 this.Domains(ip) = BreachDomain();
             end
             
@@ -140,7 +145,6 @@ classdef BreachTraceSystem < BreachSystem
                                 traj.X(isig,:) = trace.signals.values(idx_sig,:);
                             end
                     end
-                    
                 end
             elseif isnumeric(trace)
                 traj.X = trace(:, 2:end)';
@@ -163,7 +167,6 @@ classdef BreachTraceSystem < BreachSystem
                 traj.param = [this.Sys.p'];
             end
             
-            traj.param(this.Sys.DimX+1) = nb_traces+1;
             Pnew.traj={traj};
             Pnew.traj_ref = 1;
             Pnew.traj_to_compute =  [];
@@ -173,9 +176,6 @@ classdef BreachTraceSystem < BreachSystem
             else
                 this.P = SConcat(this.P, Pnew);
             end
-            this.P.traj_ref = 1:nb_traces+1;
-            this.P.traj_to_compute =  [];
-            this.P.pts(this.P.DimX+1,:) = 1:nb_traces+1; % index traces
             this.Sys.tspan = traj.time;
             
             if isfield(this.P, 'Xf')

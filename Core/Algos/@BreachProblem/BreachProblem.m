@@ -466,11 +466,7 @@ classdef BreachProblem < BreachStatus
         function SaveInCache(this)
             if this.BrSys.UseDiskCaching
                 FileSave = [this.BrSys.DiskCachingRoot filesep class(this) '_Runs.mat'];
-                if ~exist(FileSave, 'file')
-                    evalin('base', ['save(''' FileSave ''',''' this.whoamI ''');']);
-                else
-                    evalin('base', ['save(''' FileSave ''',''-append'',''', this.whoamI ''');']);
-                end
+                evalin('base', ['save(''' FileSave ''',''' this.whoamI ''');']);
             end
         end
         
@@ -553,13 +549,14 @@ classdef BreachProblem < BreachStatus
             this.BrSys.SetupParallel(varargin{:});      
             
             % Enable DiskCaching
-            if this.log_traces
-                this.SetupDiskCaching();
-            end
+            this.SetupDiskCaching();
 
-            % Possible need to change the optinmization optinion
-            this.setup_solver();
-
+            % Possible need to change the optimization option
+            % this.setup_solver();
+            % TODO: review when needed on solver-by-solver basis - maybe
+            % warning in order ?
+            
+            
         end
         
         function StopParallel(this)
@@ -568,6 +565,7 @@ classdef BreachProblem < BreachStatus
         end
         
         function SetupDiskCaching(this, varargin)
+            this.log_traces = 0;  % FIXME
             this.BrSys.SetupDiskCaching(varargin{:});
         end
         
@@ -672,7 +670,7 @@ classdef BreachProblem < BreachStatus
             this.X_log = [this.X_log x];
             this.obj_log = [this.obj_log fval];
             
-            if (this.log_traces)&&~(this.use_parallel);
+            if (this.log_traces)&&~(this.use_parallel)&&~(this.BrSet.UseDiskCaching); % FIXME - logging flags and methods need be revised
                 if isempty(this.BrSet_Logged)
                     this.BrSet_Logged = this.BrSys.copy();
                 else
@@ -744,8 +742,7 @@ classdef BreachProblem < BreachStatus
                 BrOut.ResetSimulations();
                 BrOut.SetParam(this.params, this.X_log);
                 BrOut.Sim();
-             end
-            
+            end
             [BrOut, Berr, BbadU] = this.ExportBrSet(BrOut); 
             
         end
@@ -763,7 +760,7 @@ classdef BreachProblem < BreachStatus
         end
               
          function summary = SaveResults(this, varargin)
-            BLog = this.GetBrSet_Logged();   
+            BLog = this.GetLog();   
             summary = BLog.SaveResults(varargin{:});
          end
         
@@ -834,7 +831,6 @@ classdef BreachProblem < BreachStatus
             if ~isempty(idx_ok)&&B.hasTraj();
                 BrOut = this.Spec.copy();
                 BrOut.ResetSimulations();
-                BrOut.BrSet = [];
                 BrOut.Eval(B);
             end
         end

@@ -8,7 +8,6 @@ mdl = 'AbstractFuelControl';
 
 BrAFC = BreachSimulinkSystem(mdl, 'all', [], {}, [], 'Verbose',0,'SimInModelsDataFolder', true); 
 
-
 pedal_angle_gen = pulse_signal_gen({'Pedal_Angle'}); % Generate a pulse signal for pedal angle
 engine_gen      = fixed_cp_signal_gen({'Engine_Speed'}, ... % signal name
                                        3,...                % number of control points

@@ -230,6 +230,10 @@ classdef BreachSet < BreachStatus
             % several samples and there is only one value, set this value to
             % all samples. Otherwise, returns an error.
             
+            if (~exist('is_spec_param', 'var'))
+                is_spec_param = false;
+            end
+            
             ip = FindParam(this.P, params);
             i_not_sys = find(ip>this.P.DimP);
             if ~isempty(i_not_sys)
@@ -238,7 +242,7 @@ classdef BreachSet < BreachStatus
                 else
                     nparam = params;
                 end
-                if ~exist('is_spec_param','var')||isequal(is_spec_param,false)
+                if isequal(is_spec_param,false)
                     warning('SetParam:param_not_in_list',['Parameter ' nparam ' was set but is not a system parameter.' ...
                         ' If this is intended to be a spec. parameter, consider using SetParamSpec instead.']);
                 end
@@ -259,18 +263,39 @@ classdef BreachSet < BreachStatus
             
             num_pts  =  size(this.P.pts,2);
             num_values = size(values, 2);
+            saved_traj = false;
             
-            if num_values==1 || num_values == num_pts
-                this.P = SetParam(this.P, params, values);
-            elseif num_pts==1    % note in this case, we have to remove traces ( or see if maybe not, )
+            if ischar(is_spec_param)&&strcmp(is_spec_param, 'combine')
+                if this.hasTraj()
+                    P0 = this.P;
+                    saved_traj = true;
+                 end
+                idx = N2Nn(2, [num_pts num_values]);
+                old_pts = this.P.pts;
                 this.P = Sselect(SPurge(this.P),1);
-                this.P.pts = repmat(this.P.pts,1, size(values, 2));
-                this.P.epsi= repmat(this.P.epsi,1, size(values, 2));
-                this.P.selected = zeros(1, size(values, 2));
-                this.P = SetParam(this.P, ip, values);
-            else
-                error('SetParam:wrong_arguments_size', 'Dimension mismatch between values and parameters.');
+                this.P.pts = old_pts(:, idx(1,:));
+                this.P.epsi= repmat(this.P.epsi,1, size(idx, 2));
+                this.P.selected = zeros(1, size(idx, 2));
+                this.P = SetParam(this.P, params, values(:, idx(2,:)));
+            else  % legacy, i.e., not combine version
+                if num_values==1 || num_values == num_pts
+                    this.P = SetParam(this.P, params, values);
+                elseif num_pts==1    % note in this case, we have to remove traces ( or see if maybe not, )
+                    this.P = Sselect(SPurge(this.P),1);
+                    this.P.pts = repmat(this.P.pts,1, size(values, 2));
+                    this.P.epsi= repmat(this.P.epsi,1, size(values, 2));
+                    this.P.selected = zeros(1, size(values, 2));
+                    this.P = SetParam(this.P, params, values);
+                else
+                    error('SetParam:wrong_arguments_size', 'Dimension mismatch between values and parameters.');
+                end
             end
+            
+            % restore traj if needed
+            if saved_traj
+                this.P = Pfix_traj_ref(this.P, P0);
+            end
+            
         end
         
         function SetParamSpec(this, params, values, ignore_sys_param)
@@ -510,9 +535,10 @@ classdef BreachSet < BreachStatus
                     
                     traj_status = zeros(1, nb_pts);
                     for it = 1:nb_pts
-                        traj_status(it) = this.P.traj{this.P.traj_ref(it)}.status;
+                        if this.P.traj_ref(it)
+                            traj_status(it) = this.P.traj{this.P.traj_ref(it)}.status;
+                        end
                     end
-                    
                     idx_ok = find(traj_status == 0);
                     idx_sim_error = find(traj_status == -1);
                     idx_invalid_input = find(traj_status == -2);
@@ -1557,7 +1583,7 @@ classdef BreachSet < BreachStatus
             if isfield(this.P,'props_names')
                 spec_names = this.P.props_names;
             end
-            
+            summary.signature= this.GetSignature();
             summary.date = datestr(now);
             summary.num_traces = num_traces;
             summary.params.names = param_names;
@@ -1576,10 +1602,13 @@ classdef BreachSet < BreachStatus
         
         function b = is_variable(this, par)
             b = false ;
-            [~, f] = FindParam(this.P, par);
+            [i, f] = FindParam(this.P, par);
             if f
-                dom = this.GetDomain(par);
+                dom = this.Domains(i);
                 b = ~isempty(dom.domain);
+                if ~b
+                    b = any(diff(this.P.pts(i,:)));
+                end
             end
         end
         

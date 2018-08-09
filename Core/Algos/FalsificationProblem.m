@@ -21,12 +21,11 @@ classdef FalsificationProblem < BreachProblem
     end
     
     methods (Static)
-        function load_runs(folder, run)
-            if nargin==1
-                evalin('base', ['load(''' folder filesep 'FalsificationProblem_Runs'');']);
-            elseif nargin==2
-                evalin('base', ['load(''' folder filesep 'FalsificationProblem_Runs'','''  run   ''');']);
-            end
+        function falsif_pb = load_runs(logFilePath)
+            st = load([logFilePath, filesep, 'FalsificationProblem_Runs']);
+            fn= fieldnames(st);
+            falsif_pb = st.(fn{1});
+            falsif_pb.SetupDiskCaching('DiskCachingRoot', logFilePath);
         end
     end
     
@@ -98,6 +97,14 @@ classdef FalsificationProblem < BreachProblem
             Xfalse = this.X_false;
         end
         
+        function SaveInCache(this)
+            if this.BrSys.UseDiskCaching
+                FileSave = [this.BrSys.DiskCachingRoot filesep 'FalsificationProblem_Runs.mat'];
+                evalin('base', ['save(''' FileSave ''',''' this.whoamI ''');']);
+            end
+        end
+      
+        
         % Logging
         function LogX(this, x, fval)
         %   LogX  log variable parameter value tested by optimizers
@@ -112,7 +119,7 @@ classdef FalsificationProblem < BreachProblem
                 this.obj_false = [this.obj_false fval];
                 if (this.log_traces)&&~this.use_parallel
                     if isempty(this.BrSet_False)
-                        this.BrSet_False = this.BrSys.copy();
+                        this.BrSet_False = this.Spec.BrSet.copy();
                     else
                         this.BrSet_False.Concat(this.BrSys);
                     end
@@ -125,8 +132,8 @@ classdef FalsificationProblem < BreachProblem
             b= b||(this.StopAtFalse&&this.obj_best<0);        
         end
         
-        function [BrFalse, BrFalse_Err, BrFalse_badU] = GetBrSet_False(this)
-            BrFalse = this.BrSet_False;
+        function [BrFalse, BrFalse_Err, BrFalse_badU] = GetFalse(this)
+           BrFalse = this.BrSet_False;
             if isempty(BrFalse)
                 [~, i_false] = find(this.obj_log<0);
                 if ~isempty(i_false)
@@ -137,6 +144,12 @@ classdef FalsificationProblem < BreachProblem
             end
             
             [BrFalse, BrFalse_Err, BrFalse_badU] = this.ExportBrSet(BrFalse);
+        
+        end
+        
+        function [BrFalse, BrFalse_Err, BrFalse_badU] = GetBrSet_False(this)
+        % Use GetFalse. Keeping this for backward compatibility.
+            [BrFalse, BrFalse_Err, BrFalse_badU] = this.GetFalse();
         end
         
         function DispResultMsg(this)

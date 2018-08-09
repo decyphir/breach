@@ -18,6 +18,6 @@ falsif_pb = FalsificationProblem(Br, phi1, input_params.names, input_params.rang
 % solves using the default solver
 falsif_pb.solve();
 
-% collect the falsifying trace 
-BrFalse = falsif_pb.GetBrSet_False() 
-BrFalse.PlotRobustSat(phi1)
+% collect the logged samples and traces 
+Blog = falsif_pb.GetLog();
+F = BreachSamplesPlot(Blog)
