@@ -74,19 +74,19 @@ classdef FalsificationProblem < BreachProblem
         function obj = objective_fn(this,x)
             % For falsification, default objective_fn is simply robust satisfaction of the least
             this.robust_fn(x);
-            robs = min(this.Spec.traces_vals,[], 2);
+            robs = this.Spec.traces_vals;
             if (~isempty(this.Spec.traces_vals_precond))
                 for itr = 1:size(this.Spec.traces_vals_precond,1)
                     precond_rob = min(this.Spec.traces_vals_precond(itr,:));
                     if  precond_rob<0
-                        robs(itr)= -precond_rob;
+                        robs(itr,:)= -precond_rob;
                     end
                 end
             end
             
             NaN_idx = isnan(robs); % if rob is undefined, make it inf to ignore it
             robs(NaN_idx) = inf;
-            obj = min(robs);
+            obj = min(robs,[],1)';
             
         end     
         
@@ -113,11 +113,11 @@ classdef FalsificationProblem < BreachProblem
             this.LogX@BreachProblem(x, fval);
             
             %  Logging falsifying parameters found      
-            [~, i_false] = find(fval<0);
+            [~, i_false] = find(min(fval)<0);
             if ~isempty(i_false)
                 this.X_false = [this.X_false x(:,i_false)];                              
-                this.obj_false = [this.obj_false fval];
-                if (this.log_traces)&&~this.use_parallel
+                this.obj_false = [this.obj_false fval(:,i_false)];
+                if (this.log_traces)&&~this.use_parallel&&~(this.BrSet.UseDiskCaching)  % FIXME - logging flags and methods need be revised
                     if isempty(this.BrSet_False)
                         this.BrSet_False = this.Spec.BrSet.copy();
                     else
@@ -129,13 +129,13 @@ classdef FalsificationProblem < BreachProblem
         
         function b = stopping(this)
             b =  this.stopping@BreachProblem();
-            b= b||(this.StopAtFalse&&this.obj_best<0);        
+            b= b||(this.StopAtFalse&&any(this.obj_best<0));        
         end
         
         function [BrFalse, BrFalse_Err, BrFalse_badU] = GetFalse(this)
            BrFalse = this.BrSet_False;
             if isempty(BrFalse)
-                [~, i_false] = find(this.obj_log<0);
+                [~, i_false] = find(min(this.obj_log)<0);
                 if ~isempty(i_false)
                     BrFalse = this.BrSys.copy();
                     BrFalse.SetParam(this.params, this.X_log(:, i_false));
@@ -156,9 +156,9 @@ classdef FalsificationProblem < BreachProblem
             this.DispResultMsg@BreachProblem();
             if this.use_parallel && this.obj_best < 0
                 this.X_false = this.x_best;
-            end      
+            end
             if ~isempty(this.X_false)
-                fprintf('Falsified with obj = %g\n', this.obj_best(end));
+                fprintf('Falsified with obj = %g\n', min(this.obj_best(:,end)));
             else
                 fprintf('No falsifying trace found.\n');
             end

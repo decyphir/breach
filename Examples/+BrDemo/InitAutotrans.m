@@ -42,3 +42,14 @@ BrAutotrans_6ranges.SetParamRanges( 'throttle_u1', [0 100]);
 BrAutotrans_6ranges.SetParamRanges( 'brake_u0', [0 325]);
 BrAutotrans_6ranges.SetParamRanges( 'brake_dt0', [0  40]);
 BrAutotrans_6ranges.SetParamRanges( 'brake_u1', [0 325]);
+
+%% 
+BrAutotrans_varstep5 =BreachSimulinkSystem(mdl, 'all', [], {}, [], 'Verbose',0,'SimInModelsDataFolder', true); 
+sg = var_step_signal_gen({'throttle', 'brake'}, 5);
+BrAutotrans_varstep5.SetInputGen(sg);
+            
+% We assign ranges for duration and amplitude of each input:
+BrAutotrans_varstep5.SetParamRanges({'dt_u0', 'dt_u1', 'dt_u2', 'dt_u3'}, ...
+                  [.1 10  ;  .1 10;    0.1 10;    0.1 10]);
+BrAutotrans_varstep5.SetParamRanges({'throttle_u0','brake_u1', 'throttle_u2', 'brake_u3'}, ... 
+                  [0 100;        0 325;      0 100;         0 325]);

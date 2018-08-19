@@ -13,5 +13,5 @@ pb_se_fc.max_obj_eval = max_obj_eval;
 pb_se_fc.setup_solver('fmincon');
 disp('============== fmincon with multiple restarts results ==============');
 tic
-[false_fc res_fc] = pb_se_fc.solve();
+[false_fc, res_fc] = pb_se_fc.solve();
 toc

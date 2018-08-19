@@ -17,13 +17,15 @@ res{1} = struct('x',res_init.x,'fval',res_init.f);
 this.solver_options.start_at_trial = this.solver_options.start_at_trial+this.solver_options.nb_new_trials;
 
 if (this.solver_options.nb_local_iter>0) && (~this.stopping)
+    fun_obj = @(x)(min(this.objective(x),[],1)); % for multi-objective support
+
     rfprintf_reset()
     if ~strcmp(this.display,'off')   
         fprintf('\nStarting local optimization using Nelder-Mead algorithm\n');
         this.display_status_header();
     end
     % Collect and sort solutions
-    [~, ibest] = sort(res_init.fval);
+    [~, ibest] = sort(max(res_init.fval,[],1));
     options = optimset(this.solver_options.local_optim_options, 'MaxIter',this.solver_options.nb_local_iter);
     flag_Cont = true;
     if this.use_parallel
@@ -32,7 +34,7 @@ if (this.solver_options.nb_local_iter>0) && (~this.stopping)
         options = optimset(options, 'UseParallel', true);
         while flag_Cont
             fun = @(x0) optimize(...
-                this.objective,x0,this.lb,this.ub,this.Aineq,this.bineq,this.Aeq,this.beq,[],[],options,'NelderMead');
+                fun_obj,x0,this.lb,this.ub,this.Aineq,this.bineq,this.Aeq,this.beq,[],[],options,'NelderMead');
             for idx = 1:num_works
                 x0 = X0(:,idx);
                 F(idx) = parfeval(fun, 4, x0);
@@ -58,7 +60,7 @@ if (this.solver_options.nb_local_iter>0) && (~this.stopping)
             if ~this.stopping()
                 options = optimset(options, 'Display', 'off');
                 [x, fval, exitflag, output] = optimize(...
-                    this.objective, x0 ,this.lb,this.ub,this.Aineq,this.bineq,this.Aeq,this.beq,[],[],options,'NelderMead');
+                    fun_obj, x0 ,this.lb,this.ub,this.Aineq,this.bineq,this.Aeq,this.beq,[],[],options,'NelderMead');
                 res{end+1} = struct('x',x, 'fval',fval, 'exitflag', exitflag,  'output', output);
             end
        end

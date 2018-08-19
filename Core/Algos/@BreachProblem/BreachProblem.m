@@ -29,12 +29,13 @@ classdef BreachProblem < BreachStatus
     %                     help to know available options (E.g., for matlab solvers, this is
     %                     often set using the optimset command).
     %   max_time       -  maximum wall-time budget allocated to optimization
+    %   max_obj_eval   -  maximum number of objective function evaluation (
+    %   often translates into number of simulations of system under test)
     %   log_traces     -  (default=true) logs all traces computed during optimization                 
     %   T_spec         -  time 
     % 
     % BreachProblem Properties (outputs)
     %   BrSet_Logged    -  BreachSet with parameter vectors used during optimization.
-    %
     %   BrSet_Best      -  BreachSet with the best parameter vector found during optimization.
     %   res             -  a result structure, specific to each solver
     %   X_log, obj_log  -  all values tried by the solver and corresponding objective function values.
@@ -46,8 +47,10 @@ classdef BreachProblem < BreachStatus
     %   setup_solver    - setup the solver given as argument with default options
     %                     and returns these options.
     %   solve           - calls the solver 
-    %   GetBrSet_Logged - returns a BrSet_Logged
-    %   GetBrSet_Best   - returns a BrSet_Best
+    %   GetLog          - returns a BreachRequirement object with logged
+    %   traces
+    %   GetBest         - returns a BreachRequirement object with the best
+    %   trace (worst satisfaction in case of falsification) 
     %
     % See also FalsificationProblem, ParamSynthProblem, ReqMiningProblem
     
@@ -60,7 +63,7 @@ classdef BreachProblem < BreachStatus
         Spec
         T_Spec=0
         constraints_fn    % constraints function
-        robust_fn           % base robustness function - typically the robust satisfaction of some property by some trace
+        robust_fn         % base robustness function - typically the robust satisfaction of some property by some trace
     end
     
     % properties related to the function to minimize
@@ -187,7 +190,6 @@ classdef BreachProblem < BreachStatus
             this.Reset_x0();
             
             % robustness
-            % [this.robust_fn, this.BrSys] =  this.BrSet.GetRobustSatFn(phi, this.params, this.T_Spec);
             this.BrSys = this.BrSet.copy(); 
             this.robust_fn = @(x) (phi.Eval(this.BrSys, this.params, x));
             
@@ -571,8 +573,8 @@ classdef BreachProblem < BreachStatus
         
         %% Objective wrapper        
         function obj = objective_fn(this,x)
-            % default objective_fn is simply robust satisfaction of the least
-            obj = min(this.robust_fn(x));
+            % default objective_fn is simply robust satisfaction 
+            obj = this.robust_fn(x);
         end
         
         function fval = objective_wrapper(this,x)
@@ -583,7 +585,7 @@ classdef BreachProblem < BreachStatus
              end
         
             nb_eval =  size(x,2);
-            fval = inf*ones(1, nb_eval);
+            fval = inf*ones(size(this.Spec.req_monitors,2), nb_eval);
             fun = @(isample) this.objective_fn(x(:, isample));
             nb_iter = min(nb_eval, this.max_obj_eval);
      
@@ -603,38 +605,38 @@ classdef BreachProblem < BreachStatus
                             if  ~isempty(this.BrSet_Logged)
                                 this.BrSys.P = Sselect(this.BrSet_Logged.P,idx);
                             end
-                            fval(iter) = this.obj_log(idx);
+                            fval(:,iter) = this.obj_log(:,idx);
                         else
                             % calling actual objective function
-                            fval(iter) = fun(iter);
+                            fval(:,iter) = fun(iter);
                         end
 
                         % logging and updating best
-                        this.LogX(x(:, iter), fval(iter));
+                        this.LogX(x(:, iter), fval(:,iter));
                         
                         % update status
                         if rem(this.nb_obj_eval,this.freq_update)==0
                             this.display_status();
                         end
-                 
-                        % stops if falsified or
+                        
+                        % stops if falsified or other
                         if this.stopping()
                             break
                         end
-                 
+                        
                     end
                 else % Parallel case 
                     
                     % Launch tasks
                     for iter = 1:nb_iter
-                        par_f(iter) = parfeval(fun,1, iter);
+                        par_f(:,iter) = parfeval(fun,1, iter);
                     end
                     
                     fq = this.freq_update;                  
                     for iter=1:nb_iter
                         [idx, value] = fetchNext(par_f);
-                        fval(idx) = value;
-                        this.LogX(x(:, idx), fval(idx));
+                        fval(:,idx) = value;
+                        this.LogX(x(:, idx), fval(:,idx));
                         
                         % update status
                         if rem(iter,fq)==0
@@ -670,7 +672,7 @@ classdef BreachProblem < BreachStatus
             this.X_log = [this.X_log x];
             this.obj_log = [this.obj_log fval];
             
-            if (this.log_traces)&&~(this.use_parallel)&&~(this.BrSet.UseDiskCaching); % FIXME - logging flags and methods need be revised
+            if (this.log_traces)&&~(this.use_parallel)&&~(this.BrSet.UseDiskCaching) % FIXME - logging flags and methods need be revised
                 if isempty(this.BrSet_Logged)
                     this.BrSet_Logged = this.BrSys.copy();
                 else
@@ -678,16 +680,16 @@ classdef BreachProblem < BreachStatus
                 end
             end
             
-            [fmin , imin] = min(fval);
+            [fmin , imin] = min(min(fval));
             x_min =x(:, imin);
             if fmin < this.obj_best
                 this.x_best = x_min;
-                this.obj_best = fmin;
+                this.obj_best = fval(:,imin);
                 this.BrSet_Best = this.BrSys.copy(); % could be more efficient - also suspicious when several x... 
             end
             
             % Timing and num_eval       
-            this.nb_obj_eval= numel(this.obj_log);
+            this.nb_obj_eval= numel(this.obj_log(1,:));
             this.time_spent = toc(this.time_start);
            
         end
@@ -726,7 +728,7 @@ classdef BreachProblem < BreachStatus
         end
         
         function Display_Best_Results(this, best_fval, param_values)
-            fprintf('\n ---- Best value %g found with\n', best_fval);
+            fprintf('\n ---- Best value %g found with\n', min(best_fval));
             
             for ip = 1:numel(this.params)
                 fprintf( '        %s = %g\n', this.params{ip},param_values(ip))
@@ -766,6 +768,10 @@ classdef BreachProblem < BreachStatus
         
         function Rlog = GetLog(this,varargin)
             Rlog = this.GetBrSet_Logged(varargin{:});
+        end
+        
+        function Rbest = GetBest(this,varargin)
+            Rbest = this.GetBrSet_Best(varargin{:});
         end
         
     end
