@@ -62,6 +62,7 @@ classdef BreachProblem < BreachStatus
         solver_options    % solver options
         Spec
         T_Spec=0
+        
         constraints_fn    % constraints function
         robust_fn         % base robustness function - typically the robust satisfaction of some property by some trace
     end
@@ -156,7 +157,6 @@ classdef BreachProblem < BreachStatus
             end
             
             this.Spec = phi;
-            
             this.BrSet = BrSet.copy();
             this.BrSet.Sys.Verbose=0;
                   
@@ -780,28 +780,31 @@ classdef BreachProblem < BreachStatus
         
         function display_status_header(this)
             if ~isempty(this.Spec.precond_monitors)
-                fprintf(  '#calls (max:%5d)           time spent (max: %g)           best                         obj                    constraint\n',...
+                hd_st = sprintf(  '#calls (max:%5d)        time spent (max: %g)       [current obj]   (current best)   [constraint]\n',...
                     this.max_obj_eval, this.max_time);
             else
-                fprintf(  '#calls (max:%5d)           time spent (max: %g)           best                         obj\n',...
+                hd_st = sprintf(  '#calls (max:%5d)        time spent (max: %g)       [current obj]   (current best) \n',...
                     this.max_obj_eval, this.max_time);
             end
+       %     l = numel(hd_st);
+       %     hd_st = [hd_st repmat('-',1,l) '\n'];
+            fprintf(hd_st);
         end
         
         function display_status(this,fval, const_val)
             
             if ~strcmp(this.display,'off')
                 if nargin==1
-                    fval = this.obj_log(end); % bof bof
+                    fval = this.obj_log(:,end); % bof bof
                     if ~isempty(this.Spec.precond_monitors)
                         const_val = min(min(this.Spec.traces_vals_precond));
                     end
                 end
                 
-                st__= sprintf('    %5d                        %7.1f                            %+5.5e             %+5.5e', ...
-                    this.nb_obj_eval, this.time_spent, this.obj_best, fval);
+                st__= sprintf('     %5d                    %7.1f               [%s]    (%s)', ...
+                    this.nb_obj_eval, this.time_spent,  num2str(fval','%+5.5e '), num2str(this.obj_best', '%+5.5e '));
                 if exist('const_val', 'var')
-                    st__ = sprintf([st__ '          %+5.5e\n'], const_val);
+                    st__ = sprintf([st__ '       [%s]\n'], num2str(const_val', '%+5.5e '));
                 else
                     st__ = [st__ '\n'];  
                 end

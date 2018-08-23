@@ -11,8 +11,6 @@ R.SetParam({'rpm_low','rpm_up'}, [3000, 3100]);
 
 pb = FalsificationProblem(BrAutotrans_3ranges, R);
 
-%% 
-%
 pb.solve();
 
 %%

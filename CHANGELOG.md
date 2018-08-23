@@ -1,3 +1,8 @@
+# Release 1.4.2 
+
+- Improved display values for multi-objective optimization
+
+
 # Release 1.4.1
 
 ## Users 
