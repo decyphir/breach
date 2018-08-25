@@ -1,3 +1,10 @@
+# Release 1.4.3
+
+## Bugfixes
+- display result fixed when using parallel falsification
+- parallel computation during Nelder Mead phase disabled until
+  behavior is fixed
+  
 # Release 1.4.2 
 
 - Improved display values for multi-objective optimization

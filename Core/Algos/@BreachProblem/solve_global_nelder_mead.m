@@ -28,7 +28,7 @@ if (this.solver_options.nb_local_iter>0) && (~this.stopping)
     [~, ibest] = sort(max(res_init.fval,[],1));
     options = optimset(this.solver_options.local_optim_options, 'MaxIter',this.solver_options.nb_local_iter);
     flag_Cont = true;
-    if this.use_parallel
+    if this.use_parallel&&false % FIXME: behavior need be more thoroughly tested/verified 
         num_works = this.BrSys.Sys.Parallel;
         options = optimset(options, 'Display', 'off');
         options = optimset(options, 'UseParallel', true);

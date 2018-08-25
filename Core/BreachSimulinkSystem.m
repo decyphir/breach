@@ -8,7 +8,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
     %   Arguments:
     %   mdl.name  -  a string naming a Simulink model.
     %   params    -  cell array of strings | 'all'
-    %   p0          -  (optional) default values for parameters
+    %   p0        -  (optional) default values for parameters
     %   signals   -  specifies signals to interface
     %   inputfn   -  specifies an input generator
     %
