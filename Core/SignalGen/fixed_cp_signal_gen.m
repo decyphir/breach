@@ -21,6 +21,7 @@ classdef fixed_cp_signal_gen < signal_gen
         
         function this = fixed_cp_signal_gen(signals, cp, method,p0)
             
+            
             if nargin == 1
                 cp = 1;
                 method = 'previous';

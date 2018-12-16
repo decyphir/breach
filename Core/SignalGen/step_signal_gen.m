@@ -12,7 +12,7 @@ classdef step_signal_gen < signal_gen
     
     methods 
         
-        function this = step_signal_gen(signals)
+        function this = step_signal_gen(signals, p0)
            this.signals = signals; 
            this.params = {};
            for i_s = 1:numel(this.signals)

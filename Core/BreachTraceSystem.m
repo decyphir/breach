@@ -2,6 +2,10 @@ classdef BreachTraceSystem < BreachSystem
     % BreachTraceSystem  a BreachSystem class to handle traces with no
     % simulator
     
+    properties
+        pts_map = containers.Map() % keeps track of pts - first one if pts has duplicates 
+    end
+    
     methods
         % constructor - takes signal names and an optional trace
         function this = BreachTraceSystem(signals, trace, params)
@@ -158,30 +162,50 @@ classdef BreachTraceSystem < BreachSystem
                 traj = trace;
             end
             
-            Pnew = CreateParamSet(this.Sys);
-            Pnew.epsi(:,:) = 0;
             
             nb_traces =this.CountTraces();
             
             if ~isfield(traj, 'param')&&~isa(traj, 'matlab.io.MatFile')
                 traj.param = [this.Sys.p'];
             end
+            new_pts  = traj.param';
             
-            Pnew.traj={traj};
-            Pnew.traj_ref = 1;
-            Pnew.traj_to_compute =  [];
-            Pnew.pts(1:Pnew.DimP,1) =  traj.param';
             if nb_traces == 0
+                this.pts_map(DataHash(new_pts)) = 1;
+                Pnew = CreateParamSet(this.Sys);
+                Pnew.epsi(:,:) = 0;
+                Pnew.traj={traj};
+                Pnew.traj_ref = 1;
+                Pnew.traj_to_compute =  [];
+                Pnew.pts(1:Pnew.DimP,1) =  new_pts;
                 this.P = Pnew;
+                this.Sys.tspan = traj.time;
             else
-                this.P = SConcat(this.P, Pnew);
+                % add pts and epsi
+                this.P.pts(:,end+1) = new_pts;
+                this.P.epsi(:,end+1) = this.P.epsi(:,end);
+                % checks if new_pts exists 
+                key = DataHash(new_pts);
+                if this.pts_map.isKey(key) % do not add traj
+                    pts_idx = this.pts_map(key);
+                    this.P.traj_ref(end+1) = this.P.traj_ref(pts_idx);
+                else % add traj
+                    this.P.traj{end+1} = traj;
+                    this.P.traj_ref(end+1) = numel(this.P.traj);
+                end
+                %this.P = SConcat(this.P, Pnew);
             end
-            this.Sys.tspan = traj.time;
             
+            % FIXME still need to get rid of legacy useless Xf field... 
+            if isa(traj, 'matlab.io.MatFile')  % avoid loading matfile for Xf 
+                Xf= zeros(1,this.P.DimX);
+            else               
+                Xf = traj.X(:,end);
+            end
             if isfield(this.P, 'Xf')
-                this.P.Xf(:,end+1)= traj.X(:,end);
+                this.P.Xf(:,end+1)= Xf;
             else
-                this.P.Xf= traj.X(:,end);
+                this.P.Xf= Xf;
             end
         end
         

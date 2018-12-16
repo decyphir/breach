@@ -35,7 +35,7 @@ classdef BreachImportData < BreachSignalGen
                 if exist('params', 'var')
                     ff_ingen = from_file_signal_gen(signals, fname,{}, params);
                 else
-                    ff_ingen = from_file_signal_gen(signals, fname);
+                    ff_ingen = from_file_signal_gen(signals, fname, {}, 'all');
                 end
                 ff_ingen.ignore_time = true;
             else
@@ -45,10 +45,13 @@ classdef BreachImportData < BreachSignalGen
             this = this@BreachSignalGen({ff_ingen});
             
             if ~isa(ff_ingen, 'constant_signal_gen')  % not canceled
-                dom = this.GetDomain('file_idx');  % will need to improve this at some point
-                dom.domain = [dom.enum(1) dom.enum(end)];
-                this.SetDomain('file_idx', dom);
-                this.SampleDomain('file_idx', 'all');
+                param_file_idx = this.P.ParamList{this.P.DimX+1};
+                dom = this.GetDomain(param_file_idx);
+                if strcmp(dom.type,'enum')
+                    dom.domain = [dom.enum(1) dom.enum(end)];
+                    this.SetDomain(param_file_idx, dom);
+                    this.SampleDomain(param_file_idx, 'all');
+                end
                 this.Sys.Verbose=0;
                 this.Sim();
             end

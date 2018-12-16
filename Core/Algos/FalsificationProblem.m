@@ -64,8 +64,8 @@ classdef FalsificationProblem < BreachProblem
             this.obj_best=inf;
         end
         
-        function ResetObjective(this)
-            ResetObjective@BreachProblem(this);
+        function ResetObjective(this, varargin)
+            ResetObjective@BreachProblem(this,varargin{:});
             this.X_false = [];
             this.BrSet_False = [];
             this.obj_best = inf;
@@ -103,19 +103,16 @@ classdef FalsificationProblem < BreachProblem
                 evalin('base', ['save(''' FileSave ''',''' this.whoamI ''');']);
             end
         end
-      
+        
         
         % Logging
         function LogX(this, x, fval)
-        %   LogX  log variable parameter value tested by optimizers
-       
-            % Logging default stuff
-            this.LogX@BreachProblem(x, fval);
+            %   LogX  log variable parameter value tested by optimizers
             
-            %  Logging falsifying parameters found      
+            %  Logging falsifying parameters found
             [~, i_false] = find(min(fval)<0);
             if ~isempty(i_false)
-                this.X_false = [this.X_false x(:,i_false)];                              
+                this.X_false = [this.X_false x(:,i_false)];
                 this.obj_false = [this.obj_false fval(:,i_false)];
                 if (this.log_traces)&&~this.use_parallel&&~(this.BrSet.UseDiskCaching)  % FIXME - logging flags and methods need be revised
                     if isempty(this.BrSet_False)
@@ -124,7 +121,10 @@ classdef FalsificationProblem < BreachProblem
                         this.BrSet_False.Concat(this.BrSys);
                     end
                 end
-            end    
+            end
+            % Logging default stuff
+            this.LogX@BreachProblem(x, fval);
+            
         end
         
         function b = stopping(this)

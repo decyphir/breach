@@ -103,8 +103,8 @@ classdef ParamSynthProblem < BreachProblem
             const = max(const_vec);
         end
         
-        function ResetObjective(this)
-            ResetObjective@BreachProblem(this);
+        function ResetObjective(this, varargin)
+            ResetObjective@BreachProblem(this, varargin{:});
             this.X_Synth = [];
             this.BrSet_Synth = [];
             this.x0 = this.x0(:,1); % need double checking... 

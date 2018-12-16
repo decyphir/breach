@@ -34,5 +34,4 @@ function Sys = CreateSystem(vars, params, p0)
   % dynamicless system
   Sys.type = 'traces';
   
-  assignin('base','Sys',Sys);
   

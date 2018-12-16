@@ -28,7 +28,6 @@ if  nb_dir>1
         br_old_dir =   fileparts(br_all_dir{idir});
         all_paths = strsplit(path, ';');
         nb_paths = numel(all_paths);
-        disp(['Warning: removing paths in ' br_old_dir]);
         rm_path_list = {};
         for ii = 1:nb_paths
             if strcmp(all_paths{ii}(1:min(numel(br_old_dir),end)),br_old_dir)
@@ -36,8 +35,11 @@ if  nb_dir>1
                 rm_path_list = [rm_path_list all_paths{ii}];
             end
         end
-        rmpath(rm_path_list{:});
-        disp(' ');
+        if ~isempty(rm_path_list)
+            disp(['Warning: removing paths in ' br_old_dir]);
+            rmpath(rm_path_list{:});
+            disp(' ');
+        end
     end
 end
     
@@ -68,6 +70,7 @@ list_path = { ...
     [br_dir filesep 'Core' filesep 'Algos'], ...
     [br_dir filesep 'Core' filesep 'SignalGen'], ...
     [br_dir filesep 'Core' filesep 'OutputGen'], ...
+    [br_dir filesep 'Core' filesep 'ParamGen'], ...
     [br_dir filesep 'Params'], ...
     [br_dir filesep 'Params' filesep 'm_src'], ...
     [br_dir filesep 'Params' filesep 'm_src' filesep 'sobolqr'], ...
@@ -90,10 +93,19 @@ list_path = { ...
     [br_dir filesep 'Ext' filesep 'Toolboxes' filesep 'sundials' filesep 'sundialsTB' ], ...
     [br_dir filesep 'Ext' filesep 'Toolboxes' filesep 'sundials' filesep 'sundialsTB' filesep 'cvodes'], ...
     [br_dir filesep 'Ext' filesep 'Toolboxes' filesep 'jsonlab'], ...
+    [br_dir filesep 'Ext' filesep 'Toolboxes' filesep 'YAMLmatlab'], ...
+    [br_dir filesep 'Ext' filesep 'Toolboxes' filesep 'YAMLmatlab' filesep 'external'], ...
+    [br_dir filesep 'Ext' filesep 'Toolboxes' filesep 'YAMLmatlab' filesep 'extras'], ...
     };
 
 addpath(list_path{:});
 cd(cdr);
+
+%% Lookfor extensions
+if exist('InitBreachFlows', 'file')
+    InitBreachFlows;
+end
+
 
 %% Init BreachGlobOpt global configuration variable
 
@@ -121,8 +133,8 @@ end
 BreachGlobOpt.breach_dir = br_dir;
 BreachGlobOpt.list_path = list_path;
 
-%% Force refreshing sl_customization menu
-sl_refresh_customizations;
+%% Force refreshing sl_customization menu % disabled fixed/proven useful
+%sl_refresh_customizations;
 
 warning('on',id);
 

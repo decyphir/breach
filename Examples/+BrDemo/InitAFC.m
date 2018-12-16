@@ -1,9 +1,7 @@
 clear;
-InitBreach;
 
 BrDemo.InitAFCparams;
 
-warning('off', 'Simulink:LoadSave:EncodingMismatch')
 mdl = 'AbstractFuelControl';
 
 BrAFC = BreachSimulinkSystem(mdl, 'all', [], {}, [], 'Verbose',0,'SimInModelsDataFolder', true); 
@@ -23,3 +21,4 @@ InputGen.SetParam({'Pedal_Angle_base_value', 'Pedal_Angle_pulse_period', ...
                          [0 15 30 .5]);
 
 BrAFC.SetInputGen(InputGen);
+ 

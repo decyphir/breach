@@ -22,7 +22,7 @@ function varargout = select_cell_gui(varargin)
 
 % Edit the above text to modify the response to help select_cell_gui
 
-% Last Modified by GUIDE v2.5 09-Nov-2017 13:37:29
+% Last Modified by GUIDE v2.5 28-Sep-2018 14:53:05
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -92,14 +92,32 @@ set(hObject, 'Name', ['Choose from list']);
   % Choose default command line output for select_cell_gui
   handles.output = content_all;
   
+  % Init configurable edit boxes
+  set(handles.edit1, 'UserData', containers.Map());
+  set(handles.edit2, 'UserData', containers.Map());
+  
   % focus on listbox with all 
   uicontrol(handles.listbox_all_variables);
+
+  % 
+  handles= update_selected(handles);
+  handles = update_custom_edits(handles);
+  
+  % wait or not (controlled by caller)
+  if numel(varargin)>=4
+      handles.wait = varargin{4};
+  else
+      handles.wait = true;
+  end
   
   % Update handles structure
   guidata(hObject, handles);
   
 % UIWAIT makes select_cell_gui wait for user response (see UIRESUME)
-  uiwait(handles.main);
+if handles.wait
+    uiwait(handles.main);
+end
+
 
 
 % --- Outputs from this function are returned to the command line.
@@ -111,15 +129,18 @@ function varargout = select_cell_gui_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output';
+varargout{2} = handles;
 
 % The figure can be deleted now
-delete(handles.main);
+if handles.wait
+    delete(handles.main);
+end
 
 % --- Executes on selection change in listbox_all_variables.
 function listbox_all_variables_Callback(hObject, eventdata, handles)
 
-  val= get(hObject,'Value');
-  handles.selected_var = val;  
+  handles= update_selected(handles);
+  handles = update_custom_edits(handles);
   guidata(hObject, handles);
 
 
@@ -133,8 +154,9 @@ function listbox_all_variables_CreateFcn(hObject, eventdata, handles)
 
 % --- Executes on selection change in listbox_selected.
 function listbox_selected_Callback(hObject, eventdata, handles)
-  val= get(hObject,'Value');
-  handles.selected_var_to_plot = val;  
+
+  handles= update_selected(handles);
+  handles = update_custom_edits(handles);
   guidata(hObject, handles);
  
 
@@ -156,11 +178,15 @@ function button_add_Callback(hObject, eventdata, handles)
   niou_cont= content_all(vall);
   content_select = union(content_select, niou_cont); 
   set(handles.listbox_selected, 'String', content_select);  
+  handles= update_selected(handles);
+  handles = update_custom_edits(handles);
   guidata(hObject, handles);
   
 % --- Executes on button press in button_rem.
 function button_rem_Callback(hObject, eventdata, handles)
 handles = rem(handles);
+handles= update_selected(handles);
+handles = update_custom_edits(handles);
 guidata(hObject, handles);
 
 function handles= rem(handles)
@@ -203,14 +229,17 @@ else
 end
 
 function handles = add(handles)
-      % code of button_add_Callback
-       content_all = get(handles.listbox_all_variables, 'String');      
-       content_select = get(handles.listbox_selected, 'String');
-       vall = get(handles.listbox_all_variables,'Value');
-       vtp = get(handles.listbox_selected,'Value');
-       niou_cont= content_all(vall);
-       content_select = union(content_select, niou_cont);
-       set(handles.listbox_selected, 'String', content_select);
+% code of button_add_Callback
+content_all = get(handles.listbox_all_variables, 'String');
+content_select = get(handles.listbox_selected, 'String');
+vall = get(handles.listbox_all_variables,'Value');
+vtp = get(handles.listbox_selected,'Value');
+niou_cont= content_all(vall);
+content_select = union(content_select, niou_cont);
+handles= update_selected(handles);
+handles = update_custom_edits(handles);
+
+set(handles.listbox_selected, 'String', content_select);
 
 
 % --- Executes on key press with focus on main and none of its controls.
@@ -261,10 +290,12 @@ function pushbutton_add_all_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
- content_all = get(handles.listbox_all_variables,'String');
- set(handles.listbox_selected,'String',content_all);
+content_all = get(handles.listbox_all_variables,'String');
+set(handles.listbox_selected,'String',content_all);
 set(handles.listbox_selected,'Value',1);
- guidata(hObject, handles);
+handles= update_selected(handles);
+handles = update_custom_edits(handles);
+guidata(hObject, handles);
     
 % --- Executes on button press in pushbutton_rem_all.
 function pushbutton_rem_all_Callback(hObject, eventdata, handles)
@@ -273,6 +304,8 @@ function pushbutton_rem_all_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 set(handles.listbox_selected,'String',{});
 set(handles.listbox_selected,'Value',1);
+handles= update_selected(handles);
+handles = update_custom_edits(handles);
 guidata(hObject, handles);
 
 % --- Executes on key press with focus on listbox_selected and none of its controls.
@@ -285,28 +318,36 @@ function listbox_selected_KeyPressFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 if (isa(eventdata, 'matlab.ui.eventdata.UIClientComponentKeyEvent'))
     switch eventdata.Key
-     case 'rightarrow'
-     handles= add(handles);
-      guidata(hObject, handles);
-      
-     case 'leftarrow'
-      handles= rem(handles);
-      guidata(hObject, handles);
-         
-     case 'return'
-      
-      content_selected = get(handles.listbox_selected, 'String');
-      handles.output = content_selected ;
-  
-      guidata(hObject, handles);
-      uiresume(handles.main);
-
-     case 'escape'
-      handles.output=[];
-      uiresume(handles.main);
-    %  otherwise 
-    %  eventdata      
-    end 
+        case 'rightarrow'
+            handles= add(handles);
+            
+            handles= update_selected(handles);
+            handles = update_custom_edits(handles);
+            
+            guidata(hObject, handles);
+            
+        case 'leftarrow'
+            handles= rem(handles);
+            handles= update_selected(handles);
+            handles = update_custom_edits(handles);
+            guidata(hObject, handles);
+            
+        case 'return'
+            
+            content_selected = get(handles.listbox_selected, 'String');
+            handles.output = content_selected ;
+            handles= update_selected(handles);
+            handles = update_custom_edits(handles);
+            
+            guidata(hObject, handles);
+            uiresume(handles.main);
+            
+        case 'escape'
+            handles.output=[];
+            uiresume(handles.main);
+            %  otherwise
+            %  eventdata
+    end
 end
 
 function edit_search_Callback(hObject, eventdata, handles)
@@ -357,3 +398,95 @@ end
 
 
 
+function edit1_Callback(hObject, eventdata, handles)
+% hObject    handle to edit1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+var = handles.selected_var;
+ 
+if ~isempty(var)
+    m = get(hObject, 'UserData');
+    st=  get(hObject, 'String');
+    if ~isempty(st)
+        m(var)= strtrim(st);
+    end
+else
+    set(hObject, 'String', '');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function edit1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function edit2_Callback(hObject, eventdata, handles)
+% hObject    handle to edit2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+var = handles.selected_var;
+if ~isempty(var)
+    m = get(hObject, 'UserData');
+    st=  get(hObject, 'String');
+    if ~isempty(st)
+        m(var)= strtrim(st);
+    end
+else
+    set(hObject, 'String', '');
+end
+
+% --- Executes during object creation, after setting all properties.
+function edit2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function handles =update_custom_edits(handles)
+v= handles.selected_var;
+set(handles.edit1, 'String','');
+set(handles.edit2, 'String', '');
+if ~isempty(v)
+    m1 = get(handles.edit1,'UserData');
+    if m1.isKey(v)
+        set(handles.edit1, 'String', m1(v));
+    end
+    
+    m2 = get(handles.edit2,'UserData');
+    if m2.isKey(v)
+        set(handles.edit2, 'String', m2(v));
+    end
+        
+end
+
+function handles = update_selected(handles)
+
+% find focus? 
+h = gco(handles.main);
+if ~strcmp(get(h, 'Style'), 'listbox')||isempty(get(h, 'String'))
+    h = handles.listbox_all_variables;
+end
+
+val= get(h,'Value');
+content_all = get(h, 'String');
+if ~isempty(content_all)
+    handles.selected_var = content_all{val};
+else
+    handles.selected_var = '';
+end

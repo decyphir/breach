@@ -289,7 +289,11 @@ end
 % first time instant
 ind_ti = find(traj.time>=interval(1),1);
 if isempty(ind_ti)
-    time_values = [traj.time(1,end) traj.time(1,end)+1];
+    if ~isempty(traj.time)
+        time_values = [traj.time(1,end) traj.time(1,end)+1];
+    else
+        time_values = [];
+    end
     return
 end
 

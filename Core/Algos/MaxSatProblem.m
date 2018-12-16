@@ -40,11 +40,25 @@ classdef MaxSatProblem < BreachProblem
         end
         
         function obj = objective_fn(this,x)
-            obj = -min(this.robust_fn(x)); % maximizes the min robustness
+            this.robust_fn(x);
+            robs = this.Spec.traces_vals;
+            if (~isempty(this.Spec.traces_vals_precond))
+                for itr = 1:size(this.Spec.traces_vals_precond,1)
+                    precond_rob = min(this.Spec.traces_vals_precond(itr,:));
+                    if  precond_rob<0
+                        robs(itr,:)= -precond_rob;
+                    end
+                end
+            end
+            
+            NaN_idx = isnan(robs); % if rob is undefined, make it inf to ignore it
+            robs(NaN_idx) = -inf;
+            obj = -min(robs,[],1)';
+        
         end
         
-        function ResetObjective(this)
-            ResetObjective@BreachProblem(this);
+        function ResetObjective(this, varargin)
+            ResetObjective@BreachProblem(this, varargin{:});
             this.X_true = [];
             this.BrSet_True = [];
         end
@@ -60,9 +74,6 @@ classdef MaxSatProblem < BreachProblem
         % Logging
         function LogX(this, x, fval)
             
-            % Logging default stuff
-            this.LogX@BreachProblem(x, fval);
-            
             %  Logging satisfying parameters and traces
             [~, i_true] = find(fval>0);
             if ~isempty(i_true)
@@ -75,6 +86,10 @@ classdef MaxSatProblem < BreachProblem
                     end
                 end
             end
+            
+            % Logging default stuff
+            this.LogX@BreachProblem(x, fval);
+            
         end
         
         function b = stopping(this)

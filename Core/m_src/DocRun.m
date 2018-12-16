@@ -148,6 +148,7 @@ classdef DocRun < handle
         %% Publish
         function success = publish_beamer(this, compile, open)
             % publish_beamer run and create beamer
+            success = 1;
             global BreachGlobOpt;
             this.pre_run()
             if ~(exist(this.publish_src_dir,'dir'))
@@ -182,7 +183,8 @@ classdef DocRun < handle
                     cd(tex_src_path);
                     [status, result] = system(['pdflatex ' tex_file]);
                     if (status)
-                        error('Couldn''t compile Beamer presentation.');
+                        success = 0; 
+                        warning('Couldn''t compile Beamer presentation.');
                     else
                         copyfile(pdf_file, [this.publish_dir filesep this.script_name '.pdf']);
                     end

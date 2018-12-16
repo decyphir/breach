@@ -256,6 +256,14 @@ classdef BreachRequirement < BreachTraceSystem
             end
         end
         
+        
+        function h = PlotSignals(this,varargin)
+        
+            h = BreachSignalsPlot(this,varargin{:});
+            
+            
+        end
+        
         function summary = GetSummary(this)
             
             summary = GetStatement(this);
@@ -385,6 +393,10 @@ classdef BreachRequirement < BreachTraceSystem
             if all(ifound)
                 X = GetSignalValues@BreachTraceSystem(this,idxR, varargin{2:end});
             else
+                if any(~ifound&~ifoundB)
+                   absent =  find(~ifound&~ifoundB,1);
+                   warning('GetSignalsValues:not_found', 'Signal %s not found', signals{absent});
+                end
                 if any(ifound)
                     idxR = idxR(ifound==1);
                     values_req = this.GetSignalValues@BreachTraceSystem(idxR, varargin{2:end});
@@ -410,8 +422,9 @@ classdef BreachRequirement < BreachTraceSystem
                         nb_traj =numel(values_data);
                     else
                         nb_traj =1;
-                    end
+                    end                    
                 end
+                
                 if nb_traj>1
                     X = cell(nb_traj,1);
                     for iv = 1:nb_traj
@@ -470,58 +483,64 @@ classdef BreachRequirement < BreachTraceSystem
             disp(summary.statement);
         end
         
-        function PrintFormula(this)
-            
+        function st = PrintFormula(this)
+            st = '';
             if ~isempty(this.precond_monitors)
-                fprintf(['--- PRECONDITIONS ---\n']);
+                st = sprintf([st '--- PRECONDITIONS ---\n']);
                 for ifo = 1:numel(this.precond_monitors)
-                    this.precond_monitors{ifo}.disp();
+                    st = [st this.precond_monitors{ifo}.disp()];
                 end
-                fprintf('\n');
+                st = [st '\n'];
             end
-            fprintf(['--- REQUIREMENT FORMULAS ---\n']);
+            st = sprintf([st '--- REQUIREMENT FORMULAS ---\n']);
             for ifo = 1:numel(this.req_monitors)
-                this.req_monitors{ifo}.disp();
+                st = [st  this.req_monitors{ifo}.disp()];
             end
-            fprintf('\n');
+            st = sprintf([st '\n']);
         end
         
-        function PrintSignals(this)
-            disp( '---- SIGNALS IN ----')
+        function st = PrintSignals(this)
+            st = sprintf('---- SIGNALS IN ----\n');
             for isig = 1:numel(this.signals_in)
                 sig = this.signals_in{isig};
-                fprintf('%s %s\n', sig, this.get_signal_attributes_string(sig));
+                st = [st sprintf('%s %s\n', sig, this.get_signal_attributes_string(sig))];
             end
-            fprintf('\n');
-            disp( '---- SIGNALS  OUT ----')
+            st = sprintf([st '\n']);
+            st= sprintf([st '---- SIGNALS  OUT ----\n']);
             for isig = 1:this.P.DimX
-                fprintf('%s %s\n', this.P.ParamList{isig}, this.get_signal_attributes_string(this.P.ParamList{isig}));
+                st = [st sprintf('%s %s\n', this.P.ParamList{isig}, this.get_signal_attributes_string(this.P.ParamList{isig}))];
             end
-            fprintf('\n')
+            st = sprintf([ st '\n']);
             
             if ~isempty(this.postprocess_signal_gens)
                 for iog = 1:numel(this.postprocess_signal_gens)
                     if iog==1
-                        disp('--- POSTPROCESSING ---')
+                        st = sprintf([st '--- POSTPROCESSING ---\n']); 
                     end
                     signals_in_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.postprocess_signal_gens{iog}.signals_in, 'UniformOutput', false));
                     signals_in_st = ['{' signals_in_st(1:end-2) '}'];
                     signals_out_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.postprocess_signal_gens{iog}.signals, 'UniformOutput', false));
                     signals_out_st = ['{' signals_out_st(1:end-2) '}'];
-                    fprintf('%s --> %s\n',signals_in_st, signals_out_st);
+                    st =  [st sprintf('%s --> %s\n',signals_in_st, signals_out_st)];
                 end
-                fprintf('\n');
+                st = sprintf([ st '\n']);
             end
             if ~isempty(this.sigMap)
-                this.PrintAliases();
-                fprintf('\n');
+                st = [st this.PrintAliases() '\n'];
+            end
+            
+            if nargout==0
+                fprintf(st);
             end
         end
         
-        function PrintAll(this)
-            this.PrintFormula();
-            this.PrintSignals();
-            this.PrintParams();
+        function st = PrintAll(this)
+            st =this.PrintFormula();
+            st = sprintf([st this.PrintSignals()]);
+            st = sprintf([st this.PrintParams()]);
+            if nargout==0
+                fprintf(st);
+            end
         end
         
         function  atts = get_signal_attributes(this, sig)
@@ -723,9 +742,9 @@ classdef BreachRequirement < BreachTraceSystem
             end
         end
         
-        function PrintAliases(this)
+        function st = PrintAliases(this)
             if ~isempty(this.sigMap)
-                disp( '---- ALIASES ----')
+                st = sprintf('---- ALIASES ----\n');
                 keys = union(this.sigMap.keys(), this.sigMapInv.keys());
                 printed ={};
                 for ik = 1:numel(keys)
@@ -752,12 +771,17 @@ classdef BreachRequirement < BreachTraceSystem
                         al_st = [al_st(1:end-2) ' (not linked to data)' ];
                     end
                     if ~ismember(sig, printed)
-                        fprintf('%s <--> %s\n', sig, al_st )
+                        st =sprintf( [st sprintf('%s <--> %s\n', sig, al_st )]);
                         printed = [printed {sig} aliases];
                     end
                 end
-                fprintf('\n')
+                st = sprintf([st '\n']);
             end
+            
+            if nargout==0
+                fprintf(st);
+            end
+            
         end
             
         function sigs_in = get_signals_in(this)
@@ -881,13 +905,14 @@ classdef BreachRequirement < BreachTraceSystem
             end  
             
             % We got B, checks whether it contains necessary signals
-            absent_signals_in = setdiff(this.signals_in, B.GetSignalList());
-            if ~isempty(absent_signals_in)
-                error('BreachRequirement:Eval', 'Signal %s is not provided by data or model',absent_signals_in{1});
+            this.BrSet = B; 
+            [ifound, ~, ifoundB, ~ ] = this.FindSignalsIdx(this.signals_in);
+            if ~all(ifound|ifoundB)
+               idx_not_found = find((~ifound)&(~ifoundB),1) ;
+               error('BreachRequirement:Eval', 'Signal %s is not provided by data or model',this.signals_in{idx_not_found});
             end
             
-            
-            % checksi parameters in B and in Req
+            % checks parameters in B and in Req
             this.BrSet = B;
             paramB = this.BrSet.GetParamList();
             idxR_paramR = this.P.DimX+2:this.P.DimP;

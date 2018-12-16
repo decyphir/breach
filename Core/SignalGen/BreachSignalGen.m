@@ -183,5 +183,30 @@ classdef BreachSignalGen < BreachSystem
                 error('GetSignalGenFromSignalName:signal_not_found.', 'No signal generator generates this signal.');
             end
         end
+        
+        function strct_cfg = ExportConfig(this)
+            strct_cfg = struct;
+            strct_cfg.input_cfg = {};
+            
+            for isg = 1:numel(this.signalGenerators)
+                sg =this.signalGenerators{isg};
+                cfg = struct;
+                cfg.signal_gen_class = class(sg);
+                args_name = sg.getSignalGenArgs();
+                cfg.Args = {sg.signals};
+                for ia= 1:numel(args_name)
+                    cfg.Args{end+1} = sg.(args_name{ia});
+                end
+                if size(sg.p0,2)>1
+                    cfg.Args{end+1} = sg.p0;
+                else
+                    cfg.Args{end+1} = sg.p0';
+                end
+                strct_cfg.input_cfg{end+1} = cfg; 
+            end
+            
+        end
+        
+        
     end
 end

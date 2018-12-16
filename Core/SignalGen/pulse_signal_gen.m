@@ -11,6 +11,9 @@ classdef pulse_signal_gen < signal_gen
     
     methods
         function this = pulse_signal_gen(signals, p0)
+            if ischar(signals)
+                signals = {signals};
+            end
             this.signals = signals;
             this.params = {};
             this.p0 = zeros( 5*numel(signals), 1 );

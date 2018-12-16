@@ -3,7 +3,7 @@
 % hierarchy of java.util.ArrayListS and java.util.MapS. Then calls
 % Snakeyaml to write it to a file.
 %=========================================================================
-function result = WriteYaml(filename, data, flowstyle)
+function [result, output] = WriteYaml(filename, data, flowstyle)
     if ~exist('flowstyle','var')
         flowstyle = 0;
     end;

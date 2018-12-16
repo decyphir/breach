@@ -1432,7 +1432,7 @@ end
 function button_sys_params_Callback(hObject, eventdata, handles)
 Br = get_current_set(handles);
 if ~isempty(Br)
-    handles.show_params = Br.GetParamsSysList();
+    handles.show_params = Br.GetSysParamList();
     handles = fill_uitable(handles);
     guidata(hObject,handles);
 end

@@ -1,7 +1,7 @@
 function P = Pfix_traj_ref(P, P0)
 % Pfix_traj_ref(P, P0) checks whether P0 contains traces computed from  
 
-%  Checks for pts sharing the sames systems parameters
+%  Checks for pts sharing the same systems parameters
 P.traj_ref = zeros(1,size(P.pts,2));
 
 % check if some already computed traj are valid for generated param set

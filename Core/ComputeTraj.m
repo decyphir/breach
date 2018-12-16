@@ -217,7 +217,6 @@ switch Sys.type
         if isfield(Sys, 'Parallel')&&Sys.Parallel&&numel(ipts)>1
             
             for idx = ipts
-                % calculate each magic square from 1:10
                 f(idx) = parfeval(@(ii)task_sim(Sys,P0,tspan,ii), 1, idx);
             end
             trajs = cell(1, numel(ipts));
@@ -343,11 +342,7 @@ if  use_caching
 end
 
 if do_compute
-    if isfield(Sys,'init_u')
-        U = Sys.init_u(Sys.InputOpt, p, tspan);
-        assignin('base','t__',U.t);
-        assignin('base', 'u__',U.u);
-    end
+    
     [traj.time, traj.X,traj.status] = Sys.sim(Sys, tspan, P0.pts(:,ii));
     traj.param = P0.pts(1:P0.DimP,ii)';
     

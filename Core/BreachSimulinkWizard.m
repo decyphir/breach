@@ -141,7 +141,6 @@ if isempty(Br)
     Br = Ball;
     assignin('base','IG__', []);
 else
-    IG = Br.InputGenerator;
     assignin('base', 'IG__', Br.InputGenerator);
 end
 
@@ -157,8 +156,8 @@ if isequal(niou_sigs,0) % pushed cancel
 end
 
 assignin('base','sigs__', niou_sigs);
-params_all = Ball.GetParamsSysList();
-params = Br.GetParamsSysList();
+params_all = Ball.GetPlantParamList();
+params = Br.GetPlantParamList();
 
 %% Params in workspace
 if ~isempty(params_all)

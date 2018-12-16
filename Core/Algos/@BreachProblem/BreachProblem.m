@@ -60,7 +60,7 @@ classdef BreachProblem < BreachStatus
         x0
         solver= 'global_nelder_mead'   % default solver name
         solver_options    % solver options
-        Spec
+        Spec              % BreachRequirement object reset to R0 for each objective evaluation
         T_Spec=0
         
         constraints_fn    % constraints function
@@ -70,9 +70,12 @@ classdef BreachProblem < BreachStatus
     % properties related to the function to minimize
     properties
         BrSet
-        BrSys
-        BrSet_Best
+        BrSys         % BreachSystem reset for each objective evaluation
+        BrSet_Best   
         BrSet_Logged
+        R0            % BreachRequirement object initial 
+        R_log    % BreachRequirement object logging requirement evaluations during solving 
+        
         params
         domains
         lb
@@ -99,6 +102,7 @@ classdef BreachProblem < BreachStatus
         time_spent = 0
         nb_obj_eval = 0
         max_obj_eval = 100
+        mixed_integer_optim_solvers = {'ga'};
     end
     
     %% Static Methods
@@ -156,8 +160,51 @@ classdef BreachProblem < BreachStatus
                 phi = BreachRequirement(phi);
             end
             
+            this.R0 = phi.copy(); 
             this.Spec = phi;
-            this.BrSet = BrSet.copy();
+            
+            switch nargin 
+                case 2
+                    this.ResetObjective(BrSet);
+                case 3
+                    this.ResetObjective(BrSet, params);
+                case 4
+                    this.ResetObjective(BrSet, params, ranges);
+            end
+            % setup default solver
+            this.setup_solver();
+            
+            % reset display
+            rfprintf_reset();
+            
+        end
+        
+        function Reset_x0(this)
+            
+            x0__ = zeros(numel(this.params), size(this.BrSet.P.pts,2));
+            for ip = 1:numel(this.params)
+                x0__ip =  this.BrSet.GetParam(this.params{ip});
+                if isempty(x0__ip)
+                    x0__ip =  this.Spec.GetParam(this.params{ip});
+                end
+                if isempty(x0__ip)
+                    error('BreachProblem:unknown_param', ['Parameter ' this.params{ip} ' is neither a system parameter nor a requirement parameter.']);
+                end
+                x0__(ip,:) = x0__ip;
+            end
+            
+            this.BrSet.SetParam(this.params, x0__,'spec');  % not sure this is useful anymore, if ever
+            this.x0 = unique(x0__', 'rows')';% remove duplicates, I guess. 
+            
+        end
+        
+        function ResetObjective(this, BrSet, params, ranges)
+            if nargin == 1
+                BrSet = this.BrSet;
+            else
+                this.BrSet = BrSet.copy();
+            end
+            
             this.BrSet.Sys.Verbose=0;
                   
             % Parameter ranges
@@ -184,51 +231,7 @@ classdef BreachProblem < BreachStatus
             end
            
             this.lb = lb__;
-            this.ub = ub__;
-            
-            % Initial value
-            this.Reset_x0();
-            
-            % robustness
-            this.BrSys = this.BrSet.copy(); 
-            this.robust_fn = @(x) (phi.Eval(this.BrSys, this.params, x));
-            
-            this.BrSys.Sys.Verbose=0;
-             
-            % objective function
-            this.objective = @(x) (objective_wrapper(this,x));
-      
-            % setup default solver
-            this.setup_solver();
-            
-            % reset display
-            rfprintf_reset();
-            
-        end
-        
-        function Reset_x0(this)
-            
-            x0__ = zeros(numel(this.params), size(this.BrSet.P.pts,2));
-            for ip = 1:numel(this.params)
-                x0__ip =  this.BrSet.GetParam(this.params{ip});
-                if isempty(x0__ip)
-                    x0__ip =  this.Spec.GetParam(this.params{ip});
-                end
-                if isempty(x0__ip)
-                    error('BreachProblem:unknown_param', ['Parameter ' this.params{ip} ' is neither a system parameter nor a requirement parameter.']);
-                end
-                x0__(ip,:) = x0__ip;
-            end
-            
-            this.BrSet.SetParam(this.params, x0__,'spec');  % not sure this is useful anymore, if ever
-            this.x0 = unique(x0__', 'rows')';
-            
-        end
-        
-        function ResetObjective(this, BrSet)
-            if nargin == 1
-                BrSet = this.BrSet;
-            end
+            this.ub = ub__;            
             
             this.Reset_x0;
             
@@ -236,8 +239,20 @@ classdef BreachProblem < BreachStatus
             rfprintf_reset();
             
             % robustness
-            this.BrSys = BrSet.copy(); 
+            this.BrSys = BrSet.copy();
+            
+            this.BrSys.SetParam(this.params, this.x0(:,1), 'spec');
+            [~, ia] = unique( this.BrSys.P.pts','rows');
+            if numel(ia)<size(this.BrSys.P.pts,2)
+                this.BrSys = this.BrSys.ExtractSubset(ia);
+            end
+
+            this.BrSys.Sys.Verbose=0;
+            
             this.robust_fn = @(x) (this.Spec.Eval(this.BrSys, this.params, x));
+            
+            % objective function
+            this.objective = @(x) (objective_wrapper(this,x));      
             
             this.BrSet_Best = [];
             this.BrSet_Logged = [];
@@ -369,7 +384,7 @@ classdef BreachProblem < BreachStatus
             
             % create problem structure
             problem = this.get_problem();
-                        
+            
             switch this.solver
                 case 'init'
                     this.display_status_header();
@@ -483,11 +498,12 @@ classdef BreachProblem < BreachStatus
             BrQ.ResetParamSet();
             BrQ.SetParamRanges(this.params, [this.lb this.ub])
             BrC = BrQ.copy();
+            nb_corners = this.solver_options.nb_max_corners;
             nb_samples = this.solver_options.nb_new_trials;
             step = this.solver_options.start_at_trial;
             
             BrC.P = CreateParamSet(BrC.Sys,this.params,[this.lb this.ub]);
-            BrC.CornerSample(nb_samples);
+            BrC.CornerSample(nb_corners);
             XC = BrC.GetParam(this.params);
             nb_corners= size(XC, 2);
             qstep = step-nb_corners;
@@ -510,11 +526,11 @@ classdef BreachProblem < BreachStatus
         end
         
         function x0 = generate_new_x0(this)
-            x0 = (this.ub-this.lb).*rand(3,1) + this.lb;
+            x0 = (this.ub-this.lb).*rand(length(this.ub),1) + this.lb;
         end
         
         function problem = get_problem(this)
-            problem =struct('objective', this.objective, ...
+            problem = struct('objective', this.objective, ...
                 'fitnessfcn', this.objective, ... % for ga
                 'x0', this.x0, ...   
                 'nvars', size(this.x0, 1),... % for ga
@@ -533,11 +549,47 @@ classdef BreachProblem < BreachStatus
             % Checks whether some variables are integer
             for ip = 1:numel(this.params)
                 dom = this.BrSys.GetDomain(this.params{ip});
-                if strcmp(dom.type, 'int')
+                if strcmp(dom.type, 'int')  
                     problem.intcon = [problem.intcon ip];
                 end
             end
             
+        end
+        
+        % check the MIP options for suppoted solvers and change the this.params
+        function setup_mixed_int_optim(this, method)
+            if ~exist('method')||isempty(method)
+                method = 'map_enum_to_int';
+            end
+           
+            switch method
+                case 'map_enum_to_int'
+                    
+                    enum_idx = find(this.params_type_idx('enum'));
+                    for ii = 1:length(enum_idx)
+                        enum_param = this.params{enum_idx(ii)};
+                        enum_domain = this.BrSet.GetDomain(enum_param);
+                        enum_br_domain = BreachDomain('enum', enum_domain.enum);
+                        pg = enum_idx_param_gen(enum_param, enum_br_domain);
+                        this.BrSet.SetParamGen({pg});
+                        this.params{enum_idx(ii)} = pg.params{1};
+                        fprintf('Mapped %s to %s\n', pg.params_out{1}, pg.params{1} );
+                    end
+                    this.ResetObjective();
+                case 'exhaustive'
+                    idx = union(find(this.params_type_idx('enum')),find(this.params_type_idx('int')));
+                    BrSet = this.BrSet.copy();
+                    BrSet.SampleDomain(this.params(idx), 'all');
+                    this.ResetObjective(BrSet, this.params(setdiff(1:numel(this.params), idx)));
+                    fprintf('Sampled enum and int domains exhaustively, resulting in %g values for each objective evaluation.\n', BrSet.GetNbParamVectors());
+            end
+            
+        end
+                
+        function idx = params_type_idx(this, ptype)
+            domains = this.BrSys.GetDomain(this.params);
+            idx = cell2mat(arrayfun(@(x) strcmp(x.type, ptype), ...
+                domains, 'UniformOutput', false));
         end
        
         function add_constraint(this, phi)
@@ -594,7 +646,9 @@ classdef BreachProblem < BreachStatus
                     for iter = 1:nb_iter
 
                         % checks whether x has already been computed or not
-                        % can do better, but will do for now
+                        % skips logging if already computed 
+                        % might cause inconsistencies down the road...
+                        
                         if ~isempty(this.X_log)
                             xi = x(:, iter);
                             idx = find(sum(abs(this.X_log-repmat(xi, 1, size(this.X_log, 2)))) == 0,1);
@@ -602,23 +656,19 @@ classdef BreachProblem < BreachStatus
                             idx=[];
                         end
                         if ~isempty(idx)
-                            if  ~isempty(this.BrSet_Logged)
-                                this.BrSys.P = Sselect(this.BrSet_Logged.P,idx);
-                            end
                             fval(:,iter) = this.obj_log(:,idx);
                         else
                             % calling actual objective function
                             fval(:,iter) = fun(iter);
-                        end
-
-                        % logging and updating best
-                        this.LogX(x(:, iter), fval(:,iter));
                         
-                        % update status
-                        if rem(this.nb_obj_eval,this.freq_update)==0
-                            this.display_status();
+                            % logging and updating best
+                            this.LogX(x(:, iter), fval(:,iter));
+                            
+                            % update status
+                            if rem(this.nb_obj_eval,this.freq_update)==0
+                                this.display_status();
+                            end
                         end
-                        
                         % stops if falsified or other
                         if this.stopping()
                             break
@@ -655,8 +705,8 @@ classdef BreachProblem < BreachStatus
         end
         
         function b = stopping(this)
-            b =  (this.time_spent > this.max_time) ||...
-                    (this.nb_obj_eval> this.max_obj_eval);
+            b =  (this.time_spent >= this.max_time) ||...
+                    (this.nb_obj_eval>= this.max_obj_eval);
         end
               
         %% Misc methods
@@ -675,9 +725,12 @@ classdef BreachProblem < BreachStatus
             if (this.log_traces)&&~(this.use_parallel)&&~(this.BrSet.UseDiskCaching) % FIXME - logging flags and methods need be revised
                 if isempty(this.BrSet_Logged)
                     this.BrSet_Logged = this.BrSys.copy();
+                    this.R_log = this.Spec.copy();
                 else
                     this.BrSet_Logged.Concat(this.BrSys);
+                    this.R_log.Concat(this.Spec);
                 end
+                this.Spec = this.R0.copy();
             end
             
             [fmin , imin] = min(min(fval));
@@ -731,7 +784,9 @@ classdef BreachProblem < BreachStatus
             fprintf('\n ---- Best value %g found with\n', min(best_fval));
             
             for ip = 1:numel(this.params)
-                fprintf( '        %s = %g\n', this.params{ip},param_values(ip))
+                % check the enum_idx variable and restore the params
+                value = param_values(ip);
+                fprintf( '        %s = %g\n', this.params{ip},value)
             end
             fprintf('\n');
         end
@@ -780,14 +835,12 @@ classdef BreachProblem < BreachStatus
         
         function display_status_header(this)
             if ~isempty(this.Spec.precond_monitors)
-                hd_st = sprintf(  '#calls (max:%5d)        time spent (max: %g)       [current obj]   (current best)   [constraint]\n',...
+                hd_st = sprintf(  '#calls (max:%5d)        time spent (max: %g)     [current  obj]     (current best)   [constraint]\n',...
                     this.max_obj_eval, this.max_time);
             else
-                hd_st = sprintf(  '#calls (max:%5d)        time spent (max: %g)       [current obj]   (current best) \n',...
+                hd_st = sprintf(  '#calls (max:%5d)        time spent (max: %g)     [current  obj]     (current best) \n',...
                     this.max_obj_eval, this.max_time);
             end
-       %     l = numel(hd_st);
-       %     hd_st = [hd_st repmat('-',1,l) '\n'];
             fprintf(hd_st);
         end
         
@@ -843,36 +896,7 @@ classdef BreachProblem < BreachStatus
                 BrOut.Eval(B);
             end
         end
-        
-        function [cmp, cmpSet, cmpSys, cmpBest, cmpLogged] = compare(this, other)
-            % FIXME broken as per changes in BreachStatus
-            cmp = BreachStatus();
-            cmpSet = BreachStatus();
-            cmpSys = BreachStatus();
-            cmpBest = BreachStatus();
-            cmpLogged= BreachStatus();
-            
-            if ~isequal(this,other)
-                cmp.addstatus(-1, 'Something is different.')
-                cmpSet = this.BrSet.compare(other.BrSet);
-                if (cmpSet.status~=0)
-                    cmp.addStatus(-1, 'Fields BrSet are different.');
-                end
-                cmpSys = this.BrSys.compare(other.BrSys);
-                if (cmpSys.status~=0)
-                    cmp.addStatus(-1, 'Fields BrSys are different.');
-                end
-                cmpBest   = this.BrSet_Best.compare(other.BrSet_Best);
-                if (cmpBest.status~=0)
-                    cmp.addStatus(-1, 'Fields BrSet_Best are different.');
-                end
-                cmpLogged = this.BrSet_Logged.compare(other.BrSet_Logged);
-                if (cmpLogged.status~=0)
-                    cmp.addStatus(-1, 'Fields BrSet_Logged are different.');
-                end
-            end
-        end
-        
+                
         
     end
     

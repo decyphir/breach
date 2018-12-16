@@ -18,10 +18,34 @@ classdef spike_signal_gen < signal_gen
     end
     methods 
         
-        function this = spike_signal_gen(signals, varargin)
-           this.signals = signals; 
+        function this = spike_signal_gen(signals, method, p0)
+           if ischar(signals)
+              signals= {signals}; 
+           end
+            
+           this.signals = signals;
            this.params = {};
            this.interp_method = {};
+
+           if exist('method','var')
+              if ischar(method) 
+                  method = {method};
+              end
+           else
+               method = repmat( {'spline'}, 1, numel(signals));
+           end
+           
+           if ~exist('p0', 'var')
+               p0=[];
+           end
+           
+           num_m = length(method);
+           if num_m ~= 1 || length(method) ~= numel(this.signals)
+               error(['Interpolation method can either be set for each individual' ...
+                   'signal or for all signals']);
+           end
+           this.interp_method = method;
+      
            for i_s = 1:numel(this.signals)
                this.params = { this.params{:} [this.signals{i_s} '_spike_base'] ...
                               [this.signals{i_s} '_spike_amp']... 
@@ -29,17 +53,15 @@ classdef spike_signal_gen < signal_gen
                               [this.signals{i_s} '_spike_time']};
                this.p0(4*(i_s-1)+1:4*i_s, 1) = [0 1 1 1];
            end
-
-           if nargin > 1
-               num_vars = length(varargin);
-               if num_vars ~= 1 || length(varargin{1}) ~= numel(this.signals)
-                   error(['Interpolation method can either be set for each individual' ...
-                   'signal or for all signals']);
+           
+           if ~isempty(p0)
+               if length(p0)==length(this.p0)
+                   this.p0(:) = p0(:);
+               else
+                   error('spike_signal_gen:bad_p0','Incorrect dimensions for p0');
                end
-               this.interp_method = varargin{1};
-           else
-               this.interp_method{end+1} = 'spline';
            end
+           
 
            this.params_domain = repmat(BreachDomain(), 1, numel(this.params));
            this.signals_domain = repmat(BreachDomain(), 1, numel(this.signals));     
@@ -66,9 +88,9 @@ classdef spike_signal_gen < signal_gen
                     
                 pi_s = p(4*i_s+1:4*i_s+4);
                 
-                if time(1) > pi_s(4) - pi_s(3)/2.0 || time(end) < pi_s(4) + pi_s(3)/2.0
-                    warning('Spike is outside the signal range.' )
-                end 
+              %  if time(1) > pi_s(4) - pi_s(3)/2.0 || time(end) < pi_s(4) + pi_s(3)/2.0
+              %      warning('Spike is outside the signal range.' )
+              %  end 
 
                 i_left = find(time>=(pi_s(4) - pi_s(3)/2.0), 1);
                 if  time(end) < pi_s(4) + pi_s(3)/2.0
@@ -90,6 +112,10 @@ classdef spike_signal_gen < signal_gen
         function type = getType(this)
             type = 'spike';
         end
+        function args = getSignalGenArgs(this)
+            args = {'interp_method'};         
+        end
+        
     end
             
 end

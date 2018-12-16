@@ -50,7 +50,6 @@ if exist('kn','var')
     kn = kn(kn>0); % keep only valid kn
     kn = kn(kn<=size(P.pts,2));
     if isempty(kn)
-        warning('Sselect:EmptyKn','The optional parameter ''kn'' is empty. Pn is defined as P.');
         Pn = P;
         return ;
     elseif(isequal(kn,1)&&(size(P.pts,2)==1))
