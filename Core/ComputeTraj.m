@@ -159,6 +159,10 @@ switch Sys.type
             end
         end
         
+        if ischar(tspan) %  FIXME: does not work with sim_time being varying parameter...
+            tspan = evalin('base', tspan);
+        end
+                    
         for ii = ipts
             if isfield(Sys,'init_u')
                 U = Sys.init_u(Sys.ParamList(Sys.DimX-Sys.DimU+1:Sys.DimX), P0.pts(1:Sys.DimP,ii), tspan);
@@ -367,6 +371,7 @@ if do_compute
     end
 end
 end
+
 
 
 function err = check_u(u)

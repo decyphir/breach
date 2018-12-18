@@ -49,7 +49,6 @@ classdef stl_monitor < req_monitor
         
         function [time, Xout] = computeSignals(this, time, X, p)
             this.init_tXp(time,X,p); 
-            
             Xout = zeros(numel(this.signals), numel(time));
             
             % compute predicate values
@@ -66,12 +65,7 @@ classdef stl_monitor < req_monitor
         
         function plot_diagnosis(this, F)
             % Assumes F has data about this formula
-            F.BrSet.PlotRobustSat(this.formula,[],[],F.ipts);
-            
-%             if ~isempty(this.predicates)
-%                 F.AddAxes();
-%                 F.AddSignals(get_id(this.predicates{1}));
-%             end
+            F.BrSet.PlotRobustSat(this.formula,[],[],F.ipts);            
         end
         
         function [v, t, Xout] = eval(this, t, X,p)

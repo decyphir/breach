@@ -37,7 +37,6 @@ classdef BreachSamplesPlot < handle
             this.summary = BrSet.GetSummary();
             this.signature = this.summary.signature;
             
-            this.update_data();
             if exist('params','var')
                 if ischar(params)
                     this.params = {params};
@@ -48,6 +47,21 @@ classdef BreachSamplesPlot < handle
                 this.params = {};
             end
             
+            this.update_data();
+            
+            %% default axis
+            if ~isa(this.BrSet, 'BreachRequirement')
+                var = this.data.variables;
+                if numel(var)>=1
+                    this.x_axis = var{1};
+                end
+                if numel(var)>=2
+                    this.y_axis = var{2};
+                end
+                if numel(var)>=3
+                    this.z_axis = var{3};
+                end
+            end
             
             this.update_plot();
             
@@ -322,6 +336,9 @@ classdef BreachSamplesPlot < handle
                     case 'sum'
                         zdata_pos = this.data.pos_pts.v_sum_pos;
                         plot_this = @plot3_sum;
+                    case 'num'
+                        zdata_pos = this.data.pos_pts.v_num_pos;
+                        plot_this = @plot3_num;
                     otherwise  % assumes z_axis is a parameter name
                         if ismember(this.z_axis, this.data.req_names)
                             pos_idx = this.data.(this.z_axis).pos_pts.idx;
@@ -392,6 +409,9 @@ classdef BreachSamplesPlot < handle
                     case 'sum'
                         zdata_neg = this.data.neg_pts.v_sum_neg;
                         plot_this = @plot3_sum;
+                    case 'num'
+                        zdata_neg = this.data.neg_pts.v_num_neg;
+                        plot_this = @plot3_num;
                     otherwise  % assumes z_axis is a parameter name
                         if ismember(this.z_axis, this.data.req_names)
                             neg_idx = this.data.(this.z_axis).neg_pts.idx;
@@ -519,11 +539,31 @@ classdef BreachSamplesPlot < handle
                 if has_neg&&~isempty(xdata_neg)
                     ydata_neg = this.data.neg_pts.v_num_neg;
                     this.neg_plot = bar(xdata_neg, ydata_neg ,0.5,'r');
-                    set(gca, 'YLim', [min(ydata_neg)-.1, max(ydata_pos)+.1],  'Ytick', ceil(min(ydata_neg)-.1):1:floor(max(ydata_pos)+.1));
+                    %set(gca, 'YLim', [min(ydata_neg)-.1, max(ydata_pos)+.1],  'Ytick', ceil(min(ydata_neg)-.1):1:floor(max(ydata_pos)+.1));
                 end
                 xlabel(this.x_axis, 'Interpreter', 'None');
                 ylabel('Num. requirement falsified/satisfied');
+                set(gca, 'XTick', 1:numel(this.data.all_pts.idx) );
             end
+            
+            
+            function plot3_num()
+                if has_pos
+                    ydata_pos = this.data.pos_pts.v_num_pos;
+                    this.pos_plot = plot3(xdata_pos, ydata_pos, zdata_pos,'.g', 'MarkerSize', 20);
+                end
+                hold on;
+                grid on;
+                if has_neg
+                    ydata_neg = this.data.neg_pts.v_num_neg;
+                    this.neg_plot = plot3(xdata_neg, ydata_neg , zdata_neg,'.r', 'MarkerSize', 20);
+                    %set(gca, 'YLim', [min(ydata_neg)-.1, max(ydata_pos)+.1],  'Ytick', ceil(min(ydata_neg)-.1):1:floor(max(ydata_pos)+.1));
+                end
+                xlabel(this.x_axis, 'Interpreter', 'None');
+                ylabel(this.y_axis, 'Interpreter', 'None');        
+                zlabel('Num. requirement falsified/satisfied');
+            end
+
             h = title('Left click on data to get details, right click to plot signals', 'FontWeight', 'normal', 'FontSize', 10);
             
             
