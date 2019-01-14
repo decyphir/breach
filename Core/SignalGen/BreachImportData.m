@@ -8,7 +8,10 @@ classdef BreachImportData < BreachSignalGen
     end
     
     methods
-        function this = BreachImportData(fname, signals, params)
+        function this = BreachImportData(fname, signals, params, varargin)
+            
+            options.InitDataScript='';            
+            options = varargin2struct(options, varargin{:});
             
             if ~exist('fname', 'var')||isempty(fname)
                 
@@ -27,15 +30,15 @@ classdef BreachImportData < BreachSignalGen
                 end
             end
             
-            if ~exist('signals', 'var')
+            if ~exist('signals', 'var')||isequal(signals, 'all')
                 signals = {};
             end
             
             if ~isempty(fname)
                 if exist('params', 'var')
-                    ff_ingen = from_file_signal_gen(signals, fname,{}, params);
+                    ff_ingen = from_file_signal_gen(signals, fname,{}, params,'', options.InitDataScript);
                 else
-                    ff_ingen = from_file_signal_gen(signals, fname, {}, 'all');
+                    ff_ingen = from_file_signal_gen(signals, fname, {}, 'all','', options.InitDataScript);
                 end
                 ff_ingen.ignore_time = true;
             else

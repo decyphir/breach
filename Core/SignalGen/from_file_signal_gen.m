@@ -7,10 +7,11 @@ classdef from_file_signal_gen < signal_gen
         time_var_name
         params_from_file
         ignore_time = false   % if true, will ignore time given as parameter of Sim command and use time data instead
+        init_data_script
         pts  % stores possible values of parameters
     end
     methods
-        function this = from_file_signal_gen(signals, fname, varname,params_from_file,sg_name,p0)
+        function this = from_file_signal_gen(signals, fname, varname,params_from_file,sg_name,init_data_script, p0)
             
             if ~exist('fname', 'var')
                 [filenames, paths] = uigetfile( ...
@@ -31,27 +32,43 @@ classdef from_file_signal_gen < signal_gen
                 fname= {fname};
             end
             
-            % checks files and tries to recover them 
-            for i= 1:numel(fname)
-                if ~exist(fname{i}, 'file') 
-                    error('from_file_signal_gen:file_not_found','Input file %s not found', fname{i});
+            if exist('init_data_script', 'var')
+                if isnumeric(init_data_script)&&~exist('p0','var') % Backward compatibility trick..
+                    p0 = init_data_script;
+                else
+                    this.init_data_script = init_data_script;
                 end
             end
-            
-            
+                
             % First thing is detecting files
             for ifn=1:numel(fname)
-                dir_file_list = dir(fname{ifn});
-                pathstr = fileparts(fname{ifn}); % dir does not keep the path...
-                for ifnl = 1:numel(dir_file_list)
-                    if ~isempty(pathstr)
-                        dir_file_list(ifnl).name = [pathstr filesep dir_file_list(ifnl).name];
+                files_list = {};
+                dir_file_list = dir(fname{ifn});   % try using dir (if directory or wildcard like *.mat)
+                if ~isempty(dir_file_list)  
+                    pathstr = fileparts(fname{ifn}); % dir does not keep the path...
+                    for id = 1:numel(dir_file_list)
+                        if ~isempty(pathstr)
+                            files_list{id} = [pathstr filesep dir_file_list(id).name];
+                        elseif isdir(fname{ifn})
+                            files_list{id} = [fname{ifn} filesep dir_file_list(id).name];
+                        else
+                            files_list{id} = fname{ifn};
+                        end
+                    end
+                else % try finding file in the path 
+                    pfe = which(fname{ifn});
+                    if ~isempty(pfe)
+                        files_list = {pfe};
+                    else
+                        files_list = {};
                     end
                 end
+                
+                
                 if isempty(this.file_list)
-                    this.file_list = dir_file_list;
+                    this.file_list = files_list;
                 else
-                    this.file_list = [this.file_list dir_file_list];
+                    this.file_list = [this.file_list files_list];
                 end
             end
             
@@ -73,8 +90,8 @@ classdef from_file_signal_gen < signal_gen
             this.pts = [1:numel(this.file_list)];
             
             % open first file
-            fname = this.file_list(1).name;
-            st = load(fname);
+            fname = this.file_list{1};
+            st = this.load_data(fname);
             vars = fieldnames(st);
             
             % look for a time array - let's make that mandatory to begin
@@ -129,15 +146,15 @@ classdef from_file_signal_gen < signal_gen
             % go over all files to fetch values for the parameters and
             % create enum domains
             for ifile = 1:numel(this.file_list)
-                fname = this.file_list(ifile).name;
-                st = load(fname);
+                fname = this.file_list{ifile};
+                st = this.load_data(fname);
                 vars = fieldnames(st);
                 for ip = 2:numel(this.params)
                     this.pts(ip, ifile) = st.(this.params{ip});   % TODO some try catch for parameter defined in first file, but not in other(s)
                 end
             end
             for ip = 2:numel(this.params)
-                this.params_domain(ip)= BreachDomain('enum', [], this.pts(ip, :));
+                this.params_domain(ip)= BreachDomain('enum', [], unique(this.pts(ip, :)));
             end
             
             if nargin==0||isempty(signals)
@@ -164,16 +181,39 @@ classdef from_file_signal_gen < signal_gen
             this.sg_name = sg_name;
         end
         
+        function st = load_data(this,fname)
+            % loads, apply script if needed
+            if isempty(this.init_data_script)
+                st= load(fname);            
+            else
+                load(fname);
+                try 
+                    eval(this.init_data_script);
+                catch
+                    error('from_file_signal_gen:load_data:pb_init_script', 'Error while executing script %s', this.init_data_script);
+                end
+                
+                vars = who;
+                st = struct();
+                for iv= 1:numel(vars)
+                    st.(vars{iv}) = eval(vars{iv});
+                end
+                
+            end
+        end
+        
         function [X, time] = computeSignals(this, p, time) % returns a p in pts
             
-            fname = this.file_list(p(1)).name;
+            fname = this.file_list{p(1)};
+            X = nan(numel(this.signals), length(time));
             
             try
-                st = load(fname);
+                st = this.load_data(fname);
             catch
                 warning(['Could not read file ' fname '. Returning NaN trace.'] )
-                X(:,:) = NaN;
+                return;
             end
+            
             % fetch time data
             if isfield(st, this.time_var_name)
                 t_sig = st.(this.time_var_name);
@@ -226,7 +266,7 @@ classdef from_file_signal_gen < signal_gen
         end
         
         function args = getSignalGenArgs(this)
-            args = {'file_name','var_name', 'params_from_file', 'sg_name'};
+            args = {'file_name','var_name', 'params_from_file', 'sg_name', 'init_data_script'};
         end
         
     end

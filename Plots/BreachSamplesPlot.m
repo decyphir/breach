@@ -245,6 +245,10 @@ classdef BreachSamplesPlot < handle
                 
                 this.idx_tipped = i_pts;
                 txt{1} = ['Sample idx:' num2str(i_pts)] ;
+                if isfield(this.summary, 'file_names')
+                    [p, f ,e ] = fileparts(this.summary.file_names{i_pts});
+                    txt{end+1} = ['File Name: ' f e];
+                end
                 
                 if isfield(this.signature, 'variables_idx')
                     txt{end+1} = '--------------';
@@ -585,15 +589,24 @@ classdef BreachSamplesPlot < handle
                 this.idx_tipped = i_pts_req;
                 
                 if isa(this.BrSet,'BreachRequirement')
-                    data_trace_idx_ = this.BrSet.GetParam('data_trace_idx_',i_pts_req);
+                    data_trace_idx_ = this.BrSet.GetParam('data_trace_idx_',i_pts_req);                    
                     txt{1} = ['req_val_idx_:' num2str(i_pts_req)] ;
                     txt{2} = ['data_trace_idx_:' num2str(data_trace_idx_)] ;
-                    txt{3} = '--------------';
+                    if isfield(this.summary, 'file_names')
+                        [~, f ,e ] = fileparts(this.summary.file_names{data_trace_idx_});
+                        txt{end+1} = ['File Name: ' f e];
+                    end
+                    
+                    txt{end+1} = '--------------';
                     for irr = 1:numel(this.summary.requirements.names)
                         txt{end+1} = [this.summary.requirements.names{irr} ':' num2str(this.summary.requirements.rob(i_pts_req, irr))];
                     end
                 else
-                    txt{1} = ['Sample idx:' num2str(i_pts_req)] ;
+                    txt{1} = ['Sample idx:' num2str(i_pts_req)];
+                    if isfield(this.summary, 'file_names')
+                        [~, f ,e ] = fileparts(this.summary.file_names{data_trace_idx_});
+                        txt{end+1} = ['File Name: ' f e];
+                    end
                 end
                 
                 if isfield(this.signature, 'variables_idx')

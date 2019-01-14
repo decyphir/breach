@@ -5,7 +5,7 @@ classdef BreachOptionGui < handle
         dlg
         dlg_pos
         dlg_sz
-        room_increment = 50
+        room_increment = 45
         button_pos
         button_sz
         gui_components
@@ -63,6 +63,7 @@ classdef BreachOptionGui < handle
             end
             this.reset_fig();
         end
+        
         function merge_options(this, opt_other, choices_other, tips_other)
             fn= fieldnames(opt_other);
             for ifn = 1:numel(fn)
@@ -188,7 +189,7 @@ classdef BreachOptionGui < handle
         
         function g = add_check_box(this, string, tooltip)
             this.make_room();
-            g = this.create_check_box(string, [this.button_pos this.button_sz]);
+            g = this.create_check_box([ 'Enable ' string ' option' ], [this.button_pos this.button_sz]);
             set(g, 'TooltipString', tooltip);
             this.gui_components{end+1,1} = g;
         end
@@ -197,12 +198,24 @@ classdef BreachOptionGui < handle
             
             g = uicontrol('Parent',this.dlg,...
                 'Style','checkbox',...
-                'String', [ 'Enable ' string ' option' ],...
+                'String', string ,...
                 'FontName', this.font_name,...
                 'FontSize', this.font_size,...
                 'Units', 'Normalized',...
                 'Position', pos);
         end
+
+        function g  = create_radio(this, string, pos)
+            
+            g = uicontrol('Parent',this.dlg,...
+                'Style','radiobutton',...
+                'String', string ,...
+                'FontName', this.font_name,...
+                'FontSize', this.font_size,...
+                'Units', 'Normalized',...
+                'Position', pos);
+        end
+
         
         function g = add_text_box(this, string)
             this.make_room();
@@ -210,7 +223,7 @@ classdef BreachOptionGui < handle
             num_elements = size(this.gui_components,1);
             ax = axes;
             set(ax, 'Position', pos, 'visible', 'off');
-            g = text(0.012,0.2, string,'Interpreter','none');
+            g = text(0.0,0.3, string,'Interpreter','none', 'FontWeight', 'bold');
             set(g,'FontName', this.font_name,...
                 'FontSize', this.font_size);
             this.gui_components{num_elements+1,1} = ....
@@ -235,8 +248,7 @@ classdef BreachOptionGui < handle
                 'FontSize', this.font_size,...
                 'Position', pos);
         end 
-        
-        
+                
         function add_ok_cancel_buttons(this)
             this.make_room();
             sz = this.get_multiple_sz(2);
@@ -285,19 +297,22 @@ classdef BreachOptionGui < handle
             end
         end
  
-        
-        
-         function make_room(this)
+               
+        function make_room(this)
             d = this.room_increment;
             n = size(this.gui_components, 1)+1;
             this.dlg_sz = this.dlg_sz+ [0 d];
             this.dlg_pos = this.dlg_pos - [0 d/2];
             set(this.dlg, 'Position', [this.dlg_pos this.dlg_sz])
+            
+            total_ratio = 0.9+0.1*(n-1)/(n+10);
+            one_minus_tr = 1-total_ratio;
+            
             if n>1
-                new_inter = 0.1/(n-1);
-                new_height =  (0.9-(n-1)*new_inter)/n; %(1-0.1/(n-1)-.1)/n;
+                new_inter = one_minus_tr/(n-1);
+                new_height =  (total_ratio-(n-1)*new_inter)/n;
                 this.button_sz =   [ 0.9  new_height];
-                this.button_pos = [ 0.05  0.05+(n-1)*(new_height+new_inter)];
+                this.button_pos = [ 0.05  one_minus_tr/2+(n-1)*(new_height+new_inter)];
                 
                 % Resize and pos other elements
                 for ic = 1:size(this.gui_components, 1)
@@ -305,7 +320,7 @@ classdef BreachOptionGui < handle
                         g = this.gui_components{ic,irow};
                         if ~isempty(g)
                             pos = get(g,'Position');
-                            pos(2) = 0.05+(ic-1)*(new_height+new_inter);
+                            pos(2) = one_minus_tr/2+(ic-1)*(new_height+new_inter);
                             pos(4) = this.button_sz(2);
                             set(g,'Position', pos);
                         end
