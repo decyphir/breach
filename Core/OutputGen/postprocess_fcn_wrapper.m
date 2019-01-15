@@ -6,6 +6,11 @@ classdef postprocess_fcn_wrapper < output_gen
     methods
         function this = postprocess_fcn_wrapper(fn_handle,  sigs_in, sigs_out, params, p0)
             if ischar(fn_handle)
+              [p,f]  = fileparts(fn_handle);
+              if ~isempty(p)
+                addpath(p);
+                fn_handle = f;
+              end
               fn_handle = eval(['@' fn_handle]); 
             end
             this.fun = fn_handle;
