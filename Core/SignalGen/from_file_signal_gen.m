@@ -188,7 +188,7 @@ classdef from_file_signal_gen < signal_gen
             else
                 load(fname);
                 try 
-                    eval(this.init_data_script);
+                    run(this.init_data_script);
                 catch
                     error('from_file_signal_gen:load_data:pb_init_script', 'Error while executing script %s', this.init_data_script);
                 end
