@@ -215,6 +215,7 @@ function button_ok_Callback(hObject, eventdata, handles)
 % --- Executes on button press in button_cancel.
 function button_cancel_Callback(hObject, eventdata, handles)
   handles.output=0;
+  set(hObject, 'UserData', true);
   guidata(hObject, handles);
   uiresume(handles.main);
 

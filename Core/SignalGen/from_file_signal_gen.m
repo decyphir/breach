@@ -264,9 +264,17 @@ classdef from_file_signal_gen < signal_gen
                 end
             end
         end
-        
+                       
         function args = getSignalGenArgs(this)
             args = {'file_name','var_name', 'params_from_file', 'sg_name', 'init_data_script'};
+        end
+        
+        function sgs = split(this)
+        % split splits one signal_gen into one signal_gen per signal
+             for i = 1:numel(this.signals)
+                 sgs{i} = this.copy();
+                 sgs{i}.signals = {this.signals{i}};
+             end
         end
         
     end

@@ -35,7 +35,6 @@ classdef BreachSignalGen < BreachSystem
             end
             
             this.Domains = [];
-            % we need to declare parameters, signals, p0, and simfn           
             this.InitSignalGen(signalGenerators);
             
         end
@@ -75,6 +74,14 @@ classdef BreachSignalGen < BreachSystem
                 end
                 p0 = [p0; p0sg ];
             end
+            
+            %% Uniquify
+            [signals, ius] = unique(signals,'stable');
+            SignalDomains =SignalDomains(ius);
+            [params, iup] = unique(params,'stable');
+            ParamDomains =ParamDomains(iup);
+            
+            
             this.Domains = [SignalDomains ParamDomains];
             
             p0 = [zeros(numel(signals),1) ; p0 ];
@@ -82,7 +89,7 @@ classdef BreachSignalGen < BreachSystem
             this.Sys.tspan =0:.01:10;
             this.Sys.Verbose =0;
             this.P = CreateParamSet(this.Sys);
-            this.P.epsi(:,:)=0 ;
+            this.P.epsi(:,:)=0;
             
             if isaSys(this.Sys) % Note: we ignore initial conditions for now in ParamRanges
                                        % OK for Simulink, less so for ODEs...
@@ -100,17 +107,14 @@ classdef BreachSignalGen < BreachSystem
                tspan = tspan(1):this.dt_default:tspan(2); 
             end
             
-            p = p(this.Sys.DimX+1:end);
-            cur_ip =1;
             cur_is =1;
             
             for isg = 1:numel(this.signalGenerators)
                sg = this.signalGenerators{isg};
-               np = numel(sg.params);
-               p_isg = p(cur_ip:cur_ip+np-1);  % 
+               idx_psg = FindParam(this.P, sg.params);
+               p_isg = p(idx_psg);
                ns = numel(sg.signals);
                X(cur_is:cur_is+ns-1, :) = sg.computeSignals(p_isg, tspan);
-               cur_ip = cur_ip+ np;
                cur_is = cur_is+ ns;
             end
                 
@@ -172,7 +176,6 @@ classdef BreachSignalGen < BreachSystem
             % GetSignalGenFromSignalName(this, sig_name) only works for one
             % dimensional signal generators so far
             for  is = 1:numel(this.Sys.DimX)
-                
                 for isg = 1:numel(this.signalGenerators)
                     ll = strcmp(this.signalGenerators{isg}.signals, sig_name);
                     if any(ll)

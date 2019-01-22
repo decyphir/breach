@@ -361,6 +361,7 @@ classdef BreachOptionGui < handle
                     set(g, 'enable', 'on')
                 end
             end
+            figure(this.dlg);
         end
         
         

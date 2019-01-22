@@ -27,11 +27,11 @@ classdef BreachOpenSystem < BreachSystem
         end
         
         function Sim(this,tspan,U)
-
+            
             evalin('base', this.InitFn);
             this.CheckinDomainParam();
             
-            if this.use_precomputed_inputs % Input generator drives the thing 
+            if this.use_precomputed_inputs % Input generator drives the thing
                 ig_params  = this.InputGenerator.GetSysParamList();
                 all_pts_u = this.InputGenerator.GetParam(ig_params);
                 this.SetParam(ig_params, all_pts_u);
@@ -67,7 +67,7 @@ classdef BreachOpenSystem < BreachSystem
             end
             
             this.P = ComputeTraj(Sys, this.P, tspan);
-
+            
             this.CheckinDomainTraj();
             if this.verbose>=1
                 this.dispTraceStatus();
@@ -78,11 +78,9 @@ classdef BreachOpenSystem < BreachSystem
         % system, but keep both BreachObjects
         function SetInputGen(this, IG, varargin)
             % BreachOpenSystem.SetInputGen Attach a BreachSystem as input generator.
-
+            
             opt.SetInputGenTime = false;
             opt= varargin2struct(opt, varargin{:});
-            
-            
             
             % look for property parameters and save them
             PropParams={};
@@ -156,7 +154,7 @@ classdef BreachOpenSystem < BreachSystem
                         IG = BreachSignalGen({sg});
                 end
             elseif iscell(IG)
-        mm = methods(IG{1});
+                mm = methods(IG{1});
                 if any(strcmp(mm,'computeSignals'))
                     IG = BreachSignalGen(IG);
                 else
@@ -224,10 +222,10 @@ classdef BreachOpenSystem < BreachSystem
                     this.ParamSrc(p) = IG.ParamSrc(p);
                 end
                 if  ~this.ParamSrc.isKey(p)
-                   this.ParamSrc(p) = BreachParam(p); 
+                    this.ParamSrc(p) = BreachParam(p);
                 end
             end
-
+            
             if opt.SetInputGenTime
                 this.SetTime(IG.GetTime());
             end
@@ -286,7 +284,7 @@ classdef BreachOpenSystem < BreachSystem
                 end
                 U.t = this.InputGenerator.P.traj{i_traj}.time';
                 U.u= this.InputGenerator.P.traj{i_traj}.X';  % assumes only input generator has only the input signals
-                                                                              % I know this will break on me eventually, hopefully not today   
+                % I know this will break on me eventually, hopefully not today
             else
                 
                 this.InputGenerator.P = SetParam(this.InputGenerator.P,ig_params,pts_u); % FIXME: legacy use
@@ -361,7 +359,7 @@ classdef BreachOpenSystem < BreachSystem
             atts = {};
             [idx, found] = this.FindSignalsIdx(sig);
             if found
-            sig = this.P.ParamList{idx}; 
+                sig = this.P.ParamList{idx};
             else
                 atts = union(atts, {'unknown'});
             end
