@@ -1,5 +1,20 @@
 # Release 1.5.0
-TBD
+
+- from_file_signal_gen can have an initialization script 
+- mixed integer optimization support
+- signal_gen_gui more robust 
+- param_gen framework: arbitrary parameter transformation 
+- better backward compatibility between BreachRequirement and STL_Formula 
+- BreachSamplesPlot and BreachSignalsPlot improved
+- BreachSimulinkSystem now look at all scalar parameters in the base
+  workspace for potential tunable parameters, regardless if they are
+  detected in the model
+- STL formulas with no signals now are accepted (constraints on parameters)
+
+## Bugfixes
+- spike and exponential signal generators fixed
+- fixed an issue with aliases not being always found 
+- fixed duplicates in signals map
 
 # Release 1.4.3
 
@@ -11,7 +26,6 @@ TBD
 # Release 1.4.2 
 
 - Improved display values for multi-objective optimization
-
 
 # Release 1.4.1
 

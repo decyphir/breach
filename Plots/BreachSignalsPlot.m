@@ -39,7 +39,6 @@ classdef BreachSignalsPlot < handle
             
         end
         
-        
         function ax = AddAxes(this, pos)
             % AddAxes add new axe at specified position
             if nargin==1
@@ -96,7 +95,6 @@ classdef BreachSignalsPlot < handle
             end
             
             % Aliases
-
             if ~isempty(this.BrSet.sigMap)
                 att = 'aliases';
                 keys = this.BrSet.sigMap.keys();

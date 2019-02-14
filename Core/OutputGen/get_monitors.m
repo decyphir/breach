@@ -48,8 +48,8 @@ end
                 else
                     monitor = alw_monitor(formula);
                 end
-            case {'ev', 'eventually'}
-                monitor  = ev_monitor(formula);
+%            case {'ev', 'eventually'}
+%                monitor  = ev_monitor(formula);
 %             case {'until'}
 %             otherwise  % default to top alw if horizon is 0
 %                hor = get_horizon(formula);

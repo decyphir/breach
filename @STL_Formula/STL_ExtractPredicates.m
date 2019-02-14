@@ -13,12 +13,14 @@ function [mus, signals] = STL_ExtractPredicates(phi)
 %    ted from patterns of the form signal_id[t])
 %
 mus = [];
-
+ids = {}; 
 if strcmp(phi.type, 'predicate')
-    mus = phi;    
+    mus = phi;
 else
     if ~isempty(phi.phi)
-        mus = [mus, STL_ExtractPredicates(phi.phi)];
+        if ~ismember(phi.id, ids)
+            mus = [mus, STL_ExtractPredicates(phi.phi)];
+        end
     end
     if ~isempty(phi.phi1)
         mus = [mus, STL_ExtractPredicates(phi.phi1)];
@@ -33,6 +35,14 @@ else
         end
     end
 end
+
+ids = {};
+for  ni= 1:numel(mus)
+    ids{ni} = mus(ni).id;
+end
+[~, idx] = unique(ids);
+mus = mus(idx);
+
 signals = {};
 for imu=1:numel(mus)
      fn_ = mus(imu).params.fn;
