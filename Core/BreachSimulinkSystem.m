@@ -40,7 +40,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         SimInModelsDataFolder=false
         StopAtSimulinkError=false
         mdl
-        DiskCachingRoot 
+        DiskCachingRoot
     end
     
     
@@ -56,12 +56,12 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             if exist('p0', 'var')&&iscell(p0)
                 p0 = cell2mat(p0);
             end
-                     
+            
             if ~ischar(mdl_name)
-               error('BreachSimulinkSystem:wrong_argument', 'First argument of BreachSimulinkSystem must be a string naming a Simulink system.'); 
+                error('BreachSimulinkSystem:wrong_argument', 'First argument of BreachSimulinkSystem must be a string naming a Simulink system.');
             end
             
-            if ~exist(mdl_name)==4  
+            if ~exist(mdl_name)==4
                 error('BreachSimulinkSystem first argument must be the name of a Simulink model.');
             end
             this.mdl.name = mdl_name;
@@ -72,7 +72,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             this.ParamSrc = containers.Map();
             
             this.SetupOptions(varargin{:})
-                
+            
             switch nargin
                 case 1,
                     this.CreateInterface(mdl_name);
@@ -119,10 +119,10 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         
         function SetupOptions(this, varargin)
             % handles additional options for model interfacing
-            options.UseDiskCaching = false;     
+            options.UseDiskCaching = false;
             options.FindScopes = false;
             options.FindTables = false;
-            options.FindStruct  = false; 
+            options.FindStruct  = false;
             options.FindSignalBuilders = false;  % TODO fixme when true
             options.SimInModelsDataFolder = false;
             options.Parallel = 'off';
@@ -130,11 +130,11 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             options.Verbose = 1;
             options.MaxNumTabParam = 10;
             options.InitFn = '';
-  
+            
             global BreachGlobOpt;
             options.DiskCachingRoot =[BreachGlobOpt.breach_dir filesep 'Ext' filesep 'ModelsData' filesep 'Cache'];
             options = varargin2struct(options, varargin{:});
-        
+            
             this.UseDiskCaching = options.UseDiskCaching;
             this.DiskCachingRoot = options.DiskCachingRoot;
             this.FindScopes = options.FindScopes;
@@ -150,40 +150,21 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
             
         end
-            
+        
         function SetupParallel(this, NumWorkers, varargin)
-        % BreachSimulinkSystem.SetupParallel     
-
-        switch nargin
-            case 1
-                this.SetupParallel@BreachSystem();
-            case 2
-                this.SetupParallel@BreachSystem(NumWorkers);
-            otherwise
-                this.SetupParallel@BreachSystem(NumWorkers, varargin{:});
-        end
-        
-        pctRunOnAll('warning(''off'', ''Simulink:Commands:MdlFileChangedCloseManually'')'); % should be harmless right?
-        
-        % Create a copy of mdl for each worker - ONHOLD: not working and
-        % not sure it is viable/useful. 
-%          global BreachGlobOpt
-%         breach_dir = BreachGlobOpt.breach_dir;
-%         breach_data_dir = [breach_dir filesep 'Ext' filesep 'ModelsData' ];
-%         mdl_breach = this.Sys.mdl;
-%      %   evalin('base', ['load_system(''' mdl_breach ''')'] );
-%       
-%     
-%         this.disp_msg(['Creating copies of ' mdl_breach '...'], 1);
-%         for iw = 1:NumWorkers
-%             mdl_breach_lab = [breach_data_dir filesep mdl_breach '_lab' num2str(iw)];
-%             close_system(mdl_breach_lab,0);
-%             load_system(mdl_breach );
-%             save_system(mdl_breach, mdl_breach_lab);
-%         end
-%         close_system(mdl_breach,0);
-%         this.disp_msg('done.');
-%         
+            % BreachSimulinkSystem.SetupParallel
+            
+            switch nargin
+                case 1
+                    this.SetupParallel@BreachSystem();
+                case 2
+                    this.SetupParallel@BreachSystem(NumWorkers);
+                otherwise
+                    this.SetupParallel@BreachSystem(NumWorkers, varargin{:});
+            end
+            
+            pctRunOnAll('warning(''off'', ''Simulink:Commands:MdlFileChangedCloseManually'')'); % should be harmless right?
+            
         end
         
         function StopParallel(this)
@@ -192,7 +173,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             if ~isempty(poolobj)
                 delete(poolobj);     % not sure this is doing anything
             end
-
+            
             this.use_parallel = 0;
             this.Sys.Parallel = 0;
         end
@@ -239,6 +220,8 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 t_end= 1;
             end
             
+            min_step =str2num(cs.get_param('MinStep'));
+            max_step = str2num(cs.get_param('MaxStep'));
             try
                 t_step= str2num(cs.get_param('FixedStep'));
             catch % default fixed step is t_end/1000, unless MaxStep is set smaller
@@ -247,10 +230,11 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             
             if isempty(t_step) % makes it some default
                 t_step= t_end/1000;
-                try
-                    maxstep = cs.get_param('MaxStep');
-                    t_step = min([t_step str2num(maxstep)]);
-                catch
+                if ~isempty(max_step)
+                    t_step = min([t_step max_step]);
+                end
+                if ~isempty(min_step)
+                    t_step = max([t_step min_step]);
                 end
             end
             cs.set_param('StartTime', '0.0');   % Start time
@@ -453,12 +437,15 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             if ~exist('p0', 'var')||isempty(p0)
                 p0 = zeros(1,numel(params));
             end
-     
+            
             params = [params U.params];
             
-            %% Test run model on 0 time and collect simout 
+            %% Test run model on 0 time and collect simout
             tspan = evalin('base', 'tspan;');
-            assignin('base','tspan',[0 eps]);
+            if isempty(min_step)
+                min_step =eps;
+            end
+            assignin('base','tspan',[0 51*min_step]);
             assignin('base','t__',0);
             assignin('base','u__',zeros(1, numel(this.Sys.InputList)));
             if this.SimInModelsDataFolder
@@ -548,7 +535,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             %
             % converts a simulink output to a data structure Breach can handle
             %
-                       
+            
             %% Outputs and scopes
             Vars = simout.who;
             lenVars = numel(Vars);
@@ -590,18 +577,19 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                         if ~ismember(signame,sig_log)
                             
                             sig = logs.getElement(signame);
-                            nbdim = size(sig.Values.Data,2);
-                            
-                            % naming multidimensional signal= name_signal_i_
-                            if nbdim==1
-                                sig_log = {sig_log{:} signame};
-                            else
-                                for idim =1:nbdim
-                                    signamei = [signame '_' num2str(idim)  '_'];
-                                    sig_log = {sig_log{:} signamei};
+                            if  isa(sig, 'Simulink.SimulationData.Signal')
+                                nbdim = size(sig.Values.Data,2);
+                                
+                                % naming multidimensional signal= name_signal_i_
+                                if nbdim==1
+                                    sig_log = {sig_log{:} signame};
+                                else
+                                    for idim =1:nbdim
+                                        signamei = [signame '_' num2str(idim)  '_'];
+                                        sig_log = {sig_log{:} signamei};
+                                    end
                                 end
                             end
-                            
                         end
                     end
                 end
@@ -704,12 +692,12 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         
         %% Simulation
         function Sim(this, tspan, U)
-   
-            % Refresh or setup cache if needed 
+            
+            % Refresh or setup cache if needed
             if this.UseDiskCaching
-                this.SetupDiskCaching();  
+                this.SetupDiskCaching();
             end
-       
+            
             switch nargin
                 case 1
                     Sim@BreachOpenSystem(this);
@@ -763,7 +751,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 assignin('base','t__',U.t);
                 assignin('base', 'u__',U.u);
             end
-
+            
             
             %
             % TODO: fix support for signal builder using a proper
@@ -777,7 +765,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             %    end
             %end
             %
-
+            
             
             assignin('base','tspan',tspan);
             if numel(tspan)>2
@@ -879,21 +867,23 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                     
                     signame = logs_names{ilg};
                     sig = logs.getElement(signame);
-                    nbdim = size(sig.Values.Data,2);
-                    
-                    if (nbdim==1)
-                        [lia, loc]= ismember(signame, signals);
-                        if lia
-                            xx = interp1(sig.Values.Time',double(sig.Values.Data(:,1)),tout, 'linear','extrap');
-                            X(loc,:) = xx;
-                        end
-                    else
-                        for idim = 1:nbdim
-                            signamei = [signame '_' num2str(idim)  '_'];
-                            [lia, loc]= ismember(signamei, signals);
+                    if  isa(sig, 'Simulink.SimulationData.Signal')
+                        nbdim = size(sig.Values.Data,2);
+                        
+                        if (nbdim==1)
+                            [lia, loc]= ismember(signame, signals);
                             if lia
-                                xx = interp1(sig.Values.Time', double(sig.Values.Data(:,idim)),tout, 'linear','extrap') ;
+                                xx = interp1(sig.Values.Time',double(sig.Values.Data(:,1)),tout, 'linear','extrap');
                                 X(loc,:) = xx;
+                            end
+                        else
+                            for idim = 1:nbdim
+                                signamei = [signame '_' num2str(idim)  '_'];
+                                [lia, loc]= ismember(signamei, signals);
+                                if lia
+                                    xx = interp1(sig.Values.Time', double(sig.Values.Data(:,idim)),tout, 'linear','extrap') ;
+                                    X(loc,:) = xx;
+                                end
                             end
                         end
                     end
@@ -1039,7 +1029,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         %% Disk Caching
         % TODO adapt to BreachSystem
         function SetupDiskCaching(this, varargin)
-        %  BreachSimulinkSystem.SetupDiskCaching 
+            %  BreachSimulinkSystem.SetupDiskCaching
             
             this.UseDiskCaching = true;
             if nargin>1
@@ -1052,7 +1042,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 options = varargin2struct(options, varargin{:});
                 this.DiskCachingRoot = options.DiskCachingRoot;
                 this.Sys.StoreTracesOnDisk  = options.StoreTracesOnDisk;
-            end         
+            end
             
             % The following creates the cache folder if not done already
             this.Sys.DiskCachingFolder= this.GetCachingFolder();
@@ -1083,16 +1073,16 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 this.ResetSimulations();
             end
         end
-    
+        
         function caching_folder_name= GetCachingFolder(this, CacheRoot)
-            if nargin<=1 
+            if nargin<=1
                 CacheRoot = this.DiskCachingRoot;
             end
             mdl_hash = DataHash(this.mdl.file_info);
             caching_folder_name = [CacheRoot filesep mdl_hash];
         end
-     
-        %% Export result            
+        
+        %% Export result
         function [summary, traces] = ExportTracesToStruct(this,i_traces, varargin)
             % BreachSimulinkSystem.ExportTracesToStruct
             
@@ -1198,7 +1188,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             
             summary.const_params.names = setdiff( this.P.ParamList(this.P.DimX+1:end), this.GetBoundedDomains())';
             summary.const_params.values = this.GetParam(summary.const_params.names,1)';
-   
+            
             if isfield(this.P, 'props')
                 summary.specs.names = spec_names;
                 if ~options.PreserveTracesOrdering
@@ -1247,13 +1237,13 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             summary.test_params.values = this.GetParam(summary.test_params.names);
             summary.const_params.names = setdiff( this.P.ParamList(this.P.DimX+1:end), this.GetBoundedDomains())';
             summary.const_params.values = this.GetParam(summary.const_params.names,1)';
-   
+            
             if isfield(this.P, 'props')
                 summary.specs.names = spec_names;
-                if ~options.PreserveTracesOrdering
-                    this.SortbyRob();
-                    this.SortbySat();
-                end
+ %               if ~options.PreserveTracesOrdering % this should not be there
+  %                 this.SortbyRob();
+  %                 this.SortbySat();
+  %             end
                 summary.specs.rob = this.GetSatValues();
                 summary.specs.sat = summary.specs.rob>=0;
                 summary.num_sat = - sum( ~summary.specs.sat, 1  );
@@ -1309,16 +1299,16 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 end
                 
                 breachsys_filename  = [folder_name filesep breachsys_name];
-                % Need to move cache into result folder 
+                % Need to move cache into result folder
                 if this.UseDiskCaching
                     trajs = this.GetTraces();
-                    this.disp_msg(['Copying cached traces to ' folder_name '\traces'], 2); 
+                    this.disp_msg(['Copying cached traces to ' folder_name '\traces'], 2);
                     
                     for it = 1:numel(trajs)
                         src =  trajs{it}.Properties.Source;
-                        dest = [folder_name filesep 'traces' filesep 'traj_matfile' num2str(it) '.mat']; 
+                        dest = [folder_name filesep 'traces' filesep 'traj_matfile' num2str(it) '.mat'];
                         this.disp_msg([src '   --->    ' dest], 2);
-                        [success,msg] = copyfile(src,dest); 
+                        [success,msg] = copyfile(src,dest);
                         if success==0
                             error('Copy of file %s failed with message %s', src, msg);
                         end
@@ -1339,10 +1329,10 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
         end
         
-        function ExportToExcel(this, excel_file)  % TODO: specialize to Simulink ? or use BreachSet.ExportToExcel 
+        function ExportToExcel(this, excel_file)  % TODO: specialize to Simulink ? or use BreachSet.ExportToExcel
             [summary, traces] = this.ExportTracesToStruct();
             global BreachGlobOpt
-    
+            
             if ~isfield(summary, 'specs')
                 warning('Breach:SaveResult:no_spec_for_Excel','Export to Excel requested but there is no requirement result to report. Excel file not created.');
             else
@@ -1367,16 +1357,16 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
             
         end
-    
+        
         function  st = disp(this)
             if isfield(this.P, 'traj')
                 nb_traj = numel(this.P.traj);
             else
                 nb_traj = 0;
             end
-            [name, name_found] = this.whoamI; 
+            [name, name_found] = this.whoamI;
             
-            [~,~, ~, st_status]  = GetTraceStatus(this); 
+            [~,~, ~, st_status]  = GetTraceStatus(this);
             if ~name_found
                 st = ['BreachSimulinkSystem interfacing model ' this.mdl.name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' unique traces.'];
             else

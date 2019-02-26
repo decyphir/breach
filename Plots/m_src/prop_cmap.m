@@ -6,6 +6,7 @@ function cm = prop_cmap(varargin)
    case 0
     n0 = nb_col/2;
     n1 = nb_col/2;
+    cm = bicolormap(n0,n1);
    case 1
     val= varargin{1};
     

@@ -188,18 +188,16 @@ classdef BreachSystem < BreachSet
             if ischar(tspan)  % if time is an expression, test it in base
                 try
                     T= evalin('base', tspan);
-                    this.Sys.tspan = tspan;
                 catch
                     error('BreachSystem:SetTime:undef', 'Cannot evaluate time.expression %s', tspan);
                 end
-                
             elseif isscalar(tspan)  % standard case
                 tspan = [0 tspan];
                 if tspan(end)<0
                     error('BreachSystem:SetTime:neg_time', 'Cannot set negative time.')
                 end
-                this.Sys.tspan = tspan;
             end
+            this.Sys.tspan = tspan;
         end
         
         function time = GetTime(this)

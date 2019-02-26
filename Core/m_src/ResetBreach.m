@@ -1,7 +1,13 @@
-% ResetBreach
+function ResetBreach
+% ResetBreach clear all files in ModelsData folder 
+
 global BreachGlobOpt
+d = [BreachGlobOpt.breach_dir filesep 'Ext' filesep 'ModelsData'];
+
 if questdlg('Remove models data files?')
-  delete([BreachGlobOpt.breach_dir filesep 'Ext' filesep 'ModelsData' filesep '*.mat'])
-  delete([BreachGlobOpt.breach_dir filesep 'Ext' filesep 'ModelsData' filesep '*.slx'])
-  delete([BreachGlobOpt.breach_dir filesep 'Ext' filesep 'ModelsData' filesep '*.bck'])
+  try 
+      rmdir([d filesep 'slprj'], 's');
+      rmdir([d filesep 'ParallelTemp'], 's');
+      delete([d filesep '*.*'])
+  end
 end

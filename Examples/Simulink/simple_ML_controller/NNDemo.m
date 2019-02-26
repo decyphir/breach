@@ -58,7 +58,7 @@ B.CheckSpec(alw_reach_ref_in_tau);
 B.PrintAll()
 
 %% Falsification problem
-B.SetParamRanges({'Ref_u0','Ref_u1','Ref_u2'}, [u_min u_max; u_min u_max; u_min u_max]);
+B.SetParamRanges({'Ref_u0','Ref_u1','Ref_u2'}, [u_min u_max]);
 falsif_pb = FalsificationProblem(B, alw_reach_ref_in_tau); 
 falsif_pb.max_time= 50; falsif_pb.solve()
 

@@ -33,7 +33,6 @@ classdef BreachSamplesPlot < handle
             this.BrSet = BrSet;
             this.Fig = figure;
             
-            
             this.summary = BrSet.GetSummary();
             this.signature = this.summary.signature;
             

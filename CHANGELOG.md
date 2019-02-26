@@ -1,3 +1,19 @@
+# Release 1.5.1
+
+- better detection of maximum and minimum step sizes when interfacing
+  a model 
+- some cleaning in Examples folder 
+
+## Bugfixes
+- fixed bug in SetInputGenGui 
+- fixed bug whereas time was sometimes not set properly with SetTime
+- fixed crash when minimum step size is bigger than eps, used for
+  detecting logged signals when creating interface
+- fixed bug causing BreachSimulinkSystem to fail when a logged object
+  is not a simple signal 
+- fixed bug when sampling 1D grids using legacy Refine 
+- fixed typo bug in InstallBreach
+
 # Release 1.5.0
 
 - from_file_signal_gen can have an initialization script 

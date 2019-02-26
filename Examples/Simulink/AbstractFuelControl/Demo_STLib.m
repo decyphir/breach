@@ -1,7 +1,10 @@
 close all;
 clear;
 
+%%
 STL_ReadFile('stlib.stl');
+
+%%
 SG = SignalGenerator()
 %%
 % Mixed bag of signals
@@ -13,7 +16,7 @@ SG.PlotSignals
 %phi = req_inc
 %phi = req_dec
 %phi = req_ev_ring_once
-phi = req_ring_twice
+phi = ev_ring_twice
 %phi = req_overshoot
 
 % checks the stable template on all those signals
@@ -23,16 +26,21 @@ val = SG.GetRobustSat(phi);
 idx_pos = find(val>0);
 idx_neg = find(val<0);
 
+%%
 if ~isempty(idx_neg)
-SG.PlotSignals([],idx_neg )
-set(gcf, 'Name','Negative');
+    figure;
+    SG.PlotSignals([],idx_neg )
+    set(gcf, 'Name','Negative');
 end
 
+%%
 if ~isempty(idx_pos)
-SG.PlotSignals([],idx_pos )
-set(gcf, 'Name','Positive');
+    figure;
+    SG.PlotSignals([],idx_pos )
+    set(gcf, 'Name','Positive');
 end
 
+%% 
 configs = GetParam(SG.P, 'config');
 pos_types = {};
 for idx= idx_pos

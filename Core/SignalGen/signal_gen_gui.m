@@ -153,11 +153,9 @@ update_config(handles);
 
 % Init plot
 update_plot(handles);
-%fill_uitable_params(handles.uitable_params, signal_gens{1}.params, signal_gens{1}.p0, signal_gens{1}.params_domain);
 
 % Update handles structure
 guidata(hObject, handles);
-%uiwait(handles.main);
 
 function st = dbl2str(x)
 st = num2str(x, '%0.5g');
@@ -165,15 +163,15 @@ st = num2str(x, '%0.5g');
 function time_string = get_time_string(time)
 if ischar(time)
     time_string = time;
-elseif isnumeric()
+elseif isnumeric(time)
     if isscalar(time)
         time_string = ['[0 ' dbl2str(time) ']'];
     elseif numel(time)==2
         time_string = ['[' dbl2str(time(1)) ' ' dbl2str(time(2)) ']'];
-    elseif max(diff(diff(time)))<100*eps
+    elseif max(diff(diff(time)))<1000*eps
         time_string = ['0:' dbl2str(time(2)-time(1)) ':' dbl2str(time(end))];
     else
-        time_string = num2str(time);
+        time_string = ['[' num2str(time) ']'] ;
     end
 end
 

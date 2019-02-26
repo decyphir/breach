@@ -2,11 +2,11 @@ function Nn = N2Nn(n,nb, num_new)
 %N2NN Builds a set of nb^n points in N^n (nb points per axes)
 %
 % Synopsis : Nn = N2Nn(n,nb, [num_new])
-% 
-%  The resulting set of points is sorted according to a heuristic which favors clusters of identical values.  
+%
+%  The resulting set of points is sorted according to a heuristic which favors clusters of identical values.
 %  In particular, the two first column are uniform. In the corner
 %  computation case, this corresponds to the two extremal corners.
-%  
+%
 
 if isscalar(nb)
     nb = nb*ones(1,n);
@@ -26,7 +26,9 @@ if num_new >BreachGlobOpt.MaxNumSamples
     num_new =BreachGlobOpt.MaxNumSamples;
 end
 
-if num_new ==1
+if n==1
+    Nn = 1:num_new;
+elseif num_new ==1
     Nn= ones(n,1);
 elseif num_new ==2
     Nn=  [ ones(n,1) nb'];
@@ -42,7 +44,7 @@ else
             Nn = FullNn(:, idx(1:num_new+1));
             % always include/starts with min and max corners
             Nn =  unique([ones(n,1) nb' Nn(:,2:end)]', 'rows','stable')';
-            Nn = Nn(:,1:num_new); 
+            Nn = Nn(:,1:num_new);
         else % otherwise random stuff until we get enough unique vectors
             Nn = unique(RandNn(n,nb,num_new)', 'rows', 'stable')';
             % always include/starts with min and max corners
@@ -51,18 +53,15 @@ else
                 Nn =  unique([Nn Nn_more]', 'rows','stable')';
             end
             Nn =  unique([ones(n,1) nb' Nn(:,2:end)]', 'rows', 'stable')';
-            Nn = Nn(:,1:num_new); 
+            Nn = Nn(:,1:num_new);
             
-        end       
-        
+        end
     end
-    
     % optimize order
     % max min ( size(biggest_cluster of zeros, biggest_cluster_of_ones), )
     clust = find_size_min_cluster(Nn);
     [~, clust_sort ] = sort(clust, 1, 'descend');
     Nn = Nn(:, clust_sort);
-    
 end
 end
 

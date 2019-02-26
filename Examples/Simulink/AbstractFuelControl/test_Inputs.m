@@ -12,12 +12,13 @@ InputGen.SetParam({'Engine_Speed_u0','Engine_Speed_u1','Engine_Speed_u2'},...
                         [100 1100 900]);
 InputGen.SetParam({'Pedal_Angle_base_value', 'Pedal_Angle_pulse_period', ...
                          'Pedal_Angle_pulse_amp','Pedal_Angle_pulse_width'}, ... 
-                         [0 15 30 .5]);
+                         [0 5 30 .5]);
 InputGen.PrintParams();
 
 InputGen.Sim([0 10]);
+figure;
+set(gcf, 'Name','Pulse and constant interpolation');
 InputGen.PlotSignals();
-title('pulse and constant interpolation')
 
 %% linear interpolation
 engine_gen      = fixed_cp_signal_gen({'Engine_Speed'}, ... % signal name
@@ -30,13 +31,14 @@ InputGen2.PrintParams();
 
 InputGen2.SetParam({'Pedal_Angle_base_value', 'Pedal_Angle_pulse_period', ...
                          'Pedal_Angle_pulse_amp','Pedal_Angle_pulse_width'}, ... 
-                         [0 15 30 .5]);
+                         [0 5 30 .5]);
 InputGen2.SetParam({'Engine_Speed_u0','Engine_Speed_u1','Engine_Speed_u2'},...
                         [100 1100 900]);
 InputGen2.PrintParams();
 InputGen2.Sim([0 10]);
+figure;
+set(gcf, 'Name','Pulse and Linear Interpolation');
 InputGen2.PlotSignals();
-title('step and linear interpolation')
 
 %% linear and spline interpolation with var steps 
 
@@ -63,12 +65,16 @@ InputGen3.SetParam({'Engine_Speed_u0','Engine_Speed_dt0',...
 
 InputGen3.PrintParams();
 InputGen3.Sim([0 10]);
+figure;
+set(gcf, 'Name','Interpolation with variable steps');
 InputGen3.PlotSignals();
-title('Interpolation with variable steps')
 
 %% test with system
+BrDemo.InitAFC;
+
 BrAFC.SetInputGen(InputGen)
 BrAFC.Sim(40);
+figure;
 BrAFC.PlotSignals({'Pedal_Angle', 'Engine_Speed','cyl_fuel', 'AF'});
 
 %% Test my_signal_generator
@@ -81,4 +87,5 @@ BrAFC_MyGen.SetInputGen(MyInputGen);          % Plug it to the Simulink model
 BrAFC_MyGen.PrintParams();                    % Makes sure the new parameters are visible
 
 BrAFC_MyGen.Sim(40);
+figure;
 BrAFC_MyGen.PlotSignals({'Pedal_Angle', 'Engine_Speed','cyl_fuel', 'AF'});

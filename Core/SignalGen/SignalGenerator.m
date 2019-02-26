@@ -1,4 +1,4 @@
-classdef SignalGenerator < BreachSet
+classdef SignalGenerator < BreachSystem
 % NOT USED, kept there for reference and eventual adaptation into proper signal_gen classes    
     properties
         signals
@@ -77,7 +77,7 @@ classdef SignalGenerator < BreachSet
                 };
             
             % Initialize Breach system infrastructure
-            sigs = {'x','xref'};
+            sigs = {'x_','x_ref_'};
             params =  this.param_list;
             params =  {params{:}, 'num_edges', 'numCp', 'config'};
             p0 = zeros(1,numel(params));
