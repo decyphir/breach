@@ -1,3 +1,7 @@
+# Release 1.5.2
+
+- minor fix for maxstep/minstep detection causing crash with some solver configuration (Simulink)
+
 # Release 1.5.1
 
 - better detection of maximum and minimum step sizes when interfacing

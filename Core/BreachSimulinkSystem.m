@@ -220,14 +220,24 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 t_end= 1;
             end
             
-            min_step =str2num(cs.get_param('MinStep'));
-            max_step = str2num(cs.get_param('MaxStep'));
+            try
+                min_step =str2num(cs.get_param('MinStep'));
+            catch 
+                min_step=[];
+            end
+            
+            try
+                max_step = str2num(cs.get_param('MaxStep'));
+            catch 
+                max_step=[];
+            end
+            
             try
                 t_step= str2num(cs.get_param('FixedStep'));
             catch % default fixed step is t_end/1000, unless MaxStep is set smaller
                 t_step=[];
             end
-            
+
             if isempty(t_step) % makes it some default
                 t_step= t_end/1000;
                 if ~isempty(max_step)

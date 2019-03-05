@@ -20,20 +20,41 @@ classdef BreachCEGIS < BreachStatus
         
         function solve(this)
             cont = true;
+            BrFalse = []; 
+            %% if Falsification not already done, start with that 
+            if this.falsif_pb.nb_obj_eval ==0
+                this.falsif_pb.solve();
+                BrFalse = this.falsif_pb.GetBrSet_False();
+                if ~isempty(BrFalse)
+                    this.synth_pb.BrSet = BrFalse.BrSet;
+                    this.synth_pb.ResetObjective();
+                else
+                    cont = false;
+                end
+            end
+            %% Main Loop
             while (cont)
                 clc;
-                %% Synthesis step
                 fprintf('Iter %d/%d\n', this.iter,this.iter_max)
-                fprintf('Synthesis step\n');
-                fprintf('--------------\n');
-                this.synth_pb.solve();
-                
-                if isempty(this.synth_pb.obj_best<0)
-                    fprintf('Couldn''t synthesize parameters.\n');
-                    return
-                end
+                %% Synthesis step
+                synth_step();
                 
                 %% Falsification step
+                counter_ex_step();
+                 
+                %% Update parameter synthesis problem
+                update_synth();
+                this.iter = this.iter+1;
+                cont = this.iter<this.iter_max;
+            end
+            
+            function update_synth()
+                this.synth_pb.BrSet.Concat(BrFalse.BrSet);
+                this.synth_pb.ResetObjective();
+                this.synth_pb.BrSys.Sys.Verbose=0;   
+            end
+            
+            function counter_ex_step()
                 fprintf('Counter-Example step\n');
                 fprintf('--------------------\n');
                 this.falsif_pb.BrSet.SetParam(this.synth_pb.params, this.synth_pb.x_best, true);
@@ -43,15 +64,21 @@ classdef BreachCEGIS < BreachStatus
                 if isempty(BrFalse)
                     return
                 end
-                
-                %% Update parameter synthesis problem
-                this.synth_pb.BrSet.Concat(BrFalse.BrSet);
-                this.synth_pb.ResetObjective();
-                this.synth_pb.BrSys.Sys.Verbose=0;
-                
-                this.iter = this.iter+1;
-                cont = this.iter<this.iter_max;
             end
+            
+            function synth_step()
+                fprintf('Synthesis step\n');
+                fprintf('--------------\n');
+                this.synth_pb.solve();
+                
+                if isempty(this.synth_pb.obj_best<0)
+                    fprintf('Couldn''t synthesize parameters.\n');
+                    return
+                end
+                
+            end
+            
+            
         end
         
         function ResetIter(this)
