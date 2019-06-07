@@ -74,7 +74,77 @@ classdef BreachSignalsPlot < handle
             set(h,'Motion','horizontal','Enable','off');
         
         end
+               
+        function DeleteAxes(this, pos)
+            % DeleteAxe Remove axe  at specified position
+            
+            num_ax_old = numel(this.Axes);
+            this.Axes(pos).delete;
+            this.Axes = [this.Axes(1:pos-1) this.Axes(pos+1:end)];
+            
+            for ia = 1:num_ax_old-1;
+                subplot(num_ax_old-1, 1, ia, this.Axes(ia))
+            end
+            
+            figure(this.Fig);
+            if ~isempty(this.Axes)
+                linkaxes(this.Axes, 'x');
+            end
+        end
         
+        function AddSignals(this,sigs, ax)
+            if ischar(sigs)
+                sigs = {sigs};
+            end
+            
+            if ~exist('ax', 'var')||isempty(ax)
+                ax = numel(this.Axes)+1;
+            end
+            
+            if isnumeric(ax)
+                if ax==0
+                    this.AddAxes(1);
+                    ax = this.Axes(1);
+                elseif ax > numel(this.Axes)
+                    this.AddAxes();
+                    ax =this.Axes(end);
+                else
+                    ax = this.Axes(ax);
+                end
+            end
+            if ~isa(ax, 'matlab.graphics.axis.Axes')
+                error('Argument should be an Axes object or an index.')
+            end
+            
+            for is = 1:numel(sigs)
+                sig = sigs{is};
+                this.plot_signal(sig, ax);
+            end
+            this.update_legend(ax);
+            
+        end
+        
+        function int_false= HighlightFalse(this, sig, ax)
+            if ~exist('ax', 'var')||isempty(ax)
+                ax = this.Axes(end);
+            end
+            
+            axes(ax);
+            hold on;
+            traj = this.BrSet.P.traj{this.ipts};
+            idx = FindParam(this.BrSet.P, sig);
+            tau = traj.time;
+            val = traj.X(idx,:);
+            int_false = highlight_truth_intervals(tau,val, 'g', 0, 'r', 0.3);
+            set(ax,'UserData', int_false);
+            this.update_legend(ax);
+            
+        end
+        
+    end
+    
+    methods (Access=protected)
+ 
         function ax = AddAxesContextMenu(this, ax)
             cm = uicontextmenu(this.Fig);
             set(ax, 'UIContextMenu', cm);
@@ -179,78 +249,7 @@ classdef BreachSignalsPlot < handle
                 this.HighlightFalse(sig, ax);
             end
         end
-       
-        
-        function DeleteAxes(this, pos)
-            % DeleteAxe Remove axe  at specified position
-            
-            num_ax_old = numel(this.Axes);
-            this.Axes(pos).delete;
-            this.Axes = [this.Axes(1:pos-1) this.Axes(pos+1:end)];
-            
-            for ia = 1:num_ax_old-1;
-                subplot(num_ax_old-1, 1, ia, this.Axes(ia))
-            end
-            
-            figure(this.Fig);
-            if ~isempty(this.Axes)
-                linkaxes(this.Axes, 'x');
-            end
-        end
-        
-        function AddSignals(this,sigs, ax)
-            if ischar(sigs)
-                sigs = {sigs};
-            end
-            
-            if ~exist('ax', 'var')||isempty(ax)
-                ax = numel(this.Axes)+1;
-            end
-            
-            if isnumeric(ax)
-                if ax==0
-                    this.AddAxes(1);
-                    ax = this.Axes(1);
-                elseif ax > numel(this.Axes)
-                    this.AddAxes();
-                    ax =this.Axes(end);
-                else
-                    ax = this.Axes(ax);
-                end
-            end
-            if ~isa(ax, 'matlab.graphics.axis.Axes')
-                error('Argument should be an Axes object or an index.')
-            end
-            
-            for is = 1:numel(sigs)
-                sig = sigs{is};
-                this.plot_signal(sig, ax);
-            end
-            this.update_legend(ax);
-            
-        end
-        
-        function int_false= HighlightFalse(this, sig, ax)
-            if ~exist('ax', 'var')||isempty(ax)
-                ax = this.Axes(end);
-            end
-            
-            axes(ax);
-            hold on;
-            traj = this.BrSet.P.traj{this.ipts};
-            idx = FindParam(this.BrSet.P, sig);
-            tau = traj.time;
-            val = traj.X(idx,:);
-            int_false = highlight_truth_intervals(tau,val, 'g', 0, 'r', 0.3);
-            set(ax,'UserData', int_false);
-            this.update_legend(ax);
-            
-        end
-        
-    end
-    
-    methods (Access=protected)
-        
+   
         function update_legend(this, ax)
             l = legend('-DynamicLegend');
             c = flipud(get(ax, 'Children'));
@@ -290,5 +289,6 @@ classdef BreachSignalsPlot < handle
                 l = plot(time , sig_values, 'DisplayName', sig);
             end
         end
+              
     end
 end

@@ -193,7 +193,6 @@ classdef BreachTraceSystem < BreachSystem
                     this.P.traj{end+1} = traj;
                     this.P.traj_ref(end+1) = numel(this.P.traj);
                 end
-                %this.P = SConcat(this.P, Pnew);
             end
             
             % FIXME still need to get rid of legacy useless Xf field... 

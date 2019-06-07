@@ -53,7 +53,8 @@ classdef var_cp_signal_gen < signal_gen
             
             p0 = zeros(2*sum(cp)-numel(signals),1);
             for ku = 1:numel(signals)
-                k=0;                 for k = 1:cp(ku)-1
+                k=0;                
+                for k = 1:cp(ku)-1
                     this.params= [this.params { [signals{ku} '_u' num2str(k-1)] [signals{ku} '_dt' num2str(k-1)] }];
                     if isempty(this.p0)
                         p0(numel(this.params))=1;
@@ -75,6 +76,49 @@ classdef var_cp_signal_gen < signal_gen
             
         end
         
+        
+        
+        function [cp_times, cp_values, t_bnd, cp_bnd] = get_cp(this, signal)
+            
+            i_sig = find(strcmp(signal,this.signals),1);
+            i_p = sum(this.num_cp(1:i_sig-1))+1;
+            idx_cp = i_p:2:i_p+2*this.num_cp(i_sig)-2;
+            idx_t = i_p+1:2:i_p+2*this.num_cp(i_sig)-2;
+            
+            cp_values = this.p0(idx_cp);
+            cp_dt  = this.p0(idx_t); 
+            
+            cp_times = cp_values*0;
+            for ic = 1:numel(cp_dt)
+               cp_times(ic+1) = sum(cp_dt(1:ic));
+            end
+            
+                                   
+            cp_bnd = [cp_values cp_values];
+            t_bnd = [cp_times cp_times];
+                        
+            for ic = 1:numel(idx_cp)
+                dom_cp(ic) = this.params_domain(idx_cp(ic));
+                if ~isempty(dom_cp(ic).domain)
+                    cp_bnd(ic,1) = dom_cp(ic).domain(1);
+                    cp_bnd(ic,2) = dom_cp(ic).domain(2);                    
+                end
+                if ic>1
+                   dom = this.params_domain(idx_t(ic-1));
+                   if ~isempty(dom.domain)                                              
+                       t_bnd(ic,1) = sum(t_bnd(1:ic-1,1))+dom.domain(1);
+                       t_bnd(ic,2) = sum(t_bnd(1:ic-1,2))+dom.domain(2);
+                   else
+                       t_bnd(ic,1) = sum(t_bnd(1:ic,1));
+                       t_bnd(ic,2) = sum(t_bnd(1:ic,2));                       
+                   end
+                end
+                
+            end
+           
+        end
+        
+                                        
         function X = computeSignals(this,p, time) % compute the signals
             
             if size(p,1) ==1
@@ -102,6 +146,31 @@ classdef var_cp_signal_gen < signal_gen
                 X(i_cp,:) = x';
             end
         end
+                
+        function plot(this, signal, time)
+            plot@signal_gen(this,signal, time);
+            
+            % plot control points
+            [t_cp, x_cp] = this.get_cp(signal);
+            hold on;
+            plot(t_cp,x_cp,'or','MarkerSize', 6, 'MarkerFaceColor', [1 0 0]);
+            legend({signal,'control points (cp)'}, 'Interpreter', 'None');
+            
+        end                        
+          
+     %   function plot_enveloppe(this, signal, time)
+          %  not simple because Minkovski
+            
+   %     end
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
         function type = getType(this)
             type = 'varstep';

@@ -19,7 +19,7 @@ classdef BreachStatus < handle
             name_found = false;
             S = evalin('base', 'who');
             if ~exist('default', 'var')
-                my_name= 'Nobody__';
+                my_name= this.gen_name();
             else
                 my_name = default;
             end

@@ -30,10 +30,10 @@ for itfo = 1:numel(formulas)
 %        monitor = formula;
 %   end
 %   if ~isa(monitor, 'param_constraint_monitor')
-        if isa(monitor,'stl_monitor')
-            find_template();
-        end
-        signals = union(signals, monitor.signals, 'stable');
+%        if isa(monitor,'stl_monitor')
+%            find_template();
+%        end
+    signals = union(signals, monitor.signals, 'stable');
 %   end
     monitors = [monitors {monitor}];
 end

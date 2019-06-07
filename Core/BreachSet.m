@@ -42,6 +42,40 @@ classdef BreachSet < BreachStatus
         sigMapInv
     end
     
+    properties  %  coverage stuff
+        % Gridsize is a vector that contains one value for each dimension,
+        % where each value corresponds to the length of a grid element in
+        % the corresponding dimension. The eps value for each
+        % dimension corresponds to the smallest distance allowed
+        % between any two points in the parameter space.
+        epsgridsize = [];
+        
+        % Gridsize is a vector that contains one value for each dimension,
+        % where each value corresponds to the length of a grid element in
+        % the corresponding dimension. The delta value for each
+        % dimension corresponds to the grid element size that is used to
+        % measure the cell count and entropy coverage measures.
+        deltagridsize = [];
+        
+        % The following flag determines whether all points should be
+        % shifted to the center of the appropriate grid element. If the
+        % flag is set, then this class will assume that only one point
+        % should occupy any given grid element, and that point will be in
+        % the center of the grid element.
+        snap_to_grid = false;
+        
+        % Will use containers for now. This will be an efficient
+        % representation to a.) allow the query of any cell and b.) know
+        % the total number of cells that are populated with points.
+        % This DOES NOT permit an easy way to check a region (e.g., a
+        % hybperbox) that contains points.
+        % In the future, we can switch this for BDDs. A BDD representation
+        % will allow us to do things like use an SMT query to determine
+        % whether points in a region (hyperbox) are populated.
+        EpsGridMapObj = containers.Map('UniformValues',false);
+        DeltaGridMapObj = containers.Map('KeyType','char','ValueType','int32');
+    end
+   
     methods (Hidden=true)
         function P = GetP(this)
             % Get the legacy parameter set structure
@@ -67,7 +101,12 @@ classdef BreachSet < BreachStatus
                 case 0
                     return;
                 case 1
-                    this.P = CreateParamSet(Sys);
+                    if isaSys(Sys)
+                        this.P = CreateParamSet(Sys);
+                    elseif iscell(Sys) % assumes parameter names
+                        Sys = CreateSystem({}, Sys, zeros(1, numel(Sys)));
+                        this.P = CreateParamSet(Sys);
+                    end
                 case 2
                     this.P = CreateParamSet(Sys, params);
                 case 3
@@ -340,7 +379,24 @@ classdef BreachSet < BreachStatus
                 this.Concat(B);
             end
         end
-        
+              
+        function SetDomainCfg(this, cfg)
+           for ip = 1:numel(cfg.params) 
+              typ = cfg.types{ip};
+              dom = cfg.domains{ip};
+              if isempty(dom)
+                  dom = [];
+              elseif ischar(dom)
+                  dom = str2num(dom); %#ok<ST2NM>
+              elseif iscell(dom)
+                 dom = cell2mat(dom);
+              end
+              
+              this.SetDomain(cfg.params{ip},typ,dom); 
+              
+           end
+            
+        end
         
         function SetParamSpec(this, params, values, ignore_sys_param)
             % BreachSet.SetParamSpec
@@ -514,8 +570,7 @@ classdef BreachSet < BreachStatus
                 nb_pts= size(this.P.pts,2);
             end
         end
-        
-        
+               
         function [params, ipr] = GetVariables(this)
             [params, ipr] = GetBoundedDomains(this);
             if this.GetNbParamVectors()>1
@@ -553,8 +608,7 @@ classdef BreachSet < BreachStatus
             params =   this.P.ParamList(ipr);
         end
                 
-        %% Signals
-        
+        %% Signals       
         function  this =  SetSignalMap(this, varargin)
             % SetSignalMap defines aliases for signals - used by GetSignalValues 
             %
@@ -1014,12 +1068,16 @@ classdef BreachSet < BreachStatus
             if nargin ==1
                 max_num_samples = inf;
             end
+            
             bnd_params = this.GetBoundedDomains();
             if this.AppendWhenSample
                 this.SampleDomain(bnd_params, 2, 'corners', 'append', max_num_samples);
             else
                 this.SampleDomain(bnd_params,2, 'corners', 'replace', max_num_samples);
             end
+            
+            
+            
         end
         
         function QuasiRandomSample(this, nb_sample, step)
@@ -1045,8 +1103,11 @@ classdef BreachSet < BreachStatus
         end
                 
         %% Concatenation, ExtractSubset - needs some additional compatibility checks...
-        function Concat(this, other)
-            this.P = SConcat(this.P, other.P);
+        function Concat(this, other, fast)
+            if nargin<=2
+               fast = false; 
+            end
+            this.P = SConcat(this.P, other.P, fast);
         end
         
         function other  = ExtractSubset(this, idx)
@@ -1314,6 +1375,21 @@ classdef BreachSet < BreachStatus
                 end
             end
         end
+        
+        function cfg=  GetDomainCfg(this)
+            params = this.GetParamList();
+            cfg.params = params;
+            for ip = 1:numel(params)
+                dom = this.GetDomain(params{ip});
+                cfg.types{ip} = dom.type;
+                if strcmp(dom.type, 'enum')
+                    cfg.domains{ip}=dom.enum;
+                else
+                    cfg.domains{ip}=dom.domain;
+                end
+            end                       
+        end
+        
         
         %% Coverage
         function [cnt, grd1, grd2] = GetSignalCoverage(this,sigs, delta1,delta2)
@@ -1681,8 +1757,7 @@ classdef BreachSet < BreachStatus
                 
             end
         end
-        
-        
+           
         function summary = GetSummary(this)
             
             if this.hasTraj()
@@ -1874,8 +1949,7 @@ classdef BreachSet < BreachStatus
             
             end
         end
-        
-        
+                
         function st = get_signal_attributes_string(this, sig) 
             atts = this.get_signal_attributes(sig);
             if isempty(atts)
@@ -2024,7 +2098,297 @@ classdef BreachSet < BreachStatus
         end
          
     end
-    methods (Access=protected)    
+    
+    
+    %% Coverage Methods
+    methods
+        
+        function SetEpsGridsize(this,eps_size_vector)
+            % Assign a grid sizes for each parameter dimension. The eps
+            % grid size indicates the length of grid elements for each of
+            % the dimensions in parameter space. The eps value for each
+            % dimension corresponds to the smallest distance allowed
+            % between any two points in the parameter space.
+            
+            if ~isempty(this.epsgridsize)
+                error('Eps grid size already set. You cannot change the grid size after it has been defined.');
+            end
+            
+            if isrow(eps_size_vector)
+                eps_size_vector = eps_size_vector';
+            end
+            
+            % Number of parameters with ranges associated with them.
+            varying_parameter_indices = this.VaryingParamList();
+            
+            if length(eps_size_vector)~=length(varying_parameter_indices)
+                error('Length of the size vector does not match the number of parameters wth ranges associated with them.');
+            end
+            this.epsgridsize = eps_size_vector;
+        end
+        
+        function SetDeltaGridsize(this,delta_size_vector)
+            % Assign a grid sizes for each parameter dimension. The eps
+            % grid size indicates the length of grid elements for each of
+            % the dimensions in parameter space. The delta value for each
+            % dimension corresponds to the grid element size that is used to
+            % measure the cell count and entropy coverage measures.
+            
+            if ~isempty(this.deltagridsize)
+                error('Delta grid size already set. You cannot change the grid size after it has been defined.');
+            end
+            if isrow(delta_size_vector)
+                delta_size_vector = delta_size_vector';
+            end
+            % Number of parameters with ranges associated with them.
+            
+            varying_parameter_indices = this.VaryingParamList;
+            if length(delta_size_vector)~=length(varying_parameter_indices)
+                error('Length of the size vector does not match the number of parameters wth ranges associated with them.');
+            end
+            this.deltagridsize = delta_size_vector;
+        end
+        
+        function SetSnapToGrid(this,snapflag)
+            this.snap_to_grid = snapflag;
+        end
+        
+        function inRange = TestPointInRange(this,new_point)
+            % Identify the "lower, left" and "upper, right" corners of the
+            % parameter set
+            if isrow(new_point)
+                new_point = new_point';
+            end
+            inRange = true;
+            varying_parameter_indices = this.VaryingParamList;
+            lower_left_corner = [];
+            upper_right_corner = [];
+            for ip = varying_parameter_indices
+                lower_left_corner = [lower_left_corner; this.Domains(ip).domain(1)];
+                upper_right_corner = [upper_right_corner; this.Domains(ip).domain(2)];
+            end
+            
+            if any(new_point < lower_left_corner)||any(new_point>upper_right_corner)
+                %fprintf('\nNew point out of range.\n');
+                inRange = false;
+            end
+        end
+        
+        function lower_left_corner = LowerLeftCorner(this)
+            % Identify the "lower, left" corner of the parameter set
+            varying_parameter_indices = this.VaryingParamList;
+            lower_left_corner = [];
+            for ip = varying_parameter_indices
+                lower_left_corner = [lower_left_corner; this.Domains(ip).domain(1)];
+            end
+        end
+        
+        function upper_right_corner = UpperRightCorner(this)
+            % Identify the "upper, right" corner of the parameter set
+            varying_parameter_indices = this.VaryingParamList;
+            upper_right_corner = [];
+            for ip = varying_parameter_indices
+                upper_right_corner = [upper_right_corner; this.Domains(ip).domain(2)];
+            end
+        end
+        
+        function [varargout] = AddPoints(this,new_points)
+            % Add a collection of new points to the space.
+            
+            var = this.GetVariables();
+            if nargin<=1
+               new_points = this.GetParam(var);
+            end
+            
+            
+            % Assume that for an "row x col" matrix that represents the new points,
+            % each col represents a unique point.
+            num_points = size(new_points,2);
+            for ind = 1:num_points
+                thisPoint = new_points(:,ind);
+                this.AddPoint(thisPoint);
+            end
+            
+        end
+        
+        function [varargout] = AddPoint(this,new_point)
+            % Add a point to the data structure
+            
+            if nargout>0
+                varargout{1} = true;
+            end
+            if nargout>1
+                varargout{2} = [];
+            end
+            
+            if ~this.TestPointInRange(new_point)
+                %fprintf('\nPoint not in range, so it was not added.\n');
+                if nargout>0
+                    varargout{1} = false;
+                end
+                return
+            end
+            
+            epsgridsize = this.epsgridsize;
+            deltagridsize = this.deltagridsize;
+            
+            if isrow(new_point)
+                new_point = new_point';
+            end
+            
+            if nargout>1
+                varargout{2} = new_point;
+            end
+            
+            % Identify the "lower, left" corner of the parameter set
+            lower_left_corner = this.LowerLeftCorner();
+            
+            shifted_point = new_point - lower_left_corner;
+            
+            % First, identify corresponding eps grid element
+            shifted_grid_element = diag(epsgridsize)*floor(shifted_point./epsgridsize);
+            eps_grid_element = shifted_grid_element + lower_left_corner;
+            
+            % Also, identify delta grid element
+            shifted_grid_element = diag(deltagridsize)*floor(shifted_point./deltagridsize);
+            delta_grid_element = shifted_grid_element + lower_left_corner;
+            
+            if this.snap_to_grid
+                if this.EpsGridMapObj.isKey(mat2str(eps_grid_element))
+                    % fprintf('\nValue already present in grid element %s.\n',mat2str(eps_grid_element));
+                    if nargout>0
+                        varargout{1} = false;
+                    end
+                    if nargout>1
+                        varargout{2} = [];
+                    end
+                else
+                    if this.DeltaGridMapObj.isKey(mat2str(delta_grid_element))
+                        previous_grid_members = this.DeltaGridMapObj(mat2str(delta_grid_element));
+                        this.DeltaGridMapObj(mat2str(delta_grid_element)) = previous_grid_members + 1;
+                    else
+                        this.DeltaGridMapObj(mat2str(delta_grid_element)) = 1;
+                    end
+                    this.EpsGridMapObj(mat2str(eps_grid_element)) = 1;
+                    if nargout>1
+                        varargout{2} = eps_grid_element;
+                    end
+                end
+            else
+                % For this case, create a list for each grid
+                % element that is populated by at least one point.
+                if this.EpsGridMapObj.isKey(mat2str(eps_grid_element))
+                    previous_grid_members = this.EpsGridMapObj(mat2str(eps_grid_element));
+                    this.EpsGridMapObj(mat2str(eps_grid_element)) = [previous_grid_members new_point];
+                else
+                    this.EpsGridMapObj(mat2str(eps_grid_element)) = [new_point];
+                end
+                if this.DeltaGridMapObj.isKey(mat2str(delta_grid_element))
+                    previous_grid_members = this.DeltaGridMapObj(mat2str(delta_grid_element));
+                    this.DeltaGridMapObj(mat2str(delta_grid_element)) = previous_grid_members + 1;
+                else
+                    this.DeltaGridMapObj(mat2str(delta_grid_element)) = 1;
+                end
+            end
+            
+        end
+        
+        function varying_parameter_indices = VaryingParamList(this)
+            % Determine the indices into the SimulinkSystem parameters that
+            % correspond to parameters that are allowed to vary (i.e., that
+            % have a range assocaited with them).
+            
+            [~, varying_parameter_indices] = this.GetBoundedDomains();
+            
+        end
+        
+        function num_points = NumPoints(this)
+            % Return number of points in the list
+            num_points = double(this.EpsGridMapObj.Count);
+        end
+        
+        function DisplayPoints(this)
+            % Display all points in the list
+            KeysSet = this.EpsGridMapObj.keys;
+            fprintf('\nCell: Occupancy\n');
+            for ind = 1:length(KeysSet);
+                ValueTemp = this.EpsGridMapObj(KeysSet{ind});
+                fprintf('%s: %s \n',KeysSet{ind}, mat2str(ValueTemp'));
+            end
+        end
+        
+        function total_cells = TotalCellCount(this)
+            % Total number of cells in the parameter space
+            %
+            % First, compute the width of the range for each dimension in
+            % the parameter space.
+            varying_parameter_indices = this.VaryingParamList;
+            rg = [];
+            for ip = varying_parameter_indices
+                rg = [rg; this.Domains(ip).domain(2)-this.Domains(ip).domain(1)];
+            end
+            total_cells = prod(ceil(rg./this.epsgridsize));
+        end
+        
+        function coverage = ComputeLogCellOccupancyCoverage(this)
+            % Compute the log of the cell occupancy
+            % for the parameter space
+            
+            % Total number of cells in the parameter space
+            total_cells = this.TotalCellCount;
+            % Next, obtain the total number of populated cells
+            pop_cells = this.NumPoints;
+            coverage = log(pop_cells)/log(total_cells);
+        end
+        
+        function coverage = ComputeCellOccupancyCoverage(this)
+            % Compute the cell occupancy for the parameter space
+            
+            % Total number of cells in the parameter space
+            total_cells = this.TotalCellCount;
+            % Next, obtain the total number of populated cells
+            pop_cells = this.NumPoints;
+            coverage = pop_cells/total_cells;
+        end
+        
+        function coverage = ComputeEntropyCoverage(this)
+            % Compute the combinatorial entropy (also known as the
+            % coarse-grained Boltzmann entropy).
+            
+            % The entropy measure is given by the following:
+            %
+            % G(D) = p!/(n_1!\cdots n_c!)
+            %
+            % S_B(D) = log(G(D)),
+            %
+            % where p is the total number of points, and n_i is the number
+            % of points in cell i.
+            
+            % Collect the number of points in each cell and compute the
+            % denominator of G(D). At the same time, compute the total
+            % number of points p.
+            delta_cell_labels = this.DeltaGridMapObj.keys;
+            numpoints = 0;
+            GD_denominator = 1;
+            for ind = 1:length(delta_cell_labels)
+                n_i = double(this.DeltaGridMapObj(delta_cell_labels{ind}));
+                numpoints = numpoints + n_i;
+                GD_denominator = GD_denominator*(factorial(n_i));
+            end
+            
+            GD_numerator = factorial(numpoints);
+            
+            GD = GD_numerator/GD_denominator;
+            
+            coverage = log(GD);
+        end
+        
+    end
+
+    
+    
+    
+    methods (Access=protected)
         
         
         

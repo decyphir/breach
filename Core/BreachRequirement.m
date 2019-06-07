@@ -11,7 +11,10 @@ classdef BreachRequirement < BreachTraceSystem
         signals_in
         traces_vals_precond % results for individual traces & precond_monitors
         traces_vals % results for individual traces & req_monitors
-        val             % summary evaluation for all traces & req_monitors
+        val         % summary evaluation for all traces & req_monitors
+        robustness_map
+        diag_map
+        formula_names_map
     end
     
     properties (Access=protected)
@@ -23,25 +26,26 @@ classdef BreachRequirement < BreachTraceSystem
         function this = BreachRequirement(req_monitors, postprocess_signal_gens, precond_monitors)
             
             this = this@BreachTraceSystem({}, [], {'data_trace_idx_'});
-            
-            % Adds requirement monitors, at least one
-            this.req_monitors = {};
-            this.AddReq(req_monitors);
-            
-            % Add output gens
-            this.postprocess_signal_gens={};
-            if exist('postprocess_signal_gens', 'var')&&~isempty(postprocess_signal_gens)
-                this.AddPostProcess(postprocess_signal_gens);
+            if nargin>0
+                % Adds requirement monitors, at least one
+                this.req_monitors = {};
+                this.AddReq(req_monitors);
+                
+                % Add output gens
+                this.postprocess_signal_gens={};
+                if exist('postprocess_signal_gens', 'var')&&~isempty(postprocess_signal_gens)
+                    this.AddPostProcess(postprocess_signal_gens);
+                end
+                
+                % precondition requirements
+                this.precond_monitors = {};
+                if  exist('precond_monitors', 'var')&&~isempty(precond_monitors)
+                    this.AddPreCond(precond_monitors);
+                end
+                
+                % Reset signal map and figure out what signals are required input signals
+                this.ResetSigMap();
             end
-            
-            % precondition requirements
-            this.precond_monitors = {};
-            if  exist('precond_monitors', 'var')&&~isempty(precond_monitors)
-                this.AddPreCond(precond_monitors);
-            end
-            
-            % Reset signal map and figure out what signals are required input signals
-            this.ResetSigMap();
             
         end
         
@@ -159,7 +163,24 @@ classdef BreachRequirement < BreachTraceSystem
             
             % A BreachRequirement must return a single value
             global_val = min(min(traces_vals));
-            this.val = global_val;
+            global_precond_val = min(min(traces_vals_precond));
+            this.val = min([global_val,-global_precond_val]);
+        end
+        
+        function [global_val, traces_vals, traces_vals_precond] = Eval_IO(this, inout, relabs, varargin)
+            % BreachRequirement.Eval_IO returns IO-aware evaluation of the requirement -
+            % compute it for all traces available and returns min (implicit
+            % conjunction)
+            
+            % Collect traces from context and eval them
+            [traces_vals, traces_vals_precond] = this.evalAllTracesIO(inout, relabs, varargin{:});
+            this.traces_vals = traces_vals;
+            this.traces_vals_precond = traces_vals_precond;
+            
+            % A BreachRequirement must return a single value
+            global_val = min(min(traces_vals));
+            global_precond_val = min(min(traces_vals_precond));
+            this.val = min([global_val,-global_precond_val]);
         end
         
         function [traces_vals, traces_vals_precond] =evalAllTraces(this,varargin)
@@ -230,7 +251,6 @@ classdef BreachRequirement < BreachTraceSystem
             end
             
         end
-
         
         function F = PlotDiagnosis(this, idx_req_monitors, itraj)
             if nargin<2
@@ -255,13 +275,9 @@ classdef BreachRequirement < BreachTraceSystem
                 end
             end
         end
-        
-        
+             
         function h = PlotSignals(this,varargin)
-        
             h = BreachSignalsPlot(this,varargin{:});
-            
-            
         end
         
         function summary = GetSummary(this, varargin)
@@ -450,7 +466,7 @@ classdef BreachRequirement < BreachTraceSystem
                 end
             end
         end
-        
+         
         function dom  = GetDomain(this, param)
             if ischar(param)
                 param =  {param};
@@ -476,6 +492,424 @@ classdef BreachRequirement < BreachTraceSystem
             this.BrSet.PlotRobustSat(varargin{:});
         end
         
+        function F = PlotDiagnostic(this,req, itraj)
+            if nargin<=2
+                itraj = 1;
+            end
+            
+            F = BreachSignalsPlot(this);
+            F.DeleteAxes(1);
+            if isnumeric(req)
+                req = this.req_monitors{req};
+            elseif (ischar(req))
+                req = this.get_req_from_name(req);
+            elseif (isa(req, 'STL_Formula'))
+                req = this.get_req_from_name(get_id(req));
+                if isempty(req)
+                    req = stl_monitor(req);
+                end
+            end
+            
+            this.eval_req(req, itraj);
+            req.plot_diagnosis(F);
+            
+        end
+        
+        function req = get_req_from_name(this, req_name)
+            
+            req = [];
+            for ir = 1:numel(this.precond_monitors)
+                if strcmp(this.precond_monitors{ir}.name, req_name)
+                    req = this.precond_monitors{ir};
+                    return;
+                end
+            end
+            
+            for ir = 1:numel(this.req_monitors)
+                if strcmp(this.req_monitors{ir}.name, req_name)
+                    req = this.req_monitors{ir};
+                    return;
+                end
+            end
+        end
+        
+        
+        %% Dejan original diagnostic code
+        function PlotDiag_debug(this, verdict)
+            gca;
+            figure;
+            if (verdict)
+                color = 'g';
+            else
+                color = 'r';
+            end
+            robustness_map = this.robustness_map;
+            diag_map = this.diag_map;
+            formula_names_map = this.formula_names_map;
+           
+            nb_plots = robustness_map.size(1);
+            keys = robustness_map.keys();
+            for (i=1:nb_plots)
+                id = keys{i};
+                h = subplot(nb_plots, 1, i);
+                hold on;
+                grid on;
+                formula_name = formula_names_map(id);
+                title(formula_name, 'Interpreter', 'none');
+                signal = robustness_map(id);               
+                stairs(signal.times, signal.values);
+                %sample_time = implicant.getSampleTime();
+                
+                ylim = get(h, 'YLim');
+                ylim_bot = ylim(1);
+                ylim_top = ylim(2);
+                
+                implicant = diag_map(id);
+                size = implicant.getIntervalsSize();
+                for(j=1:size)
+                    interval = implicant.getInterval(j);
+                    x = interval.begin;
+                    y = interval.end;
+                    if (x == y)
+                        line([x x],[ylim_bot ylim_top],'Color',color);
+                    elseif (y > x)
+                        %line([x x],[ylim_bot ylim_top],'Color',[1 0 0]);
+                        %line([y y],[ylim_bot ylim_top],'Color',[1 0 0]);
+                        p = patch([x y y x], [ylim_bot ylim_bot ylim_top ylim_top], color); 
+                        alpha(p, 0.05);
+                        set(p,'EdgeColor','none');
+                    end
+                end
+                samples = implicant.getSignificantSamples();
+                for (j=1:length(samples))
+                    sample = samples(j);
+                    hold on;
+                    plot(sample.time, sample.value, 'x');
+                end
+                
+            end
+        end
+        
+        function PlotDiag(this, phi, verdict)
+            gca;
+            figure;
+            if (verdict)
+                color = 'g';
+            else
+                color = 'r';
+            end
+            robustness_map = this.robustness_map;
+            diag_map = this.diag_map;
+            formula_names_map = this.formula_names_map;
+            signal_names = STL_ExtractSignals(phi);
+           
+            nb_plots = length(signal_names);
+            keys = signal_names;
+            for (i=1:nb_plots)
+                id = keys{i};
+                h = subplot(nb_plots, 4, [(i-1)*4 + 1,(i-1)*4 + 4]);
+                hold on;
+                grid on;
+                ax = gca;
+                ax.FontWeight = 'bold';
+                %ax.FontSize = 12;
+                formula_name = formula_names_map(id);
+                title(formula_name, 'Interpreter', 'none');
+                signal = robustness_map(id);  
+                stairs(signal.times, signal.values, 'LineWidth', 2);
+      
+                ylim = get(h, 'YLim');
+                ylim_bot = ylim(1);
+                ylim_top = ylim(2);
+                
+                implicant = diag_map(id);
+                size = implicant.getIntervalsSize();
+                for(j=1:size)
+                    interval = implicant.getInterval(j);
+                    x = interval.begin;
+                    y = interval.end;
+                    if (x == y)
+                        line([x x],[ylim_bot ylim_top],'Color',color);
+                    elseif (y > x)
+                        p = patch([x y y x], [ylim_bot ylim_bot ylim_top ylim_top], color); 
+                        alpha(p, 0.3);
+                        set(p,'EdgeColor','r','LineWidth',1);
+                    end
+                end
+                samples = implicant.getSignificantSamples();
+                for (j=1:length(samples))
+                    sample = samples(j);
+                   
+                    plot(sample.time, sample.value, ...
+                        '-s', 'MarkerSize',8,...
+                        'MarkerEdgeColor','red',...
+                        'MarkerFaceColor','red');
+                end
+                hold off;
+                
+                
+            end
+            %a = axes;
+            %t1 = title(display(phi), 'Interpreter', 'none');
+            %a.Visible = 'off'; % set(a,'Visible','off');
+            %t1.Visible = 'on'; % set(t1,'Visible','on');
+            zoom xon;
+        end
+        
+        function PlotDiag_with_zoom(this, phi, verdict)
+            gca;
+            figure('Color', 'white');
+            if (verdict)
+                color = 'g';
+            else
+                color = 'r';
+            end
+            robustness_map = this.robustness_map;
+            diag_map = this.diag_map;
+            formula_names_map = this.formula_names_map;
+            signal_names = STL_ExtractSignals(phi);
+            nb_plots = length(signal_names);
+            
+            keys = signal_names;
+            
+                      
+            for (i=1:nb_plots)
+                id = keys{i};
+                 
+                h = subplot(nb_plots, 4, [(i-1)*4 + 1,(i-1)*4 + 3]);
+                hold on;
+                grid on;
+                ax = gca;
+                ax.FontWeight = 'bold';
+                %ax.FontSize = 12;
+                formula_name = formula_names_map(id);
+                title(formula_name, 'Interpreter', 'none');
+                signal = robustness_map(id);  
+                stairs(signal.times, signal.values, 'LineWidth', 2);
+                
+                
+                ylim = get(h, 'YLim');
+                ylim_bot = ylim(1);
+                ylim_top = ylim(2);
+                
+                implicant = diag_map(id);
+                size = implicant.getIntervalsSize();
+                for(j=1:size)
+                    interval = implicant.getInterval(j);
+                    x = interval.begin;
+                    y = interval.end;
+                    if (x == y)
+                        line([x x],[ylim_bot ylim_top],'Color',color);
+                    elseif (y > x)
+                        p = patch([x y y x], [ylim_bot ylim_bot ylim_top ylim_top], color); 
+                        alpha(p, 0.3);
+                        set(p,'EdgeColor','red','LineWidth',1);
+                    end
+                end
+                samples = implicant.getSignificantSamples();
+                for (j=1:length(samples))
+                    sample = samples(j);
+                   
+                    plot(sample.time, sample.value, ...
+                        '-s', 'MarkerSize',8,...
+                        'MarkerEdgeColor','red',...
+                        'MarkerFaceColor','red');
+                end
+                hold off;
+                
+                
+                % Now we plot the zoomed in version
+                
+                h = subplot(nb_plots, 4, i*4);
+                hold on;
+                grid on;
+                ax = gca;
+                ax.FontWeight = 'bold';
+                ax.XLim = [11,14];
+                %ax.FontSize = 12;
+                formula_name = formula_names_map(id);
+                %title(formula_name, 'Interpreter', 'none');
+                signal = robustness_map(id);  
+                stairs(signal.times, signal.values, 'LineWidth', 2);
+                
+                
+                ylim = get(h, 'YLim');
+                ylim_bot = ylim(1);
+                ylim_top = ylim(2);
+                
+                implicant = diag_map(id);
+                size = implicant.getIntervalsSize();
+                for(j=1:size)
+                    interval = implicant.getInterval(j);
+                    x = interval.begin;
+                    y = interval.end;
+                    if (x == y)
+                        line([x x],[ylim_bot ylim_top],'Color',color);
+                    elseif (y > x)
+                        p = patch([x y y x], [ylim_bot ylim_bot ylim_top ylim_top], color); 
+                        alpha(p, 0.3);
+                        set(p,'EdgeColor','red','LineWidth',1);
+                    end
+                end
+                samples = implicant.getSignificantSamples();
+                for (j=1:length(samples))
+                    sample = samples(j);
+                   
+                    plot(sample.time, sample.value, ...
+                        '-s', 'MarkerSize',8,...
+                        'MarkerEdgeColor','red',...
+                        'MarkerFaceColor','red');
+                end
+                hold off;
+                
+                
+            end
+            %a = axes;
+            %t1 = title(display(phi), 'Interpreter', 'none');
+            %a.Visible = 'off'; % set(a,'Visible','off');
+            %t1.Visible = 'on'; % set(t1,'Visible','on');
+            zoom xon;
+        end
+              
+        function [verdict] = Explain(this, B, phi)
+            robustness_map = containers.Map;
+            %this.getBrSet(B);
+            
+            [val tau robustness_map] = STL_Eval_IO_Rob(B.Sys, phi, B.P, B.P.traj{1}, 'out', 'rel', robustness_map);
+            diag_map = containers.Map;
+            
+            formula_names_map = containers.Map;
+            formula_names_map = get_formula_name_map(phi, formula_names_map);
+            
+            top_signal = robustness_map(get_id(phi));
+  
+            val = top_signal.values(1);
+            if(val < 0)
+                verdict = 0;
+            else
+                verdict = 1;
+            end
+            
+            implicant = BreachImplicant;
+            implicant = implicant.addInterval(0, 0);
+            implicant = implicant.addSignificantSample(0, val);
+            
+            id = get_id(phi);
+            diag_map(id) = implicant;
+            
+            [phi, diag_map] = this.Diag(phi, robustness_map, diag_map, verdict);
+            
+            this.robustness_map = robustness_map;
+            this.diag_map = diag_map;
+            this.formula_names_map = formula_names_map;
+            %this.PlotDiag_debug(robustness_map, diag_map, formula_names_map);
+           
+        end
+        
+        function [phi, diag_map] = Diag(this, phi, robustness_map, diag_map, flag)
+            
+            in_implicant = diag_map(get_id(phi));
+            samples = in_implicant.getSignificantSamples();
+            id = get_id(phi);
+            
+            psis = get_children(phi);
+            switch(get_type(phi))
+                case 'predicate'
+                    signal_names = STL_ExtractSignals(phi);
+                    for(i=1:length(signal_names))
+                        signal_name = signal_names{i};
+                        signal = robustness_map(signal_name);
+                        if(~diag_map.isKey(signal_name))
+                            out_implicant = BreachImplicant;
+                            intervals = in_implicant.getIntervals();
+                            for(j=1:length(intervals))
+                                interval = intervals(j);
+                                out_implicant = out_implicant.addInterval(interval.begin, interval.end);
+                            end
+                            samples = in_implicant.getSignificantSamples();
+                            for(j=1:length(samples))
+                                sample = samples(j);
+                                value = interp1(signal.times, signal.values, sample.time, 'previous');
+                                out_implicant = out_implicant.addSignificantSample(sample.time, value);
+                            end
+                            diag_map(signal_name) = out_implicant;
+                        end
+                    end
+                    
+                case 'not'
+                    signal = robustness_map(get_id(psis{1}));
+                    if(flag)
+                        [implicant] = BreachDiagnostics.diag_not_t(signal, in_implicant, samples);
+                    else
+                        [implicant] = BreachDiagnostics.diag_not_f(signal, in_implicant, samples);
+                    end
+                    diag_map(get_id(psis{1})) = implicant;
+                    [psis{1}, diag_map] = this.Diag(psis{1}, robustness_map, diag_map, ~flag);
+                case 'or'
+                    signal1 = robustness_map(get_id(psis{1}));
+                    signal2 = robustness_map(get_id(psis{2}));
+                    if(flag)
+                        [implicant1 implicant2] = BreachDiagnostics.diag_or_t(signal1, signal2, in_implicant, samples);
+                    else
+                        [implicant1 implicant2] = BreachDiagnostics.diag_or_f(signal1, signal2, in_implicant, samples);
+                    end
+                    diag_map(get_id(psis{1})) = implicant1;
+                    diag_map(get_id(psis{2})) = implicant2;
+                    [psis{1}, diag_map] = this.Diag(psis{1}, robustness_map, diag_map, flag);
+                    [psis{2}, diag_map] = this.Diag(psis{2}, robustness_map, diag_map, flag);
+                case 'and'
+                    signal1 = robustness_map(get_id(psis{1}));
+                    signal2 = robustness_map(get_id(psis{2}));
+                    if(flag)
+                        [implicant1 implicant2] = BreachDiagnostics.diag_and_t(signal1, signal2, in_implicant, samples);
+                    else
+                        [implicant1 implicant2] = BreachDiagnostics.diag_and_f(signal1, signal2, in_implicant, samples);
+                    end
+                    diag_map(get_id(psis{1})) = implicant1;
+                    diag_map(get_id(psis{2})) = implicant2;
+                    [psis{1}, diag_map] = this.Diag(psis{1}, robustness_map, diag_map, flag);
+                    [psis{2}, diag_map] = this.Diag(psis{2}, robustness_map, diag_map, flag);
+                case '=>'
+                    signal1 = robustness_map(get_id(psis{1}));
+                    signal2 = robustness_map(get_id(psis{2}));
+                    if(flag)
+                        [implicant1 implicant2] = BreachDiagnostics.diag_implies_t(signal1, signal2, in_implicant, samples);
+                    else
+                        [implicant1 implicant2] = BreachDiagnostics.diag_implies_f(signal1, signal2, in_implicant, samples);
+                    end
+                    diag_map(get_id(psis{1})) = implicant1;
+                    diag_map(get_id(psis{2})) = implicant2;
+                    [psis{1}, diag_map] = this.Diag(psis{1}, robustness_map, diag_map, flag);
+                    [psis{2}, diag_map] = this.Diag(psis{2}, robustness_map, diag_map, flag);
+                case 'always'
+                    signal = robustness_map(get_id(psis{1}));
+                    I = eval(get_interval(phi));
+                    bound.begin = I(1);
+                    bound.end = min(I(2),max(signal.times));
+                    if(flag)
+                        [implicant] = BreachDiagnostics.diag_alw_t(signal, bound, in_implicant, samples);
+                    else
+                        [implicant] = BreachDiagnostics.diag_alw_f(signal, bound, in_implicant, samples);
+                    end
+
+                    diag_map(get_id(psis{1})) = implicant;
+                    [psis{1}, diag_map] = this.Diag(psis{1}, robustness_map, diag_map, flag);
+                case 'eventually'
+                    signal = robustness_map(get_id(psis{1}));
+                    I = eval(get_interval(phi));
+                    bound.begin = I(1);
+                    bound.end = min(I(2),max(signal.times));
+                    if(flag)
+                        [implicant] = BreachDiagnostics.diag_ev_t(signal, bound, in_implicant, samples);
+                    else
+                        [implicant] = BreachDiagnostics.diag_ev_f(signal, bound, in_implicant, samples);
+                    end
+                    diag_map(get_id(psis{1})) = implicant;
+                    [psis{1}, diag_map] = this.Diag(psis{1}, robustness_map, diag_map, flag);        
+            end
+        end
+        
+                
         %% Display
         function st = disp(this)
             signals_in_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.signals_in, 'UniformOutput', false));
@@ -904,7 +1338,7 @@ classdef BreachRequirement < BreachTraceSystem
                     end
                     
                     if ~isempty(params_req)
-                        this.SetParam(params_req, values(i_req,:));
+                        this.SetParam(params_req, values(i_req));
                     end
                     
             end
@@ -1016,6 +1450,76 @@ classdef BreachRequirement < BreachTraceSystem
                 this.AddTrace(trajR);
             end
             
+        end
+ 
+        function [traces_vals, traces_vals_precond] =evalAllTracesIO(this,inout,relabs,varargin)
+            % BreachRequirement.evalAllTraces collect traces and apply
+            % evalTrace
+            this.getBrSet(varargin{:});            
+            for i_req = 1:numel(this.req_monitors)
+                this.req_monitors{i_req}.set_mode(inout,relabs);
+            end
+            
+            num_traj = numel(this.BrSet.P.traj);
+            traces_vals = nan(num_traj, numel(this.req_monitors));        
+            traces_vals_precond = nan(num_traj, numel(this.precond_monitors));        
+            % eval pre conditions
+            if ~isempty(this.precond_monitors)
+                for it = 1:num_traj
+                    for ipre = 1:numel(this.precond_monitors)
+                        req = this.precond_monitors{ipre};
+                        traces_vals_precond(it, ipre)  = this.eval_req(req,it);
+                    end
+                end
+            end
+            
+            % eval requirement 
+            for it = 1:num_traj
+                if any(traces_vals_precond(it,:)<0)
+                    traces_vals(it, :) = NaN;
+                else
+                    for ipre = 1:numel(this.req_monitors)
+                        req = this.req_monitors{ipre};
+                        traces_vals(it, ipre)  = this.eval_req(req,it);
+                    end
+                end
+            end
+            this.traces_vals_precond = traces_vals_precond;
+            this.traces_vals = traces_vals;
+
+        end
+
+        function  val = eval_req(this, req, it)
+            time = this.P.traj{it}.time;                        
+            idx_sig_req = FindParam(this.P, req.signals);
+            idx_par_req = FindParam(this.P, req.params);
+            p_in = this.P.traj{it}.param(1, idx_par_req);
+            if ~isempty(req.signals_in)
+                Xin = this.GetSignalValues(req.signals_in, it);
+            else
+                Xin = [];
+            end
+            % checks if a signal is missing (need postprocess)
+            while any(isnan(Xin))
+                % should do only one iteration if postprocessing function are
+                % properly ordered following dependency
+                for ipp = 1:numel(this.postprocess_signal_gens)
+                    psg  = this.postprocess_signal_gens{ipp};
+                    Xpp_in = this.GetSignalValues(psg.signals_in, it);
+                    idx_param_pp_in = FindParam(this.P, psg.params);
+                    idx_Xout = FindParam(this.P, psg.signals);
+                    param_pp_in = this.P.traj{it}.param(1, idx_param_pp_in);
+                    [~, this.P.traj{it}.X(idx_Xout,:)]  = this.postprocessSignals(this.postprocess_signal_gens{ipp},time, Xpp_in, param_pp_in);
+                end
+                Xin = this.GetSignalValues(req.signals_in, it);
+            end
+            if ~isempty(idx_sig_req)
+                [val , this.P.traj{it}.time, Xout] ...
+                    = this.evalRequirement(req, time, Xin, p_in);
+                this.P.traj{it}.X( idx_sig_req,:) = Xout;
+            else
+                val  = this.evalRequirement(req, time, Xin, p_in);
+            end
         end
         
         function  [time, Xout] = postprocessSignals(this, pp, time, Xin, pin)

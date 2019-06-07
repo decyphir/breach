@@ -817,7 +817,8 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             
             % FIXME: the following needs to be reviewed
             if ~isempty(this.InputGenerator)&&this.use_precomputed_inputs==false
-                this.InputGenerator.Reset();
+                this.InputGenerator.ResetSimulations();
+                this.InputGenerator.resetStatus();
             end
             
             if this.SimInModelsDataFolder

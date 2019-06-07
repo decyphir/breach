@@ -159,7 +159,7 @@ switch Sys.type
             end
         end
         
-        if ischar(tspan) %  FIXME: does not work with sim_time being varying parameter...
+        if ischar(tspan) 
             tspan = evalin('base', tspan);
         end
                     

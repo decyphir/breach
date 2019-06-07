@@ -18,6 +18,9 @@ classdef FalsificationProblem < BreachProblem
         X_false
         obj_false
         StopAtFalse=true
+        Rio_Mode
+        Rio_Mode_log=[]
+        val_max=inf
     end
     
     methods (Static)
@@ -33,11 +36,16 @@ classdef FalsificationProblem < BreachProblem
         
         % Constructor calls parent constructor
         function this = FalsificationProblem(BrSys, phi, params, ranges)
-           
-            Br = BrSys.copy();
+         
+            if nargin>=1
+                Br = BrSys.copy();
+            end
             switch nargin
+                case 0
+                    super_args = {};
                 case 2
-                    params = Br.GetSysVariables();
+                    [params, ipr] = Br.GetSysVariables();
+                    params = params(ipr>Br.P.DimX);
                     req_params = Br.GetReqVariables();
                     if ~isempty(req_params)
                       Br.ResetDomain(req_params);
@@ -62,6 +70,7 @@ classdef FalsificationProblem < BreachProblem
             end
             this = this@BreachProblem(super_args{:});
             this.obj_best=inf;
+        
         end
         
         function ResetObjective(this, varargin)
@@ -71,43 +80,84 @@ classdef FalsificationProblem < BreachProblem
             this.obj_best = inf;
         end
         
-        function obj = objective_fn(this,x)
-            % For falsification, default objective_fn is simply robust satisfaction of the least
-            this.robust_fn(x);
-            robs = this.Spec.traces_vals;
-            if (~isempty(this.Spec.traces_vals_precond))
-                for itr = 1:size(this.Spec.traces_vals_precond,1)
-                    precond_rob = min(this.Spec.traces_vals_precond(itr,:));
-                    if  precond_rob<0
-                        robs(itr,:)= -precond_rob;
+            
+        function set_IO_robustness_mode(this, mode, cap)
+            switch mode
+                case 'default'
+                    this.robust_fn = @(x) (this.Spec.Eval(this.BrSys, this.params, x));
+                    this.constraints_fn = [];
+                case 'random'
+                    this.robust_fn = @(x) this.boolean_verdict(x);
+                    this.constraints_fn = [];
+                case 'in'
+                    this.robust_fn = @(x) (this.Spec.Eval_IO('in', 'rel', this.BrSys, this.params, x));
+                    if exist('cap','var')
+                        this.val_max = cap;
                     end
-                end
+                    this.constraints_fn = [];
+                case 'out'
+                    this.robust_fn = @(x) (this.Spec.Eval_IO('out', 'rel', this.BrSys, this.params, x));
+                    if exist('cap','var')
+                        this.val_max = cap;
+                    end
+                    this.constraints_fn = [];
+                case 'constrained'
+                    this.robust_fn = @(x) (this.Spec.Eval_IO('out', 'rel', this.BrSys, this.params, x));
+                    if exist('cap','var')
+                        this.val_max = cap;
+                    end
+                    this.constraints_fn = @(x) (this.Spec.Eval_IO('in', 'abs', this.BrSys, this.params, x));
+                case 'combined'
+                    this.robust_fn = @(x) (this.combined_IO_robustness(x));
+                    this.constraints_fn = [];
             end
-            
-            NaN_idx = isnan(robs); % if rob is undefined, make it inf to ignore it
-            robs(NaN_idx) = inf;
-            obj = min(robs,[],1)';
-            
-        end     
+        end
         
+        function ert = boolean_verdict(this, x)
+            rob = this.Spec.Eval(this.BrSys, this.params, x);
+            if rob >= 0
+                ert = 0.5;
+            else
+                ert = -0.5;
+            end
+        end 
+
+        function rio = combined_IO_robustness(this, x)
+            ri = this.Spec.Eval_IO('in', 'abs', this.BrSys, this.params, x);
+            ro = this.Spec.Eval_IO('out','rel', this.BrSys, this.params, x);
+            rio = atan(ri) + atan(ro);
+        end        
+   
         % Nothing fancy - calls parent solve then returns falsifying params
         % if found.
         function [Xfalse, res] = solve(this)
             res = solve@BreachProblem(this);
             Xfalse = this.X_false;
         end
-        
+       
         function SaveInCache(this)
             if this.BrSys.UseDiskCaching
                 FileSave = [this.BrSys.DiskCachingRoot filesep 'FalsificationProblem_Runs.mat'];
-                evalin('base', ['save(''' FileSave ''',''' this.whoamI ''');']);
+                varname = this.whoamI;
+                if ~evalin('base', ['exist(''' varname ''', ''var'')'])
+                    assignin('base', varname,this);
+                    evalin('base', ['save(''' FileSave ''',''' varname ''');']);
+                    evalin('base', ['clear ' varname ';']);
+                else
+                    evalin('base', ['save(''' FileSave ''',''' varname ''');']);
+                end
+                
             end
         end
         
         
         % Logging
         function LogX(this, x, fval)
-            %   LogX  log variable parameter value tested by optimizers
+        % LogX  log variable parameter value tested by optimizers
+       
+            % Logging default stuff
+            this.LogX@BreachProblem(x, fval);
+            % this.Rio_Mode_log = [ this.Rio_Mode_log this.Rio_Mode ];  % not sure what this is useful for
             
             %  Logging falsifying parameters found
             [~, i_false] = find(min(fval)<0);
@@ -116,14 +166,14 @@ classdef FalsificationProblem < BreachProblem
                 this.obj_false = [this.obj_false fval(:,i_false)];
                 if (this.log_traces)&&~this.use_parallel&&~(this.BrSet.UseDiskCaching)  % FIXME - logging flags and methods need be revised
                     if isempty(this.BrSet_False)
-                        this.BrSet_False = this.Spec.BrSet.copy();
+                        if ~isempty(this.Spec.BrSet)
+                            this.BrSet_False = this.Spec.BrSet.copy();
+                        end
                     else
                         this.BrSet_False.Concat(this.BrSys);
                     end
                 end
             end
-            % Logging default stuff
-            this.LogX@BreachProblem(x, fval);
             
         end
         
@@ -153,14 +203,17 @@ classdef FalsificationProblem < BreachProblem
         end
         
         function DispResultMsg(this)
-            this.DispResultMsg@BreachProblem();
-            %if this.use_parallel && min(this.obj_best) < 0
-            %    this.X_false = this.x_best;
-            %end
-            if ~isempty(this.X_false)
-                fprintf('Falsified with obj = %g\n', min(this.obj_best(:,end)));
-            else
-                fprintf('No falsifying trace found.\n');
+            if ~strcmp(this.display, 'off')
+                
+                this.DispResultMsg@BreachProblem();
+                %if this.use_parallel && min(this.obj_best) < 0
+                %    this.X_false = this.x_best;
+                %end
+                if ~isempty(this.X_false)
+                    fprintf('Falsified with obj = %g\n', min(this.obj_best(:,end)));
+                else
+                    fprintf('No falsifying trace found.\n');
+                end
             end
         end
         

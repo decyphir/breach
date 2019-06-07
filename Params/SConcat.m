@@ -1,4 +1,4 @@
-function P = SConcat(P, P2)
+function P = SConcat(P, P2, fast)
 %SCONCAT concatenates two parameter sets.
 % 
 % Synopsis: P = SConcat(P, P2)
@@ -145,30 +145,41 @@ if isfield(P2,'traj')
     end
 end
 
+if ~exist('fast', 'var')
+    fast =false;
+end
+
+
 if(isfield(P,'traj') && isfield(P2,'traj'))
-    num_traj_P = numel(P.traj);
-    P2.traj_ref(P2.traj_ref~=0) = P2.traj_ref(P2.traj_ref~=0) + num_traj_P;
-    
-    % link param vector of P2 to traj of P
-    for ii = 1:num_traj_P
-        P2.traj_ref(ismember(P2.pts(1:P2.DimP,:)',P.traj{ii}.param,'rows')) = ii; % P.traj{ii}.param is a row vector
+
+    if ~fast
+        num_traj_P = numel(P.traj);
+        P2.traj_ref(P2.traj_ref~=0) = P2.traj_ref(P2.traj_ref~=0) + num_traj_P;
+        
+        % link param vector of P2 to traj of P
+        for ii = 1:num_traj_P
+            P2.traj_ref(ismember(P2.pts(1:P2.DimP,:)',P.traj{ii}.param,'rows')) = ii; % P.traj{ii}.param is a row vector
+        end
+        
+        % copy P2.traj not in P.traj
+        [traj_valid,~,i_unique] = unique(P2.traj_ref(P2.traj_ref>num_traj_P),'stable');
+        i_unique = reshape(i_unique,1,[]);
+        P.traj = [ P.traj , P2.traj(traj_valid-num_traj_P) ];
+        
+        % update P2.traj_ref (for traj not in P)
+        P2.traj_ref(P2.traj_ref>num_traj_P) = i_unique+num_traj_P;
+        
+        % link param vector of P to P2 trajectories
+        for ii=num_traj_P+1:numel(P.traj)
+            P.traj_ref(ismember(P.pts(1:P.DimP,:)',P.traj{ii}.param,'rows')) = ii;
+        end
+        
+        % copy P2.traj_ref in P.traj_ref
+        P.traj_ref = [P.traj_ref, P2.traj_ref];
+    else
+        P.traj_ref = [P.traj_ref P2.traj_ref+numel(P.traj)]; % should be good enough
+        P.traj = [P.traj P2.traj];
     end
-    
-    % copy P2.traj not in P.traj
-    [traj_valid,~,i_unique] = unique(P2.traj_ref(P2.traj_ref>num_traj_P),'stable');
-    i_unique = reshape(i_unique,1,[]);
-    P.traj = [ P.traj , P2.traj(traj_valid-num_traj_P) ];
-    
-    % update P2.traj_ref (for traj not in P)
-    P2.traj_ref(P2.traj_ref>num_traj_P) = i_unique+num_traj_P;
-    
-    % link param vector of P to P2 trajectories
-    for ii=num_traj_P+1:numel(P.traj)
-        P.traj_ref(ismember(P.pts(1:P.DimP,:)',P.traj{ii}.param,'rows')) = ii;
-    end
-    
-    % copy P2.traj_ref in P.traj_ref
-    P.traj_ref = [P.traj_ref, P2.traj_ref];
 elseif isfield(P,'traj')
     % link param vector of P2 to traj of  P
     P2.traj_ref = zeros(1,size(P2.pts,2));

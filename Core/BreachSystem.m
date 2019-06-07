@@ -218,22 +218,51 @@ classdef BreachSystem < BreachSet
             end
             this.P = ComputeTraj(this.Sys, this.P, tspan);
             this.CheckinDomainTraj();
-            this.dispTraceStatus();
+            
+            if this.verbose>=1
+                this.dispTraceStatus();
+            end
         end
+        
+        %% Signals Enveloppe
+        
+        function PlotEnveloppe(this, signals)
+            dom = this.GetBoundedDomains(); 
+            if ~isempty(dom)
+                Bc = this.copy();
+                Bc.CornerSample();                
+                Bc.Sim();
+                Bc.PlotSignals(signals,[], {'k', 'LineWidth',2});
+                Br = this.copy();
+                Br.QuasiRandomSample(100);
+                Br.Sim();
+                Br.PlotSignals(signals,[],{'g','LineWidth', .5});                
+            end
+            
+            
+        end
+        
+        
         
         %% Specs
         function phi = AddSpec(this, varargin)
             % AddSpec Adds a specification
             global BreachGlobOpt
-            if isa(varargin{1},'STL_Formula')
-                phi = varargin{1};
+            
+            f = varargin{1};
+            
+            if isa(f,'STL_Formula')
+                phi = f;
                 phi_id = get_id(phi);            
-            elseif ischar(varargin{1})
+            elseif ischar(f)&&BreachGlobOpt.STLDB.isKey(f)
+                phi_id =f;
+                phi = BreachGlobOpt.STLDB(f);                        
+            elseif ischar(f)
                 phi_id = MakeUniqueID([this.Sys.name '_spec'],  BreachGlobOpt.STLDB.keys);
-                phi = STL_Formula(phi_id, varargin{1});
-            elseif isa(varargin{1}, 'BreachRequirement')
-                phi_id = varargin{1}.req_monitors{1}.name;
-                phi = varargin{1}; 
+                phi = STL_Formula(phi_id, f);
+            elseif isa(f, 'BreachRequirement')
+                phi_id = f.req_monitors{1}.name;
+                phi = f; 
             else
                 error('Argument not a formula.');
             end
@@ -385,6 +414,49 @@ classdef BreachSystem < BreachSet
             
         end
         
+        function [rob, tau] = GetIORobustSat(this, inout, relabs, phi, params, values, t_phi)
+            % Monitor spec on trajectories - run simulations if not done before
+           
+            if nargin < 7
+                t_phi = 0;
+            end
+            if nargin==3
+                phi = this.spec;
+                params = {};
+                values = [];
+            end
+           
+            if nargin==4
+                params = {};
+                values = [];
+            end
+           
+            if nargin==5
+                t_phi = params;
+                params = {};
+                values = [];
+            end
+            
+            if ~isempty(params)
+                this.P = SetParam(this.P, params, values);
+            end
+            
+            this.CheckinDomainParam();
+            Sim(this);
+            this.CheckinDomainTraj();
+            
+            % FIXME: this is going to break with multiple trajectories with
+            % some of them containing NaN -
+            if any(isnan(this.P.traj{1}.X))
+                tau = t_phi;
+                rob = t_phi;
+                rob(:) = NaN;
+            else
+                [rob, tau] = STL_Eval_IO(this.Sys, phi, this.P, this.P.traj, inout, relabs, t_phi);
+            end
+            
+        end
+        
         function [robfn, BrSys] = GetRobustSatFn(this, phi, params, t_phi)
             % Return a function of the form robfn: p -> rob such that p is a
             % vector of values for parameters and robfn(p) is the
@@ -401,6 +473,29 @@ classdef BreachSystem < BreachSet
                 robfn = @(values) GetRobustSat(BrSys, this__phi__, params, values, t_phi);
             else
                 robfn = @(values) GetRobustSat(BrSys, phi, params, values,t_phi);
+            end
+            
+        end
+        
+        function [robfn, BrSys] = GetIORobustSatFn(this, phi, params, t_phi, inout, relabs)
+            % Return a function of the form robfn: p -> rob such that p is a
+            % vector of values for parameters and robfn(p) is the
+            % corresponding robust satisfaction
+            
+            if ~exist('t_phi', 'var')
+                t_phi =0;
+            end
+            
+            BrSys = this.copy();
+            
+            if ischar(phi) 
+                % does not make much sense here because no inputs or output are declared
+                this__phi__ = STL_Formula('this__phi__', phi);
+                this__phi__ = set_in_signal_names(this__phi__, {});  % for consistency
+                this__phi__ = set_out_signal_names(this__phi__, {}); % for consistency
+                robfn = @(values) GetIORobustSat(BrSys, this__phi__, params, values, t_phi, inout, relabs);
+            else
+                robfn = @(values) GetIORobustSat(BrSys, phi, params, values, t_phi, inout, relabs);
             end
             
         end
@@ -423,6 +518,27 @@ classdef BreachSystem < BreachSet
             
             gca;
             SplotSat(this.Sys,this.P, phi, depth, tau, ipts);
+            
+        end
+             
+        function PlotIORobustSat(this, phi, inout, relabs, depth, tau, ipts)
+            % Plots satisfaction signal
+            
+            % check arguments
+            if(~exist('ipts','var')||isempty(ipts))
+                ipts = 1;
+            end
+            
+            if(~exist('tau','var')||isempty(tau)) % also manage empty cell
+                tau = [];
+            end
+            
+            if ~exist('depth','var')||isempty(depth)
+                depth = inf;
+            end
+            
+            gca;
+            SplotSatIO(this.Sys, this.P, phi, depth, tau, ipts, inout, relabs);
             
         end
         
@@ -667,7 +783,7 @@ classdef BreachSystem < BreachSet
             pval = pval';
             
         end
-        
+
         function [out] = PlotRobustMap(this, phi, params, ranges, delta, options_in)
             % Plot robust satisfaction vs 1 or 2 parameters.
             

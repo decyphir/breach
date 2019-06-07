@@ -66,7 +66,7 @@ classdef ParamSynthProblem < BreachProblem
         
         % default objective function for synthesis
         function obj = objective_fn(this,x)
-            
+            this.Spec = this.R0.copy(); 
             rob = this.robust_fn(x);
             rob = min(rob);
             obj = max([rob 0]) + 1000*max([-rob 0]);

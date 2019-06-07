@@ -810,7 +810,8 @@ function [sol, fval, exitflag, output] = ...
         if (narg == 2) || isempty(options), options = optimset; end
         reltol_x = optimget(options, 'TolX', 1e-12);
         reltol_f = optimget(options, 'TolFun', 1e-12);
-        parallel_f = optimget(options,'UseParallel', false);
+        parallel_f = 0;
+%        parallel_f = optimget(options,'UseParallel', false);
         max_evaluations = optimget(options, 'MaxFunEvals', 200*N);
         max_iterations  = optimget(options, 'MaxIter', 1e4);
         display = optimget(options, 'Display', 'off');

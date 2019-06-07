@@ -1,8 +1,8 @@
-function [props_names, props, signal_names, param_names] = STL_ReadFile(fname)
+function [props_names, props, signal_names, param_names, in_signal_names, out_signal_names] = STL_ReadFile(fname)
 %STL_READFILE reads formulas from a text file and loads them in the base
 %workspace 
 %
-% Synopsis: [props_names, props, signal_names, param_names] = STL_ReadFile(fname)
+% Synopsis: [props_names, props, signal_names, param_names, in_signal_names, out_signal_names] = STL_ReadFile(fname)
 %
 % Input:
 %  - fname the text file containing formulas. This text file fname should
@@ -53,6 +53,8 @@ props = {};
 new_params = struct;
 
 signal_names = {};
+in_signal_names = {};
+out_signal_names = {};
 param_names = {};
 p0 = [];
 
@@ -88,12 +90,40 @@ while ischar(tline)
     
     
     % checks if we are declaring signals
+    
+    % we define here signals without I/O signatures
     if ~isempty(tline)
         tokens = regexp(tline, '^signal (.*)','tokens');
         if ~isempty(tokens)
             new_signals= strsplit(tokens{1}{1},',');
             for isig = 1:numel(new_signals)
                 signal_names = {signal_names{:} strtrim(new_signals{isig})};
+            end
+            tline = '';
+        end
+    end
+    
+    % we define here input signals
+    if ~isempty(tline)
+        tokens = regexp(tline, '^input signal (.*)','tokens');
+        if ~isempty(tokens)
+            new_signals= strsplit(tokens{1}{1},',');
+            for isig = 1:numel(new_signals)
+                signal_names = {signal_names{:} strtrim(new_signals{isig})};
+                in_signal_names = {in_signal_names{:} strtrim(new_signals{isig})};
+            end
+            tline = '';
+        end
+    end
+    
+    % we define here output signals
+    if ~isempty(tline)
+        tokens = regexp(tline, '^output signal (.*)','tokens');
+        if ~isempty(tokens)
+            new_signals= strsplit(tokens{1}{1},',');
+            for isig = 1:numel(new_signals)
+                signal_names = {signal_names{:} strtrim(new_signals{isig})};
+                out_signal_names = {out_signal_names{:} strtrim(new_signals{isig})};
             end
             tline = '';
         end
@@ -122,7 +152,7 @@ while ischar(tline)
             % ok try wrapping up what we have so far before starting a new formula
             if (~isempty(current_id)&& got_it == 0)
                 try
-                    phi = wrap_up(current_id, current_formula, new_params);
+                    phi = wrap_up(current_id, current_formula, new_params, in_signal_names, out_signal_names);
                     props = [props, {phi}]; %#ok<*AGROW>
                     props_names = [props_names, {current_id}];
                 catch err
@@ -158,7 +188,7 @@ end
 
 
 try
-    phi = wrap_up(current_id, current_formula, new_params);
+    phi = wrap_up(current_id, current_formula, new_params, in_signal_names, out_signal_names);
     props = [props, {phi}];
     props_names = [props_names, {current_id}];
 catch err
@@ -167,11 +197,15 @@ catch err
     rethrow(err);
 end
 
-
 end
 
-function phi = wrap_up(current_id, current_formula, new_params)
+function phi = wrap_up(current_id, current_formula, new_params, in_signal_names, out_signal_names)
 phi = STL_Formula(current_id, current_formula);
+
+% label subformulas by input/output signal names
+
+phi = set_in_signal_names(phi, in_signal_names);
+phi = set_out_signal_names(phi, out_signal_names);
 
 % looks for potential parameters in the formula that could be overriden by
 % new_params

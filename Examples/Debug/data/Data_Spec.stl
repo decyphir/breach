@@ -1,0 +1,4 @@
+# Data specification
+  input signal x
+  output signal g
+  phi := alw ( ( x[t] >= 5 and g[t] <= 2 ) => ev_[0,1] g[t] >= 3 )

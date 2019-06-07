@@ -106,6 +106,8 @@ phi.phi1 = [];
 phi.phi2 = [];
 phi.phin = [];
 phi.type = '';
+phi.in_signal_names = {};
+phi.out_signal_names = {};
 phi.params = struct;
 phi.params_interval = struct;
 varargin = varargin(2:end);
@@ -510,7 +512,7 @@ for i = 1:numel(start_idx)
     
     [success, diag, st1, st2] = checks_parenthesis_balance(st1,st2);
     if success==-1
-        error(['STL_Parse: exppression ' st ':' diag]);
+        error(['STL_Parse: expression ' st ':' diag]);
     elseif success==1
         if nargout == 4
             interval= ['[' tokens{i}{1} ']'];

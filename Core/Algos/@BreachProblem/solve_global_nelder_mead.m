@@ -13,7 +13,10 @@ if ~strcmp(this.display,'off')
     this.display_status_header();
 end
 res_init = FevalInit(this, X0);
-res{1} = struct('x',res_init.x,'fval',res_init.f);
+res{1} = res_init;
+res{1}.x0 = X0;
+res{1}.fval = res_init.f;
+
 this.solver_options.start_at_trial = this.solver_options.start_at_trial+this.solver_options.nb_new_trials;
 
 if (this.solver_options.nb_local_iter>0) && (~this.stopping)
@@ -28,6 +31,7 @@ if (this.solver_options.nb_local_iter>0) && (~this.stopping)
     [~, ibest] = sort(max(res_init.fval,[],1));
     options = optimset(this.solver_options.local_optim_options, 'MaxIter',this.solver_options.nb_local_iter);
     flag_Cont = true;
+    
     if this.use_parallel&&false % FIXME: behavior need be more thoroughly tested/verified 
         num_works = this.BrSys.Sys.Parallel;
         options = optimset(options, 'Display', 'off');
@@ -61,7 +65,7 @@ if (this.solver_options.nb_local_iter>0) && (~this.stopping)
                 options = optimset(options, 'Display', 'off');
                 [x, fval, exitflag, output] = optimize(...
                     fun_obj, x0 ,this.lb,this.ub,this.Aineq,this.bineq,this.Aeq,this.beq,[],[],options,'NelderMead');
-                res{end+1} = struct('x',x, 'fval',fval, 'exitflag', exitflag,  'output', output);
+                res{end+1} = struct('x0', x0, 'x',x, 'fval',fval, 'exitflag', exitflag,  'output', output);
             end
        end
     end

@@ -31,13 +31,13 @@ if strcmp(opt.monotony, 'infer')
     end
 end
 
-[p, rob] =  GetPropParamBin(Sys, phi, P, opt,P.traj, this.T_Spec);
+[p, rob] = GetPropParamBin(Sys, phi, P, opt,P.traj, this.T_Spec);
 res.x = p;
 res.f = rob;
 this.x_best = p;
 this.obj_best = rob;
 this.X_log = p;
 this.obj_log = rob;
-this.BrSet.SetParamSpec(this.params, p);
+this.BrSet.SetParam(this.params, p, true);
 this.BrSet.CheckSpec(phi);
 end

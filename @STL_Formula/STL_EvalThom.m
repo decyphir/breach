@@ -1,4 +1,4 @@
-function [val__, time_values__] = STL_EvalThom(Sys, phi, P, trajs, t)
+function [val__, time_values__] = STL_EvalThom(Sys_, phi_, P_, trajs_, t)
 %STL_EVALTHOM computes the satisfaction function of a property for one
 % or many trajectory(ies). This function uses a variable time step robust
 % monitoring algorithm.
@@ -44,40 +44,40 @@ function [val__, time_values__] = STL_EvalThom(Sys, phi, P, trajs, t)
 % all subsequent computations
 
 global BreachGlobOpt;
-if ~isempty(P.ParamList)
-    BreachGlobOpt.GlobVarsDeclare = ['global ', sprintf('%s ',P.ParamList{:})]; % contains parameters and IC values (can remove IC if phi is optimized)
+if ~isempty(P_.ParamList)
+    BreachGlobOpt.GlobVarsDeclare = ['global ', sprintf('%s ',P_.ParamList{:})]; % contains parameters and IC values (can remove IC if phi is optimized)
     eval(BreachGlobOpt.GlobVarsDeclare); % These values may be used in generic_predicate and GetValues
 else
     BreachGlobOpt.GlobVarsDeclare = ''; % contains parameters and IC values (can remove IC if phi is optimized)
 end
 
 ii=1;
-num_dim = size(P.pts,1); 
-eval_str = [P.ParamList(1:num_dim);num2cell(1:num_dim)];
-eval_str = sprintf('%s=P.pts(%d,ii);',eval_str{:});
+num_dim = size(P_.pts,1); 
+eval_str = [P_.ParamList(1:num_dim);num2cell(1:num_dim)];
+eval_str = sprintf('%s=P_.pts(%d,ii);',eval_str{:});
 eval(eval_str);
 
 %% for each trajectory, compute values and times
 
-numTrajs = numel(trajs);
+numTrajs = numel(trajs_);
 val__ = cell(1, numTrajs);
 time_values__ = cell(1, numTrajs);
 
-if isstruct(trajs)||isa(trajs, 'matlab.io.MatFile')
-    trajs = {trajs};
+if isstruct(trajs_)||isa(trajs_, 'matlab.io.MatFile')
+    trajs_ = {trajs_};
 end
 
 for ii=1:numTrajs % we loop on every traj in case we check more than one
-    if (Psize_pts(P)==1)
-        Pii = P;
+    if (Psize_pts(P_)==1)
+        Pii = P_;
     else
-        Pii = Sselect(P, ii);
+        Pii = Sselect(P_, ii);
         eval(eval_str); % needed, as parameters can change from one Pii to another
     end
     
     % Ensures that traj.X and traj.time are double precision
-    traj.time = double(trajs{ii}.time);
-    traj.X = double(trajs{ii}.X);
+    traj.time = double(trajs_{ii}.time);
+    traj.X = double(trajs_{ii}.X);
     
     % Robusthom doesn't like singular intervals - should be optimized one
     % of these days ...
@@ -93,7 +93,7 @@ for ii=1:numTrajs % we loop on every traj in case we check more than one
         else
             interval = [t(1) t(end)];
         end
-        [val, time_values] = GetValues(Sys, phi, Pii, traj, interval);
+        [val, time_values] = GetValues(Sys_, phi_, Pii, traj, interval);
         
         try
             if(numel(t)==1) % we handle singular times
@@ -110,7 +110,7 @@ for ii=1:numTrajs % we loop on every traj in case we check more than one
         end
     else
         interval = [0 traj.time(1,end)];
-        [val__ii, time_values__ii] = GetValues(Sys, phi, Pii, traj, interval);
+        [val__ii, time_values__ii] = GetValues(Sys_, phi_, Pii, traj, interval);
         
         val__{ii} = val__ii(time_values__ii<=traj.time(1,end));
         time_values__{ii} = time_values__ii(time_values__ii<=traj.time(1,end));

@@ -55,11 +55,59 @@ classdef signal_gen <handle
             new = getArrayFromByteStream(objByteArray);
         end
         
-        function plot(this, time)
+        function plot(this, signal, time)
         % plot default signal  
             x =  computeSignals(this, this.p0, time);
-            plot(time, x); 
+            i_sig = find(strcmp(signal,this.signals),1);
+            plot(time, x(i_sig,:), 'LineWidth', 2); 
         end
+        
+        function plot_enveloppe(this, signal, time)
+            % Default implementation - no guarantee to generate a fair
+            % enveloppe
+            S = BreachSignalGen(this);                        
+            dom = S.GetBoundedDomains();  
+            S.SetTime(time);
+            if ~isempty(dom)
+                % random approach
+                if 0
+                    var = S.GetVariables();
+                    S.CornerSample(100);
+                    S.SampleDomain(var, 1000, 'quasi-random', 'append');
+                    S.Sim(time);
+                    hold on;
+                    vcell = S.GetSignalValues(signal);
+                    vbot =vcell{1};
+                    vtop = vcell{2};
+                    for is=  1:numel(vcell)
+                        vbot = min([vbot; vcell{is}]);
+                        vtop = max([vtop; vcell{is}]);
+                    end
+                end
+                %% Optim based                
+                reachmon = reach_monitor('r', signal, time);
+                R = BreachRequirement(reachmon);
+                pb = FalsificationProblem(S, R);
+                pb.StopAtFalse = false;
+                pb.display = 'off';
+                pb.log_traces = false;
+                pb.max_obj_eval = 200;
+                
+                pb.setup_meta();                
+                fprintf('Computing enveloppe...');
+                pb.solve();
+                fprintf('done.\n');                
+                [~, env] = reachmon.computeSignals(time,0,0);
+                vbot = env(2,:);
+                vtop = env(1,:);
+                
+                plot(time, vbot, 'k', 'LineWidth', .5);
+                plot(time, vtop, 'k', 'LineWidth', .5);
+                t2 = [time, fliplr(time)];
+                inBetween = [vbot, fliplr(vtop)];
+                f = fill(t2, inBetween, 'k', 'FaceAlpha', 0.1);
+            end
+        end                               
         
    end
     
