@@ -1004,7 +1004,16 @@ classdef BreachSystem < BreachSet
             end
         end
         
-        %% GUI
+        function assignin_ws_p0(this)
+            ip = 0;
+            for p = this.Sys.ParamList
+                ip = ip+1;
+                assignin('base', p{1}, this.Sys.p(ip));
+            end       
+        end
+        
+        
+       %% GUI
         function new_phi  = AddSpecGUI(this)
             signals = this.Sys.ParamList(1:this.Sys.DimX);
             new_phi = STL_TemplateGUI('varargin', signals);
@@ -1043,6 +1052,9 @@ classdef BreachSystem < BreachSet
             
             BreachTrajGui(this,args);
         end
+        
+        
+        
         
         %% Experimental
         function report = Analysis(this)

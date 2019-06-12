@@ -62,9 +62,16 @@ classdef signal_gen <handle
             plot(time, x(i_sig,:), 'LineWidth', 2); 
         end
         
-        function plot_enveloppe(this, signal, time)
+        function plot_enveloppe(this, signal, time, varargin)
             % Default implementation - no guarantee to generate a fair
             % enveloppe
+            
+            opt.max_time = 3;            
+            opt.max_obj_eval = inf;
+            opt = varargin2struct(opt, varargin{:});
+            
+            
+            %%
             S = BreachSignalGen(this);                        
             dom = S.GetBoundedDomains();  
             S.SetTime(time);
@@ -89,14 +96,13 @@ classdef signal_gen <handle
                 R = BreachRequirement(reachmon);
                 pb = FalsificationProblem(S, R);
                 pb.StopAtFalse = false;
-                pb.display = 'off';
+                %pb.display = 'off';
                 pb.log_traces = false;
-                pb.max_obj_eval = 200;
-                
+                pb.max_obj_eval = opt.max_obj_eval;
+                pb.max_time = opt.max_time;
+                                
                 pb.setup_meta();                
-                fprintf('Computing enveloppe...');
                 pb.solve();
-                fprintf('done.\n');                
                 [~, env] = reachmon.computeSignals(time,0,0);
                 vbot = env(2,:);
                 vtop = env(1,:);

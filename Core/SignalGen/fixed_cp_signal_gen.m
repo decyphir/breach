@@ -158,7 +158,7 @@ classdef fixed_cp_signal_gen < signal_gen
             
         end
         
-        function plot_enveloppe(this, signal, time)
+        function plot_enveloppe(this, signal, time, varargin)
             [t_cp, x_cp, x_low, x_up, dom] = this.get_cp(signal, time);
             
             isig= find(strcmp(signal,this.signals),1);

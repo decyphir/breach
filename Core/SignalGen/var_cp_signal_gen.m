@@ -158,20 +158,6 @@ classdef var_cp_signal_gen < signal_gen
             
         end                        
           
-     %   function plot_enveloppe(this, signal, time)
-          %  not simple because Minkovski
-            
-   %     end
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
         function type = getType(this)
             type = 'varstep';
         end

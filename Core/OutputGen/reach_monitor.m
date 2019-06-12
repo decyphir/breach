@@ -44,7 +44,6 @@ classdef reach_monitor < req_monitor
             
                         
             % Update top and bot
-            assert(t(end) == 40);
             Xin_t = interp1(t, Xin, time, 'linear', 'extrap');                                   
                         
             top = max([Xin_t ;old_top]);

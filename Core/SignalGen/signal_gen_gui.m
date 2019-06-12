@@ -22,7 +22,7 @@ function varargout = signal_gen_gui(varargin)
 
 % Edit the above text to modify the response to help signal_gen_gui
 
-% Last Modified by GUIDE v2.5 27-May-2019 18:18:19
+% Last Modified by GUIDE v2.5 11-Jun-2019 17:16:21
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -72,6 +72,11 @@ end
 
 handles.select_cells = [];
 handles.constraints_map = containers.Map('KeyType', 'int32','ValueType','any');
+
+set(handles.checkbox_enveloppe, 'Value', 0);
+set(handles.text_max_time_enveloppe, 'Visible', 'off');
+set(handles.edit_max_time_enveloppe, 'Visible', 'off');
+handles.max_time_enveloppe = 3;
 
 % get signal names
 if isa(varargin{1}, 'BreachOpenSystem')
@@ -516,8 +521,9 @@ grid on;
 set(gca, 'FontSize',8)
 
 % compute enveloppe
-sg.plot_enveloppe(sig_name,time);
-
+if get(handles.checkbox_enveloppe, 'Value')
+    sg.plot_enveloppe(sig_name,time, 'max_time', handles.max_time_enveloppe);
+end
 update_uitable(handles);
 update_constraints_table(handles);
 set(handles.text_computing, 'visible', 'off');
@@ -672,3 +678,45 @@ function update_constraints_table(handles)
     
 
 
+% --- Executes on button press in checkbox_enveloppe.
+function checkbox_enveloppe_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox_enveloppe (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+update_plot(handles);
+if get(hObject, 'Value')
+    set(handles.edit_max_time_enveloppe, 'Visible', 'on');
+    set(handles.text_max_time_enveloppe, 'Visible', 'on');
+else
+    set(handles.edit_max_time_enveloppe, 'Visible', 'off');
+    set(handles.text_max_time_enveloppe, 'Visible', 'off');
+end
+
+function edit_max_time_enveloppe_Callback(hObject, eventdata, handles)
+% hObject    handle to edit_max_time_enveloppe (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit_max_time_enveloppe as text
+%        str2double(get(hObject,'String')) returns contents of edit_max_time_enveloppe as a double
+try
+    handles.max_time_enveloppe = str2double(get(hObject,'String'));
+    guidata(hObject, handles);
+    update_plot(handles);
+end
+
+
+
+
+
+% --- Executes during object creation, after setting all properties.
+function edit_max_time_enveloppe_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_max_time_enveloppe (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
