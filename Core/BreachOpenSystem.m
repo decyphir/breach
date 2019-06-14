@@ -319,6 +319,46 @@ classdef BreachOpenSystem < BreachSystem
             end
         end
         
+        function SetDomainCfg(this, cfg)           
+            IG = this.InputGenerator;
+            for ip = 1:numel(cfg.params) 
+              p  = cfg.params{ip};
+                val = cfg.values{ip};
+              if ischar(val)
+                val = str2num(val);
+              end
+              typ = cfg.types{ip};
+              dom = cfg.domains{ip};
+              if isempty(dom)
+                  dom = [];
+              elseif ischar(dom)
+                  dom = str2num(dom); %#ok<ST2NM>
+              elseif iscell(dom)
+                 dom = cell2mat(dom);
+              end
+              this.SetParam(p, val);
+              this.SetDomain(p,typ,dom);               
+              [~, found] = FindParam(IG.P, p);
+              if found                                                                                          
+                  IG.SetParam(p, val);
+                  IG.SetDomain(p,typ,dom);
+                  if isa(IG, 'BreachSignalGen') % update individual signal_gen as well
+                     for isg = 1:numel(IG.signalGenerators)   
+                       sg = IG.signalGenerators{isg};
+                       idxp = find(strcmp(p, sg.params),1);
+                       if ~isempty(idxp)
+                          sg.p0(idxp) = val;
+                          sg.params_domain(idxp) = this.GetDomain(p);
+                       end
+                     end
+                  
+                  end                                    
+              end
+            end            
+        end
+        
+        
+        
         function hsi = SetInputGenGUI(varargin)
             hsi= signal_gen_gui(varargin{:});
         end

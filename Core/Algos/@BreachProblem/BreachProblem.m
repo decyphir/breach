@@ -946,7 +946,7 @@ classdef BreachProblem < BreachStatus
                 
                 st__= sprintf('     %5d                    %7.1f               [%s]     (%s)', ...
                     this.nb_obj_eval, this.time_spent,  num2str(fval','%+5.5e '), num2str(this.obj_best', '%+5.5e '));
-                if exist('const_val', 'var')
+                if ~isempty(this.Spec.precond_monitors)
                     st__ = sprintf([st__ '           [%s (%g)]\n'], num2str(const_val', '%+5.5e '), this.nb_failed_constraints);
                 else
                     st__ = [st__ '\n'];  

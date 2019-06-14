@@ -106,14 +106,8 @@ classdef BreachDomain
             if nargout >= 2
                     is_in = isequal(x,new_x);
             end
-            if nargout>= 3
-                if is_in % signed distance
-                    
-                else
-                    
-                end
-                dist =d;
-                    
+            if nargout>= 3               
+                dist = abs(x-new_x);                    
             end
          end
         

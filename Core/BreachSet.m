@@ -271,7 +271,7 @@ classdef BreachSet < BreachStatus
         
         %%  Params
         function SetParam(this, params, values, is_spec_param)
-            % BreachSet.SetParam(params, values,  is_spec_param) sets values to
+            % BreachSet.SetParam(params, values [,  is_spec_param]) sets values to
             % parameters listed in params. If the set contains only one sample,
             % creates as many sample as there are values. If the set has
             % several samples and there is only one value, set this value to
@@ -382,6 +382,10 @@ classdef BreachSet < BreachStatus
               
         function SetDomainCfg(this, cfg)
            for ip = 1:numel(cfg.params) 
+              val = cfg.values{ip};
+              if ischar(val)
+                val = str2num(val);
+              end
               typ = cfg.types{ip};
               dom = cfg.domains{ip};
               if isempty(dom)
@@ -391,11 +395,9 @@ classdef BreachSet < BreachStatus
               elseif iscell(dom)
                  dom = cell2mat(dom);
               end
-              
-              this.SetDomain(cfg.params{ip},typ,dom); 
-              
-           end
-            
+              this.SetParam(cfg.params{ip}, val);
+              this.SetDomain(cfg.params{ip},typ,dom);               
+           end            
         end
         
         function SetParamSpec(this, params, values, ignore_sys_param)
@@ -1380,8 +1382,9 @@ classdef BreachSet < BreachStatus
             params = this.GetParamList();
             cfg.params = params;
             for ip = 1:numel(params)
-                dom = this.GetDomain(params{ip});
-                cfg.types{ip} = dom.type;
+                dom = this.GetDomain(params{ip});                
+                cfg.types{ip} = dom.type;                               
+                cfg.values{ip} = this.GetParam(params{ip},1);
                 if strcmp(dom.type, 'enum')
                     cfg.domains{ip}=dom.enum;
                 else
