@@ -88,6 +88,9 @@ classdef BreachOpenSystem < BreachSystem
                 PropParams = this.P.ParamList(this.P.DimP+1:end);
                 PropParamsValues = GetParam(this.P, PropParams);
             end
+            PlantParams = this.GetPlantParamList();
+            PlantParamsValues=  this.GetParam(PlantParams);
+            
             
             inputs = this.Sys.InputList;
             
@@ -195,10 +198,7 @@ classdef BreachOpenSystem < BreachSystem
             this.P = CreateParamSet(this.Sys);
             this.P.epsi(:,:) = 0;
             
-            % Restore property parameter
-            if ~isempty(PropParams)
-                this.P = SetParam(this.P, PropParams, PropParamsValues);
-            end
+            
             % Sets the new input function for ComputeTraj
             % FIXME?: tilde?
             this.Sys.init_u = @(~, pts, tspan) (InitU(this,pts,tspan));
@@ -212,7 +212,7 @@ classdef BreachOpenSystem < BreachSystem
                     this.SetDomain(parami, IGdomains(ip));
                 end
             end
-            
+
             % Copy or init ParamSrc
             
             %% Init param sources, if not done already
@@ -229,7 +229,17 @@ classdef BreachOpenSystem < BreachSystem
             if opt.SetInputGenTime
                 this.SetTime(IG.GetTime());
             end
+
             
+            % Restore env and prop parameters
+            if ~isempty(PropParams)
+                this.SetParam(PropParams, PropParamsValues, true);
+            end
+            
+            if ~isempty(PlantParams)
+               this.SetParam(PlantParams, PlantParamsValues);
+            end
+
             
         end
         
@@ -323,10 +333,6 @@ classdef BreachOpenSystem < BreachSystem
             IG = this.InputGenerator;
             for ip = 1:numel(cfg.params) 
               p  = cfg.params{ip};
-                val = cfg.values{ip};
-              if ischar(val)
-                val = str2num(val);
-              end
               typ = cfg.types{ip};
               dom = cfg.domains{ip};
               if isempty(dom)
@@ -336,19 +342,31 @@ classdef BreachOpenSystem < BreachSystem
               elseif iscell(dom)
                  dom = cell2mat(dom);
               end
-              this.SetParam(p, val);
+              
+              if isfield(cfg,'values')
+                  val = cfg.values{ip};
+                  if ischar(val)
+                      val = str2num(val);
+                  end
+              else
+                  val = this.GetParam(p);
+              end
+             
+              
               this.SetDomain(p,typ,dom);               
+              this.SetParam(p, val);
               [~, found] = FindParam(IG.P, p);
               if found                                                                                          
-                  IG.SetParam(p, val);
                   IG.SetDomain(p,typ,dom);
+                  IG.SetParam(p, val);
                   if isa(IG, 'BreachSignalGen') % update individual signal_gen as well
                      for isg = 1:numel(IG.signalGenerators)   
                        sg = IG.signalGenerators{isg};
                        idxp = find(strcmp(p, sg.params),1);
                        if ~isempty(idxp)
-                          sg.p0(idxp) = val;
-                          sg.params_domain(idxp) = this.GetDomain(p);
+                          dom = this.GetDomain(p);
+                          sg.params_domain(idxp) =dom;  
+                          sg.p0(idxp) = dom.checkin(val(1));                          
                        end
                      end
                   
