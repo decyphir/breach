@@ -5,7 +5,7 @@ if ~exist('X0', 'var')
     X0 = this.BrSet.GetParam(this.params);
 end
 fval = this.objective(X0);
-[fbest, ibest] = min(fval);
+[fbest, ibest] = min(min(fval));
 res = struct('BrSys', this.BrSys,'X0',X0,'x',X0(:,ibest),'f', fbest, 'fval', fval);
 
 end

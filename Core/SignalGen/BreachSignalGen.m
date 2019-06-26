@@ -36,7 +36,7 @@ classdef BreachSignalGen < BreachSystem
             
             this.Domains = [];
             this.InitSignalGen(signalGenerators);
-            
+            this.CheckinDomain();
         end
         
         function InitSignalGen(this, signalGenerators)

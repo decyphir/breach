@@ -196,8 +196,8 @@ switch(phi.type)
         for i=1:length(signal_names)
             signal_name = signal_names{i};
             index = FindParam(Sys, signal_name);
-            signal.times = P.traj{1}.time;
-            signal.values = P.traj{1}.X(index,:);
+            signal.times = traj.time;
+            signal.values = traj.X(index,:);
             if(~robustness_map.isKey(signal_name))
               robustness_map(signal_name) = signal;
             end

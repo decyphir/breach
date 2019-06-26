@@ -239,7 +239,9 @@ classdef BreachOpenSystem < BreachSystem
             if ~isempty(PlantParams)
                this.SetParam(PlantParams, PlantParamsValues);
             end
-
+            
+            % Final checkin 
+            this.CheckinDomain();
             
         end
         

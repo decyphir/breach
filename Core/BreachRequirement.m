@@ -933,7 +933,7 @@ classdef BreachRequirement < BreachTraceSystem
             end
             st = sprintf([st '--- REQUIREMENT FORMULAS ---\n']);
             for ifo = 1:numel(this.req_monitors)
-                st = [st  this.req_monitors{ifo}.disp()];
+                st = [st  this.req_monitors{ifo}.disp() sprintf('\n')];
             end
             st = sprintf([st '\n']);
         end

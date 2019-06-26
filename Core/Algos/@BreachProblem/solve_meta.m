@@ -15,9 +15,9 @@ if opt.num_corners>0
     res= this.solve_corners();
 end
 
-if ~strcmp(this.display,'off')
-    this.display_status();
-    this.Display_Best_Results(res.fval, res.x);
+if ~strcmp(this.display,'off')&&~this.stopping()
+    this.display_status();    
+    this.Display_Best_Results(res.f, res.x);
 end
 
 qr_step = 1;

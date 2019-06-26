@@ -56,10 +56,11 @@ classdef BreachImportData < BreachSignalGen
                     this.SampleDomain(param_file_idx, 'all');
                 end
                 this.Sys.Verbose=0;
-                this.Sim();
+                this.Sim();                
             end
-            
+            this.CheckinDomainParam();                
             this.fname = fname;
+            
         end
         
         function idx = GetParamsInputIdx(this)

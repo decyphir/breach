@@ -33,10 +33,10 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         FindTables = false
         FindStruct = false
         MaxNumTabParam
-        SimCmdArgs = {}       % argument list passed to sim command
+        SimCmdArgs = {}              % argument list passed to sim command
         InputSrc                     % for each input, we match an input port or base workspace (0)
         MdlVars                      % List of variables used by the model
-        SimInputsOnly=false % if true, will not run Simulink model
+        SimInputsOnly=false          % if true, will not run Simulink model
         SimInModelsDataFolder=false
         StopAtSimulinkError=false
         mdl

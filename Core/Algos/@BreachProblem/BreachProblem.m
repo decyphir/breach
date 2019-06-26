@@ -675,8 +675,9 @@ classdef BreachProblem < BreachStatus
             this.robust_fn(x);
             robs = this.Spec.traces_vals;
             if (~isempty(this.Spec.traces_vals_precond))
-                precond_robs = robs;
-                for itr = 1:size(this.Spec.traces_vals_precond,1)
+                num_tr = size(this.Spec.traces_vals_precond,1);
+                precond_robs = zeros(num_tr,1);
+                for itr = 1:num_tr
                     precond_robs(itr) = min(this.Spec.traces_vals_precond(itr,:));
                     if  precond_robs(itr)<0
                         robs(itr,:)= -precond_robs(itr);
@@ -695,7 +696,7 @@ classdef BreachProblem < BreachStatus
         end
         
         
-        function fval = objective_wrapper(this,x)
+        function [fval, const] = objective_wrapper(this,x)
              % objective_wrapper calls the objective function and wraps some bookkeeping           
              
              if size(x,1) ~= numel(this.params)

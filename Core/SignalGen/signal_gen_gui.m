@@ -670,7 +670,7 @@ function update_constraints_table(handles)
             end
         catch ME
             data{irow, 3} = NaN;
-            set(hObject, 'Data', data);
+            set(handles.table_constraints, 'Data', data);
         end
     end
     
