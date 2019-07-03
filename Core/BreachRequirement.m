@@ -101,6 +101,8 @@ classdef BreachRequirement < BreachTraceSystem
         function ResetSigMap(this)
             this.sigMap = containers.Map();
             this.sigMapInv = containers.Map();
+            this.AliasMap =containers.Map();
+            
             this.signals_in = this.get_signals_in();
         end
         
@@ -371,21 +373,12 @@ classdef BreachRequirement < BreachTraceSystem
             idxB = zeros(1, numel(signals)); ifoundB = zeros(1, numel(signals));
             [idx, ifound] = FindSignalsIdx@BreachSet(this, signals);   %
             
-            if any(~ifound)   % if not a signal of the requirement, look into BrSet (system) signals
+            if any(~ifound)&&isa(this.BrSet, 'BreachSet')   % if not a signal of the requirement, look into BrSet (system) signals
                 idx_not_found = find(~ifound);
                 for isig = 1:numel(idx_not_found)
                     s0 = signals{idx_not_found(isig)};
-                    aliases = {s0};  % compute all aliases for s
-                    s = s0;
-                    while (this.sigMap.isKey(s))
-                        s = this.sigMap(s);
-                        aliases = union(aliases, {s} );
-                    end
-                    s = s0;
-                    while (this.sigMapInv.isKey(s))
-                        s = this.sigMapInv(s);
-                        aliases = union(aliases, {s} );
-                    end
+                    aliases = this.getAliases(s0);                                                                                
+                    
                     [idx_s, ifound_s] = FindParam(this.P, aliases);
                     if any(ifound_s) % one alias is the one !
                         idx(idx_not_found(isig)) = idx_s(find(ifound_s, 1));
@@ -1132,61 +1125,28 @@ classdef BreachRequirement < BreachTraceSystem
         end
         
         function aliases = getAliases(this, signals)
+                            
             if ischar(signals)
                 signals = {signals};
             end
             
             aliases = signals;
-            sig_queue = signals;
-            
-            while ~isempty(sig_queue)
-                sig = sig_queue{1};
-                sig_queue = sig_queue(2:end);
-                if this.sigMap.isKey(sig)
-                    nu_sig = this.sigMap(sig);
-                    check_nusig()
-                end
-                if this.sigMapInv.isKey(sig)
-                    nu_sig = this.sigMapInv(sig);
-                    check_nusig()
-                end
-                if ~isempty(this.BrSet)
-                    if this.BrSet.sigMap.isKey(sig)
-                        nu_sig = this.BrSet.sigMap(sig);
-                        check_nusig()
-                    end
-                    if this.BrSet.sigMapInv.isKey(sig)
-                        nu_sig = this.BrSet.sigMapInv(sig);
-                        check_nusig()
-                    end
-                end
-            end
-            
-            for  invkey = this.sigMapInv.keys()
-                sig = this.sigMapInv(invkey{1});
-                if ismember(sig,aliases)
-                    aliases = union(aliases, invkey{1});
-                end
-            end
-            if ~isempty(this.BrSet)
-                for  invkey = this.BrSet.sigMapInv.keys()
-                    sig = this.BrSet.sigMapInv(invkey{1});
-                    if ismember(sig,aliases)
-                        aliases = union(aliases, invkey{1});
-                    end
-                end
-            end
-            
-            function check_nusig()
-                if ~ismember(nu_sig, aliases)
-                    aliases = [aliases {nu_sig}];
-                    sig_queue = [sig_queue nu_sig];
-                end
+            for is = 1:numel(signals)
+               sig = signals{is} ;
+               if this.AliasMap.isKey(sig)
+                   aliases = union(aliases, this.AliasMap(sig),'stable');
+               end
+               if isa(this.BrSet, 'BreachSet')                   
+                   if this.BrSet.AliasMap.isKey(sig)
+                       aliases = union(aliases, this.BrSet.getAliases(aliases),'stable');
+                   end
+               end
             end
         end
         
         function st = PrintAliases(this)
-            if ~isempty(this.sigMap)
+            st='';
+            if ~isempty(this.AliasMap)
                 st = sprintf('---- ALIASES ----\n');
                 keys = union(this.sigMap.keys(), this.sigMapInv.keys());
                 printed ={};
@@ -1221,7 +1181,7 @@ classdef BreachRequirement < BreachTraceSystem
                 st = sprintf([st '\n']);
             end
             
-            if nargout==0
+            if nargout==0&&~isempty(st)
                 fprintf(st);
             end
             
@@ -1250,23 +1210,23 @@ classdef BreachRequirement < BreachTraceSystem
                 all_sigs_in = all_sigs_in';
             end
             
-            reps_sigs_in = all_sigs_in(1);
-            aliases = this.getAliases(all_sigs_in{1});
-            for is = 1:numel(all_sigs_in)
-                if ~ismember(all_sigs_in{is}, aliases)
-                    reps_sigs_in= union(reps_sigs_in, all_sigs_in(is));
-                    aliases = union(aliases, this.getAliases(all_sigs_in(is)));
+            if ~isempty(all_sigs_in)
+                reps_sigs_in = all_sigs_in(1);
+                aliases = this.getAliases(all_sigs_in{1});
+                for is = 1:numel(all_sigs_in)
+                    if ~ismember(all_sigs_in{is}, aliases)
+                        reps_sigs_in= union(reps_sigs_in, all_sigs_in(is));
+                        aliases = union(aliases, this.getAliases(all_sigs_in(is)));
+                    end
+                end
+                
+                for is = 1:numel(reps_sigs_in) % remove postprocess_out
+                    s  = this.get_signal_attributes(reps_sigs_in{is});
+                    if ~ismember('postprocess_out', s)
+                        sigs_in=union(sigs_in, reps_sigs_in{is});
+                    end
                 end
             end
-            
-            
-            for is = 1:numel(reps_sigs_in) % remove postprocess_out
-                s  = this.get_signal_attributes(reps_sigs_in{is});
-                if ~ismember('postprocess_out', s)
-                    sigs_in=union(sigs_in, reps_sigs_in{is});
-                end
-            end
-            
             
         end
         

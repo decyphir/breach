@@ -40,6 +40,7 @@ classdef BreachSet < BreachStatus
         log_folder
         sigMap 
         sigMapInv
+        AliasMap
     end
     
     properties  %  coverage stuff
@@ -96,7 +97,7 @@ classdef BreachSet < BreachStatus
             
             this.sigMap = containers.Map();
             this.sigMapInv = containers.Map();
-            
+            this.AliasMap = containers.Map(); 
             switch nargin
                 case 0
                     return;
@@ -630,28 +631,21 @@ classdef BreachSet < BreachStatus
                             error('SetSignalMap:wrong_arg', arg_err_msg);
                         end
                         for is = 1:numel(varargin{2})
-                            if ~strcmp(varargin{1}{is},varargin{2}{is})
-                                this.sigMap(varargin{1}{is}) = varargin{2}{is};
-                                this.sigMapInv( varargin{2}{is} ) = varargin{1}{is};
-                            end
+                            sig1 = varargin{1}{is};
+                            sig2 = varargin{2}{is};
+                            add_sigs(sig1, sig2);                            
                         end
                     else
-                        if ischar(varargin{1})&&ischar(varargin{2})
-                            if ~strcmp(varargin{1},varargin{2})
-                                this.sigMap(varargin{1}) = varargin{2};
-                                this.sigMapInv(varargin{2}) = varargin{1};
-                            end
-                        else
-                            error('SetSignalMap:wrong_arg', arg_err_msg);
-                        end
+                        sig1 = varargin{1};
+                        sig2 = varargin{2};
+                        add_sigs(sig1, sig2);                                                
                     end
                 otherwise
                     for is = 1:numel(varargin)/2
                         try
-                            if ~strcmp(varargin{2*is-1},varargin{2*is})
-                                this.sigMap(varargin{2*is-1}) = varargin{2*is};
-                                this.sigMapInv(varargin{2*is}) = varargin{2*is-1};
-                            end
+                            sig1 = varargin{2*is-1};
+                            sig2 = varargin{2*is};
+                            add_sigs(sig1, sig2);                            
                         catch
                             error('SetSignalMap:wrong_arg', arg_err_msg);
                         end
@@ -661,11 +655,50 @@ classdef BreachSet < BreachStatus
             if this.verbose >= 2
                 this.PrintSigMap();
             end
+                        
+            function add_sigs(sig1, sig2)
+                if ischar(sig1)&&ischar(sig2)
+                    if ~strcmp(sig1,sig2)
+                        this.sigMap(sig1) = sig2;
+                        this.sigMapInv(sig2) = sig1;
+                        
+                        % get current aliases for sig1 and sig2
+                        if this.AliasMap.isKey(sig1) 
+                           SIG1 = [{sig1} this.AliasMap(sig1)];
+                        else
+                           SIG1 = {sig1};
+                        end
+                        
+                        if this.AliasMap.isKey(sig2) 
+                           SIG2 = [{sig2} this.AliasMap(sig2)];
+                        else
+                           SIG2 = {sig2};
+                        end
+                                                                        
+                        % add aliases of each other 
+                        if ~this.AliasMap.isKey(sig1)
+                            this.AliasMap(sig1) = SIG2;
+                        else
+                            this.AliasMap(sig1) = unique([this.AliasMap(sig1) SIG2], 'stable');                            
+                        end
+                        if ~this.AliasMap.isKey(sig2)
+                            this.AliasMap(sig2) = SIG1;
+                        else
+                            this.AliasMap(sig2) = unique([this.AliasMap(sig2) SIG1], 'stable');                            
+                        end                                            
+                    end
+                else
+                    error('SetSignalMap:wrong_arg', arg_err_msg);
+                end                            
+            end
             
         end
         
         function ResetSigMap(this)
             this.sigMap = containers.Map();
+            this.sigMapInv = containers.Map();
+            this.AliasMap =containers.Map();
+      
         end
 
         function PrintSigMap(this)
@@ -850,15 +883,20 @@ classdef BreachSet < BreachStatus
             end
             % For all signals, first use sigMap-less search, then check
             % aliases
+            
+            idx = zeros(1, numel(signals));
+            ifound = idx; 
             for isig = 1:numel(signals)
                 sig = signals{isig}; 
                 [idx(isig), ifound(isig)] = FindParam(this.P, sig);
-                aliases_sig = setdiff(this.getAliases(sig), sig);
-                for ais = 1:numel(aliases_sig)
-                    [idx_s, ifound_s] = FindParam(this.P, aliases_sig{ais});
-                    if ifound_s
-                        ifound(isig)=true;
-                        idx(isig)=idx_s;
+                if this.AliasMap.isKey(sig)
+                    aliases_sig = this.AliasMap(sig);
+                    for ais = 1:numel(aliases_sig)
+                        [idx_s, ifound_s] = FindParam(this.P, aliases_sig{ais});
+                        if ifound_s
+                            ifound(isig)=true;
+                            idx(isig)=idx_s;
+                        end
                     end
                 end
             end
@@ -2064,40 +2102,19 @@ classdef BreachSet < BreachStatus
         end
         
         function aliases = getAliases(this, signals)
+            
             if ischar(signals)
                 signals = {signals};
             end
             
             aliases = signals;
-            sig_queue = signals;
-            
-            while ~isempty(sig_queue)
-                sig = sig_queue{1};
-                sig_queue = sig_queue(2:end);
-                if this.sigMap.isKey(sig)
-                    nu_sig = this.sigMap(sig);
-                    check_nusig()
-                end
-                if this.sigMapInv.isKey(sig)
-                    nu_sig = this.sigMapInv(sig);
-                    check_nusig()
-                end
+            for is = 1:numel(signals)
+               sig = signals{is} ;
+               if this.AliasMap.isKey(sig)
+                   aliases = union(aliases, this.AliasMap(sig),'stable');
+               end              
             end
             
-            % check sigMapInv for double alias
-            for  invkey = this.sigMapInv.keys()
-                sig = this.sigMapInv(invkey{1});
-                if ismember(sig,aliases)
-                    aliases = union(aliases, invkey{1});
-                end
-            end
-            
-            function check_nusig()
-                if ~ismember(nu_sig, aliases)
-                    aliases = [aliases {nu_sig}];
-                    sig_queue = [sig_queue nu_sig];
-                end
-            end
         end
          
     end

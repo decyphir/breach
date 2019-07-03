@@ -159,9 +159,15 @@ for isig= 1:numel(signal_names)
             end
         else
             sgs = sg.split();
-            for isg =1:numel(sgs)
+            for isg =1:numel(sgs)               
                 if strcmp(sgs{isg}.signals{1}, c)
-                    handles.signal_gen_map(c)= sgs{isg};
+                    sg = sgs{isg};
+                    handles.signal_gen_map(c)= sg;
+                    sg_class = class(sg);
+                    idx = find(strcmp(signal_types, sg_class));
+                    if isig == 1
+                        set(handles.popupmenu_signal_gen_type,'Value', idx);
+                    end
                     break;
                 end
             end
@@ -645,7 +651,7 @@ try
     end
     set(hObject, 'Data', data);
 catch ME
-    errordlg(sprintf('Error Message: %s', ME.message), 'Problem with Expression');
+    errordlg(sprintf('Error Message: %s', ME2st(ME)), 'Problem with Expression');
     data{idx(1), 3} = NaN;
     set(hObject, 'Data', data);    
 end
