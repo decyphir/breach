@@ -397,6 +397,10 @@ classdef BreachOpenSystem < BreachSystem
                 end
             else
                 st = sprintf([st '---  SIGNALS  --- (%d traces)\n'], numel(this.P.traj));
+                if isempty(this.SignalRanges)
+                    this.UpdateSignalRanges();
+                end
+                
                 for isig = 1:this.Sys.DimX
                     st = sprintf([st '%s %s in  [%g, %g]\n'], this.Sys.ParamList{isig}, this.get_signal_attributes_string(this.P.ParamList{isig}),this.SignalRanges(isig,1),this.SignalRanges(isig,2));
                 end

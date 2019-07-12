@@ -18,23 +18,23 @@ for itfo = 1:numel(formulas)
         monitor = stl_monitor(formula);
     end
     
-%   if isa(formula, 'STL_Formula')
-%       % checks whether we have parameter constraint   % ONHOLD 
-%        sigs  = STL_ExtractSignals(formula);       
-%         if isempty(sigs)  % 
-%             monitor = param_constraint_monitor(formula);
-%         else
-%           monitor = stl_monitor(formula);
-%         end
-%     elseif isa(formula, 'stl_monitor')
-%        monitor = formula;
-%   end
-%   if ~isa(monitor, 'param_constraint_monitor')
-%        if isa(monitor,'stl_monitor')
-%            find_template();
-%        end
+    %   if isa(formula, 'STL_Formula')
+    %       % checks whether we have parameter constraint   % ONHOLD
+    %        sigs  = STL_ExtractSignals(formula);
+    %         if isempty(sigs)  %
+    %             monitor = param_constraint_monitor(formula);
+    %         else
+    %           monitor = stl_monitor(formula);
+    %         end
+    %     elseif isa(formula, 'stl_monitor')
+    %        monitor = formula;
+    %   end
+    %   if ~isa(monitor, 'param_constraint_monitor')
+    if isa(monitor,'stl_monitor')
+        find_template();
+    end
     signals = union(signals, monitor.signals, 'stable');
-%   end
+    %   end
     monitors = [monitors {monitor}];
 end
 

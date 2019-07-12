@@ -634,52 +634,68 @@ else
     expr = eventdata.EditData;    
 end
 
-try 
+[handles, data, status] = check_constraint(handles, id, expr, data, idx(1));
+if status
+    set(hObject, 'Data', data);
+    update_constraints_table(handles);
+end
+guidata(hObject,handles);
+
+function [handles, data,status] = check_constraint(handles, id, expr, data, irow)
+
+status =1;
+try
     if ~isempty(id)&&~isempty(expr)
         phi = STL_Formula(id,expr);
-        time = evalin('base',handles.time);        
-        S = BreachSignalGen(handles.signal_gen_map.values);    
+        [sigs,params] =  STL_ExtractSignals(phi);
+        time = evalin('base',handles.time);
+        S = BreachSignalGen(handles.signal_gen_map.values);
+        Usigs = S.GetSignalList();
+        Uparams = S.GetParamList();
+        
+        undef_sig = setdiff(sigs, Usigs);
+        if ~isempty(undef_sig)
+            errordlg(sprintf('The constraint [ %s ] involves signal %s unrelated to the input signals. Please double-check for potential typo.', expr, undef_sig{1}), 'Error');
+            error('undef_sig');
+        end
+        
+        undef_param = setdiff(params, Uparams);
+        if ~isempty(undef_param)
+            errordlg(sprintf('The constraint [ %s ] is syntactically correct but involve parameter %s unrelated to the input parameters. Please double-check for potential typo.', expr, undef_param{1}), 'Error');
+            error('undef_param');
+        end
+        
         S.Sim(time);
         v = S.CheckSpec(phi);
-        data{idx(1), 3} = v;        
-        handles.constraints_map(idx(1)) = struct('id',  id, 'expr',expr);    
-        if idx(1) == size(data, 1)
-           data{idx(1)+1,1} = [];
-        end        
+        data{irow, 3} = v;
+        handles.constraints_map(irow) = struct('id',  id, 'expr',expr);    
     else
-        data{idx(1), 3} = [];        
+        if handles.constraints_map.isKey(irow)
+            handles.constraints_map.remove(irow);
+        end
+        data{irow, 3} = [];
     end
-    set(hObject, 'Data', data);
 catch ME
-    errordlg(sprintf('Error Message: %s', ME2st(ME)), 'Problem with Expression');
-    data{idx(1), 3} = NaN;
-    set(hObject, 'Data', data);    
+    status = 0;
+    if ~strcmp(ME.message, 'undef_sig')&&~strcmp(ME.message, 'undef_param')
+        errordlg(sprintf('Error Message: %s', ME2st(ME)), 'Problem with Expression');
+    end
+    data{irow, 3} = NaN;
+    set(handles.table_constraints, 'Data', data);
 end
 
-guidata(hObject,handles);
 
 function update_constraints_table(handles)
     data = get(handles.table_constraints,'Data');
     for irow = 1:size(data, 1)
         id = data{irow,1};
         expr = data{irow,2};
-        try
-            if ~isempty(id)&&~isempty(expr)
-                phi = STL_Formula(id,expr);
-                time = evalin('base',handles.time);
-                S = BreachSignalGen(handles.signal_gen_map.values);                
-                S.Sim(time);
-                v = S.CheckSpec(phi);
-                data{irow, 3} = v;
-            else
-                data{irow, 3} = [];
-            end
-        catch ME
-            data{irow, 3} = NaN;
-            set(handles.table_constraints, 'Data', data);
-        end
+        [handles, data] = check_constraint(handles, id, expr, data, irow);
     end
     
+    if ~(isempty(data{end,1})&&isempty(data{end,2}))
+        data{end+1,1} = '';
+    end
     set(handles.table_constraints, 'Data', data);
     
 

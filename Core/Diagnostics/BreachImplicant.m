@@ -5,43 +5,55 @@ classdef BreachImplicant
     end
     
     methods
-        function obj = BreachImplicant(obj)
-            obj.Intervals = [];
-            obj.SignificantSamples = [];
+        function this = BreachImplicant(this)
+            this.Intervals = [];
+            this.SignificantSamples = [];
         end 
         
-        function obj = addInterval (obj, begin_value, end_value)
+        function this = addInterval (this, begin_value, end_value)
             if (end_value >= begin_value)
                 interval.begin = begin_value;
                 interval.end = end_value;
-                obj.Intervals = [obj.Intervals, interval];
+                this.Intervals = [this.Intervals, interval];
             end
         end
         
-        function obj = addSignificantSample (obj, sample_time, sample_value)
+        function this = addSignificantSample (this, sample_time, sample_value)
             sample.time = sample_time;
             sample.value = sample_value;
-            obj.SignificantSamples = [sample obj.SignificantSamples];
+            this.SignificantSamples = [sample this.SignificantSamples];
         end
         
-        function intervals = getIntervals(obj)
-            intervals = obj.Intervals;
+        function intervals = getIntervals(this)
+            intervals = this.Intervals;
         end 
         
-        function interval = getInterval(obj, index)
-            if (index > length(obj.Intervals))
+        function interval = getInterval(this, index)
+            if (index > length(this.Intervals))
                 interval = [];
             else
-                interval = obj.Intervals(index);
+                interval = this.Intervals(index);
             end
         end 
         
-        function size = getIntervalsSize(obj) 
-            size = length(obj.Intervals);
+        function X = getSignal(this, time)
+            X = 0*time;
+            size = this.getIntervalsSize();
+            for j=1:size
+                interval = this.getInterval(j);
+                x = interval.begin;
+                y = interval.end;
+                idx = (time>=x)&(time<y); 
+                X(idx) = 1.;
+            end
         end
         
-        function significant_samples = getSignificantSamples(obj)
-            significant_samples = obj.SignificantSamples;
+        function size = getIntervalsSize(this) 
+            size = length(this.Intervals);
+        end
+        
+        function significant_samples = getSignificantSamples(this)
+            significant_samples = this.SignificantSamples;
         end
     end
 end

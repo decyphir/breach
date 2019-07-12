@@ -14,6 +14,8 @@ for ii = 1:numel(phis)
     fprintf('\n');
 end
 
-fprintf('\n');
+if nargout == 0
+    fprintf('\n');
+end
 
 end

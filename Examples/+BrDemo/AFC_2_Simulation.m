@@ -4,6 +4,7 @@
 %% Initialization
 % The following script creates a default interface with the
 % AbstractFuelControl model.
+clear; close all;
 BrDemo.InitAFC;
 BrAFC
 

@@ -104,7 +104,7 @@ classdef BreachProblem < BreachStatus
         time_start = tic
         time_spent = 0
         nb_obj_eval = 0
-        max_obj_eval = 1000
+        max_obj_eval = 300
         nb_failed_constraints = 0
         max_failed_constraints = 100
         mixed_integer_optim_solvers = {'ga'};
@@ -427,6 +427,9 @@ classdef BreachProblem < BreachStatus
     
                 case 'corners'
                     res = this.solve_corners();
+                    
+                case 'morris'
+                    res = this.solve_morris();
                     
                 case 'nelder_mead'
                     res = this.solve_nelder_mead();

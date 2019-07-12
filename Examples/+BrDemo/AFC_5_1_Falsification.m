@@ -3,6 +3,7 @@
 %% Initialization
 % The following script creates a default interface with the
 % AbstractFuelControl model.
+clear; close all;
 BrDemo.InitAFC();
 BrAFC
 
@@ -53,27 +54,24 @@ res = falsif_pb2.solve();
 % The solver failed, we might want to understand what happened. 
 
 %% Understanding the Solver Behavior
-% The solver stopped because a timeout was reached. We can allocate more
-% time by changing max_time value:
-falsif_pb2.max_time = 120; % give it two minutes - default is 60s
-
-%%
-% Note that the solver may also have a maximum number of objective function
+% The solver has a maximum  of objective function
 % evaluation (i.e., number of simulations and property evaluation in our
-% case).  
-falsif_pb.max_obj_eval
+% case). We can allocate more.  
+falsif_pb2.max_obj_eval = 1000; % give it 1000 evalulations - default is 300
 
 %%
-% Inf means there is no bound here. 
+% The solver can also have a maximum time to run (default is inf). 
+falsif_pb.max_time
+
 
 %% Understanding the Solver Behavior (ct'd)  
-% The default solver follows a strategy with two phases:  
-%
+% The default solver follows a strategy alternating two phases. 
 % # Global: computes the objective function for a number of trials in the
 % parameter domain, starting with corners then quasi-random sampling  
 % # Local:  sorts the results obtained in the global phase and perform
 % local optimizations using Nelder-Mead algorithm starting with the best values as initial guesses  
-
+% Before that, it tries corner cases (max-min values for variables).
+%
 
 %% Understanding the Solver Behavior (ct'd) 
 % We can examine which parameter value was tested as follows: 
@@ -81,7 +79,7 @@ falsif_pb.max_obj_eval
 BrLog = falsif_pb2.GetLog(); 
 BreachSamplesPlot(BrLog);
 
-%% Understanding the Solver Behavior (ct'd)
+%% Understanding the Solver Behavior (ct'd) TODO META
 % To control the default solver behavior, the following options can be set: 
 falsif_pb2.solver_options
 

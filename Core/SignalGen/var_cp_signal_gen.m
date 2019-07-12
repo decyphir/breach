@@ -148,10 +148,12 @@ classdef var_cp_signal_gen < signal_gen
         end
                 
         function plot(this, signal, time)
+            
+            [t_cp, x_cp] = this.get_cp(signal);
+            time =  union(time, t_cp);
             plot@signal_gen(this,signal, time);
             
             % plot control points
-            [t_cp, x_cp] = this.get_cp(signal);
             hold on;
             plot(t_cp,x_cp,'or','MarkerSize', 6, 'MarkerFaceColor', [1 0 0]);
             legend({signal,'control points (cp)'}, 'Interpreter', 'None');

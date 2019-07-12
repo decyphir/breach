@@ -7,7 +7,7 @@ function map = get_formula_name_map(phi, map)
 %  where phi is a STL_Formula and map is a Map of (string, string)
 
     id = get_id(phi);
-    name = display(phi);
+    name = disp(phi,1);
     
     if(~map.isKey(id))
         map(id) = name;

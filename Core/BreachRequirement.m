@@ -152,7 +152,6 @@ classdef BreachRequirement < BreachTraceSystem
             this.val = [];
             this.traces_vals_precond= [];
             this.BrSet =[];
-            
         end
         
         function [global_val, traces_vals, traces_vals_precond] = Eval(this, varargin)
@@ -265,8 +264,14 @@ classdef BreachRequirement < BreachTraceSystem
             F = BreachSignalsPlot(this, {}, itraj); % empty
             for ifo =1:numel(idx_req_monitors)
                 if isa(req_mon{ifo},'stl_monitor')
-                    req_mon{ifo}.plot_diagnosis(F);
-                    title(req_mon{ifo}.formula_id, 'Interpreter', 'None')
+                    req = req_mon{ifo}; 
+                    traj = this.P.traj{itraj}; 
+                    t = traj.time;
+                    idx_par_req = FindParam(this.P, req.params);
+                    p_in = traj.param(1, idx_par_req);
+                    Xin = this.GetSignalValues(req_mon{ifo}.signals_in,itraj);
+                    req.init_tXp(t,Xin,p_in);
+                    req.plot_diagnosis(F);
                 else
                     if ~isempty(req_mon{ifo}.signals_in)
                         F.AddSignals(req_mon{ifo}.signals_in)

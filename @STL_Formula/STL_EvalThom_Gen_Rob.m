@@ -168,23 +168,27 @@ switch(phi.type)
             valarray = arrayfun(evalfn, time_values);
         end
 
+        sigs = STL_ExtractSignals(phi);
         switch relabs
             case 'rel'
                 % Check whether the predicate talks only about the signals
                 % that are not in the partition. If yes, treat the predicate
                 % qualitatively
-                all_outside_partition = isempty(intersect(STL_ExtractSignals(phi), partition));
-                if(all_outside_partition)
-                    valarray = Inf*(2*(valarray>0)-1);
+                if ~isempty(sigs) % parameters only are always treated quantitatively
+                    all_outside_partition = isempty(intersect(sigs, partition));
+                    if(all_outside_partition)
+                        valarray = Inf*(2*(valarray>0)-1);
+                    end
                 end
-
             case 'abs'
                 % Checks whether the predicate has at least one signal that
                 % is outside the partition. If yes, treat the predicate
                 % qualitatively
-                one_outside_partition = ~isempty(setdiff(STL_ExtractSignals(phi), partition));
-                if (one_outside_partition)
-                    valarray = zeros(size(valarray));
+                if ~isempty(sigs) % parameters only are always treated quantitatively
+                    one_outside_partition = ~isempty(setdiff(sigs, partition));
+                    if (one_outside_partition)
+                        valarray = zeros(size(valarray));
+                    end
                 end
         end
         

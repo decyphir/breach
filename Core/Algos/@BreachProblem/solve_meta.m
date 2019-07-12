@@ -30,7 +30,7 @@ while ~this.stopping()
 
     this.setup_quasi_random('quasi_rand_seed',qr_step,'num_quasi_rand_samples',opt.num_quasi_rand_samples);
     res = this.solve_quasi_random();
-    qr_step = qr_step+ opt.num_quasi_rand_samples;    
+    qr_step = qr_step+opt.num_quasi_rand_samples;  
 
     %% Disp
     if this.stopping()

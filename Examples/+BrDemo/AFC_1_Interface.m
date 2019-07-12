@@ -12,7 +12,7 @@
 
 %%
 % First, we initialize Breach and instantiate parameters for the model to run properly: 
-clear;
+clear;close all;
 InitBreach;
 fuel_inj_tol = 1.0; 
 MAF_sensor_tol = 1.0;
@@ -39,7 +39,7 @@ BrAFC = BreachSimulinkSystem(mdl)
 
 %%
 % We can check which parameters are interfaced via the following command: 
-BrAFC.PrintParams()
+BrAFC.PrintParams();
 
 
 %% Creating an Interface Object (2)
@@ -48,7 +48,7 @@ BrAFC.PrintParams()
 % explicitly specify those we want to tune, e.g., some PI parameters:
 
 BrAFC_less_params = BreachSimulinkSystem(mdl, {'ki', 'kp'}, [0.14 0.04]);
-BrAFC_less_params.PrintParams()
+BrAFC_less_params.PrintParams();
 
 
 %% 
@@ -57,7 +57,7 @@ BrAFC_less_params.PrintParams()
 
 BrAFC_less_signals = BreachSimulinkSystem(mdl, 'all', [], ... % 'all' means detects all visible paremeters
                                              {'Pedal_Angle','Engine_Speed', 'AF'}); 
-BrAFC_less_signals.PrintAll
+BrAFC_less_signals.PrintAll;
 
 
 %% Interfacing Signals
@@ -70,7 +70,7 @@ BrAFC_less_signals.PrintAll
 
 %% 
 % We can check which signals are interfaced via the following command: 
-BrAFC.PrintSignals()
+BrAFC.PrintSignals();
 
 %%
 % Note that signal and parameter names in the model should remain simple. 
@@ -88,7 +88,7 @@ BrAFC.PrintSignals()
 % we set their constant values: 
 BrAFC.SetParam('Engine_Speed_u0',1000)
 BrAFC.SetParam('Pedal_Angle_u0',30)
-BrAFC.PrintParams()
+BrAFC.PrintParams();
 
 %%
 % We can now run simulations.  
