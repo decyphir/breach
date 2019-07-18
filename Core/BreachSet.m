@@ -2004,22 +2004,39 @@ classdef BreachSet < BreachStatus
             end
         end
         
-        function st = PrintParams(this)
+        function st = PrintParams(this,params, header)
             st = '';
             nb_pts= this.GetNbParamVectors();
-            if (nb_pts<=1)
-                st = sprintf('-- PARAMETERS --\n');
-                for ip = this.P.DimX+1:numel(this.P.ParamList)
-                    st = sprintf([st '%s=%g       %s\n'],this.P.ParamList{ip},this.P.pts(ip,1), this.Domains(ip).short_disp(1));
-                end
-            else
-                st = sprintf([st '-- PARAMETERS -- (%d vectors):\n'],nb_pts);
-                for ip = this.P.DimX+1:numel(this.P.ParamList)
-                    st = sprintf([st '%s     %s\n'],this.P.ParamList{ip}, this.Domains(ip).short_disp(1));
-                end
+            
+            if ~exist('params','var')
+                params = this.P.DimX+1:numel(this.P.ParamList);
+            elseif ischar(params)||iscell(params)
+                params = FindParam(this.P, params);
             end
             
-            st = sprintf([st ' \n']);
+            if ~exist('header', 'var')
+                header = '-- PARAMETERS --';            
+            end
+                
+            if (nb_pts<=1)
+                if ~isempty(header)
+                    st = [header sprintf('\n')];
+                end
+                for ip = params
+                    st = [st sprintf('%s=%g       %s\n',this.P.ParamList{ip},this.P.pts(ip,1), this.Domains(ip).short_disp(1))];
+                end
+                
+            else
+                if ~isempty(header)
+                    st = [header sprintf(' (%d vectors):\n',nb_pts)];
+                end
+                for ip = params
+                    st = [st sprintf('%s     %s\n',this.P.ParamList{ip}, this.Domains(ip).short_disp(1))];
+                end
+                
+            end
+            
+            st = [st sprintf('\n')];
             
             if nargout==0
                 fprintf(st);

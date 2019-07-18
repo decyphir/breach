@@ -367,8 +367,7 @@ classdef BreachProblem < BreachStatus
         
         function solver_opt = setup_simulannealbnd(this)
             disp('Setting options for simulannealbnd solver');
-            this.display = 'off';
-            solver_opt = saoptimset('Display', 'iter');
+            solver_opt = saoptimset('Display', 'off');
             if this.max_time < inf
                 solver_opt = saoptimset(solver_opt, 'MaxTime', this.max_time);
             end
@@ -451,7 +450,8 @@ classdef BreachProblem < BreachStatus
                     this.add_res(res);
 
                 case 'meta'
-                    res = this.solve_meta();                
+                    res = this.solve_meta();        
+                    
                 case 'ga'
                     res = solve_ga(this, problem);
                     
@@ -464,6 +464,7 @@ classdef BreachProblem < BreachStatus
                         end
                     end
                     this.add_res(res);                    
+            
                 case 'fminsearch'
                     while ~this.stopping
                         if this.use_parallel
@@ -489,6 +490,7 @@ classdef BreachProblem < BreachStatus
                     this.add_res(res);
     
                 case 'simulannealbnd'
+                    this.display_status_header();
                     if this.use_parallel
                         num_works = this.BrSys.Sys.Parallel;
                         for idx = 1:num_works

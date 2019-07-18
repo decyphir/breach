@@ -20,8 +20,8 @@ if ~strcmp(this.display,'off')&&~this.stopping()
     this.Display_Best_Results(res.f, res.x);
 end
 
-qr_step = 1;
 while ~this.stopping()
+    qr_step = opt.quasi_rand_seed;
     
     %% Quasi-random phase
     if ~strcmp(this.display,'off')
@@ -30,7 +30,7 @@ while ~this.stopping()
 
     this.setup_quasi_random('quasi_rand_seed',qr_step,'num_quasi_rand_samples',opt.num_quasi_rand_samples);
     res = this.solve_quasi_random();
-    qr_step = qr_step+opt.num_quasi_rand_samples;  
+    opt.quasi_rand_seed = opt.quasi_rand_seed+opt.num_quasi_rand_samples;  
 
     %% Disp
     if this.stopping()
@@ -48,7 +48,7 @@ while ~this.stopping()
     end
 
     res = run_nelder_mead(this,opt, x0); 
-        
+    this.solver_options = opt;    
     %% Disp 
     if this.stopping()        
         break;

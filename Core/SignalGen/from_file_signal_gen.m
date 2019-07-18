@@ -78,7 +78,7 @@ classdef from_file_signal_gen < signal_gen
             
             
             this.params = {'file_idx'};
-            if exist('p0', 'var')
+            if exist('p0', 'var')&&~isempty(p0)
                 this.p0 = p0;
                 read_p0 = false;
             else

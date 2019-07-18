@@ -268,7 +268,6 @@ end
 
 niou_sg =  eval([class_name '({ sig_name }, cfg_val{:});']);
 
-
 % restore what is possible for p0
 for ip = 1:numel(niou_sg.params)
     p = niou_sg.params{ip};
@@ -280,9 +279,6 @@ for ip = 1:numel(niou_sg.params)
 end
 
 handles.signal_gen_map(sig_name) = niou_sg;
-
-
-
 
 % update config and params
 update_config(handles);

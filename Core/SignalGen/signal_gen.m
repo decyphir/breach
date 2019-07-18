@@ -74,6 +74,10 @@ classdef signal_gen <handle
             %%
             S = BreachSignalGen(this);                        
             dom = S.GetBoundedDomains();  
+            
+            if isscalar(time)
+                time = 0:time/1000:time;
+            end
             S.SetTime(time);
             if ~isempty(dom)
                 % random approach
