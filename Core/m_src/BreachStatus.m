@@ -35,7 +35,7 @@ classdef BreachStatus < handle
         end
         
         function name = gen_name(this)
-            name = [class(this) '_' datestr(now, 'mm_dd_yyyy_HHMM')];
+            name = [class(this) '_' datestr(now, 'mmm_dd_yyyy_HHMM')];
         end
         
         function new = copy(this)

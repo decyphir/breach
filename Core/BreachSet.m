@@ -523,7 +523,10 @@ classdef BreachSet < BreachStatus
             for ip = 1:numel(i_params)
                 type = this.Domains(i_params(ip)).type;
                 if isequal(type, 'enum')||isequal(type,'bool')
-                    warning('SetParamRanges:enum_or_bool', 'Use SetDomain for enum or bool types.' );
+                    this.Domains(i_params(ip)).domain = ranges(ip,:);
+                    %warning('SetParamRanges:enum_or_bool', 'Use SetDomain
+                    %for enum or bool types.' ); % Maybe should keep the
+                    %warning 
                 else
                     this.Domains(i_params(ip)) = BreachDomain(type, ranges(ip,:));
                 end
@@ -2110,7 +2113,14 @@ classdef BreachSet < BreachStatus
         function ResetSimulations(this)
             % Removes computed trajectories
             this.P = SPurge(this.P);
+            
+            if size(this.P.pts,2)>1
+                % get rid of redundant pts
+                [~, iu] = unique(this.P.pts','rows');
+                this.P = Sselect(this.P, iu);
+            end
             this.SignalRanges = [];
+            
         end
         
         function ResetSelected(this)

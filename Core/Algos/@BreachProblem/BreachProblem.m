@@ -98,15 +98,16 @@ classdef BreachProblem < BreachStatus
     % misc options
     properties
         display = 'on'
-        freq_update = 2 
+        freq_update = 1 
         use_parallel = 0
         max_time = inf
         time_start = tic
         time_spent = 0
         nb_obj_eval = 0
         max_obj_eval = 300
-        nb_failed_constraints = 0
-        max_failed_constraints = 100
+        num_constraints_failed = 0
+        num_consecutive_constraints_failed = 0
+        max_consecutive_constraints_failed = 100
         mixed_integer_optim_solvers = {'ga'};
     end
     
@@ -523,7 +524,8 @@ classdef BreachProblem < BreachStatus
                     
             end
             this.DispResultMsg(); 
-        
+            this.Display_Best_Results(this.obj_best, this.x_best);
+            
             %% Saving run in cache folder
             this.SaveInCache();
         
@@ -611,21 +613,22 @@ classdef BreachProblem < BreachStatus
             if ~exist('method')||isempty(method)
                 method = 'map_enum_to_int';
             end
-           
+            
             switch method
                 case 'map_enum_to_int'
-                    
-                    enum_idx = find(this.params_type_idx('enum'));
-                    for ii = 1:length(enum_idx)
-                        enum_param = this.params{enum_idx(ii)};
-                        enum_domain = this.BrSet.GetDomain(enum_param);
-                        enum_br_domain = BreachDomain('enum', enum_domain.enum);
-                        pg = enum_idx_param_gen(enum_param, enum_br_domain);
-                        this.BrSet.SetParamGen({pg});
-                        this.params{enum_idx(ii)} = pg.params{1};
-                        fprintf('Mapped %s to %s\n', pg.params_out{1}, pg.params{1} );
+                    if ismember(this.solver, this.mixed_integer_optim_solvers)
+                        enum_idx = find(this.params_type_idx('enum'));
+                        for ii = 1:length(enum_idx)
+                            enum_param = this.params{enum_idx(ii)};
+                            enum_domain = this.BrSet.GetDomain(enum_param);
+                            enum_br_domain = BreachDomain('enum', enum_domain.enum);
+                            pg = enum_idx_param_gen(enum_param, enum_br_domain);
+                            this.BrSet.SetParamGen({pg});
+                            this.params{enum_idx(ii)} = pg.params{1};
+                            fprintf('Mapped %s to %s\n', pg.params_out{1}, pg.params{1} );
+                        end
+                        this.ResetObjective();
                     end
-                    this.ResetObjective();
                 case 'exhaustive'
                     idx = union(find(this.params_type_idx('enum')),find(this.params_type_idx('int')));
                     BrSet = this.BrSet.copy();
@@ -635,7 +638,7 @@ classdef BreachProblem < BreachStatus
             end
             
         end
-                
+        
         function idx = params_type_idx(this, ptype)
             domains = this.BrSys.GetDomain(this.params);
             idx = cell2mat(arrayfun(@(x) strcmp(x.type, ptype), ...
@@ -674,7 +677,7 @@ classdef BreachProblem < BreachStatus
         
         %% Objective wrapper        
         
-        function [obj, const] = objective_fn(this,x)
+        function [obj, cval] = objective_fn(this,x)
             % For falsification, default objective_fn is simply robust satisfaction of the least
             this.Spec = this.R0.copy();
             this.robust_fn(x);
@@ -692,16 +695,16 @@ classdef BreachProblem < BreachStatus
             NaN_idx = isnan(robs); % if rob is undefined, make it inf to ignore it
             robs(NaN_idx) = inf;
             obj = min(robs,[],1)';
-            const = inf;
+            cval = inf;
             if (~isempty(this.Spec.traces_vals_precond))
                 NaN_idx = isnan(precond_robs); % if rob is undefined, make it inf to ignore it
                 precond_robs(NaN_idx) = inf;
-                const = min(precond_robs,[],1)';
+                cval = min(precond_robs,[],1)';
             end
         end
         
         
-        function [fval, const] = objective_wrapper(this,x)
+        function [fval, cval] = objective_wrapper(this,x)
              % objective_wrapper calls the objective function and wraps some bookkeeping           
              
              if size(x,1) ~= numel(this.params)
@@ -710,6 +713,9 @@ classdef BreachProblem < BreachStatus
         
             nb_eval =  size(x,2);
             fval = inf*ones(size(this.Spec.req_monitors,2), nb_eval);
+            %cval = inf*ones(size(this.Spec.precond_monitors,2), nb_eval);
+            cval = inf*ones(1, nb_eval);
+            
             fun = @(isample) this.objective_fn(x(:, isample));
             nb_iter = min(nb_eval, this.max_obj_eval);
      
@@ -729,25 +735,16 @@ classdef BreachProblem < BreachStatus
                         else
                             idx=[];
                         end
+                        
                         if ~isempty(idx)
                             fval(:,iter) = this.obj_log(:,idx);
                         else
                             % calling actual objective function
-                            [fval(:,iter), const] = fun(iter);
+                            [fval(:,iter), cval(:,iter)] = fun(iter);
                             this.time_spent = toc(this.time_start);
-
-                            if const>=0
-                                % logging and updating best
-                                this.LogX(x(:, iter), fval(:,iter));
-                                this.nb_failed_constraints = 0;
-                            else
-                                this.nb_failed_constraints = this.nb_failed_constraints+1;
-                            end
+                            this.LogX(x(:, iter), fval(:,iter), cval(:,iter));
+                       
                             % update status
-                            if rem(this.nb_obj_eval,this.freq_update)==0||...
-                                    (this.nb_failed_constraints>0&&rem(this.nb_failed_constraints,this.freq_update)==0)
-                                this.display_status(fval(:,iter), const);
-                            end
                         end
                                                                         
                     end
@@ -758,26 +755,15 @@ classdef BreachProblem < BreachStatus
                         par_f(:,iter) = parfeval(fun,2, iter);
                     end
                     
-                    fq = this.freq_update;                  
                     for iter=1:nb_iter
-                        [idx, value, const] = fetchNext(par_f);
-                        fval(:,idx) = value;                        
+                        [idx, value, cvalue] = fetchNext(par_f);
+                        fval(:,idx) = value;
+                        cval(:,idx) = cvalue;
+                        
                         this.time_spent = toc(this.time_start);
 
-                        if const>=0
-                            % logging and updating best
-                            this.LogX(x(:, idx), fval(:,idx));
-                            this.nb_failed_constraints = 0;
-                        else
-                            this.nb_failed_constraints = this.nb_failed_constraints+1;
-                        end
+                        this.LogX(x(:, idx), fval(:,idx), cval(:,idx));
                         
-                        
-                        % update status
-                        if rem(iter,fq)==0||...
-                            (this.nb_failed_constraints>0&&rem(this.nb_failed_constraints,fq)==0)
-                            this.display_status(fval(:,idx), const);
-                        end
                         if this.stopping()
                             cancel(par_f);
                             break
@@ -786,6 +772,7 @@ classdef BreachProblem < BreachStatus
                 end
             else
                 fval = this.obj_best*ones(1, nb_eval);
+                
             end                       
             
         end
@@ -793,7 +780,7 @@ classdef BreachProblem < BreachStatus
         function b = stopping(this)
             b = (this.time_spent >= this.max_time) ||...
                 (this.nb_obj_eval>= this.max_obj_eval) || ...
-                (this.nb_failed_constraints >= this.max_failed_constraints);
+                (this.num_consecutive_constraints_failed >= this.max_consecutive_constraints_failed);
         end
               
         %% Misc methods
@@ -803,97 +790,53 @@ classdef BreachProblem < BreachStatus
           end
         end
         
-        function LogX(this, x, fval)
+        function LogX(this, x, fval, cval)
             % LogX logs values tried by the optimizer
 
-            this.X_log = [this.X_log x];
-            this.obj_log = [this.obj_log fval];
-            
-            if (this.log_traces)&&~(this.use_parallel)&&~(this.BrSet.UseDiskCaching) % FIXME - logging flags and methods need be revised
-                if isempty(this.BrSet_Logged)
-                    this.BrSet_Logged = this.BrSys.copy();
-                    this.R_log = this.Spec.copy();
-                else
-                    this.BrSet_Logged.Concat(this.BrSys, true); % fast concat
-                    this.R_log.Concat(this.Spec, true);
-                end
-            end
-            
-            [fmin , imin] = min(min(fval));
-            x_min =x(:, imin);
-            if fmin < this.obj_best
-                this.x_best = x_min;
-                this.obj_best = fval(:,imin);
-                this.BrSet_Best = this.BrSys.copy(); % could be more efficient - also suspicious when several x... 
-            end
-            
-            % Timing and num_eval       
-            this.nb_obj_eval= numel(this.obj_log(1,:));
-            
-        end
-        
-        function DispResultMsg(this)
-       if ~strcmp(this.display, 'off')
-            % display status of last eval if not already done
-            if rem(this.nb_obj_eval,this.freq_update)
-                this.display_status();
-            end
-            
-            % DispResultMsg message displayed at the end of optimization
-            if this.time_spent > this.max_time
-                fprintf('\n Stopped after max_time was reached.\n');
-            end
-            
-            if this.nb_obj_eval > this.max_obj_eval
-                fprintf('\n Stopped after max_obj_eval was reached (maximum number of objective function evaluations).\n' );
-            end
-            
-%             if numel(this.res) > 1 && this.use_parallel
-%                 fprintf('\nReports from different parallel optimization runs.\n');
-%                 for idx = 1:numel(this.res)
-%                     fprintf('Run %d\n', idx);
-%                     this.Display_Best_Results(this.res{idx}.fval, this.res{idx}.x);
-%                     if this.obj_best > this.res{idx}.fval
-%                         this.obj_best = this.res{idx}.fval;
-%                         this.x_best = this.res{idx}.x; 
-%                     end
-%                 end
-%                 fprintf('\nIn summary, the best results among all runs: \n');
-%             end
-
-            this.Display_Best_Results(this.obj_best, this.x_best);
-        end
-        end
-        
-        function Display_Best_Results(this, best_fval, param_values)
-            if ~isempty(param_values)
-                fprintf('\n ---- Best value %g found with\n', min(best_fval));
-                this.Display_X(param_values);
-            else
-                fprintf('\n ---- Failed to find parameter values satisfying constraints.\n\n');                
-            end
-            
-        end
-
-        function Display_X(this, param_values)
-            if ~isempty(param_values)
+            if cval>=0
+                this.num_consecutive_constraints_failed = 0;
                 
-                for ip = 1:numel(this.params)
-                    value = param_values(ip);
-                    fprintf( '        %s = %g\n', this.params{ip},value)
+                this.X_log = [this.X_log x];
+                this.obj_log = [this.obj_log fval];
+                
+                if (this.log_traces)&&~(this.use_parallel)&&~(this.BrSet.UseDiskCaching) % FIXME - logging flags and methods need be revised
+                    if isempty(this.BrSet_Logged)
+                        this.BrSet_Logged = this.BrSys.copy();
+                        this.R_log = this.Spec.copy();
+                    else
+                        this.BrSet_Logged.Concat(this.BrSys, true); % fast concat
+                        this.R_log.Concat(this.Spec, true);
+                    end
                 end
-                fprintf('\n');
+                
+                [fmin , imin] = min(min(fval));
+                x_min =x(:, imin);
+                if fmin < this.obj_best
+                    this.x_best = x_min;
+                    this.obj_best = fval(:,imin);
+                    this.BrSet_Best = this.BrSys.copy(); % could be more efficient - also suspicious when several x...
+                end
+                
+                % num_eval
+                this.nb_obj_eval= numel(this.obj_log(1,:));
+            else
+                 this.num_consecutive_constraints_failed = this.num_consecutive_constraints_failed+1;
+                 this.num_constraints_failed = this.num_constraints_failed+1;                
             end
+            
+            if rem(this.nb_obj_eval+this.num_constraints_failed,this.freq_update)==0
+                this.display_status(fval, cval);
+            end
+            
         end
-
-        
+         
         function [BrOut, Berr, BbadU] = GetBrSet_Logged(this)
             % GetBrSet_Logged gets BreachSet object containing parameters and traces computed during optimization
             BrOut = this.BrSet_Logged;
             if isempty(BrOut)
                 BrOut = this.BrSys.copy();
-                BrOut.ResetSimulations();
-                BrOut.SetParam(this.params, this.X_log);
+                BrOut.ResetSimulations();               
+                BrOut.SetParam(this.params, this.X_log, 'combine');
                 BrOut.Sim();
             end
             [BrOut, Berr, BbadU] = this.ExportBrSet(BrOut); 
@@ -924,7 +867,52 @@ classdef BreachProblem < BreachStatus
         function Rbest = GetBest(this,varargin)
             Rbest = this.GetBrSet_Best(varargin{:});
         end
+    
         
+        function Display_X(this, param_values)
+            if ~isempty(param_values)
+                
+                for ip = 1:numel(this.params)
+                    value = param_values(ip);
+                    fprintf( '        %s = %g\n', this.params{ip},value)
+                end
+                fprintf('\n');
+            end
+        end
+
+        function DispResultMsg(this)
+            if ~strcmp(this.display, 'off')
+                % display status of last eval if not already done
+                if rem(this.nb_obj_eval,this.freq_update)
+                    this.display_status();
+                end
+                
+                % DispResultMsg message displayed at the end of optimization
+                if this.time_spent >= this.max_time
+                    fprintf('\n Stopped after max_time was reached.\n');
+                end
+                
+                if this.nb_obj_eval >= this.max_obj_eval
+                    fprintf('\n Stopped after max_obj_eval was reached (maximum number of objective function evaluations).\n' );
+                end
+                
+                if this.num_consecutive_constraints_failed >= this.max_consecutive_constraints_failed 
+                    fprintf('\n Stopped after maximum number of consecutive constraints \n(max_consecutive_constraints_failed=%g) failed was reached.\n', this.max_consecutive_constraints_failed);                
+                end
+            end
+        end
+        
+        function Display_Best_Results(this, best_fval, param_values)
+            if ~strcmp(this.display, 'off')
+                if ~isempty(param_values)
+                    fprintf('\n ---- Best value %g found with\n', min(best_fval));
+                    this.Display_X(param_values);
+                else
+                    fprintf('\n ---- Failed to find parameter values satisfying constraints.\n\n');
+                end
+            end
+        end
+   
     end
     
     methods (Access=protected)
@@ -940,20 +928,20 @@ classdef BreachProblem < BreachStatus
             fprintf(hd_st);
         end
         
-        function display_status(this,fval, const_val)
+        function display_status(this,fval,cval)
             
             if ~strcmp(this.display,'off')
                 if nargin==1
                     fval = this.Spec.val; 
                     if ~isempty(this.Spec.precond_monitors)
-                        const_val = min(min(this.Spec.traces_vals_precond)); % bof bof
+                        cval = min(min(this.Spec.traces_vals_precond)); % bof bof
                     end
                 end
                 
                 st__= sprintf('     %5d                    %7.1f               [%s]     (%s)', ...
                     this.nb_obj_eval, this.time_spent,  num2str(fval','%+5.5e '), num2str(this.obj_best', '%+5.5e '));
                 if ~isempty(this.Spec.precond_monitors)
-                    st__ = sprintf([st__ '           [%s (%g)]\n'], num2str(const_val', '%+5.5e '), this.nb_failed_constraints);
+                    st__ = sprintf([st__ '           [%s (%g)]\n'], num2str(cval', '%+5.5e '), this.num_consecutive_constraints_failed);
                 else
                     st__ = [st__ '\n'];  
                 end
@@ -986,10 +974,14 @@ classdef BreachProblem < BreachStatus
                 this.disp_msg(['Note: ' st_status],1);
             end
             
-            if ~isempty(idx_ok)&&B.hasTraj();
-                BrOut = this.Spec.copy();
-                BrOut.ResetSimulations();
-                BrOut.Eval(B);
+            if ~isempty(idx_ok)&&B.hasTraj()
+                if isa(this.R_log, 'BreachRequirement')&&this.R_log.hasTraj()&&...
+                        numel(idx_ok)==numel(this.R_log.P.traj)
+                    BrOut=this.R_log;
+                else
+                    BrOut = this.R0.copy();
+                    BrOut.Eval(B);
+                end
             end
         end
  

@@ -39,7 +39,7 @@ classdef MaxSatProblem < BreachProblem
             this = this@BreachProblem(super_args{:});
         end
         
-        function [obj, const] = objective_fn(this,x)
+        function [obj, cval] = objective_fn(this,x)
 
             % For falsification, default objective_fn is simply robust satisfaction of the least
             this.Spec = this.R0.copy();
@@ -57,11 +57,11 @@ classdef MaxSatProblem < BreachProblem
             NaN_idx = isnan(robs); % if rob is undefined, make it inf to ignore it
             robs(NaN_idx) = -inf;
             obj = max(robs,[],1)';
-            const = inf;
+            cval = inf;
             if (~isempty(this.Spec.traces_vals_precond))
                 NaN_idx = isnan(precond_robs); % if rob is undefined, make it inf to ignore it
                 precond_robs(NaN_idx) = inf;
-                const = min(precond_robs,[],1)';
+                cval = min(precond_robs,[],1)';
             end
 
         end
@@ -81,7 +81,7 @@ classdef MaxSatProblem < BreachProblem
         end
         
         % Logging
-        function LogX(this, x, fval)
+        function LogX(this, x, fval, cval)
             
             %  Logging satisfying parameters and traces
             [~, i_true] = find(fval>0);
@@ -97,7 +97,7 @@ classdef MaxSatProblem < BreachProblem
             end
             
             % Logging default stuff
-            this.LogX@BreachProblem(x, fval);
+            this.LogX@BreachProblem(x, fval,cval);
             
         end
         
