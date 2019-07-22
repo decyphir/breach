@@ -978,6 +978,7 @@ classdef BreachProblem < BreachStatus
                 if isa(this.R_log, 'BreachRequirement')&&this.R_log.hasTraj()&&...
                         numel(idx_ok)==numel(this.R_log.P.traj)
                     BrOut=this.R_log;
+                    BrOut.BrSet= B;
                 else
                     BrOut = this.R0.copy();
                     BrOut.Eval(B);
