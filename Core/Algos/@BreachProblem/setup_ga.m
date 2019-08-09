@@ -11,10 +11,6 @@ else
     pop_size = 200;
 end
 
-if this.max_obj_eval<inf
-    solver_opt = gaoptimset(solver_opt, 'Generations', ceil(this.max_obj_eval/pop_size), 'PopulationSize', pop_size); 
-end
-
 if isa(this, 'FalsificationProblem')
    if this.StopAtFalse
        solver_opt = gaoptimset(solver_opt, 'FitnessLimit',0);

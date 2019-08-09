@@ -350,7 +350,7 @@ classdef BreachProblem < BreachStatus
         end
         
         function solver_opt = setup_fminsearch(this)
-            disp('Setting options for fminsearch solver');
+            %disp('Setting options for fminsearch solver');
             solver_opt = optimset('fminsearch');
             solver_opt = optimset(solver_opt, 'Display', 'iter');
             if this.max_obj_eval < inf
@@ -367,22 +367,18 @@ classdef BreachProblem < BreachStatus
         end
         
         function solver_opt = setup_simulannealbnd(this)
-            disp('Setting options for simulannealbnd solver');
+            %disp('Setting options for simulannealbnd solver');
             solver_opt = saoptimset('Display', 'off');
             if this.max_time < inf
                 solver_opt = saoptimset(solver_opt, 'MaxTime', this.max_time);
             end
-            if this.max_obj_eval < inf
-                solver_opt = saoptimset(solver_opt, 'MaxFunEvals', this.max_obj_eval);
-            end
-            % Mathworks currently don't support parallel simulannealbnd
             
             this.solver = 'simulannealbnd';
             this.solver_options = solver_opt;
         end
         
         function solver_opt = setup_cmaes(this)
-            disp('Setting options for cmaes solver - use help cmaes for details');
+            %disp('Setting options for cmaes solver - use help cmaes for details');
             solver_opt = cmaes();
             solver_opt.Seed = 0;
             solver_opt.LBounds = this.lb;
@@ -413,7 +409,7 @@ classdef BreachProblem < BreachStatus
             
             % create problem structure
             problem = this.get_problem();
-            
+                        
             switch this.solver
                 case 'init'
                     this.display_status_header();
@@ -491,18 +487,27 @@ classdef BreachProblem < BreachStatus
                     this.add_res(res);
     
                 case 'simulannealbnd'
+                    % init seed if needed
+                    if isfield(this.solver_options,'rand_seed')
+                        rng(this.solver_options.rand_seed);
+                    end
+                    
                     this.display_status_header();
                     if this.use_parallel
-                        num_works = this.BrSys.Sys.Parallel;
-                        for idx = 1:num_works
-                            F(idx) = parfeval(this.solver, 4, problem);
-                        end
-                        res = cell(1,num_works);
-                        for idx = 1:num_works
-                            [completedIdx, x, fval,exitflag,output] = fetchNext(F);
-                            this.nb_obj_eval = this.nb_obj_eval + output.funccount;
-                            res{completedIdx} = struct('x',x,'fval',fval, 'exitflag', exitflag, 'output', output);
-                        end
+                        warning('Parallel Computation not yet supported for Simulated Annealing.');
+                        [x,fval,exitflag,output] = feval(this.solver, problem);
+                        res = struct('x',x,'fval',fval, 'exitflag', exitflag, 'output', output);                        
+                        
+%                         num_works = this.BrSys.Sys.Parallel;
+%                         for idx = 1:num_works
+%                             F(idx) = parfeval(this.solver, 4, problem);
+%                         end
+%                         res = cell(1,num_works);
+%                         for idx = 1:num_works
+%                             [completedIdx, x, fval,exitflag,output] = fetchNext(F);
+%                             this.nb_obj_eval = this.nb_obj_eval + output.funccount;
+%                             res{completedIdx} = struct('x',x,'fval',fval, 'exitflag', exitflag, 'output', output);
+%                         end
                     else
                         [x,fval,exitflag,output] = feval(this.solver, problem);
                         res = struct('x',x,'fval',fval, 'exitflag', exitflag, 'output', output);                        

@@ -1740,16 +1740,20 @@ classdef BreachSet < BreachStatus
                         idx = min(idx,idx_ia ); % find first position in signals an alias appears
                     end
                 end
-                if idx==is % first time we see this guy, take it as rep
-                    sigs.signals_reps{end+1} = sig;
-                    idx = numel(sigs.signals_reps);
-                end
                 
                 if idx==inf
                     warning('BreachSet:GetSignalSignature:not_found', 'Signal or alias %s not found.', sig);
                 end
                 
-                sigs.signals_map_idx(is) = idx; 
+                if idx==is % first time we see this guy, take it as rep
+                    sigs.signals_reps{end+1} = sig;
+                    idx = numel(sigs.signals_reps);
+                    sigs.signals_map_idx(is) = idx;
+                else % idx is smaller than is so signals_map_idx(idx) is defined and correct, not necessarilly equal to idx ...
+                    sigs.signals_map_idx(is) = sigs.signals_map_idx(idx);
+                end
+                
+                
                 dom = this.GetDomain(signals{idx});
                 sigs.signal_types{is}  = dom.type;
                 if isempty(dom.type)  % ? 
