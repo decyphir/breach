@@ -62,6 +62,13 @@ if isfield(P2,'time_mult')
     end
 end
 
+% %%%%
+% init_fun
+% %%%%
+
+if(isfield(P2,'init_fun') && ~isfield(P,'init_fun'))
+    P.init_fun = P2.init_fun;
+end
 
 % %%%%
 % props, props_names, props_values
@@ -79,7 +86,7 @@ else
     P.props_values = [P.props_values(iP,:),P2.props_values(iP2,:)];
 end
 
-field_list = {'XS0', 'Xf', 'ExpaMax', 'XSf'};
+field_list = {'Xf'};
 
 for ii = 1:numel(field_list)
     if(isfield(P,field_list{ii}) && isfield(P2,field_list{ii}))
@@ -121,117 +128,36 @@ if isempty(P.pts)
     return;
 end
 
-
-% %%%%
-% traj, traj_ref
-% %%%%
-
-if isfield(P,'traj') % Some check, in case of ...
-    if(size(P.traj,1) > 1)
-        P.traj = P.traj';
-    end
-    if ~isfield(P, 'traj_ref')
-        P.traj_ref = 1:numel(P.traj);
-    end
-end
-
-
-if isfield(P2,'traj')
-    if(size(P2.traj,1) > 1)
-        P2.traj = P2.traj';
-    end
-    if ~isfield(P2, 'traj_ref')
-        P2.traj_ref = 1:numel(P2.traj);
-    end
-end
-
-if ~exist('fast', 'var')
-    fast =false;
-end
-
-
-if(isfield(P,'traj') && isfield(P2,'traj'))
-
-    if ~fast
-        num_traj_P = numel(P.traj);
-        P2.traj_ref(P2.traj_ref~=0) = P2.traj_ref(P2.traj_ref~=0) + num_traj_P;
-        
-        % link param vector of P2 to traj of P
-        for ii = 1:num_traj_P
-            P2.traj_ref(ismember(P2.pts(1:P2.DimP,:)',P.traj{ii}.param,'rows')) = ii; % P.traj{ii}.param is a row vector
-        end
-        
-        % copy P2.traj not in P.traj
-        [traj_valid,~,i_unique] = unique(P2.traj_ref(P2.traj_ref>num_traj_P),'stable');
-        i_unique = reshape(i_unique,1,[]);
-        P.traj = [ P.traj , P2.traj(traj_valid-num_traj_P) ];
-        
-        % update P2.traj_ref (for traj not in P)
-        P2.traj_ref(P2.traj_ref>num_traj_P) = i_unique+num_traj_P;
-        
-        % link param vector of P to P2 trajectories
-        for ii=num_traj_P+1:numel(P.traj)
-            P.traj_ref(ismember(P.pts(1:P.DimP,:)',P.traj{ii}.param,'rows')) = ii;
-        end
-        
-        % copy P2.traj_ref in P.traj_ref
-        P.traj_ref = [P.traj_ref, P2.traj_ref];
-    else
-        P.traj_ref = [P.traj_ref P2.traj_ref+numel(P.traj)]; % should be good enough
-        P.traj = [P.traj P2.traj];
-    end
-elseif isfield(P,'traj')
-    % link param vector of P2 to traj of  P
-    P2.traj_ref = zeros(1,size(P2.pts,2));
-    for ii = 1:numel(P.traj)
-        P2.traj_ref(ismember(P2.pts(1:P2.DimP,:)',P.traj{ii}.param,'rows')) = ii; % P.traj{ii}.param is a row vector
-    end
-    % copy P2.traj_ref in P.traj_ref
-    P.traj_ref = [P.traj_ref, P2.traj_ref];
-elseif isfield(P2,'traj')
-    % link param vector of P to traj of  P2
-    P.traj_ref = zeros(1,size(P.pts,2));
-    for ii = 1:numel(P2.traj)
-        P.traj_ref(ismember(P.pts(1:P.DimP,:)',P2.traj{ii}.param,'rows')) = ii; % P2.traj{ii}.param is a row vector
-    end
-    % copy traj
-    P.traj = P2.traj;
-    % copy P2.traj_ref
-    P.traj_ref = [P.traj_ref, P2.traj_ref];
-else
-    P.traj_ref = zeros(1,size(P.pts,2)+size(P2.pts,2));
-end
-
-
 % %%%%
 % pts
 % %%%%
 
 
-if(isfield(P,'pts') && isfield(P2,'pts'))  % case where P.pts or P2.pts are empty already considered
-    % for pts in P, we set params of P2\P to last values in P2
-    newParams=setdiff(P2.ParamList,P.ParamList,'stable');
-    if ~isempty(newParams)
-        val = GetParam(P2, newParams);
-        P=SetParam(P,newParams,val(end,:));
-    end
-    
-    % for pts in P2, we set the params of P\P2 to last value in P
-    newParams=setdiff(P.ParamList,P2.ParamList,'stable');
-    if ~isempty(newParams)
-        val = GetParam(P, newParams);
-        P2=SetParam(P2,newParams,val(:,end));
-    end
-    
-    % we add P2.pts to P.pts
-    P.pts = [ P.pts , P2.pts(FindParam(P2,P.ParamList),:) ];
+% for pts in P, we set params of P2\P to last values in P2
+newParams=setdiff(P2.ParamList,P.ParamList,'stable');
+if ~isempty(newParams)
+    val = GetParam(P2, newParams);
+    P=SetParam(P,newParams,val(end,:));
 end
+
+% for pts in P2, we set the params of P\P2 to last value in P
+newParams=setdiff(P.ParamList,P2.ParamList,'stable');
+if ~isempty(newParams)
+    val = GetParam(P, newParams);
+    P2=SetParam(P2,newParams,val(:,end));
+end
+
+% we add P2.pts to P.pts
+P.pts = [ P.pts , P2.pts(FindParam(P2,P.ParamList),:) ];
 
 
 % %%%%
 % epsi, dim
 % %%%%
 
+if fast
+     P.epsi = zeros(numel(P.dim), size(P.pts, 2)); 
+else
 try % keeps backward compat. to some extent
 if(isfield(P,'epsi') && isfield(P2,'epsi'))
     
@@ -255,24 +181,33 @@ end
 catch % don't sweat it
     P.epsi = zeros(numel(P.dim), size(P.pts, 2)); 
 end
-
-% %%%%
-% traj_to_compute
-% %%%%
-
-[~,P.traj_to_compute] = unique(P.pts(1:P.DimP,:)','rows','first');
-if isfield(P,'traj') % optimizing test
-    P.traj_to_compute = setdiff(P.traj_to_compute,find(P.traj_ref~=0)); % don't keep those already computed
 end
-P.traj_to_compute = sort(reshape(P.traj_to_compute,1,[]));
-
-
 % %%%%
-% init_fun
+% traj, traj_ref, traj_to_compute
 % %%%%
 
-if(isfield(P2,'init_fun') && ~isfield(P,'init_fun'))
-    P.init_fun = P2.init_fun;
+if ~exist('fast', 'var')
+    fast =false;
+end
+
+
+if(isfield(P,'traj') && isfield(P2,'traj'))
+
+    if fast
+        P.traj_ref = [P.traj_ref P2.traj_ref+numel(P.traj)]; % should be good enough, most common case is appending one trace
+    else
+       P = Preset_traj_ref(P);
+    end
+    P.traj = [P.traj P2.traj];
+    
+elseif isfield(P,'traj')
+    P = Preset_traj_ref(P);    
+elseif isfield(P2,'traj')
+    % copy traj
+    P.traj = P2.traj;  
+    P = Preset_traj_ref(P);
+else
+    P = Preset_traj_ref(P);
 end
 
 end

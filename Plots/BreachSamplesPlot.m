@@ -623,9 +623,9 @@ classdef BreachSamplesPlot < handle
             uimenu(cm, 'Label', 'Open signals plot','Callback', @ctxtfn_signals_plot)
             
             if isa(this.BrSet, 'BreachRequirement')
-                top_diag = uimenu(cm, 'Label', ['Plot diagnosis']);
+                top_diag = uimenu(cm, 'Label', ['Plot diagnostics']);
                 for ir = 1:numel(this.summary.requirements.names)
-                    uimenu(top_diag,'Label', this.summary.requirements.names{ir},'Callback', @(o,e)ctxtfn_plot_diagnosis(ir, o, e));
+                    uimenu(top_diag,'Label', this.summary.requirements.names{ir},'Callback', @(o,e)ctxtfn_plot_diagnostics(ir, o, e));
                 end
             end
             top_x = uimenu(cm, 'Label', ['Change x-axis']);
@@ -662,13 +662,13 @@ classdef BreachSamplesPlot < handle
             datacursormode on
             
             
-            function ctxtfn_plot_diagnosis(ir, o,e)
+            function ctxtfn_plot_diagnostics(ir, o,e)
                 if isempty(this.idx_tipped)
                     it = 1;
                 else
                     it = this.idx_tipped(1);
                 end
-                F = this.BrSet.PlotDiagnosis(ir, it);
+                F = this.BrSet.PlotDiagnostics(ir, it);
                 set(F.Fig,'Name', ['Trace idx= ' num2str(it)]);
             end
             

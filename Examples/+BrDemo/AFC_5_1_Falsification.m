@@ -16,10 +16,11 @@ BrAFC
 AFC_Falsify = BrAFC.copy();
 AFC_Falsify.SetParamRanges({'Pedal_Angle_pulse_period', 'Pedal_Angle_pulse_amp'}, [10 20; 10 60]);
 STL_ReadFile('AFC_simple_spec.stl');
+req = BreachRequirement(AF_alw_ok);
 
 %% 
 % Then we create the falsification problem and solve it.
-falsif_pb = FalsificationProblem(AFC_Falsify, AF_alw_ok);
+falsif_pb = FalsificationProblem(AFC_Falsify, req);
 falsif_pb.solve();
 
 %% 
@@ -27,8 +28,7 @@ falsif_pb.solve();
 % AF_alw_ok. 
 
 %% Getting and Plotting the Falsifying Trace
-
-AFC_False = falsif_pb.GetBrSet_False(); % AFC_False contains the falsifying trace
+AFC_False = falsif_pb.GetFalse(); % AFC_False contains the falsifying trace
 AFC_False.PlotSignals({'Pedal_Angle','Engine_Speed','AF'});
 
 %% Some figure cosmetics
@@ -40,21 +40,21 @@ plot([0 41], (1-0.005)*[14.7 14.7],'r');
 %% Getting and Plotting the Falsifying Trace (ct'd)
 % We can also examine more closely at the violation by plotting the
 % robust satisfaction function for the formula and its subformulas:
-figure;AFC_False.PlotRobustSat(AF_alw_ok,3); % second argument is depth of formula decomposition
+AFC_False.PlotDiagnostics(); 
 
 %% Trying a Harder Falsification Instance
 % We were able to falsify AF_alw_ok which says that AF should stay within 1% of
 % AFref. What if we soften the requirement and make it 5% ? 
 
-AF_alw_ok2 = set_params(AF_alw_ok, 'tol', 0.05);
-falsif_pb2 = FalsificationProblem(AFC_Falsify, AF_alw_ok2);
+req.SetParam('tol', 0.05);
+falsif_pb2 = FalsificationProblem(AFC_Falsify, req);
 res = falsif_pb2.solve();
 
 %%
 % The solver failed, we might want to understand what happened. 
 
 %% Understanding the Solver Behavior
-% The solver has a maximum  of objective function
+% The solver has reached the maximum number of objective function
 % evaluation (i.e., number of simulations and property evaluation in our
 % case). We can allocate more.  
 falsif_pb2.max_obj_eval = 1000; % give it 1000 evalulations - default is 300
@@ -65,12 +65,13 @@ falsif_pb.max_time
 
 
 %% Understanding the Solver Behavior (ct'd)  
-% The default solver follows a strategy alternating two phases. 
-% # Global: computes the objective function for a number of trials in the
-% parameter domain, starting with corners then quasi-random sampling  
-% # Local:  sorts the results obtained in the global phase and perform
-% local optimizations using Nelder-Mead algorithm starting with the best values as initial guesses  
-% Before that, it tries corner cases (max-min values for variables).
+% The default solver follows a strategy alternating different phases. 
+% # Corners: computes the objective function for corner values  
+% # Global (quasi-random): computes the objective function for a number of trials in the
+% parameter domain using quasi-random sampling  
+% # Local: sorts the results obtained in the global phase and perform
+% local optimizations using Nelder-Mead algorithm starting with the best
+% value of the last quasi-random phase
 %
 
 %% Understanding the Solver Behavior (ct'd) 
@@ -84,22 +85,20 @@ BreachSamplesPlot(BrLog);
 falsif_pb2.solver_options
 
 %% 
-% * start_at_trial is the number of trials to skip. Can be considered
-% a seed for random exploration, except that low numbers corresponds
-% to corners of the parameter domain. It is 24 here because this is the
-%    number of trials that were performed in the previous run. 
-% * nb_new_trials is the number of trials to run in the next call to solve(). 
-% * nb_local_iter is the number of Nelder-Mead iterations to perform in the
-% local phase for each trial. 
-% * local_optim_options allows to fine-tune the local optimizer. It can be
+% * num_corners is the number of corners tested during the corners phase
+% * num_quasi_random_samples is the number of quasi-random samples tested
+% during the global phase
+% * local_max_obj_eval is the maximum number of objective evaluations
+% during one local phase
+% * local_options allows to fine-tune the local optimizer. It can be
 % changed using the Matlab optimset function
 
 
 %% Understanding the Solver Behavior (ct'd)
 % Falsification can be resumed by running solve() again. The main advantage
-% is to skip already tried trials in the global phase. In particular,
+% is that it will skip already tried trials in the global phase. In particular,
 % corner values won't be tried again. 
-falsif_pb2.solve(); % resume falsification - will run at most 2 minutes
+falsif_pb2.solve(); % resume falsification - will run for 1000 simulations
 
 %% Understanding the Solver Behavior (ct'd) 
 % We can check that more values have been explored:  
@@ -118,11 +117,10 @@ BreachProblem.list_solvers()
 % E.g, CMA-ES is a popular evolutionary algorithm included in the list of
 % solvers.
  
-falsif_pb3 = FalsificationProblem(AFC_Falsify, AF_alw_ok2,{'Pedal_Angle_pulse_period', 'Pedal_Angle_pulse_amp'}, [10 20; 10 60]);
+falsif_pb3 = FalsificationProblem(AFC_Falsify, req,{'Pedal_Angle_pulse_period', 'Pedal_Angle_pulse_amp'}, [10 20; 10 60]);
 falsif_pb3.setup_solver('cmaes');
 
 %% Running CMAES
-falsif_pb3.solver_options.MaxFunEvals = 100; % max number of simulations 
 falsif_pb3.solve();
 
 %% Customizing/Interfacing a New Solver
@@ -130,7 +128,7 @@ falsif_pb3.solve();
 type MyFalsificationProblem.m
 
 %% Customizing/Interfacing a New Solver (ct'd) 
-myfalsif_problem = MyFalsificationProblem(AFC_Falsify, AF_alw_ok);
+myfalsif_problem = MyFalsificationProblem(AFC_Falsify, req);
 myfalsif_problem.solve();
 
 

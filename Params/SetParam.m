@@ -113,31 +113,7 @@ end
 
 %%%%%%
 % manage traj_ref and traj_to_compute
-P.traj_ref = zeros(1,size(P.(pts),2)); % initialise traj_ref
-if isfield(P,'traj')
-    param_traj = zeros(numel(P.traj{1}.param),numel(P.traj));
-    for itraj = 1:numel(P.traj)
-        param_traj(:,itraj)=P.traj{itraj}.param'; % param value for computed traj
-    end
-    idx_new_traj = 1;
-    for ii = 1:size(param_traj,2) % for each existing traj
-        same = all(bsxfun(@eq,P.(pts)(1:P.DimP,:),param_traj(:,ii)),1);
-        if any(same) % if it is equal to a parameter vector
-            P.traj{idx_new_traj} = P.traj{ii}; % then keep the traj (ok because idx_new_traj<=ii)
-            P.traj_ref(same) = idx_new_traj;
-            idx_new_traj = idx_new_traj + 1;
-        end
-    end
-    P.traj = P.traj(1:idx_new_traj-1); % remove all other traj
-    if isempty(P.traj)
-        P = rmfield(P,'traj');
-    end
+if isfield(P,'pts')
+    P = Preset_traj_ref(P);
 end
-
-[~,P.traj_to_compute] = unique(P.(pts)(1:P.DimP,:)','rows','first'); % we define traj_to_compute
-if isfield(P,'traj')
-    P.traj_to_compute = setdiff(P.traj_to_compute,find(P.traj_ref~=0)); % don't keep those already computed
-end
-P.traj_to_compute = sort(reshape(P.traj_to_compute,1,[])); % we set P.traj_to_compute in a line shape
-
 end

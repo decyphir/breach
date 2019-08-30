@@ -17,8 +17,7 @@ classdef MaxSatProblem < BreachProblem
         BrSet_True
         X_true
         StopAtTrue=false
-    end
-    
+    end    
     
     methods
         function this = MaxSatProblem(BrSys, phi, params, ranges)
@@ -54,6 +53,7 @@ classdef MaxSatProblem < BreachProblem
                     end
                 end
             end
+            robs = -robs;
             NaN_idx = isnan(robs); % if rob is undefined, make it inf to ignore it
             robs(NaN_idx) = -inf;
             obj = max(robs,[],1)';

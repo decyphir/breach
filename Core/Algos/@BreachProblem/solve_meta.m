@@ -30,7 +30,6 @@ if opt.num_corners>0
             this.Display_X(x_best_phase);
         end
         
-        
     end
 end
 
@@ -108,6 +107,8 @@ end
 if ~strcmp(this.display,'off')
     fprintf('\nEND OPTIMIZATION METAHEURISTICS\n');
 end
+
+this.setup_meta(opt);
 
 end
 

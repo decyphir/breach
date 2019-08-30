@@ -52,7 +52,7 @@ classdef alw_monitor < stl_monitor
      
         end
         
-        function plot_diagnosis(this, F)
+        function plot_diagnostics(this, F)
             % Assumes F has data about this formula 
             
             F.AddSignals(this.signals_in);

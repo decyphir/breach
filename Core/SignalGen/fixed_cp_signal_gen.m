@@ -31,17 +31,18 @@ classdef fixed_cp_signal_gen < signal_gen
             if ~iscell(signals)
                 signals = {signals};
             end
+            
+            if isscalar(cp)
+                cp = repmat(cp,1, numel(signals));
+            end
+
             if ~iscell(method)
                 method = {method};
             end
+
             
             this.signals = signals;
             this.num_cp = cp;
-            
-            if isscalar(cp)
-                this.num_cp = repmat(cp,1, numel(signals));
-            end
-            
             this.params = {};
             
             if nargin<=2

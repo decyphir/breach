@@ -103,10 +103,20 @@ classdef BreachRequirement < BreachTraceSystem
             this.signals_in = this.get_signals_in();
         end
         
-     %   function Reset(this)
-        
-            
-      %  end
+        function ResetEval(this)
+            this.BrSet = [];         
+            this.SetParam('data_trace_idx_', 0);
+            this.P = SPurge(this.P);
+            if size(this.P.pts,2)>1
+               this.P.pts = unique(this.P.pts', 'rows')';
+               this.P.epsi = this.P.epsi(:,1:size(this.P.pts,2));               
+            end
+            this.P.selected = zeros(1, size(this.P.pts,2));
+            this.P = Preset_traj_ref(this.P);
+            this.traces_vals_precond = [];
+            this.traces_vals = [];
+            this.val = [];            
+        end
         
         function  [val_precond, traj_req] = evalTracePrecond(this,traj_req)
             % evalTracePrecond eval satisfaction of requirements for one trace.
@@ -200,7 +210,7 @@ classdef BreachRequirement < BreachTraceSystem
                     time = this.P.traj{it}.time;
                     for ipre = 1:numel(this.precond_monitors)
                         req = this.precond_monitors{ipre};
-                        traces_vals_precond(it, ipre)  = eval_req();
+                        traces_vals_precond(it, ipre)  = eval_req(this,req,it);
                     end
                 end
             end
@@ -213,53 +223,26 @@ classdef BreachRequirement < BreachTraceSystem
                     time = this.P.traj{it}.time;
                     for ipre = 1:numel(this.req_monitors)
                         req = this.req_monitors{ipre};
-                        traces_vals(it, ipre)  = eval_req();
+                        traces_vals(it, ipre)  = eval_req(this,req,it);
                     end
                 end
             end
             this.traces_vals_precond = traces_vals_precond;
             this.traces_vals = traces_vals;
-            
-            % common code for precond and req
-            function  val = eval_req()
-                idx_sig_req = FindParam(this.P, req.signals);
-                idx_par_req = FindParam(this.P, req.params);
-                p_in = this.P.traj{it}.param(1, idx_par_req);
-                if ~isempty(req.signals_in)
-                    Xin = this.GetSignalValues(req.signals_in, it);
-                else
-                    Xin = [];
-                end
-                % checks if a signal is missing (need postprocess)
-                while any(isnan(Xin))
-                    % should do only one iteration if postprocessing function are
-                    % properly ordered following dependency
-                    for ipp = 1:numel(this.postprocess_signal_gens)
-                        psg  = this.postprocess_signal_gens{ipp};
-                        Xpp_in = this.GetSignalValues(psg.signals_in, it);
-                        idx_param_pp_in = FindParam(this.P, psg.params);
-                        idx_Xout = FindParam(this.P, psg.signals);
-                        param_pp_in = this.P.traj{it}.param(1, idx_param_pp_in);
-                        [~, this.P.traj{it}.X(idx_Xout,:)]  = this.postprocessSignals(this.postprocess_signal_gens{ipp},time, Xpp_in, param_pp_in);
-                    end
-                    Xin = this.GetSignalValues(req.signals_in, it);
-                end
-                if ~isempty(idx_sig_req)
-                    [val , this.P.traj{it}.time, Xout] ...
-                        = this.evalRequirement(req, time, Xin, p_in);
-                    this.P.traj{it}.X( idx_sig_req,:) = Xout;
-                else
-                    val  = this.evalRequirement(req, time, Xin, p_in);
-                end
-            end
-            
+                        
         end
         
-        function F = PlotDiagnosis(this, idx_req_monitors, itraj)
+        function F = PlotDiagnostics(this, idx_req_monitors, itraj)
             if nargin<2
-                idx_req_monitors = 1;
+                idx_req_monitors = 1;            
             end
-            req_mon = this.req_monitors(idx_req_monitors);
+            if isa(idx_req_monitors,'req_monitor')
+                req_mon = {idx_req_monitors};
+                idx_req_monitors = 1;
+            else
+                req_mon = this.req_monitors(idx_req_monitors);
+            end
+            
             if nargin<3
                 itraj=1;
             end
@@ -273,7 +256,7 @@ classdef BreachRequirement < BreachTraceSystem
                     p_in = traj.param(1, idx_par_req);
                     Xin = this.GetSignalValues(req_mon{ifo}.signals_in,itraj);
                     req.init_tXp(t,Xin,p_in);
-                    req.plot_diagnosis(F);
+                    req.plot_diagnostics(F);
                 else
                     if ~isempty(req_mon{ifo}.signals_in)
                         F.AddSignals(req_mon{ifo}.signals_in)
@@ -491,30 +474,7 @@ classdef BreachRequirement < BreachTraceSystem
         function PlotRobustSat(this, varargin)
             this.BrSet.PlotRobustSat(varargin{:});
         end
-        
-        function F = PlotDiagnostic(this,req, itraj)
-            if nargin<=2
-                itraj = 1;
-            end
-            
-            F = BreachSignalsPlot(this);
-            F.DeleteAxes(1);
-            if isnumeric(req)
-                req = this.req_monitors{req};
-            elseif (ischar(req))
-                req = this.get_req_from_name(req);
-            elseif (isa(req, 'STL_Formula'))
-                req = this.get_req_from_name(get_id(req));
-                if isempty(req)
-                    req = stl_monitor(req);
-                end
-            end
-            
-            this.eval_req(req, itraj);
-            req.plot_diagnosis(F);
-            
-        end
-        
+                
         function req = get_req_from_name(this, req_name)
             
             req = [];

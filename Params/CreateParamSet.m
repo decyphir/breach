@@ -132,7 +132,7 @@ P.pts = pts;
 P.epsi = epsi;
 P.ParamList = ParamList;
 
-P.traj_ref = 0;
+P.traj_ref = 1;   
 P.traj_to_compute = 1;
 
 if exist('Nb_pts', 'var') 

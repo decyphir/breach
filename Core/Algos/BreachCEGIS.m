@@ -24,10 +24,9 @@ classdef BreachCEGIS < BreachStatus
             %% if Falsification not already done, start with that 
             if this.falsif_pb.nb_obj_eval ==0
                 this.falsif_pb.solve();
-                BrFalse = this.falsif_pb.GetBrSet_False();
-                if ~isempty(BrFalse)
-                    this.synth_pb.BrSet = BrFalse.BrSet;
-                    this.synth_pb.ResetObjective();
+                BrFalse = this.falsif_pb.GetFalse();
+                if ~isempty(BrFalse)                    
+                    this.synth_pb.ResetObjective(BrFalse.BrSet,this.synth_pb.params, [this.synth_pb.lb this.synth_pb.ub]);
                 else
                     cont = false;
                 end
@@ -45,13 +44,15 @@ classdef BreachCEGIS < BreachStatus
                 %% Update parameter synthesis problem
                 update_synth();
                 this.iter = this.iter+1;
-                cont = this.iter<this.iter_max;
+                cont = cont&&(this.iter<this.iter_max);
             end
             
             function update_synth()
-                this.synth_pb.BrSet.Concat(BrFalse.BrSet);
-                this.synth_pb.ResetObjective();
-                this.synth_pb.BrSys.Sys.Verbose=0;   
+                if cont
+                    this.synth_pb.BrSet.Concat(BrFalse.BrSet);
+                    this.synth_pb.ResetObjective();
+                    this.synth_pb.BrSys.Sys.Verbose=0;
+                end
             end
             
             function counter_ex_step()
@@ -60,8 +61,9 @@ classdef BreachCEGIS < BreachStatus
                 this.falsif_pb.BrSet.SetParam(this.synth_pb.params, this.synth_pb.x_best, true);
                 this.falsif_pb.ResetObjective();
                 this.falsif_pb.solve();
-                BrFalse = this.falsif_pb.GetBrSet_False();
+                BrFalse = this.falsif_pb.GetFalse();
                 if isempty(BrFalse)
+                    cont = false;
                     return
                 end
             end

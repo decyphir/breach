@@ -19,7 +19,7 @@ classdef stl_A_implies_B_monitor < stl_monitor
         
         
         
-        function ax= plot_diagnosis(this, time, X, p, style)
+        function ax= plot_diagnostics(this, time, X, p, style)
             [tau, val] = this.computeSignals(time, X, p);
             [valA, tauA] = STL_Eval(this.Sys, this.pre, this.P,this.P.traj{1}, tau);
             [valB, tauB] = STL_Eval(this.Sys, this.post, this.P,this.P.traj{1}, tau);

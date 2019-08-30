@@ -53,7 +53,7 @@ classdef alw_A_implies_B_monitor < alw_monitor
             v = min(Xout(end,idx));
         end
         
-        function plot_diagnosis(this, F)
+        function plot_diagnostics(this, F)
             % Assumes F has data about this formula 
             signals_pre = STL_ExtractSignals(this.pre);
             sig = this.signals{end-1};

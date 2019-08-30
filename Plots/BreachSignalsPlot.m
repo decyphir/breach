@@ -265,7 +265,7 @@ classdef BreachSignalsPlot < handle
             end
             
             function ctxtfn_plot_full_diag(req, ~,~)
-                req.plot_full_diagnosis(this);
+                req.plot_full_diagnostics(this);
             end
             
             

@@ -315,7 +315,7 @@ classdef BreachSet < BreachStatus
             
             if ischar(is_spec_param)&&strcmp(is_spec_param, 'combine')
                 if this.hasTraj()
-                    P0 = this.P;
+                    traj= this.P.traj;
                     saved_traj = true;
                  end
                 idx = N2Nn(2, [num_pts num_values]);
@@ -324,12 +324,14 @@ classdef BreachSet < BreachStatus
                 this.P.pts = old_pts(:, idx(1,:));
                 this.P.epsi= repmat(this.P.epsi,1, size(idx, 2));
                 this.P.selected = zeros(1, size(idx, 2));
+                if saved_traj
+                    this.P.traj = traj;
+                end
                 this.P = SetParam(this.P, params, values(:, idx(2,:)));
             else  % legacy, i.e., not combine version
                 if num_values==1 || num_values == num_pts
                     this.P = SetParam(this.P, params, values);
                 elseif num_pts==1    % note in this case, we have to remove traces ( or see if maybe not, )
-                    this.P = Sselect(SPurge(this.P),1);
                     this.P.pts = repmat(this.P.pts,1, size(values, 2));
                     this.P.epsi= repmat(this.P.epsi,1, size(values, 2));
                     this.P.selected = zeros(1, size(values, 2));
@@ -340,12 +342,7 @@ classdef BreachSet < BreachStatus
             end
             
             this.ApplyParamGens(params);
-            
-            % restore traj if needed
-            if saved_traj
-                this.P = Pfix_traj_ref(this.P, P0);
-            end
-            
+                       
         end
         
         function SetParamCfg(this, list_cfg)
@@ -1085,7 +1082,7 @@ classdef BreachSet < BreachStatus
             
             % restore traj if needed
             if saved_traj
-                this.P = Pfix_traj_ref(this.P, P0);
+                this.P = Pimport_traj(this.P, P0);
             end
             
         end

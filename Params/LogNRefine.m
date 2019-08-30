@@ -46,4 +46,6 @@ if isfield(P,'selected')
     P.selected = zeros(1, size(P.pts,2));
 end
 
+P = Preset_traj_ref(P);
+
 end

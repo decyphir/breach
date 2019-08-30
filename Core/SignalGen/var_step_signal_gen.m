@@ -31,11 +31,15 @@ classdef var_step_signal_gen < signal_gen
             elseif nargin == 2
                 method = 'previous';
             end
-            
-            
+                        
             if ~iscell(signals)
                 signals = {signals};
             end
+            
+            if isscalar(cp)
+                cp = repmat(cp,1, numel(signals));
+            end
+            
             if ~iscell(method)
                 imethod = method;
                 method  = cell(1,numel(signals));
@@ -43,6 +47,7 @@ classdef var_step_signal_gen < signal_gen
                     method{is} = imethod;
                 end
             end
+            
             if ~exist('p0', 'var')
                 p0 = [];
             end

@@ -106,11 +106,11 @@ classdef stl_monitor < req_monitor
             
         end
         
-        function plot_diagnosis(this, F, phi)
-           this.plot_full_diagnosis(F,phi); 
+        function plot_diagnostics(this, F, phi)
+           this.plot_full_diagnostics(F,phi); 
         end
         
-        function plot_full_diagnosis(this,F,phi)
+        function plot_full_diagnostics(this,F,phi)
             % Assumes F has data about this formula
             this.explain();
             

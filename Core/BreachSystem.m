@@ -51,7 +51,7 @@ classdef BreachSystem < BreachSet
                         this.Sys = inSys;
                         this.P = CreateParamSet(this.Sys);
                     else
-                        error('BreachObject with one argument assumes that the argument is a system structure.')
+                        error('BreachSystem constructor with one argument assumes that the argument is a system structure.')
                     end
                 otherwise % creates an extern system
                     if ~(exist(varargin{1})==4) % tests if the first argument is a Simulink model

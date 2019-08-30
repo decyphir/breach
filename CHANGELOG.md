@@ -1,3 +1,15 @@
+# Release 1.6.0
+
+- Global nelder mead default solver has been revamped 
+- Diagnosis and IO-aware STL support added (see HSCC'19 paper)
+- 
+
+
+## Bugfixes 
+- Signature computation sometimes failed to properly link aliases 
+
+
+
 # Release 1.5.2
 
 - minor fix for maxstep/minstep detection causing crash with some solver configuration (Simulink)

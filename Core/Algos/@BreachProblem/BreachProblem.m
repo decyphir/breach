@@ -234,8 +234,8 @@ classdef BreachProblem < BreachStatus
             else
                 lb__ = ranges(:,1);
                 ub__ = ranges(:,2);
-                this.BrSet.SetParam(params, 0.5*(ranges(:,2)-ranges(:,1)), true); % adds parameters if they don't exist 
-                this.BrSet.ResetDomains();
+                this.BrSet.SetParam(params, 0.5*(ranges(:,2)+ranges(:,1)), true); % adds parameters if they don't exist 
+                this.BrSet.ResetDomains(); % FIXME does not handle properly enum/int domains
                 this.BrSet.SetDomain(params, 'double', ranges);
             end
            
@@ -383,13 +383,19 @@ classdef BreachProblem < BreachStatus
             solver_opt.Seed = 0;
             solver_opt.LBounds = this.lb;
             solver_opt.UBounds = this.ub;
-            if this.max_obj_eval < inf
-                solver_opt.MaxFunEvals = this.max_obj_eval;
+            
+            %if this.max_obj_eval < inf
+            %    solver_opt.MaxFunEvals = this.max_obj_eval;
+            %end
+            
+            if isempty(this.x0)
+               this.x0 = (this.ub-this.lb)/2; 
             end
-            this.display = 'off';
+            
+            solver_opt.DispFinal='off';
             solver_opt.SaveVariables = 'off';
             solver_opt.LogModulo = 0;
-            %solver_opt.DispModulo = 0; % need to disable when running
+            solver_opt.DispModulo = 0; % need to disable when running
             %multiple cmaes instances
             if this.use_parallel 
                 solver_opt.EvalParallel = 'yes';
@@ -434,13 +440,6 @@ classdef BreachProblem < BreachStatus
                     res = this.solve_global_nelder_mead();
                     
                 case 'cmaes'
-                    % adds a few more initial conditions
-                    nb_more = 10*numel(this.params)- size(this.x0, 2);
-                    if nb_more>inf % what is this for? Not sure
-                        Px0 = CreateParamSet(this.BrSet.P, this.params,  [this.lb this.ub]);
-                        Px0 = QuasiRefine(Px0, nb_more);
-                        this.x0 = [this.x0' GetParam(Px0,this.params)]';
-                    end
                     
                     [x, fval, counteval, stopflag, out, bestever] = cmaes(this.objective, this.x0', [], this.solver_options);
                     res = struct('x',x, 'fval',fval, 'counteval', counteval,  'stopflag', stopflag, 'out', out, 'bestever', bestever);
@@ -587,8 +586,16 @@ classdef BreachProblem < BreachStatus
         end
         
         function problem = get_problem(this)
-            problem = struct('objective', this.objective, ...
-                'fitnessfcn', this.objective, ... % for ga
+            
+            if numel(this.Spec.req_monitors)>1
+                fun_obj = @(x)(min(this.objective(x),[],1)); % for basic multi-objective support                
+            else
+                fun_obj = this.objective;
+            end
+            
+            
+            problem = struct('objective', fun_obj, ...
+                'fitnessfcn', fun_obj, ... % for ga
                 'x0', this.x0, ...   
                 'nvars', size(this.x0, 1),... % for ga
                 'solver', this.solver,...
@@ -684,7 +691,6 @@ classdef BreachProblem < BreachStatus
         
         function [obj, cval] = objective_fn(this,x)
             % For falsification, default objective_fn is simply robust satisfaction of the least
-            this.Spec = this.R0.copy();
             this.robust_fn(x);
             robs = this.Spec.traces_vals;
             if (~isempty(this.Spec.traces_vals_precond))
@@ -706,12 +712,16 @@ classdef BreachProblem < BreachStatus
                 precond_robs(NaN_idx) = inf;
                 cval = min(precond_robs,[],1)';
             end
+            
+                        
         end
         
         
         function [fval, cval] = objective_wrapper(this,x)
-             % objective_wrapper calls the objective function and wraps some bookkeeping           
-             
+            % reset this.Spec
+            
+            
+            % objective_wrapper calls the objective function and wraps some bookkeeping                        
              if size(x,1) ~= numel(this.params)
                 x = x';
              end
