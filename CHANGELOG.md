@@ -1,9 +1,15 @@
+Breach Change log
+
+# Release 1.6.1
+
+- set domain cfg only does warning when trying to set a non existent parameter 
+
 # Release 1.6.0
 
+- Performance and memory overhead improvement when logging during falsification
 - Global nelder mead default solver has been revamped 
 - Diagnosis and IO-aware STL support added (see HSCC'19 paper)
-- 
-
+ 
 
 ## Bugfixes 
 - Signature computation sometimes failed to properly link aliases 

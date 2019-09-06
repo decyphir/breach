@@ -975,6 +975,8 @@ classdef BreachRequirement < BreachTraceSystem
             
             if all_inputs
                 B.SimInputsOnly = true;
+            else
+                B.SimInputsOnly = false;
             end
             
             % compute traces

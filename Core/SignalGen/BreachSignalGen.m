@@ -190,9 +190,9 @@ classdef BreachSignalGen < BreachSystem
             end
         end
         
-        function strct_cfg = ExportConfig(this)
-            strct_cfg = struct;
-            strct_cfg.input_cfg = {};
+        function signal_gen_cfg = ExportConfig(this)
+
+            signal_gen_cfg = {};
             
             for isg = 1:numel(this.signalGenerators)
                 sg =this.signalGenerators{isg};
@@ -208,7 +208,7 @@ classdef BreachSignalGen < BreachSystem
                 else
                     cfg.Args{end+1} = sg.p0';
                 end
-                strct_cfg.input_cfg{end+1} = cfg; 
+                signal_gen_cfg{end+1} = cfg; 
             end
             
         end

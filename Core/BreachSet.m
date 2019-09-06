@@ -132,12 +132,14 @@ classdef BreachSet < BreachStatus
                     param = params{ip};
                     [idx, found] = FindParam(this.P, param);
                     if found==0
-                        error('BreachSet:SetDomain:param_or_signal_not_found', ['Parameter or signal '  param ' not found.']);
+                        warning('BreachSet:SetDomain:param_or_signal_not_found', ['Parameter or signal '  param ' not found.']);
+                        idxs(ip) = 0;
                     end
                     idxs(ip) = idx;
                 end
             end
             
+            params = params(logical(idxs));
             % create domains
             switch nargin
                 case 3

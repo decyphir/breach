@@ -1,74 +1,125 @@
 function res = solve_global_nelder_mead(this)
 
-if this.solver_options.use_param_set_as_init
-    X0 = this.BrSet.GetParam(this.params);
-    this.BrSys.ResetParamSet;    % needs double-checking...
-else
-    X0 = init_basic_X0(this);
-end
-
 % display header
-if ~strcmp(this.display,'off')   
-    fprintf('Eval objective function on %d initial parameters.\n', size(X0,2));
-    this.display_status_header();
+if ~strcmp(this.display,'off')
+    fprintf('\nSTART OPTIMIZATION METAHEURISTICS\n');   
 end
-res_init = FevalInit(this, X0);
-res{1} = res_init;
-res{1}.x0 = X0;
-res{1}.fval = res_init.f;
 
-this.solver_options.start_at_trial = this.solver_options.start_at_trial+this.solver_options.nb_new_trials;
+opt = this.solver_options;
 
-if (this.solver_options.nb_local_iter>0) && (~this.stopping)
-    fun_obj = @(x)(min(this.objective(x),[],1)); % for multi-objective support
 
-    rfprintf_reset()
-    if ~strcmp(this.display,'off')   
-        fprintf('\nStarting local optimization using Nelder-Mead algorithm\n');
-        this.display_status_header();
+if opt.num_corners>0
+    if ~strcmp(this.display,'off')
+        fprintf('\n     TEST CORNERS\n');
     end
-    % Collect and sort solutions
-    [~, ibest] = sort(max(res_init.fval,[],1));
-    options = optimset(this.solver_options.local_optim_options, 'MaxIter',this.solver_options.nb_local_iter);
-    flag_Cont = true;
+    res= this.solve_corners();
+    if ~strcmp(this.display,'off')&&~this.stopping()
+        this.display_status();        
+        [~, admin_idx] = find(res.cval>=0);
+        if ~isempty(admin_idx)
+            [~, best_idx] = min(res.fval(admin_idx));
+            x_best_phase = res.X0(:,admin_idx(best_idx)); % best x for next phase
+            f_best_phase = res.fval(admin_idx(best_idx));
+            fprintf('Best value found during corners phase: %g with\n', f_best_phase);
+            this.Display_X(x_best_phase);
+        else
+            fprintf('No admissible variable found during corners phase. \n');
+            f_best_phase = res.f;
+            x_best_phase = res.x;
+            fprintf('Best non admissible value found: %g with\n', f_best_phase);
+            this.Display_X(x_best_phase);
+        end
+        
+    end
+end
+
+while ~this.stopping()
+    qr_step = opt.quasi_rand_seed;
     
-    if this.use_parallel&&false % FIXME: behavior need be more thoroughly tested/verified 
-        num_works = this.BrSys.Sys.Parallel;
-        options = optimset(options, 'Display', 'off');
-        options = optimset(options, 'UseParallel', true);
-        while flag_Cont
-            fun = @(x0) optimize(...
-                fun_obj,x0,this.lb,this.ub,this.Aineq,this.bineq,this.Aeq,this.beq,[],[],options,'NelderMead');
-            for idx = 1:num_works
-                x0 = X0(:,idx);
-                F(idx) = parfeval(fun, 4, x0);
-            end
-            for idx = 1:num_works
-                [completedIdx, x, fval, exitflag, output] = fetchNext(F); 
-                res{end+1} = struct('x',x, 'fval',fval, 'exitflag', exitflag,  'output', output);
-                % update the nb_obj_eval
-                this.nb_obj_eval = this.nb_obj_eval + output.funcCount;
-                this.X_log = [this.X_log output.logs];
-                if fval < 0 || this.nb_obj_eval > this.max_obj_eval
-                    cancel(F);
-                    flag_Cont = false;
-                    break;
-                end
-            end
-            
-        end 
-    else
+    %% Quasi-random phase
+    if ~strcmp(this.display,'off')
+        fprintf('\nTEST QUASI-RANDOM SAMPLES\n');
+    end
 
-        for i_loc = ibest
-            x0 = X0(:,i_loc);           
-            if ~this.stopping()
-                options = optimset(options, 'Display', 'off');
-                [x, fval, exitflag, output] = optimize(...
-                    fun_obj, x0 ,this.lb,this.ub,this.Aineq,this.bineq,this.Aeq,this.beq,[],[],options,'NelderMead');
-                res{end+1} = struct('x0', x0, 'x',x, 'fval',fval, 'exitflag', exitflag,  'output', output);
+    this.setup_quasi_random('quasi_rand_seed',qr_step,'num_quasi_rand_samples',opt.num_quasi_rand_samples);
+    res = this.solve_quasi_random();
+    opt.quasi_rand_seed = opt.quasi_rand_seed+opt.num_quasi_rand_samples;  
+
+    %% Next best man
+    [~, admin_idx] = find(res.cval>=0);
+    if ~isempty(admin_idx)
+        [~, best_idx] = min(res.fval(admin_idx));
+        x_best_phase = res.X0(:,admin_idx(best_idx)); % best x for next phase
+        f_best_phase = res.fval(admin_idx(best_idx));
+    end
+    
+    %% Disp
+    if this.stopping()
+        break;
+    else
+        if ~strcmp(this.display,'off')
+            if ~isempty(admin_idx)
+                fprintf('Best value found during quasi-random phase: %g with\n', f_best_phase);
+                this.Display_X(x_best_phase);
+            else
+                fprintf('No admissible variable found during quasi-random phase. \n');
+                f_best_phase = res.f;
+                x_best_phase = res.x;
+                fprintf('Best non admissible value found: %g with\n', f_best_phase);
+                this.Display_X(x_best_phase);
             end
-       end
+        end
+    end
+    
+    if opt.local_max_obj_eval >0
+        %% Local phase
+        if ~strcmp(this.display,'off')
+            fprintf('\nRUN LOCAL OPTIMIZATION\n');
+        end
+        
+        num_admin_before = numel(this.obj_log);
+        res = run_nelder_mead(this,opt,x_best_phase);
+        num_admin_after = numel(this.obj_log);
+
+        if ~strcmp(this.display,'off')
+            if num_admin_after>num_admin_before
+                [f_best_phase, idx_best_phase] = min(this.obj_log(num_admin_before+1:num_admin_after));
+                x_best_phase = this.X_log(:,num_admin_before+idx_best_phase);
+                fprintf('Best value found during local phase: %g with\n', f_best_phase);
+                this.Display_X(x_best_phase);
+            else
+                fprintf('No admissible variable found during local phase. \n');
+                f_best_phase = res.fval;
+                x_best_phase = res.x;
+                fprintf('Best non admissible value found: %g with\n', f_best_phase);
+                this.Display_X(x_best_phase);
+            end
+        end
+        
+        this.solver_options = opt;
+        %% Disp
+        if this.stopping()
+            break;            
+        end
     end
 end
 
+if ~strcmp(this.display,'off')
+    fprintf('\nEND OPTIMIZATION METAHEURISTICS\n');
 end
+
+this.setup_meta(opt);
+
+end
+
+function res = run_nelder_mead(this, opt,  x0)
+
+this.setup_nelder_mead(x0, 'MaxFunEvals', opt.local_max_obj_eval, 'Display', 'off');
+res = this.solve_nelder_mead();
+
+
+
+end
+
+
+
