@@ -18,6 +18,7 @@ classdef BreachOpenSystem < BreachSystem
         InputMap       % Maps input signals to idx in the input generator
         InputGenerator % BreachSystem responsible for generating inputs
         use_precomputed_inputs = false % if true, will fetch traces in InputGenerator
+        SimInputsOnly=false          % if true, will not run Simulink or other model        
     end
     
     methods

@@ -107,7 +107,11 @@ classdef stl_monitor < req_monitor
         end
         
         function plot_diagnostics(this, F, phi)
-           this.plot_full_diagnostics(F,phi); 
+            if nargin<3
+                phi=this.formula;
+            end
+            
+            this.plot_full_diagnostics(F,phi); 
         end
         
         function plot_full_diagnostics(this,F,phi)

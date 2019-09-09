@@ -958,7 +958,7 @@ classdef BreachRequirement < BreachTraceSystem
                             end
                         end
                     end
-                    if all_inputs_req
+                    if all_inputs_req&&isa(B, 'BreachOpenSystem')
                         B.AddInputSpec(req{1}.formula_id);
                     end
                     
@@ -972,11 +972,12 @@ classdef BreachRequirement < BreachTraceSystem
                     break
                 end
             end
-            
-            if all_inputs
-                B.SimInputsOnly = true;
-            else
-                B.SimInputsOnly = false;
+            if isa(B, 'BreachOpenSystem')
+                if all_inputs
+                    B.SimInputsOnly = true;
+                else
+                    B.SimInputsOnly = false;
+                end
             end
             
             % compute traces

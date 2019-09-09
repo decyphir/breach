@@ -1,6 +1,6 @@
 function opt = setup_global_nelder_mead(this, varargin)
 
-this.solver = 'meta';
+this.solver = 'global_nelder_mead';
 dim_pb = numel(this.params);
 opt = struct( ...
     'num_corners', min(2^dim_pb, 10*dim_pb),...

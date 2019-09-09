@@ -524,7 +524,12 @@ set(gca, 'FontSize',8)
 
 % compute enveloppe
 if get(handles.checkbox_enveloppe, 'Value')
-    sg.plot_enveloppe(sig_name,time, 'max_time', handles.max_time_enveloppe);
+    if ~isempty(handles.constraints_map)
+        constraints = handles.constraints_map.values;
+        sg.plot_enveloppe(sig_name,time, 'max_time', handles.max_time_enveloppe, 'constraints', constraints);
+    else
+        sg.plot_enveloppe(sig_name,time, 'max_time', handles.max_time_enveloppe);
+    end
 end
 update_uitable(handles);
 update_constraints_table(handles);
@@ -682,9 +687,10 @@ end
 
 
 function update_constraints_table(handles)
-    data = get(handles.table_constraints,'Data');
+    old_data = get(handles.table_constraints,'Data');
+    data = old_data;
     for irow = 1:size(data, 1)
-        id = data{irow,1};
+        id = old_data{irow,1};
         expr = data{irow,2};
         [handles, data] = check_constraint(handles, id, expr, data, irow);
     end
@@ -693,7 +699,9 @@ function update_constraints_table(handles)
         data{end+1,1} = '';
     end
     set(handles.table_constraints, 'Data', data);
-    
+    if ~isequal(data, old_data)
+         update_plot(handles);
+    end
 
 
 % --- Executes on button press in checkbox_enveloppe.

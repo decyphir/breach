@@ -35,11 +35,11 @@ classdef fixed_cp_signal_gen < signal_gen
             if isscalar(cp)
                 cp = repmat(cp,1, numel(signals));
             end
-
+            
             if ~iscell(method)
                 method = {method};
             end
-
+            
             
             this.signals = signals;
             this.num_cp = cp;
@@ -160,45 +160,58 @@ classdef fixed_cp_signal_gen < signal_gen
         end
         
         function plot_enveloppe(this, signal, time, varargin)
-            [t_cp, x_cp, x_low, x_up, dom] = this.get_cp(signal, time);
             
+            
+            opt.max_time = 3;
+            opt.max_obj_eval = inf;
+            opt.constraints = {}; 
+            opt = varargin2struct(opt, varargin{:});
+                        
             isig= find(strcmp(signal,this.signals),1);
+            
             if iscell(this.method)
-               method = this.method{isig};
+                method = this.method{isig};
             else
                 method = this.method;
             end
+            
+            if ~isempty(opt.constraints)||~ismember(method, {'previous', 'linear'});
+                plot_enveloppe@signal_gen(this,signal, time, varargin{:});
+            else
+                
+                [t_cp, x_cp, x_low, x_up, dom] = this.get_cp(signal, time);
+                
+                
+                switch (method)
+                    case 'previous'
+                        for icp = 1:numel(t_cp)-1
+                            %switch (dom(ic).type)
+                            %    case 'double'
+                            X = [t_cp(icp) t_cp(icp) t_cp(icp+1) t_cp(icp+1)];
+                            Y = [x_low(icp) x_up(icp) x_up(icp) x_low(icp)];
+                            patch(X, Y, 'k', 'FaceAlpha', 0.1, 'EdgeAlpha', .1);
+                        end
+                        X = [t_cp(end) t_cp(end) time(end) time(end)];
+                        Y = [x_low(end) x_up(end) x_up(end) x_low(end)];
+                        patch(X, Y, 'k', 'FaceAlpha', 0.1, 'EdgeAlpha',.1);
                         
-            switch (method)
-                case 'previous'
-                    for icp = 1:numel(t_cp)-1
-                        %switch (dom(ic).type)
-                        %    case 'double'
-                        X = [t_cp(icp) t_cp(icp) t_cp(icp+1) t_cp(icp+1)];
-                        Y = [x_low(icp) x_up(icp) x_up(icp) x_low(icp)];
+                        
+                    otherwise
+                        
+                        for icp = 1:numel(t_cp)-1
+                            %switch (dom(ic).type)
+                            %    case 'double'
+                            X = [t_cp(icp) t_cp(icp) t_cp(icp+1) t_cp(icp+1)];
+                            Y = [x_low(icp) x_up(icp) x_up(icp+1) x_low(icp+1)];
+                            patch(X, Y, 'k', 'FaceAlpha', 0.1, 'EdgeAlpha', .1);
+                        end
+                        X = [t_cp(end) t_cp(end) time(end) time(end)];
+                        Y = [x_low(end) x_up(end) x_up(end) x_low(end)];
                         patch(X, Y, 'k', 'FaceAlpha', 0.1, 'EdgeAlpha', .1);
-                    end
-                    X = [t_cp(end) t_cp(end) time(end) time(end)];
-                    Y = [x_low(end) x_up(end) x_up(end) x_low(end)];
-                    patch(X, Y, 'k', 'FaceAlpha', 0.1, 'EdgeAlpha',.1);
-                    
-                    
-                otherwise
-                    
-                    for icp = 1:numel(t_cp)-1
-                        %switch (dom(ic).type)
-                        %    case 'double'
-                        X = [t_cp(icp) t_cp(icp) t_cp(icp+1) t_cp(icp+1)];
-                        Y = [x_low(icp) x_up(icp) x_up(icp+1) x_low(icp+1)];
-                        patch(X, Y, 'k', 'FaceAlpha', 0.1, 'EdgeAlpha', .1);
-                    end
-                    X = [t_cp(end) t_cp(end) time(end) time(end)];
-                    Y = [x_low(end) x_up(end) x_up(end) x_low(end)];
-                    patch(X, Y, 'k', 'FaceAlpha', 0.1, 'EdgeAlpha', .1);
+                end
+                
             end
             
         end
-        
-        
     end
 end

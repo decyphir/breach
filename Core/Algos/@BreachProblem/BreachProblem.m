@@ -60,8 +60,7 @@ classdef BreachProblem < BreachStatus
     properties
         objective
         x0
-        %solver= 'global_nelder_mead'   % default solver name
-        solver= 'meta'   % default solver name
+        solver= 'global_nelder_mead'   % default solver name       
         solver_options    % solver options
         Spec              % BreachRequirement object reset to R0 for each objective evaluation
         T_Spec=0

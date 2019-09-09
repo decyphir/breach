@@ -68,6 +68,7 @@ classdef signal_gen <handle
             
             opt.max_time = 3;            
             opt.max_obj_eval = inf;
+            opt.constraints = {}; 
             opt = varargin2struct(opt, varargin{:});
             
             
@@ -80,32 +81,28 @@ classdef signal_gen <handle
             end
             S.SetTime(time);
             if ~isempty(dom)
-                % random approach
-                if 0
-                    var = S.GetVariables();
-                    S.CornerSample(100);
-                    S.SampleDomain(var, 1000, 'quasi-random', 'append');
-                    S.Sim(time);
-                    hold on;
-                    vcell = S.GetSignalValues(signal);
-                    vbot =vcell{1};
-                    vtop = vcell{2};
-                    for is=  1:numel(vcell)
-                        vbot = min([vbot; vcell{is}]);
-                        vtop = max([vtop; vcell{is}]);
-                    end
-                end
+           
                 %% Optim based                
                 reachmon = reach_monitor('r', signal, time);
-                R = BreachRequirement(reachmon);
+                if ~isempty(opt.constraints)
+                    for ic =1:numel(opt.constraints)
+                        precond_mon{ic} = stl_monitor(opt.constraints{ic}.id);
+                    end
+                    R = BreachRequirement(reachmon, {},precond_mon);
+                else
+                    R = BreachRequirement(reachmon);
+                end
+                
                 pb = FalsificationProblem(S, R);
+                
+                
                 pb.StopAtFalse = false;
-                %pb.display = 'off';
+                pb.display = 'off';
                 pb.log_traces = false;
                 pb.max_obj_eval = opt.max_obj_eval;
                 pb.max_time = opt.max_time;
                                 
-                pb.setup_meta();                
+                pb.setup_meta();
                 pb.solve();
                 [~, env] = reachmon.computeSignals(time,0,0);
                 vbot = env(2,:);
