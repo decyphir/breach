@@ -20,11 +20,15 @@ function fig_resize(h, x_scal, y_scal)
 %   fig_resize(gcf, 2, 0.5)
 %
 
-pos = get(h,'Position');
-pos([1 2]) = [0 0];
-pos(3) = pos(3)*x_scal;
-pos(4) = pos(4)*y_scal;
+old_pos = get(h,'Position');
+%pos([1 2]) = [0 0];
+pos = old_pos;
+pos(3) = old_pos(3)*x_scal;
+pos(4) = old_pos(4)*y_scal;
 
+hpos_old = old_pos(2)+old_pos(4); % pixel h position
+pos(2) = hpos_old-pos(4); %makes sure top position is preserved (hopefully)
+                   
 set(h, 'Position', pos);
 figure(h);
 

@@ -34,23 +34,35 @@ classdef stl_monitor < req_monitor
             
             % collect signals and params names
             [this.signals_in, this.params, this.p0] = STL_ExtractSignals(this.formula);
-            this.formula = set_out_signal_names(this.formula, this.signals_in);
+            input_signals = get_in_signal_names(this.formula);
+            output_signals = get_out_signal_names(this.formula);
+            if isempty(input_signals)&&isempty(output_signals) % if no IO specified, everybody is output and nobody input
+                this.formula = set_out_signal_names(this.formula, this.signals_in);
+            end
             this.init_P();
             
         end
         
-        function [] = set_mode(this, flag1, flag2)
-            switch flag1
-                case {'in','out'}
-                    this.inout = flag1;
-                otherwise
-                    this.inout = '';
-            end
-            switch flag2
-                case {'rel','abs'}
-                    this.relabs = flag2;
-                otherwise
-                    this.relabs = '';
+        function status = set_mode(this, flag1, flag2)            
+            input_signals = get_in_signal_names(this.formula);
+            if ~isempty(input_signals)
+                
+                
+                switch flag1
+                    case {'in','out'}
+                        this.inout = flag1;
+                    otherwise
+                        this.inout = '';
+                end
+                switch flag2
+                    case {'rel','abs'}
+                        this.relabs = flag2;
+                    otherwise
+                        this.relabs = '';
+                end
+                status = 1;
+            else
+                status = 0;   % modes are irrelevant
             end
         end
         
@@ -116,7 +128,12 @@ classdef stl_monitor < req_monitor
         
         function plot_full_diagnostics(this,F,phi)
             % Assumes F has data about this formula
-            this.explain();
+            
+            itraj = F.BrSet.P.traj_ref(F.ipts);
+            time = F.BrSet.P.traj{itraj}.time;
+            X = F.BrSet.GetSignalValues(this.signals_in, itraj);
+            p = F.BrSet.GetParam(this.params, F.ipts);
+            this.explain(time, X,p);
             
             if nargin<3
                 phi=this.formula;

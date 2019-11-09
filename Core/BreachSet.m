@@ -437,11 +437,10 @@ classdef BreachSet < BreachStatus
             % update domain of output parameters
             if ~isempty(pg.domain_out)
                for ip =1:numel(pg.params_out)
-                   this.SetDomain(pg.params_out{ip}, pg.domain_out{ip});                   
+                   this.SetDomain(pg.params_out{ip}, pg.domain_out(ip));                   
                end
             end
-                
-            
+                            
             this.ApplyParamGens();
         end
         
@@ -467,6 +466,9 @@ classdef BreachSet < BreachStatus
                        ip_out = FindParam(this.P, pg.params_out);
                        this.P.pts(ip_out,:) = p_out; 
                     end
+                end
+                if ~isempty(ig)
+                   this.P = Preset_traj_ref(this.P);
                 end
             end
         end
@@ -1140,8 +1142,9 @@ classdef BreachSet < BreachStatus
                 this.P = SConcat(Pold, newP);
             else
                 this.P = newP;
-            end
+            end            
             this.CheckinDomainParam();
+            this.ApplyParamGens();
         end
                 
         %% Concatenation, ExtractSubset - needs some additional compatibility checks...

@@ -689,9 +689,16 @@ classdef BreachProblem < BreachStatus
         %% Objective wrapper        
         
         function [obj, cval] = objective_fn(this,x)
-            % For falsification, default objective_fn is simply robust satisfaction of the least
+            % For falsification, default objective_fn is mostly robust satisfaction of the least
             this.robust_fn(x);
             robs = this.Spec.traces_vals;
+            
+            % 
+            IsVac_idx = isinf(robs);
+            if any(IsVac_idx)
+                robs(IsVac_idx) = this.Spec.traces_vals_vac(IsVac_idx); % note: if this is NaN, will get back to Inf below...                 
+            end            
+            
             if (~isempty(this.Spec.traces_vals_precond))
                 num_tr = size(this.Spec.traces_vals_precond,1);
                 precond_robs = zeros(num_tr,1);
@@ -875,7 +882,11 @@ classdef BreachProblem < BreachStatus
          end
         
         function Rlog = GetLog(this,varargin)
-            Rlog = this.GetBrSet_Logged(varargin{:});
+            if isempty(this.X_log)
+                Rlog =[];
+            else
+                Rlog = this.GetBrSet_Logged(varargin{:});
+            end
         end
         
         function Rbest = GetBest(this,varargin)

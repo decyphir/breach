@@ -14,13 +14,13 @@ if opt.num_corners>0
     end
     res= this.solve_corners();
     if ~strcmp(this.display,'off')&&~this.stopping()
-        this.display_status();        
+        %this.display_status();        
         [~, admin_idx] = find(res.cval>=0);
         if ~isempty(admin_idx)
-            [~, best_idx] = min(res.fval(admin_idx));
+            [~, best_idx] = min(min(res.fval(:,admin_idx)));
             x_best_phase = res.X0(:,admin_idx(best_idx)); % best x for next phase
-            f_best_phase = res.fval(admin_idx(best_idx));
-            fprintf('Best value found during corners phase: %g with\n', f_best_phase);
+            f_best_phase = res.fval(:,admin_idx(best_idx));
+            fprintf('Best value found during corners phase: %g with\n', min(f_best_phase));
             this.Display_X(x_best_phase);
         else
             fprintf('No admissible variable found during corners phase. \n');
@@ -48,9 +48,9 @@ while ~this.stopping()
     %% Next best man
     [~, admin_idx] = find(res.cval>=0);
     if ~isempty(admin_idx)
-        [~, best_idx] = min(res.fval(admin_idx));
+        [~, best_idx] = min(min(res.fval(:,admin_idx)));
         x_best_phase = res.X0(:,admin_idx(best_idx)); % best x for next phase
-        f_best_phase = res.fval(admin_idx(best_idx));
+        f_best_phase = res.fval(:,admin_idx(best_idx));
     end
     
     %% Disp
@@ -59,13 +59,13 @@ while ~this.stopping()
     else
         if ~strcmp(this.display,'off')
             if ~isempty(admin_idx)
-                fprintf('Best value found during quasi-random phase: %g with\n', f_best_phase);
+                fprintf('Best value found during quasi-random phase: %g with\n', min(f_best_phase));
                 this.Display_X(x_best_phase);
             else
                 fprintf('No admissible variable found during quasi-random phase. \n');
                 f_best_phase = res.f;
                 x_best_phase = res.x;
-                fprintf('Best non admissible value found: %g with\n', f_best_phase);
+                fprintf('Best non admissible value found: %g with\n', min(f_best_phase));
                 this.Display_X(x_best_phase);
             end
         end
@@ -77,21 +77,21 @@ while ~this.stopping()
             fprintf('\nRUN LOCAL OPTIMIZATION\n');
         end
         
-        num_admin_before = numel(this.obj_log);
+        num_admin_before = size(this.obj_log,2);
         res = run_nelder_mead(this,opt,x_best_phase);
-        num_admin_after = numel(this.obj_log);
+        num_admin_after = size(this.obj_log,2);
 
         if ~strcmp(this.display,'off')
             if num_admin_after>num_admin_before
-                [f_best_phase, idx_best_phase] = min(this.obj_log(num_admin_before+1:num_admin_after));
+                [f_best_phase, idx_best_phase] = min(this.obj_log(:,num_admin_before+1:num_admin_after), [],2);
                 x_best_phase = this.X_log(:,num_admin_before+idx_best_phase);
-                fprintf('Best value found during local phase: %g with\n', f_best_phase);
+                fprintf('Best value found during local phase: %g with\n', min(f_best_phase));
                 this.Display_X(x_best_phase);
             else
                 fprintf('No admissible variable found during local phase. \n');
                 f_best_phase = res.fval;
                 x_best_phase = res.x;
-                fprintf('Best non admissible value found: %g with\n', f_best_phase);
+                fprintf('Best non admissible value found: %g with\n', min(f_best_phase));
                 this.Display_X(x_best_phase);
             end
         end

@@ -1,10 +1,10 @@
-function P = pRefine(P0, p, r)
+function P = pRefine(P0, p, r, step)
 % PREFINE refines the parameter set P by picking r initial points for the
 % Morris global sensitivity measure. These points are randomly chosen in
 % the grid with p levels (See Saltelli's Books, chapter 3 or 4). We use the
 % suggested value for Delta: p/(2(p-1))
 %
-% Usage:  Pr = pRefine(P, p, r)
+% Usage:  Pr = pRefine(P, p, r,step)
 %
 % Input:
 %   - P   the initial parameter set. Only the first set of value of P will
@@ -16,7 +16,7 @@ function P = pRefine(P0, p, r)
 %         simulation obtained by adding or removing p/(2(p+1)) to one
 %         parameter
 %   - r   the number of initial points for paths to generate
-%
+%   - step seed for quasi random sampling
 % Output:
 %   - Pr  the refined parameter set containing (k+1)*r parameter sets,
 %         where k=numel(P.dim). A field D is set in Pr, which indicates
@@ -35,6 +35,10 @@ function P = pRefine(P0, p, r)
 
 % define the admissible grid and pick points
 
+if ~exist('step', 'var')
+    step = 1;
+end
+
 P=SPurge(P0);
 
 k = numel(P0.dim);           % dimension
@@ -49,7 +53,7 @@ Stmp.epsi = (ngrid+1)/2*ones(k,1);
 Stmp.DimP = k;
 Stmp.DimX = k;
 
-Stmp = QuasiRefine(Stmp,r);
+Stmp = QuasiRefine(Stmp,r, step);
 Stmp.pts = floor(Stmp.pts)/(p-1);
 
 %intialization to avoid growth when in loop
@@ -80,9 +84,5 @@ if isfield(P0, 'traj')
 else
     P = Preset_traj_ref(P);
 end
-
-% Purge trajectories and properties
-%P = SPurge_props(P);
-%P = SPurge(P);
 
 end

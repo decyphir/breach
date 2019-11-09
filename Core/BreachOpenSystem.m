@@ -302,11 +302,22 @@ classdef BreachOpenSystem < BreachSystem
                 
                 this.InputGenerator.P = SetParam(this.InputGenerator.P,ig_params,pts_u); % FIXME: legacy use
                 this.InputGenerator.Sim(tspan);
-                
+                                
                 % if an inputspec is violated, sabotage U into NaN
                 if ~isempty(this.InputGenerator.Specs)
                     Uspecs = this.InputGenerator.Specs.values();
                     for ip = 1:numel(Uspecs)
+                        phi_u = Uspecs{ip};
+                        
+                        % Find parameters for phi_u and assign them to
+                        % InputGenerator before checking it
+                        params_phi_u =  fieldnames(get_params(phi_u));
+                        [idx_phi_u, found_u] = FindParam(this.P, params_phi_u);
+                        idx_phi_u = idx_phi_u(found_u>0);
+                        if ~isempty(idx_phi_u)                             
+                             this.InputGenerator.P = SetParam(this.InputGenerator.P,params_phi_u(found_u>0),pts(idx_phi_u));
+                        end
+                        
                         rob = this.InputGenerator.CheckSpec(Uspecs{ip});
                         if rob<0
                             this.InputGenerator.addStatus(1,'input_spec_false', 'A specification on inputs is not satisfied.')

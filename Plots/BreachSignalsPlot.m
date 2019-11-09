@@ -268,8 +268,7 @@ classdef BreachSignalsPlot < handle
                 req.plot_full_diagnostics(this);
             end
             
-            
-            
+           
         end
    
         function update_legend(this, ax)

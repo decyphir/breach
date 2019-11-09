@@ -614,9 +614,10 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 for ilg = 1:numel(logs_names)
                     if ~(ismember(logs_names{ilg}, sig_log))
                         signame = logs_names{ilg};
-                        if ~ismember(signame,sig_log)
+                        if ~ismember(signame,sig_log) % new signal
                             
                             sig = logs.getElement(signame);
+                            try 
                             if  isa(sig, 'Simulink.SimulationData.Signal')
                                 nbdim = size(sig.Values.Data,2);
                                 
@@ -629,6 +630,9 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                                         sig_log = {sig_log{:} signamei};
                                     end
                                 end
+                            end
+                            catch ME
+                                warning('BreachSimulinkSystem:unreadable_logged_signal', 'Could not collect data for logged signal %s.', signame); 
                             end
                         end
                     end
@@ -907,24 +911,32 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                     signame = logs_names{ilg};
                     sig = logs.getElement(signame);
                     if  isa(sig, 'Simulink.SimulationData.Signal')
-                        nbdim = size(sig.Values.Data,2);
-                        
-                        if (nbdim==1)
-                            [lia, loc]= ismember(signame, signals);
-                            if lia
-                                xx = interp1(sig.Values.Time',double(sig.Values.Data(:,1)),tout, 'linear','extrap');
-                                X(loc,:) = xx;
-                            end
-                        else
-                            for idim = 1:nbdim
-                                signamei = [signame '_' num2str(idim)  '_'];
-                                [lia, loc]= ismember(signamei, signals);
+                        try
+                            nbdim = size(sig.Values.Data,2);
+                            
+                            if (nbdim==1)
+                                [lia, loc]= ismember(signame, signals);
                                 if lia
-                                    xx = interp1(sig.Values.Time', double(sig.Values.Data(:,idim)),tout, 'linear','extrap') ;
+                                    xx = interp1(sig.Values.Time',double(sig.Values.Data(:,1)),tout, 'linear','extrap');
                                     X(loc,:) = xx;
                                 end
+                            else
+                                for idim = 1:nbdim
+                                    signamei = [signame '_' num2str(idim)  '_'];
+                                    [lia, loc]= ismember(signamei, signals);
+                                    if lia
+                                        xx = interp1(sig.Values.Time', double(sig.Values.Data(:,idim)),tout, 'linear','extrap') ;
+                                        X(loc,:) = xx;
+                                    end
+                                end
+                            end
+                        catch ME
+                            % TODO think about what if not...
+                            if ismember(signame, signals)
+                                warning('BreachSimulinkSystem:unreadable_logged_signal', 'Could not collect data for logged signal %s.', signame);
                             end
                         end
+                        
                     end
                 end
             end

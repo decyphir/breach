@@ -2,6 +2,7 @@ classdef param_gen < handle
     properties
         params
         domain
+        domain_out
         params_out
         p0  % default values for params
     end

@@ -91,7 +91,8 @@ if(isfield(P0, 'traj_to_compute') && isempty(P0.traj_to_compute))
     if isfield(P0, 'traj')&&isfield(P0, 'traj_ref') 
         for ipts = 1:size(P0.pts,2)
             if ~isequal( tspan(end), P0.traj{P0.traj_ref(ipts)}.time(1,end))
-                P0.traj_to_compute(ipts) = 1:numel(size(P0.pts,2));
+                P0 = rmfield(P0,'traj');
+                P0 = Preset_traj_ref(P0);
                 break;
             end
         end
