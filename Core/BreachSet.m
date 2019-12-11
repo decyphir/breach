@@ -306,8 +306,10 @@ classdef BreachSet < BreachStatus
             if size(values, 1)~= num_params
                 if size(values,1) == 1 && size(values,2 ) == num_params
                     values = values';
-                else
-                    error('SetParam:wrong_arguments_size', 'Dimension mismatch between values and parameters.');
+                elseif numel(values)==1
+                   values = repmat(values, num_params,1);
+                else                    
+                   error('SetParam:wrong_arguments_size', 'Dimension mismatch between values and parameters.');
                 end
             end
             

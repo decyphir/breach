@@ -85,7 +85,7 @@ if isa(varargin{1}, 'BreachOpenSystem')
     %recover domains
     handles.IG.Domains = handles.B.GetDomain(handles.IG.P.ParamList);    
     signal_names = handles.B.Sys.InputList;
-    if isstruct(varargin{2})||ischar(varargin{2})
+    if numel(varargin)>=2&&(isstruct(varargin{2})||ischar(varargin{2}))
         cfg_in = varargin{2};
         % Add reading contraints    
         if isfield(cfg_in,'constraints_cfg')
@@ -157,6 +157,7 @@ for isig= 1:numel(signal_names)
             if isig == 1
                 set(handles.popupmenu_signal_gen_type,'Value', idx);
             end
+            sg.p0 = handles.IG.GetParam(sg.params,1);
         else
             sgs = sg.split();
             for isg =1:numel(sgs)               

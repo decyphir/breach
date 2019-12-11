@@ -8,12 +8,16 @@ classdef BreachStatus < handle
     
     properties (Hidden)
         status = [] % unique integer id for the status
-        statusMap = containers.Map() % map with key and msg strings describing the status.
+        statusMap   % map with key and msg strings describing the status.
         logged_msg
         max_logged_msg=100
     end
     
     methods
+        function this = BreachStatus()
+            this.statusMap=containers.Map();
+        end
+        
         
         function  [my_name, name_found] = whoamI(this, default)
             name_found = false;

@@ -48,7 +48,7 @@ while ~this.stopping()
     %% Next best man
     [~, admin_idx] = find(res.cval>=0);
     if ~isempty(admin_idx)
-        [~, best_idx] = min(min(res.fval(:,admin_idx)));
+        [~, best_idx] = min(min(res.fval(:,admin_idx), [],1));
         x_best_phase = res.X0(:,admin_idx(best_idx)); % best x for next phase
         f_best_phase = res.fval(:,admin_idx(best_idx));
     end
@@ -108,7 +108,7 @@ if ~strcmp(this.display,'off')
     fprintf('\nEND OPTIMIZATION METAHEURISTICS\n');
 end
 
-this.setup_meta(opt);
+this.setup_global_nelder_mead(opt);
 
 end
 

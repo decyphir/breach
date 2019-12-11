@@ -77,6 +77,8 @@ classdef BreachSignalsPlot < handle
         
         end
                
+        
+        
         function DeleteAxes(this, pos)
             % DeleteAxe Remove axe  at specified position
             
@@ -94,13 +96,19 @@ classdef BreachSignalsPlot < handle
             end
         end
         
-        function AddSignals(this,sigs, ax)
+        function AddSignals(this,sigs, ax, itraces)
             if ischar(sigs)
                 sigs = {sigs};
             end
             
             if ~exist('ax', 'var')||isempty(ax)
                 ax = numel(this.Axes)+1;
+            end
+            
+            if ~exist('itraces', 'var')
+                itraces = this.ipts;
+            elseif strcmp(itraces, 'all')
+                itraces = 1:size(this.BrSet.P.pts,2);
             end
             
             if isnumeric(ax)
@@ -120,11 +128,20 @@ classdef BreachSignalsPlot < handle
             
             for is = 1:numel(sigs)
                 sig = sigs{is};
-                this.plot_signal(sig, ax);
+                this.plot_signal(sig, ax, itraces);
             end
             this.update_legend(ax);
             
         end
+        
+           
+        function PlotDiagnostics(this, req)
+            req.plot_full_diagnostics(this);
+            for iax = 1:numel(this.Axes)
+                this.update_legend(this.Axes(ia));
+            end            
+        end
+
         
         function int_false= HighlightFalse(this, sig, ax,inv)
             if ~exist('ax', 'var')||isempty(ax)
@@ -147,6 +164,53 @@ classdef BreachSignalsPlot < handle
             set(ax,'UserData', int_false);
             this.update_legend(ax);
             
+        end
+      
+        
+          function update_legend(this, ax)
+            l = legend('-DynamicLegend');
+            c = flipud(get(ax, 'Children'));
+            num_patch = 0;
+            lc = [];
+            st = {};
+            for idx = 1:numel(c)
+                if isa(c(idx),'matlab.graphics.primitive.Patch')
+                    if num_patch==0
+                        lc(end+1) = c(idx);
+                        patch_idx = numel(lc);
+                        st{end+1} = 'F';
+                        if isequal(c(idx).Color, [1 0 0])
+                            status = 0;
+                        end
+                    end
+                    num_patch = num_patch+1;
+                elseif isequal(c(idx).Marker, 'x')
+                    lc(end+1) = c(idx);
+                    if isequal(c(idx).Color, [1 0 0])
+                        st{end+1} = 'Possible worst value';
+                    else
+                        st{end+1} = 'Possible best value';
+                    end
+                else
+                    lst = get(c(idx), 'DisplayName');
+                    if ~ismember(lst, st)&&~isempty(lst)
+                        lc(end+1) = c(idx);
+                        st{end+1} = lst;
+                    end
+                end
+                    
+            end
+            
+            if num_patch>0
+                if status==0
+                    set(lc(patch_idx),'DisplayName' ,['Violation Interval(s) (' num2str(num_patch) ')']);
+                else
+                    set(lc(patch_idx),'DisplayName' ,['Satisfying Interval(s) (' num2str(num_patch) ')']);
+                end
+                st{patch_idx} = get(lc(patch_idx),'DisplayName'); 
+            end
+            l= legend(lc,st);
+            set(l, 'Interpreter', 'None');
         end
         
     end
@@ -265,50 +329,34 @@ classdef BreachSignalsPlot < handle
             end
             
             function ctxtfn_plot_full_diag(req, ~,~)
-                req.plot_full_diagnostics(this);
+                
+                this.PlotDiagnostics(req);
             end
             
            
         end
-   
-        function update_legend(this, ax)
-            l = legend('-DynamicLegend');
-            c = flipud(get(ax, 'Children'));
-            num_patch = 0;
-            lc = [];
-            st = {};
-            for idx = 1:numel(c)
-                if isa(c(idx),'matlab.graphics.primitive.Patch')
-                    if num_patch==0
-                        lc(end+1) = c(idx);
-                        patch_idx = numel(lc);
-                        st{end+1} = 'F';
-                    end
-                    num_patch = num_patch+1;
-                else
-                    lc(end+1) = c(idx);
-                    st{end+1} = get(c(idx), 'DisplayName');
-                end
-                    
-            end
-            
-            if num_patch>0
-                set(lc(patch_idx),'DisplayName' ,['Violations (' num2str(num_patch) ')']);
-                st{patch_idx} = get(lc(patch_idx),'DisplayName'); 
-            end
-            l= legend(lc,st);
-            set(l, 'Interpreter', 'None');
-        end
         
-        function plot_signal(this, sig, ax)
+        
+        function plot_signal(this, sig, ax, ipts)
+            if ~exist('ipts', 'var')
+               ipts= this.ipts;
+            end
             axes(ax);
             hold on;
-            itraj = this.BrSet.P.traj_ref(this.ipts);
-            time = this.BrSet.P.traj{itraj}.time;
-            sig_values = this.BrSet.GetSignalValues(sig, itraj);
-            if ~isempty(sig_values)
-                l = plot(time , sig_values, 'DisplayName', sig);
+            itraj = unique(this.BrSet.P.traj_ref(ipts), 'stable');
+            
+            for k = 1:numel(itraj)
+                time = this.BrSet.P.traj{itraj(k)}.time;
+                sig_values = this.BrSet.GetSignalValues(sig, itraj(k));
+                if ~isempty(sig_values)
+                    if k==1
+                        l = plot(time , sig_values, 'DisplayName', sig);
+                    else
+                        l = plot(time , sig_values);
+                    end
+                end
             end
+            
         end
               
     end

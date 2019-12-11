@@ -253,6 +253,11 @@ classdef BreachRequirement < BreachTraceSystem
                     end
                 end
             end
+            for ia = 1:numel(F.Axes)
+                F.update_legend(F.Axes(ia));
+            end        
+            
+            
         end
              
         function h = PlotSignals(this,varargin)
@@ -1033,7 +1038,7 @@ classdef BreachRequirement < BreachTraceSystem
             time = this.P.traj{it}.time;                        
             idx_sig_req = FindParam(this.P, req.signals);
             idx_par_req = FindParam(this.P, req.params);
-            p_in = this.P.traj{it}.param(1, idx_par_req);
+            p_in = this.P.traj{it}.param(1, idx_par_req)';
             if ~isempty(req.signals_in)
                 Xin = this.GetSignalValues(req.signals_in, it);
             else

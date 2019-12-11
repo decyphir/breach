@@ -11,7 +11,7 @@ opt = struct( ...
     'local_options', optimset('Display', 'off') ...
     );
 
-if nargin > 2
+if nargin >= 2
     opt = varargin2struct(opt, varargin{:});
 end
 

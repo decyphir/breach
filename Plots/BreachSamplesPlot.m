@@ -105,8 +105,7 @@ classdef BreachSamplesPlot < handle
             
             this.data.all_pts.idx = all_pts;
             
-            %% robustnesses of each requirement
-            
+            %% robustnesses of each requirement            
             if isa(this.BrSet, 'BreachRequirement')
                 this.data.req_names = {};
                 for ir = 1:numel(this.BrSet.req_monitors)
@@ -476,7 +475,7 @@ classdef BreachSamplesPlot < handle
                         plot_this = @plot_sum;
                     case 'num'
                         ydata_vac = this.data.vac_pts.v_num_vac;
-                        if strcmp(this.z_axis, none_z)
+                        if any(strcmp(this.z_axis, none_z))
                             plot_this = @plot_num;
                         end
                     otherwise
@@ -486,7 +485,7 @@ classdef BreachSamplesPlot < handle
                         else
                             ydata_vac  = B.GetParam(this.y_axis, vac_idx);
                         end
-                        if strcmp(this.z_axis, none_z)
+                        if any(strcmp(this.z_axis, none_z))
                             plot_this = @plot_param;
                         end
                 end
@@ -534,12 +533,12 @@ classdef BreachSamplesPlot < handle
                         plot_this=@plot_num;
                     case 'sum'
                         ydata_neg = this.data.neg_pts.v_sum_neg;
-                        if strcmp(this.z_axis, none_z)
+                        if any(strcmp(this.z_axis, none_z))
                             plot_this = @plot_sum;
                         end
                     case 'num'
                         ydata_neg = this.data.neg_pts.v_num_neg;
-                        if strcmp(this.z_axis, none_z)
+                        if any(strcmp(this.z_axis, none_z))
                             plot_this = @plot_num;
                         end
                     otherwise
@@ -549,7 +548,7 @@ classdef BreachSamplesPlot < handle
                         else
                             ydata_neg = B.GetParam(this.y_axis, neg_idx);
                         end
-                        if strcmp(this.z_axis, none_z)
+                        if any(strcmp(this.z_axis, none_z))
                             plot_this =  @plot_param;
                         end
                 end                
@@ -562,7 +561,7 @@ classdef BreachSamplesPlot < handle
                 end
                                 
             end
-            
+            leg = {};                
             plot_this();
             
             function plot_param()
@@ -604,8 +603,7 @@ classdef BreachSamplesPlot < handle
                 ylabel(this.y_axis, 'Interpreter', 'None');
                 zlabel(this.z_axis, 'Interpreter', 'None');
             end
-            
-            
+                        
             function plot_sum()
                 if has_pos&&~isempty(xdata_pos)
                     this.pos_plot = plot(xdata_pos,ydata_pos,'.g', 'MarkerSize', 20);
@@ -643,40 +641,45 @@ classdef BreachSamplesPlot < handle
                 ylabel(this.y_axis, 'Interpreter', 'None');
                 zlabel('Cumulative satisfactions/violations');
             end
-            
-            
+                        
             function plot_num()
-                leg = {};
+                
                 if has_pos&&~isempty(xdata_pos)
-                    if has_vac&&~isempty(xdata_vac)
-                        ydata_pos = this.data.pos_pts.v_num_pos;
-                        ydata_vac = this.data.vac_pts.v_num_vac;                        
-                        this.pos_plot = bar(xdata_pos, ydata_pos ,0.3,'g');
-                        hold on                                            
-                        this.vac_plot = bar(xdata_vac+.05, ydata_vac ,0.2,'m');                        
-                        leg = {'#Satisfied', '#Vacuous Sat.'};
-                    else
-                        ydata_pos = this.data.pos_pts.v_num_pos;
-                        this.pos_plot = bar(xdata_pos, ydata_pos ,0.3,'g');
-                        hold on                                            
-                        leg = {'#Satisfied'};
-                    end
+                    bar_pos()
                 end
                 
-                hold on;
-                grid on;
                 if has_neg&&~isempty(xdata_neg)
-                    ydata_neg = this.data.neg_pts.v_num_neg;
-                    this.neg_plot = bar(xdata_neg, ydata_neg ,0.3,'r');
-                    %set(gca, 'YLim', [min(ydata_neg)-.1, max(ydata_pos)+.1],  'Ytick', ceil(min(ydata_neg)-.1):1:floor(max(ydata_pos)+.1));
-                    leg = [leg {'#Falsified'}];
+                    bar_neg();
                 end
+                
+                grid on;
                 xlabel(this.x_axis, 'Interpreter', 'None');
                 ylabel('Num. requirement falsified/satisfied');
-                set(gca, 'XTick', 1:numel(this.data.all_pts.idx));
+                set(gca, 'XTick', 1:numel(this.data.all_pts.idx), 'XLim', [0 numel(this.data.all_pts.idx)+1]);
                 legend(leg);
             end
             
+            function bar_pos()
+                if has_vac&&~isempty(xdata_vac)
+                    ydata_pos = this.data.pos_pts.v_num_pos;
+                    ydata_vac = this.data.vac_pts.v_num_vac;
+                    this.pos_plot = bar([xdata_pos xdata_pos(end)+1], [ydata_pos nan] ,0.5,'g');
+                    hold on
+                    this.vac_plot = bar([xdata_vac xdata_vac(end)+1]+.1, [ydata_vac nan],0.4,'m');
+                    leg = {'#Satisfied', '#Vacuous Sat.'};
+                else
+                    ydata_pos = this.data.pos_pts.v_num_pos;
+                    this.pos_plot = bar([xdata_pos xdata_pos(end)+1] , [ydata_pos nan] ,0.5,'g');
+                    hold on
+                    leg =[leg {'#Satisfied'}];
+                end
+            end
+            
+            function bar_neg()
+                ydata_neg = this.data.neg_pts.v_num_neg;
+                this.neg_plot = bar([xdata_neg xdata_neg(end)+1], [ydata_neg nan] ,0.5,'r');                
+                leg = [leg {'#Falsified'}];                
+            end            
             
             function plot3_num()
                 if has_pos
@@ -779,33 +782,126 @@ classdef BreachSamplesPlot < handle
             end
             top_x = uimenu(cm, 'Label', ['Change x-axis']);
             uimenu(top_x, 'Label', 'idx','Callback',@(o,e)(this.set_x_axis('idx')));
-            for ip = 1:numel(this.data.variables)
-                uimenu(top_x, 'Label', this.data.variables{ip},'Callback',@(o,e)(this.set_x_axis(this.data.variables{ip})));
-            end
             
-            top_y = uimenu(cm, 'Label', ['Change y-axis']);
+            if numel(this.data.variables)<10
+                top_var = uimenu(top_x, 'Label', 'Variable');
+                for ip = 1:numel(this.data.variables)
+                    uimenu(top_var, 'Label', this.data.variables{ip},'Callback',@(o,e)(this.set_x_axis(this.data.variables{ip})));
+                end
+            else
+                num_var_in_menu = 0;                   
+                top_var = [];
+                some_var_left = true;
+                while some_var_left                    
+                    var_idx_start = num_var_in_menu+1;
+                    var_idx_end= min(numel(this.data.variables),num_var_in_menu+10);
+                    some_var_left = (var_idx_end ~= numel(this.data.variables));
+                    top_var(end+1) = uimenu(top_x, 'Label', sprintf(['Variable (%d - %d)'],var_idx_start, var_idx_end));
+                    for ip = var_idx_start:var_idx_end
+                        uimenu(top_var(end), 'Label', this.data.variables{ip},'Callback',@(o,e)(this.set_x_axis(this.data.variables{ip})));
+                    end                    
+                    num_var_in_menu = var_idx_end;
+                end
+                
+            end
+                                   
+            top_y = uimenu(cm, 'Label', ['Change y-axis']);                        
             uimenu(top_y, 'Label', 'Cumulative sums of robustness','Callback',@(o,e)(this.set_y_axis('sum')));
             uimenu(top_y, 'Label', 'Number of Sat/False req.','Callback',@(o,e)(this.set_y_axis('num')));
-            
-            
-            for ip = 1:numel(this.data.variables)
-                uimenu(top_y, 'Label', this.data.variables{ip},'Callback',@(o,e)(this.set_y_axis(this.data.variables{ip})));
+      
+            if numel(this.data.variables)<10
+                top_var = uimenu(top_y, 'Label', 'Variable');
+                for ip = 1:numel(this.data.variables)
+                    uimenu(top_var, 'Label', this.data.variables{ip},'Callback',@(o,e)(this.set_y_axis(this.data.variables{ip})));
+                end
+            else
+                num_var_in_menu = 0;                   
+                top_var = [];
+                some_var_left = true;
+                while some_var_left                    
+                    var_idx_start = num_var_in_menu+1;
+                    var_idx_end= min(numel(this.data.variables),num_var_in_menu+10);
+                    some_var_left = (var_idx_end ~= numel(this.data.variables));
+                    top_var(end+1) = uimenu(top_y, 'Label', sprintf(['Variable (%d - %d)'],var_idx_start, var_idx_end));
+                    for ip = var_idx_start:var_idx_end
+                        uimenu(top_var(end), 'Label', this.data.variables{ip},'Callback',@(o,e)(this.set_y_axis(this.data.variables{ip})));
+                    end                    
+                    num_var_in_menu = var_idx_end;
+                end
+                
             end
-            for ir = 1:numel(this.data.req_names)
-                uimenu(top_y, 'Label', this.data.req_names{ir},'Callback',@(o,e)(this.set_y_axis(this.data.req_names{ir})));
-            end
             
+            
+            lim = 6;
+            if numel(this.data.req_names)<lim
+                top_req_y = uimenu(top_y, 'Label', 'Requirement');
+                for ip = 1:numel(this.data.req_names)
+                    uimenu(top_req_y, 'Label', this.data.req_names{ip},'Callback',@(o,e)(this.set_y_axis(this.data.req_names{ip})));
+                end
+            else
+                num_req_in_menu = 0;                   
+                top_req_y = [];
+                some_req_left = true;                
+                while some_req_left                    
+                    req_idx_start = num_req_in_menu+1;
+                    req_idx_end= min(numel(this.data.req_names),num_req_in_menu+lim);
+                    some_req_left = (req_idx_end ~= numel(this.data.req_names));
+                    top_req_y(end+1) = uimenu(top_y, 'Label', sprintf(['Requirement (%d - %d)'],req_idx_start, req_idx_end));
+                    for ip = req_idx_start:req_idx_end
+                        uimenu(top_req_y(end), 'Label', this.data.req_names{ip},'Callback',@(o,e)(this.set_y_axis(this.data.req_names{ip})));
+                    end                    
+                    num_req_in_menu = req_idx_end;
+                end                
+            end           
             
             top_z = uimenu(cm, 'Label', ['Change z-axis']);
             uimenu(top_z, 'Label', none_z{1},'Callback',@(o,e)(this.set_z_axis(none_z{1})));
             uimenu(top_z, 'Label', 'sum','Callback',@(o,e)(this.set_z_axis('sum')));
-            for ip = 1:numel(this.data.variables)
-                uimenu(top_z, 'Label', this.data.variables{ip},'Callback',@(o,e)(this.set_z_axis(this.data.variables{ip})));
-            end
-            for ir = 1:numel(this.data.req_names)
-                uimenu(top_z, 'Label', this.data.req_names{ir},'Callback',@(o,e)(this.set_z_axis(this.data.req_names{ir})));
+            
+            if numel(this.data.variables)<10
+                top_var_z = uimenu(top_z, 'Label', 'Variable');
+                for ip = 1:numel(this.data.variables)
+                    uimenu(top_var_z, 'Label', this.data.variables{ip},'Callback',@(o,e)(this.set_z_axis(this.data.variables{ip})));
+                end
+            else
+                num_var_in_menu = 0;                   
+                top_var_z = [];
+                some_var_left = true;
+                while some_var_left                    
+                    var_idx_start = num_var_in_menu+1;
+                    var_idx_end= min(numel(this.data.variables),num_var_in_menu+10);
+                    some_var_left = (var_idx_end ~= numel(this.data.variables));
+                    top_var_z(end+1) = uimenu(top_z, 'Label', sprintf(['Variable (%d - %d)'],var_idx_start, var_idx_end));
+                    for ip = var_idx_start:var_idx_end
+                        uimenu(top_var_z(end), 'Label', this.data.variables{ip},'Callback',@(o,e)(this.set_z_axis(this.data.variables{ip})));
+                    end                    
+                    num_var_in_menu = var_idx_end;
+                end
+                
             end
             
+            lim = 6; 
+            if numel(this.data.req_names)<lim
+                top_req_z = uimenu(top_z, 'Label', 'Requirement');
+                for ip = 1:numel(this.data.req_names)
+                    uimenu(top_req_z, 'Label', this.data.req_names{ip},'Callback',@(o,e)(this.set_z_axis(this.data.req_names{ip})));
+                end
+            else
+                num_req_in_menu = 0;                   
+                top_req_z = [];
+                some_req_left = true;                
+                while some_req_left                    
+                    req_idx_start = num_req_in_menu+1;
+                    req_idx_end= min(numel(this.data.req_names),num_req_in_menu+lim);
+                    some_req_left = (req_idx_end ~= numel(this.data.req_names));
+                    top_req_z(end+1) = uimenu(top_z, 'Label', sprintf(['Requirement (%d - %d)'],req_idx_start, req_idx_end));
+                    for ip = req_idx_start:req_idx_end
+                        uimenu(top_req_z(end), 'Label', this.data.req_names{ip},'Callback',@(o,e)(this.set_z_axis(this.data.req_names{ip})));
+                    end                    
+                    num_req_in_menu = req_idx_end;
+                end                
+            end
+                                                
             set(cursor_h, 'UIContextMenu', cm);
             set(this.ax, 'UIContextMenu', cm);
             set(this.Fig, 'UIContextMenu', cm);

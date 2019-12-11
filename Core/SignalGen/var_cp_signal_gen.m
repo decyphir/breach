@@ -72,12 +72,9 @@ classdef var_cp_signal_gen < signal_gen
         
            this.params_domain = repmat(BreachDomain(), 1, numel(this.params));
            this.signals_domain = repmat(BreachDomain(), 1, numel(this.signals));
-     
-            
+                 
         end
-        
-        
-        
+                        
         function [cp_times, cp_values, t_bnd, cp_bnd] = get_cp(this, signal)
             
             i_sig = find(strcmp(signal,this.signals),1);
@@ -91,8 +88,7 @@ classdef var_cp_signal_gen < signal_gen
             cp_times = cp_values*0;
             for ic = 1:numel(cp_dt)
                cp_times(ic+1) = sum(cp_dt(1:ic));
-            end
-            
+            end            
                                    
             cp_bnd = [cp_values cp_values];
             t_bnd = [cp_times cp_times];
@@ -112,8 +108,7 @@ classdef var_cp_signal_gen < signal_gen
                        t_bnd(ic,1) = sum(t_bnd(1:ic,1));
                        t_bnd(ic,2) = sum(t_bnd(1:ic,2));                       
                    end
-                end
-                
+                end                
             end
            
         end
@@ -134,8 +129,12 @@ classdef var_cp_signal_gen < signal_gen
                 pts_x = pts_x(2*this.num_cp(i_cp):end);
                 
                 dt_cp = cp_values(2:2:end-1);
-                t_cp = unique( [0; cumsum(dt_cp)]);
                 x_values = cp_values(1:2:end);
+                dt_cp(dt_cp==0) = 1e-10;
+                t_cp = [0; cumsum(dt_cp)];
+                [t_cp, i_t_cp] = unique( [0; cumsum(dt_cp)], 'last');                
+                x_values = x_values(i_t_cp);
+
                 if numel(t_cp)==1
                     x = x_values(end)*ones(numel(time),1);
                 else
@@ -150,7 +149,7 @@ classdef var_cp_signal_gen < signal_gen
         function plot(this, signal, time)
             
             [t_cp, x_cp] = this.get_cp(signal);
-            time =  union(time, t_cp);
+            time =  sort([time t_cp']);
             plot@signal_gen(this,signal, time);
             
             % plot control points

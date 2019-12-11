@@ -460,17 +460,18 @@ classdef BreachDiagnostics
                     prev_time = tmp.times(1);
                     prev_value = tmp.values(1);
                     begin_time = inf;
+                    end_time = inf;
                     % The first sample satisfies phi and the operator is
                     % ev_I phi, or it violates phi and the operator is
                     % alw_I phi -- we have found a beginning of an
                     % explanation
                     if (prev_value >= 0 && operator == BreachOperator.EV)
                         begin_time = prev_time;
-                    elseif (prev_value < 0 && operator == BreachOperator.ALW);
+                    elseif (prev_value < 0 && operator == BreachOperator.ALW)
                         begin_time = prev_time;    
                     end
                 
-                    for(j=2:tmp_size)
+                    for j=2:tmp_size
                         current_time = tmp.times(j);
                         current_value = tmp.values(j);
                         
@@ -503,7 +504,7 @@ classdef BreachDiagnostics
                             out_implicant = out_implicant.addInterval(begin_time, end_time);
                         end
                         samples = in_implicant.getSignificantSamples();
-                        for(k=1:length(samples))
+                        for k=1:length(samples)
                             sample = samples(k);
                             if (sample.value == prev_value)
                                 out_implicant = out_implicant.addSignificantSample(prev_time, prev_value);
@@ -545,7 +546,7 @@ classdef BreachDiagnostics
             
             size = in_implicant.getIntervalsSize();
             % We want an explanation for each interval in the in_implicant
-            for(i = 1:size)
+            for i = 1:size
                 interval = in_implicant.getInterval(i);
                 
                 % We first restrict the search in signals in1 and in2
@@ -568,23 +569,35 @@ classdef BreachDiagnostics
                 old_v2 = out2_tmp.values(1);
                 old_value = TwoBitValue.getValue(old_v1,old_v2);
                 
-                for(j=2:length(out1_tmp.times))
-                    t = out1_tmp.times(j);
-                    new_v1 = out1_tmp.values(j);
-                    new_v2 = out2_tmp.values(j);
+                if length(out1_tmp.times)==1
+                    end_time = out1_tmp.times(1);
+                    end_idx = 1;
+                    new_v1 = out1_tmp.values(1);
+                    new_v2 = out2_tmp.values(1);
                     
                     new_value = TwoBitValue.getValue(new_v1,new_v2);
-                    
-                    if (new_value ~= old_value || j == length(out1_tmp.times))
-                        end_time = t;
-                        end_idx = j;
-                        [out1_implicant, out2_implicant] = BreachDiagnostics.diag_binary_plogic_update_implicants( ...
+                    [out1_implicant, out2_implicant] = BreachDiagnostics.diag_binary_plogic_update_implicants( ...
                             operator, old_value, out1_implicant, out2_implicant, begin_time, end_time, begin_idx, end_idx, out1_tmp, out2_tmp, samples);
-                        begin_time = t;
-                        begin_idx = j;
-                        old_value = new_value;
-                        old_v1 = new_v1;
-                        old_v2 = new_v2;
+                    
+                else
+                    for j=2:length(out1_tmp.times)
+                        t = out1_tmp.times(j);
+                        new_v1 = out1_tmp.values(j);
+                        new_v2 = out2_tmp.values(j);
+                        
+                        new_value = TwoBitValue.getValue(new_v1,new_v2);
+                        
+                        if (new_value ~= old_value || j == length(out1_tmp.times))
+                            end_time = t;
+                            end_idx = j;
+                            [out1_implicant, out2_implicant] = BreachDiagnostics.diag_binary_plogic_update_implicants( ...
+                                operator, old_value, out1_implicant, out2_implicant, begin_time, end_time, begin_idx, end_idx, out1_tmp, out2_tmp, samples);
+                            begin_time = t;
+                            begin_idx = j;
+                            old_value = new_value;
+                            old_v1 = new_v1;
+                            old_v2 = new_v2;
+                        end
                     end
                 end
             end
@@ -894,20 +907,26 @@ classdef BreachDiagnostics
             out.values = v_out;     
         end    
         
-        function [out1, out2] = diag_two_signals_normalize_sampling(in1, in2)
+        function [in1, in2] = diag_two_signals_normalize_sampling(in1, in2)
             t1 = in1.times;
             v1 = in1.values;
             t2 = in2.times;
             v2 = in2.values;
             
             t_tmp = union(t1, t2, 'sorted');
-            v1_tmp = interp1(t1, v1, t_tmp, 'previous');
-            v2_tmp = interp1(t2, v2, t_tmp, 'previous');
             
-            out1.times = t_tmp;
-            out1.values = v1_tmp;
-            out2.times = t_tmp;
-            out2.values = v2_tmp;
+            if ~isequal(t_tmp,t1)
+                v1_tmp = interp1(t1, v1, t_tmp, 'previous');
+                in1.times = t_tmp;
+                in1.values = v1_tmp;
+            end
+            
+            if ~isequal(t_tmp,t2)
+                v2_tmp = interp1(t2, v2, t_tmp, 'previous');
+                in2.times = t_tmp;
+                in2.values = v2_tmp;
+            end
+            
         end
 
     end

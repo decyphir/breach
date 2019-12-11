@@ -56,7 +56,6 @@ classdef var_step_signal_gen < signal_gen
             this.cp = cp;
             this.params = {};
             this.method = method;
-            this.p0 = zeros(1,cp*numel(signals)+cp-1);
             
             % fill in time steps params
             for kstep = 1:cp-1
@@ -71,6 +70,8 @@ classdef var_step_signal_gen < signal_gen
             end
             if ~isempty(p0)
                 this.p0 = p0;
+            else
+                this.p0 = zeros(numel(this.params),1);
             end
                        
            this.params_domain = repmat(BreachDomain(), 1, numel(this.params));
