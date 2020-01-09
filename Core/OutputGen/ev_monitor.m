@@ -8,7 +8,7 @@ classdef ev_monitor < alw_monitor
             v__ = max(Xout__(end,idx));
         end
         
-        function st = disp(this)
+        function varargout = disp(this)
             phi = this.formula;
             st = sprintf(['%s := ev_%s (%s)\n'], this.formula_id,this.interval,  disp(phi,1));
             
@@ -21,8 +21,12 @@ classdef ev_monitor < alw_monitor
             end
             
             if nargout == 0
+                varargout = {};
                 fprintf(st);
+            else
+                varargout{1} = st;
             end
+            
         end
     end
  end

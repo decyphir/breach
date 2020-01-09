@@ -25,12 +25,12 @@ br_all_dir = which('InstallBreach', '-all');
 nb_dir = numel(br_all_dir);   
 if  nb_dir>1
     for idir =  2: nb_dir
-        br_old_dir =   fileparts(br_all_dir{idir});
-        all_paths = strsplit(path, ';');
+        br_old_dir =   fileparts(br_all_dir{idir});        
+        all_paths = strsplit(path,pathsep);
         nb_paths = numel(all_paths);
         rm_path_list = {};
         for ii = 1:nb_paths
-            if strcmp(all_paths{ii}(1:min(numel(br_old_dir),end)),br_old_dir)
+            if regexp(all_paths{ii},br_old_dir)
                 %disp(['              ' all_paths{ii}]);
                 rm_path_list = [rm_path_list all_paths{ii}];
             end

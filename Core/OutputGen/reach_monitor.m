@@ -61,9 +61,20 @@ classdef reach_monitor < req_monitor
             
             [t, Xout] = this.computeSignals(t, Xin, pin);
         end
+           
+ 
+
+        function varargout = disp(this)
+            st= [this.name ': Reach monitor for signal ' this.signals_in{1} '.\n'];
             
-        function st = disp(this)
-            st= [this.name ': Reach monitor for signal ' this.signals_in{1} '.\n'];            
+            
+            if nargout == 0
+                varargout = {};
+                fprintf(st);
+            else
+                varargout{1} = st;
+            end
+            
         end
         
     end

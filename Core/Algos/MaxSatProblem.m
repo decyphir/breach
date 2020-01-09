@@ -91,7 +91,7 @@ classdef MaxSatProblem < BreachProblem
                     if isempty(this.BrSet_True)
                         this.BrSet_True = this.BrSys.copy();
                     else
-                        this.BrSet_True.Concat(this.BrSys);
+                        this.BrSet_True.Concat(this.BrSys, true);
                     end
                 end
             end

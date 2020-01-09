@@ -388,9 +388,7 @@ classdef BreachOpenSystem < BreachSystem
               end
             end            
         end
-        
-        
-        
+                        
         function hsi = SetInputGenGUI(varargin)
             hsi= signal_gen_gui(varargin{:});
         end
@@ -400,7 +398,7 @@ classdef BreachOpenSystem < BreachSystem
             idx = idx(status~=0);
         end
         
-        function st = PrintSignals(this)
+        function varargout = PrintSignals(this)
             st = '';
             if (~this.hasTraj())
                 st =  sprintf('---  SIGNALS  ---\n');
@@ -422,8 +420,11 @@ classdef BreachOpenSystem < BreachSystem
                 st = [st this.PrintAliases()];
             end
             
-            if nargout==0
+            if nargout == 0
+                varargout = {};
                 fprintf(st);
+            else
+                varargout{1} = st;
             end
             
         end

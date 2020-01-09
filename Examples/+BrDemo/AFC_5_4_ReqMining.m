@@ -40,7 +40,4 @@ mine_pb.synth_pb.solver_options.monotony = 1;
 mine_pb.solve();
 
 %% Requirement Mining
-% The mining ends when the falsifier fails. Though, we can change the
-% falsifier and resume mining where it stops for more confidence:
-mine_pb.falsif_pb.solver_options.nb_new_trials = 100; 
-mine_pb.solve(); % restart
+% The mining ends when the falsifier fails. 

@@ -285,7 +285,6 @@ switch Sys.type
         
         
         Pf.traj_to_compute = [];
-        %Pf.traj_ref = 1:numel(Pf.traj); % fill field traj_ref (one to one mapping)
         
     otherwise
         
@@ -294,7 +293,7 @@ switch Sys.type
         if iscell(tspan)
             if(numel(tspan)==2)
                 T = [tspan{1} tspan{2} tspan{2}];  % not really nice.. should be
-                % changed some day
+                                                   % changed some day
             else
                 T = cell2mat(tspan);
             end

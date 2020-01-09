@@ -45,7 +45,7 @@ classdef BreachSignalsPlot < handle
             if numel(this.Axes)>0
                 Xlim = get(this.Axes(1),'XLim');
             end
-            for ia = 1:num_ax_old;
+            for ia = 1:num_ax_old
                 if ia < pos
                     subplot(num_ax_old+1, 1, ia, this.Axes(ia))
                 else
@@ -76,9 +76,7 @@ classdef BreachSignalsPlot < handle
             set(h,'Motion','horizontal','Enable','off');
         
         end
-               
-        
-        
+                              
         function DeleteAxes(this, pos)
             % DeleteAxe Remove axe  at specified position
             
@@ -133,15 +131,13 @@ classdef BreachSignalsPlot < handle
             this.update_legend(ax);
             
         end
-        
-           
+                   
         function PlotDiagnostics(this, req)
             req.plot_full_diagnostics(this);
-            for iax = 1:numel(this.Axes)
+            for ia = 1:numel(this.Axes)
                 this.update_legend(this.Axes(ia));
             end            
         end
-
         
         function int_false= HighlightFalse(this, sig, ax,inv)
             if ~exist('ax', 'var')||isempty(ax)
@@ -165,8 +161,7 @@ classdef BreachSignalsPlot < handle
             this.update_legend(ax);
             
         end
-      
-        
+              
           function update_legend(this, ax)
             l = legend('-DynamicLegend');
             c = flipud(get(ax, 'Children'));
@@ -179,8 +174,10 @@ classdef BreachSignalsPlot < handle
                         lc(end+1) = c(idx);
                         patch_idx = numel(lc);
                         st{end+1} = 'F';
-                        if isequal(c(idx).Color, [1 0 0])
+                        if isequal(c(idx).FaceColor, [1 0 0])
                             status = 0;
+                        else
+                            status = 1; 
                         end
                     end
                     num_patch = num_patch+1;

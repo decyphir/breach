@@ -170,7 +170,7 @@ classdef FalsificationProblem < BreachProblem
                             this.BrSet_False = this.Spec.BrSet.copy();
                         end
                     else
-                        this.BrSet_False.Concat(this.BrSys);
+                        this.BrSet_False.Concat(this.BrSys, true);
                     end
                 end
             end

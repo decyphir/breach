@@ -224,7 +224,7 @@ classdef BreachImportData < BreachSignalGen
             
         end
         
-        function st = disp(this)
+        function varargout = disp(this)
             if isfield(this.P, 'traj')
                 nb_traj = numel(this.P.traj);
             else
@@ -233,8 +233,12 @@ classdef BreachImportData < BreachSignalGen
             
             st = ['BreachImportData ' this.whoamI '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' unique traces.'];
             
-            if nargout ==0
-                disp(st);
+            
+            if nargout == 0
+                varargout = {};
+                fprintf(st);
+            else
+                varargout{1} = st;
             end
         end
         

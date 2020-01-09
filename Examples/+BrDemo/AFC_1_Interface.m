@@ -25,7 +25,9 @@ kp = 0.04;
 ki = 0.14;
 
 %%
-% They will be discovered automatically and included in the interface. 
+% They will be discovered automatically and included in the interface. Good
+% practice is to create a separate script initializing parameters of
+% concern, see for example BrDemo.InitAFCparams.
 
 %% Creating an Interface Object (1)
 %
@@ -55,7 +57,7 @@ BrAFC_less_params.PrintParams();
 % Similarly,we may want to have only a few signals among the ones logged
 % to be visible:
 
-BrAFC_less_signals = BreachSimulinkSystem(mdl, 'all', [], ... % 'all' means detects all visible paremeters
+BrAFC_less_signals = BreachSimulinkSystem(mdl, 'all', [], ... % 'all' means detects all visible parameters
                                              {'Pedal_Angle','Engine_Speed', 'AF'}); 
 BrAFC_less_signals.PrintAll;
 
@@ -74,8 +76,8 @@ BrAFC.PrintSignals();
 
 %%
 % Note that signal and parameter names in the model should remain simple. 
-% Preferably they shoul be valid variable id names, i.e., using only 
-% underscores and alphanumerical characters (a-z, A-Z, 0-9 or '_').  
+% Preferably valid variable id names, i.e., using only underscores and 
+% alphanumerical characters (a-z, A-Z, 0-9 or '_').  
 
 
 %% Input Signals

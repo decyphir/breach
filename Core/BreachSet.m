@@ -69,12 +69,12 @@ classdef BreachSet < BreachStatus
         % representation to a.) allow the query of any cell and b.) know
         % the total number of cells that are populated with points.
         % This DOES NOT permit an easy way to check a region (e.g., a
-        % hybperbox) that contains points.
+        % hyperbox) that contains points.
         % In the future, we can switch this for BDDs. A BDD representation
         % will allow us to do things like use an SMT query to determine
         % whether points in a region (hyperbox) are populated.
-        EpsGridMapObj = containers.Map('UniformValues',false);
-        DeltaGridMapObj = containers.Map('KeyType','char','ValueType','int32');
+        EpsGridMapObj
+        DeltaGridMapObj
     end
    
     methods (Hidden=true)
@@ -98,6 +98,10 @@ classdef BreachSet < BreachStatus
             this.sigMap = containers.Map();
             this.sigMapInv = containers.Map();
             this.AliasMap = containers.Map(); 
+            
+            this.EpsGridMapObj = containers.Map('UniformValues',false);
+            this.DeltaGridMapObj = containers.Map('KeyType','char','ValueType','int32');
+
             switch nargin
                 case 0
                     return;
@@ -321,7 +325,8 @@ classdef BreachSet < BreachStatus
                 if this.hasTraj()
                     traj= this.P.traj;
                     saved_traj = true;
-                 end
+                    saved_Xf = this.P.Xf;
+                end
                 idx = N2Nn(2, [num_pts num_values]);
                 old_pts = this.P.pts;
                 this.P = Sselect(SPurge(this.P),1);
@@ -330,6 +335,7 @@ classdef BreachSet < BreachStatus
                 this.P.selected = zeros(1, size(idx, 2));
                 if saved_traj
                     this.P.traj = traj;
+                    this.P.Xf = saved_Xf;
                 end
                 this.P = SetParam(this.P, params, values(:, idx(2,:)));
             else  % legacy, i.e., not combine version
@@ -596,7 +602,7 @@ classdef BreachSet < BreachStatus
             [params, ipr] = GetVariables(this);
             if ~isempty(params)
                 req_params = this.GetPropParamList();
-                [params, i_diff] = setdiff(params, req_params);
+                [params, i_diff] = setdiff(params, req_params, 'stable');
                 ipr = ipr(i_diff);
             end
         end
@@ -605,7 +611,7 @@ classdef BreachSet < BreachStatus
             [params, ipr] = GetVariables(this);
             if ~isempty(params)
                 req_params = this.GetPropParamList();
-                [params, i_intersect] = intersect(params, req_params);
+                [params, i_intersect] = intersect(params, req_params, 'stable');
                 ipr = ipr(i_intersect);
             end
         end
@@ -703,8 +709,7 @@ classdef BreachSet < BreachStatus
         function ResetSigMap(this)
             this.sigMap = containers.Map();
             this.sigMapInv = containers.Map();
-            this.AliasMap =containers.Map();
-      
+            this.AliasMap =containers.Map();      
         end
 
         function PrintSigMap(this)
@@ -1008,6 +1013,21 @@ classdef BreachSet < BreachStatus
             % process parameters
             if ischar(params)
                 params = {params};
+            elseif isnumeric(params)                
+                switch nargin
+                    case 2 % Sample randomly 
+                    case 3 
+                        method = num_samples;                        
+                    case 4
+                        opt_multi = method;
+                        method = num_samples;
+                    case 5
+                        max_num_samples = opt_multi;
+                        opt_multi = method;
+                        method = num_samples;
+                end
+                num_samples =params;                    
+                params = this.GetVariables();
             end
             
             idx_param = FindParam(this.P, params);
@@ -1437,8 +1457,7 @@ classdef BreachSet < BreachStatus
                 end
             end                       
         end
-        
-        
+               
         %% Coverage
         function [cnt, grd1, grd2] = GetSignalCoverage(this,sigs, delta1,delta2)
             % 1d or 2d
@@ -1951,20 +1970,24 @@ classdef BreachSet < BreachStatus
             end
         end
         
-        function st = PrintSignals(this)
+        function varargout = PrintSignals(this)
             st = sprintf('---- SIGNALS ----\n');
             for isig = 1:this.P.DimX
                 st = sprintf([st '%s %s\n'], this.P.ParamList{isig}, this.get_signal_attributes_string(this.P.ParamList{isig}));
             end
             st = sprintf([st '\n']);
             st = [st this.PrintAliases()];
-            if nargout==0
+            
+            if nargout == 0
+                varargout = {};
                 fprintf(st);
+            else
+                varargout{1} = st;
             end
             
         end
         
-        function st = PrintAliases(this)
+        function varargout = PrintAliases(this)
             st = '';
             if ~isempty(this.sigMap)
                 st = sprintf('---- ALIASES ----\n');
@@ -1977,28 +2000,30 @@ classdef BreachSet < BreachStatus
                         sig =this.sigMapInv(keys{ik});
                     end
                     
-                     [idx, found] = this.FindSignalsIdx(sig);
-                     if found
-                         sig = this.P.ParamList{idx};
-                         aliases = setdiff(this.getAliases(sig),sig);
-                         al_st = cell2mat(cellfun(@(c) ([ c ', ']), aliases, 'UniformOutput', false));
-                         al_st = al_st(1:end-2);
-                     else
-                         aliases = setdiff(this.getAliases(sig),sig);
-                         al_st = cell2mat(cellfun(@(c) ([ c ', ']), aliases, 'UniformOutput', false));
-                         al_st = al_st(1:end-2);
-                         al_st = [al_st(1:end-2) ' (not linked to data)' ];
-                     end
-                     if ~ismember(sig, printed)
+                    [idx, found] = this.FindSignalsIdx(sig);
+                    if found
+                        sig = this.P.ParamList{idx};
+                        aliases = setdiff(this.getAliases(sig),sig);
+                        al_st = cell2mat(cellfun(@(c) ([ c ', ']), aliases, 'UniformOutput', false));
+                        al_st = al_st(1:end-2);
+                    else
+                        aliases = setdiff(this.getAliases(sig),sig);
+                        al_st = cell2mat(cellfun(@(c) ([ c ', ']), aliases, 'UniformOutput', false));
+                        al_st = al_st(1:end-2);
+                        al_st = [al_st(1:end-2) ' (not linked to data)' ];
+                    end
+                    if ~ismember(sig, printed)
                         st = sprintf([st '%s <--> %s\n'], sig, al_st );
                         printed = [printed {sig} aliases];
                     end
-                 end
-                st = sprintf([st '\n']);
-                if nargout==0
-                    fprintf(st);
                 end
-            
+                st = sprintf([st '\n']);
+                if nargout == 0
+                    varargout = {};
+                    fprintf(st);
+                else
+                    varargout{1} = st;
+                end
             end
         end
                 
@@ -2015,7 +2040,7 @@ classdef BreachSet < BreachStatus
             end
         end
         
-        function st = PrintParams(this,params, header)
+        function varargout = PrintParams(this,params, header)
             st = '';
             nb_pts= this.GetNbParamVectors();
             
@@ -2049,10 +2074,28 @@ classdef BreachSet < BreachStatus
             
             st = [st sprintf('\n')];
             
-            if nargout==0
+            if nargout == 0
+                varargout = {};
                 fprintf(st);
+            else
+                varargout{1} = st;
+            end
+            
+        end
+        
+        function varargout = PrintAll(this)
+            this.UpdateSignalRanges();
+            st = this.PrintSignals();
+            st = sprintf([st  this.PrintParams()]);
+            
+            if nargout == 0
+                varargout = {};
+                fprintf(st);
+            else
+                varargout{1} = st;
             end
         end
+          
         
         %% Misc
         function s= isSignal(this,params)
@@ -2076,10 +2119,15 @@ classdef BreachSet < BreachStatus
         function Reset(this)
             % BreachSet.Reset()
             
-            this.P = Sselect(this.P,1);
+            this.P = Sselect(this.P,1);            
+            p_req  = this.P.pts(this.P.DimP+1:end,1);
+            
             this.P = CreateParamSet(this.P);
             try
                 this.P.pts = this.Sys.p;
+                if ~isempty(p_req)
+                   this.P.pts = [this.P.pts; p_req];
+                end
                 % Add property params
                 props = this.Specs.values;
                 for i=1:numel(props)
@@ -2310,7 +2358,7 @@ classdef BreachSet < BreachStatus
             
             if this.snap_to_grid
                 if this.EpsGridMapObj.isKey(mat2str(eps_grid_element))
-                    % fprintf('\nValue already present in grid element %s.\n',mat2str(eps_grid_element));
+                    %fprintf('\nValue already present in grid element %s.\n',mat2str(eps_grid_element));
                     if nargout>0
                         varargout{1} = false;
                     end
@@ -2338,6 +2386,7 @@ classdef BreachSet < BreachStatus
                 else
                     this.EpsGridMapObj(mat2str(eps_grid_element)) = [new_point];
                 end
+                
                 if this.DeltaGridMapObj.isKey(mat2str(delta_grid_element))
                     previous_grid_members = this.DeltaGridMapObj(mat2str(delta_grid_element));
                     this.DeltaGridMapObj(mat2str(delta_grid_element)) = previous_grid_members + 1;
@@ -2365,11 +2414,20 @@ classdef BreachSet < BreachStatus
         function DisplayPoints(this)
             % Display all points in the list
             KeysSet = this.EpsGridMapObj.keys;
-            fprintf('\nCell: Occupancy\n');
+            fprintf('\nCell: Epsi Occupancy\n');
             for ind = 1:length(KeysSet);
                 ValueTemp = this.EpsGridMapObj(KeysSet{ind});
                 fprintf('%s: %s \n',KeysSet{ind}, mat2str(ValueTemp'));
             end
+            
+            KeysSet = this.DeltaGridMapObj.keys;
+            fprintf('\nCell: Delta Occupancy\n');
+            for ind = 1:length(KeysSet);
+                ValueTemp = this.DeltaGridMapObj(KeysSet{ind});
+                fprintf('%s: %s \n',KeysSet{ind}, mat2str(ValueTemp'));
+            end
+                                                
+            
         end
         
         function total_cells = TotalCellCount(this)
@@ -2390,9 +2448,9 @@ classdef BreachSet < BreachStatus
             % for the parameter space
             
             % Total number of cells in the parameter space
-            total_cells = this.TotalCellCount;
+            total_cells = this.TotalCellCount();
             % Next, obtain the total number of populated cells
-            pop_cells = this.NumPoints;
+            pop_cells = this.NumPoints();
             coverage = log(pop_cells)/log(total_cells);
         end
         
@@ -2400,9 +2458,9 @@ classdef BreachSet < BreachStatus
             % Compute the cell occupancy for the parameter space
             
             % Total number of cells in the parameter space
-            total_cells = this.TotalCellCount;
+            total_cells = this.TotalCellCount();
             % Next, obtain the total number of populated cells
-            pop_cells = this.NumPoints;
+            pop_cells = this.NumPoints();
             coverage = pop_cells/total_cells;
         end
         
@@ -2443,9 +2501,7 @@ classdef BreachSet < BreachStatus
     
     
     
-    methods (Access=protected)
-        
-        
+    methods (Access=protected)                
         
         function Xp = get_signals_from_traj(this, traj, names)
             idx = FindParam(this.P, names); %  not fool proof, but not supposed to be used by fools

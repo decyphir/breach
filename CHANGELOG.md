@@ -1,5 +1,14 @@
 Breach Change log
 
+# Release 1.7.0
+
+- binaries added removes need to run InstallBreach for windows and linux
+- added ComputeMorrisSensi for sensitivity analysis
+- Support for IA-STL 
+- Various improvement in BreachProblem
+- Simple pseudo random solver 
+
+
 # Release 1.6.2
 
 - Enveloppe computation in signal_gen_gui works with constraints

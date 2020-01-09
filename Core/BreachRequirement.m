@@ -110,7 +110,7 @@ classdef BreachRequirement < BreachTraceSystem
             this.P = SPurge(this.P);
             if size(this.P.pts,2)>1
                this.P.pts = unique(this.P.pts', 'rows')';
-               this.P.epsi = this.P.epsi(:,1:size(this.P.pts,2));               
+               this.P.epsi = this.P.epsi(:,1:size(this.P.pts,2));                  
             end
             this.P.selected = zeros(1, size(this.P.pts,2));
             this.P = Preset_traj_ref(this.P);
@@ -174,8 +174,11 @@ classdef BreachRequirement < BreachTraceSystem
             % conjunction)
             
             % Collect traces from context and eval them
-            [traces_vals, traces_vals_precond, traces_vals_vac] = this.evalAllTraces(varargin{:});
-            
+            if isfield(this.Sys, 'use_parallel')&&this.Sys.use_parallel
+                [traces_vals, traces_vals_precond, traces_vals_vac] = this.parevalAllTraces(varargin{:});
+            else
+                [traces_vals, traces_vals_precond, traces_vals_vac] = this.evalAllTraces(varargin{:});
+            end
             % A BreachRequirement must return a single value
             global_val = min(min(traces_vals));
             global_precond_val = min(min(traces_vals_precond));
@@ -185,38 +188,86 @@ classdef BreachRequirement < BreachTraceSystem
         function [traces_vals, traces_vals_precond, traces_vals_vac] =evalAllTraces(this,varargin)
             % BreachRequirement.evalAllTraces collect traces and apply
             % evalTrace
-            this.getBrSet(varargin{:});
-            num_traj = numel(this.P.traj);
-            traces_vals = nan(num_traj, numel(this.req_monitors));
-            traces_vals_vac = nan(num_traj, numel(this.req_monitors));                    
-            traces_vals_precond = nan(num_traj, numel(this.precond_monitors));
-            
-            % eval pre conditions
-            if ~isempty(this.precond_monitors)
+            new= this.getBrSet(varargin{:});
+            if new
+                num_traj = numel(this.P.traj);
+                traces_vals = nan(num_traj, numel(this.req_monitors));
+                traces_vals_vac = nan(num_traj, numel(this.req_monitors));
+                traces_vals_precond = nan(num_traj, numel(this.precond_monitors));
+                
+                % eval pre conditions
+                if ~isempty(this.precond_monitors)
+                    for it = 1:num_traj
+                        for ipre = 1:numel(this.precond_monitors)
+                            req = this.precond_monitors{ipre};
+                            traces_vals_precond(it, ipre)  = eval_req(this,req,it);
+                        end
+                    end
+                end
+                
+                % eval requirement
                 for it = 1:num_traj
-                    for ipre = 1:numel(this.precond_monitors)
+                    if any(traces_vals_precond(it,:)<0)
+                        traces_vals(it, :)  = NaN;
+                    else
+                        for ipre = 1:numel(this.req_monitors)
+                            req = this.req_monitors{ipre};
+                            [traces_vals(it, ipre), traces_vals_vac(it, ipre)]  = eval_req(this,req,it);
+                        end
+                    end
+                end
+                this.traces_vals_precond = traces_vals_precond;
+                this.traces_vals_vac = traces_vals_vac;
+                this.traces_vals = traces_vals;
+            else
+                traces_vals_precond = this.traces_vals_precond;
+                traces_vals_vac = this.traces_vals_vac;
+                traces_vals = this.traces_vals;
+            end
+        end
+        
+        function [traces_vals, traces_vals_precond, traces_vals_vac] =parevalAllTraces(this,varargin)
+            % BreachRequirement.evalAllTraces collect traces and apply
+            % evalTrace
+            new= this.getBrSet(varargin{:});
+            if new
+                num_traj = numel(this.P.traj);
+                traces_vals = nan(num_traj, numel(this.req_monitors));
+                traces_vals_vac = nan(num_traj, numel(this.req_monitors));
+                traces_vals_precond = nan(num_traj, numel(this.precond_monitors));
+                
+                % eval pre conditions
+                num_precond_monitors = numel(this.precond_monitors);
+                if ~isempty(this.precond_monitors)
+                    for ipre = 1:num_precond_monitors
                         req = this.precond_monitors{ipre};
-                        traces_vals_precond(it, ipre)  = eval_req(this,req,it);
+                        parfor it = 1:num_traj
+                            traces_vals_precond(it, ipre)  = eval_req(this,req,it);
+                        end
                     end
                 end
-            end
-            
-            % eval requirement
-            for it = 1:num_traj
-                if any(traces_vals_precond(it,:)<0)
-                    traces_vals(it, :)  = NaN;
-                else
-                    time = this.P.traj{it}.time;
-                    for ipre = 1:numel(this.req_monitors)
-                        req = this.req_monitors{ipre};
-                        [traces_vals(it, ipre), traces_vals_vac(it, ipre)]  = eval_req(this,req,it);
+                
+                
+                % eval requirement
+                num_monitors = numel(this.req_monitors);
+                for ipre = 1:num_monitors
+                    req = this.req_monitors{ipre};                            
+                    parfor it = 1:num_traj
+                        if any(traces_vals_precond(it,:)<0)
+                            traces_vals(it, ipre)  = NaN;
+                        else
+                            [traces_vals(it, ipre), traces_vals_vac(it, ipre)]  = eval_req(this,req,it);
+                        end
                     end
                 end
+                this.traces_vals_precond = traces_vals_precond;
+                this.traces_vals_vac = traces_vals_vac;
+                this.traces_vals = traces_vals;
+            else
+                traces_vals_precond = this.traces_vals_precond;
+                traces_vals_vac = this.traces_vals_vac;
+                traces_vals = this.traces_vals;
             end
-            this.traces_vals_precond = traces_vals_precond;
-            this.traces_vals_vac = traces_vals_vac;
-            this.traces_vals = traces_vals;
-                        
         end
         
         function F = PlotDiagnostics(this, idx_req_monitors, itraj)
@@ -496,18 +547,23 @@ classdef BreachRequirement < BreachTraceSystem
         end
                 
         %% Display
-        function st = disp(this)
+        function varargout = disp(this)
             signals_in_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.signals_in, 'UniformOutput', false));
             signals_in_st = ['{' signals_in_st(1:end-2) '}'];
-            st = sprintf('BreachRequirement object for signal(s): %s\n', signals_in_st);
-            if nargout == 0
-                fprintf(st);
-            end
             summary = this.GetStatement();
-            disp(summary.statement);
+            
+            st = sprintf('BreachRequirement object for signal(s): %s. %s\n', signals_in_st, summary.statement);
+            
+            if nargout == 0
+                varargout = {};
+                fprintf(st);
+            else
+                varargout{1} = st;
+            end                      
+            
         end
         
-        function st = PrintFormula(this)
+        function varargout = PrintFormula(this)
             st = '';
             if ~isempty(this.precond_monitors)
                 st = sprintf([st '--- PRECONDITIONS ---\n']);
@@ -521,20 +577,31 @@ classdef BreachRequirement < BreachTraceSystem
                 st = [st  this.req_monitors{ifo}.disp() sprintf('\n')];
             end
             st = sprintf([st '\n']);
+        
+            if nargout == 0
+                varargout = {};
+                fprintf(st);
+            else
+                varargout{1} = st;
+            end
+               
         end
         
-        function st = PrintSignals(this)
+        function varargout = PrintSignals(this)
             st = sprintf('---- SIGNALS IN ----\n');
             for isig = 1:numel(this.signals_in)
                 sig = this.signals_in{isig};
                 st = [st sprintf('%s %s\n', sig, this.get_signal_attributes_string(sig))];
             end
             st = sprintf([st '\n']);
-            st= sprintf([st '---- SIGNALS  OUT ----\n']);
-            for isig = 1:this.P.DimX
-                st = [st sprintf('%s %s\n', this.P.ParamList{isig}, this.get_signal_attributes_string(this.P.ParamList{isig}))];
+            
+            if this.P.DimX>0
+                st= sprintf([st '---- SIGNALS  OUT ----\n']);
+                for isig = 1:this.P.DimX
+                    st = [st sprintf('%s %s\n', this.P.ParamList{isig}, this.get_signal_attributes_string(this.P.ParamList{isig}))];
+                end
+                st = sprintf([ st '\n']);
             end
-            st = sprintf([ st '\n']);
             
             if ~isempty(this.postprocess_signal_gens)
                 for iog = 1:numel(this.postprocess_signal_gens)
@@ -553,20 +620,29 @@ classdef BreachRequirement < BreachTraceSystem
                 st = [st this.PrintAliases() '\n'];
             end
             
-            if nargout==0
+            if nargout == 0
+                varargout = {};
                 fprintf(st);
+            else
+                varargout{1} = st;
             end
+            
         end
         
-        function st = PrintAll(this)
+        function varargout = PrintAll(this)
             st =this.PrintFormula();
             st = sprintf([st this.PrintSignals()]);
             st = sprintf([st this.PrintParams()]);
-            if nargout==0
+            
+             if nargout == 0
+                varargout = {};
                 fprintf(st);
-            end
+            else
+                varargout{1} = st;
+             end
+             
         end
-        
+                                
         function  atts = get_signal_attributes(this, sig)
             % returns nature to be included in signature
             % should req_input, additional_test_data_signal,
@@ -701,10 +777,8 @@ classdef BreachRequirement < BreachTraceSystem
             summary = this.GetSummary(options.IncludeSignals, options.IncludeParams);
             if ~isempty(options.AddWorkflowNum);
                 summary.workflow = options.AddWorkflowNum;
-            end
-            
-            
-            
+            end            
+                        
             summary_filename = [folder_name filesep 'summary'];
             tr = this.ExportTraces(options.IncludeSignals, options.IncludeParams, 'WriteToFolder', [folder_name filesep 'traces']);
             summary.traces_list = cell(1,numel(tr));
@@ -742,7 +816,8 @@ classdef BreachRequirement < BreachTraceSystem
             end
         end
         
-        function st = PrintAliases(this)
+        function varargout = PrintAliases(this)
+            varargout = {};
             st='';
             if ~isempty(this.AliasMap)
                 st = sprintf('---- ALIASES ----\n');
@@ -779,12 +854,33 @@ classdef BreachRequirement < BreachTraceSystem
                 st = sprintf([st '\n']);
             end
             
-            if nargout==0&&~isempty(st)
-                fprintf(st);
+            if ~isempty(st)
+                if nargout == 0
+                    varargout = {};
+                    fprintf(st);
+                else
+                    varargout{1} = st;
+                end
             end
             
         end
+                           
+        function Concat(this,other,fast)
+            if nargin<=2
+                fast = false;
+            end
+            this.P = SConcat(this.P, other.P, fast);
+            % wild guess:
+            this.P = SetParam(this.P, this.P.DimX+1,this.P.traj_ref);
             
+            this.traces_vals_precond = [this.traces_vals_precond ; other.traces_vals_precond]; 
+            this.traces_vals = [this.traces_vals ; other.traces_vals]; 
+            this.traces_vals_vac = [this.traces_vals_vac ; other.traces_vals_vac]; 
+            
+            this.val= min([ this.val other.val]);
+            
+        end
+        
         function sigs_in = get_signals_in(this)
             sigs_in = {};
             all_sigs_in =  {};
@@ -827,24 +923,7 @@ classdef BreachRequirement < BreachTraceSystem
             end
             
         end
-        
-        
-        function Concat(this,other,fast)
-            if nargin<=2
-                fast = false;
-            end
-            this.P = SConcat(this.P, other.P, fast);
-            % wild guess:
-            this.P = SetParam(this.P, this.P.DimX+1,this.P.traj_ref);
-            
-            this.traces_vals_precond = [this.traces_vals_precond ; other.traces_vals_precond]; 
-            this.traces_vals = [this.traces_vals ; other.traces_vals]; 
-            this.traces_vals_vac = [this.traces_vals_vac ; other.traces_vals_vac]; 
-            
-            this.val= min([ this.val other.val]);
-            
-        end
-        
+
         
     end
     
@@ -852,7 +931,8 @@ classdef BreachRequirement < BreachTraceSystem
     %% Protected methods
     methods (Access=protected)
         
-        function  getBrSet(this, varargin)
+        function  new = getBrSet(this, varargin)
+            new = true;
             switch numel(varargin)
                 case 0   %  uses this
                     if ~isempty(this.BrSet)
@@ -922,8 +1002,15 @@ classdef BreachRequirement < BreachTraceSystem
             if isa(B,'struct')   % reading one struct obtained from a SaveResult command
                 B = BreachTraceSystem(B);
             end  
-            
+                                                
             % We got B, checks whether it contains necessary signals
+            if isequal(B, this.BrSet)&&this.hasTraj() % same B and requirement traj computed
+                new= false;
+                return;
+            else
+                this.ResetEval(); 
+            end
+                            
             this.BrSet = B; 
             [ifound, ~, ifoundB, ~ ] = this.FindSignalsIdx(this.signals_in);
             if ~all(ifound|ifoundB)
@@ -932,7 +1019,6 @@ classdef BreachRequirement < BreachTraceSystem
             end
             
             % checks parameters in B and in Req
-            this.BrSet = B;
             paramB = this.BrSet.GetParamList();
             idxR_paramR = this.P.DimX+2:this.P.DimP;
             paramR = this.P.ParamList(idxR_paramR);
@@ -940,7 +1026,7 @@ classdef BreachRequirement < BreachTraceSystem
             idxB_paramR_in_B = FindParam(B.P, paramR_in_B);
             idxR_paramR_in_B = FindParam(this.P, paramR_in_B);
             paramR_wo_B = setdiff( paramR, paramB); % parameters in R that are not in B - need to be combined
-            
+                                    
             % if this has more than one value, needs to combine them with
             % those of B
             multiple_paramR_vals  = size(this.P.pts,2)>1;
@@ -998,17 +1084,10 @@ classdef BreachRequirement < BreachTraceSystem
             end
             
             B.Sim();
-            this.BrSet = B;
             
             % initialize or reset traces
             num_pts = size(B.P.pts,2);
-            
-            % Eval reset and recompute - not so much as Sim()
-            if this.hasTraj()
-                this.ResetParamSet();
-            end
-            this.P = Sselect(this.P,1);
-            
+                        
             if isfield(this.BrSet.P,'traj_ref')
                 itrajs = B.P.traj_ref;
             else
@@ -1031,7 +1110,45 @@ classdef BreachRequirement < BreachTraceSystem
             end
             
         end
- 
+
+         
+        function  [val, val_vac, traj] = pareval_req(this, req, traj, it)
+        % parallel version     
+            
+            val_vac = NaN;            
+            time = traj{it}.time;                        
+            idx_sig_req = FindParam(this.P, req.signals);
+            idx_par_req = FindParam(this.P, req.params);
+            p_in = traj.param(1, idx_par_req)';
+            if ~isempty(req.signals_in)
+                Xin = this.GetSignalValues(req.signals_in, it);
+            else
+                Xin = [];
+            end
+            % checks if a signal is missing (need postprocess)
+            while any(isnan(Xin))
+                % should do only one iteration if postprocessing function are
+                % properly ordered following dependency
+                for ipp = 1:numel(this.postprocess_signal_gens)
+                    psg  = this.postprocess_signal_gens{ipp};
+                    Xpp_in = this.GetSignalValues(psg.signals_in, it);
+                    idx_param_pp_in = FindParam(this.P, psg.params);
+                    idx_Xout = FindParam(this.P, psg.signals);
+                    param_pp_in = this.P.traj{it}.param(1, idx_param_pp_in);
+                    [~, this.P.traj{it}.X(idx_Xout,:)]  = this.postprocessSignals(this.postprocess_signal_gens{ipp},time, Xpp_in, param_pp_in);
+                end
+                Xin = this.GetSignalValues(req.signals_in, it);
+            end
+            if ~isempty(idx_sig_req)
+                [val ,traj.time, Xout, val_vac] ...
+                    = this.evalRequirement(req, time, Xin, p_in);
+                traj.X( idx_sig_req,:) = Xout;
+            else
+                [val, ~, ~, val_vac]  = this.evalRequirement(req, time, Xin, p_in);
+            end
+        end
+
+        
         function  [val, val_vac] = eval_req(this, req, it)
             val_vac = NaN;
             

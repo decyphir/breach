@@ -24,15 +24,20 @@ classdef BreachSamplesPlot < handle
     
     methods
         
-        function this = BreachSamplesPlot(BrSet, params)
+        function this = BreachSamplesPlot(BrSet, params, varargin)
             % BreachSamplesPlot Initial implementation meant to navigate the summary of a BreachRequirement evaluation
             switch nargin
                 case 0
                     return;
             end
             
+            opt.Fig = 'create';
+            
             this.BrSet = BrSet;
-            this.Fig = figure;
+            
+            if strcmp(opt.Fig,'create')
+                this.Fig = figure;
+            end
             
             this.summary = BrSet.GetSummary();
             this.signature = this.summary.signature;
