@@ -1,5 +1,12 @@
 Breach Change log
 
+# Release 1.8.0
+
+- Added past operators once and historically
+- Better handling of corners in falsification
+- Added binaries for macOS
+- Various bugfixes
+
 # Release 1.7.0
 
 - binaries added removes need to run InstallBreach for windows and linux

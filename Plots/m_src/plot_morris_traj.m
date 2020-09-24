@@ -19,7 +19,7 @@ function plot_morris_traj(S)
   
   SplotPts(S,[],[],{'.r', 'MarkerSize',16}); 
   for i = 0:r-1
-    SplotPts(S,[],i*(n+1)+1:(i+1)*(n+1),{'-', 'MarkerSize',16});
+    SplotPts(S,[],i*(n+1)+1:(i+1)*(n+1),{'-', 'MarkerSize',16, 'LineWidth', 2});
   end
     
    

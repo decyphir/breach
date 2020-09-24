@@ -24,7 +24,7 @@ else
 end
 
 if nargin >=3
-    options = varargin2struct(options, varargin{:});
+    options = varargin2struct_breach(options, varargin{:});
 end
 
 if nargin==0

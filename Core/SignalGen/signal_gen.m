@@ -69,7 +69,7 @@ classdef signal_gen <handle
             opt.max_time = 3;            
             opt.max_obj_eval = inf;
             opt.constraints = {}; 
-            opt = varargin2struct(opt, varargin{:});
+            opt = varargin2struct_breach(opt, varargin{:});
             
             
             %%
@@ -84,11 +84,21 @@ classdef signal_gen <handle
            
                 %% Optim based                
                 reachmon = reach_monitor('r', signal, time);
+                
                 if ~isempty(opt.constraints)
+                    precond_mon = {};
                     for ic =1:numel(opt.constraints)
-                        precond_mon{ic} = stl_monitor(opt.constraints{ic}.id);
+                        mon = stl_monitor(opt.constraints{ic}.id);
+                        if isempty(setdiff(mon.signals_in, this.signals))
+                            precond_mon{end+1} = stl_monitor(opt.constraints{ic}.id);
+                        % check that constraint applies only to this.signals 
+                        end
                     end
-                    R = BreachRequirement(reachmon, {},precond_mon);
+                    if ~isempty(precond_mon)
+                        R = BreachRequirement(reachmon, {},precond_mon);
+                    else
+                        R = BreachRequirement(reachmon);
+                    end
                 else
                     R = BreachRequirement(reachmon);
                 end

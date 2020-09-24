@@ -11,7 +11,7 @@ classdef BreachImportData < BreachSignalGen
         function this = BreachImportData(fname, signals, params, varargin)
             
             options.InitDataScript='';            
-            options = varargin2struct(options, varargin{:});
+            options = varargin2struct_breach(options, varargin{:});
             
             if ~exist('fname', 'var')||isempty(fname)
                 
@@ -106,7 +106,7 @@ classdef BreachImportData < BreachSignalGen
             
             % Additional options
             options = struct('FolderName', []);
-            options = varargin2struct(options, varargin{:});
+            options = varargin2struct_breach(options, varargin{:});
             
             if isempty(options.FolderName)
                 options.FolderName = ['Import_Results_' datestr(now, 'dd_mm_yyyy_HHMM')];
@@ -185,7 +185,7 @@ classdef BreachImportData < BreachSignalGen
             
             % Additional options
             options = struct('FileName', 'Results.xlsx');
-            options = varargin2struct(options, varargin{:});
+            options = varargin2struct_breach(options, varargin{:});
             
             global BreachGlobOpt
             
@@ -231,7 +231,7 @@ classdef BreachImportData < BreachSignalGen
                 nb_traj = 0;
             end
             
-            st = ['BreachImportData ' this.whoamI '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' unique traces.'];
+            st = ['BreachImportData ' this.whoamI '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' unique traces.\n'];
             
             
             if nargout == 0

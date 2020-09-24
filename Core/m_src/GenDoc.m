@@ -1,4 +1,4 @@
-function [index_path, success, msg, msg_id, log] = GenDoc(list_scripts, varargin)
+function [success, msg, msg_id, log, index_path] = GenDoc(list_scripts, varargin)
 %  GenDoc takes a list of scripts and create html documentation
 
 InitBreach;
@@ -11,16 +11,16 @@ end
 % Default publish dir
 publish_dir = [get_breach_path( ) filesep 'Doc' ];
 
-options = struct('format', 'html', 'PublishDir', publish_dir);
+options = struct('format', 'html', 'PublishDir', publish_dir, 'log_file', []);
 if ~isempty(varargin)
-    options = varargin2struct(options, varargin{:});
+    options = varargin2struct_breach(options, varargin{:});
 end
 
 docrun_map = CreateDocRunMap(list_scripts, options.PublishDir);
 
 % Not sure we need the following
-if exist('log_file','var')
-    [fid, msg] = fopen( log_file, 'w');
+if ~isempty(options.log_file)
+    [fid, msg] = fopen( options.log_file, 'w');
     if isequal(fid,-1)
         error(['Couldn''t open log file' log_file '. ' msg]);
     end
@@ -94,6 +94,8 @@ for i_sc = 1:num_flds
                 dc.publish_beamer(1,0);
             case 'html'
                 dc.publish_html();
+            case 'none'
+                dc.run();
         end
         
         success(i_sc) = true;

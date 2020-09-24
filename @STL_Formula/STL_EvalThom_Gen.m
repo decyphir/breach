@@ -100,15 +100,15 @@ for ii=1:numTrajs % we loop on every traj in case we check more than one
         [val, time_values] = GetValues(Sys, phi, Pii, traj, partition, relabs, interval);
         
         try
-            if(numel(t)==1) % we handle singular times
-                val__{ii} = val(1);
-            else
+ %           if(numel(t)==1) % we handle singular times
+ %               val__{ii} = val(1);
+ %           else
                 if isfield(BreachGlobOpt, 'disable_robust_linear_interpolation')&&BreachGlobOpt.disable_robust_linear_interpolation
                     val__{ii} = interp1(time_values, val, t, 'previous');
                 else
                     val__{ii} = interp1(time_values, val, t);
                 end
-            end
+%            end
         catch % if val is empty
             val__{ii} = NaN(1,numel(t));
         end
@@ -251,6 +251,49 @@ switch(phi.type)
         end
         [time_values, valarray] = RobustEv(time_values1, valarray1, I___);
         
+    case 'once'
+        I___ = eval(phi.interval);
+        I___ = max([I___; 0 0]);
+        I___(1) = min(I___(1), I___(2));
+                        
+        next_interval = interval-[I___(1)+I___(2), I___(1)];
+        next_interval(1) = max(0, next_interval(1));        
+        
+        [valarray1, time_values1] = GetValues(Sys, phi.phi, P, traj, partition, relabs, next_interval);
+        
+        % Flipping time, taking into account constant interpolation with
+        % previous 
+        Tend__ =  time_values1(end)+1; 
+        past_time_values1 = fliplr(Tend__-[time_values1 Tend__]);
+        past_valarray1 =    fliplr([valarray1(1) valarray1]);
+        
+        [past_time_values, past_valarray] = RobustEv(past_time_values1, past_valarray1, I___);
+        
+        % Flipping back 
+        time_values = fliplr(Tend__-[past_time_values Tend__]);
+        valarray = fliplr([past_valarray(1) past_valarray]);        
+        
+    case 'historically'
+        I___ = eval(phi.interval);
+        I___ = max([I___; 0 0]);
+        I___(1) = min(I___(1), I___(2));
+        
+        next_interval = interval-[I___(1)+I___(2), I___(1)];
+        next_interval(1) = max(0, next_interval(1));        
+                
+        [valarray1, time_values1] = GetValues(Sys, phi.phi, P, traj, partition, relabs, next_interval);   
+        
+        % Flipping time, taking into account constant interpolation with
+        % previous 
+        Tend__ =  time_values1(end)+1; 
+        past_time_values1 = fliplr(Tend__-[time_values1 Tend__]);
+        past_valarray1 =    fliplr([valarray1(1) valarray1]);        
+        
+        [past_time_values, past_valarray] = RobustEv(past_time_values1, -past_valarray1, I___);
+        % Flipping back
+        time_values = fliplr(Tend__-[past_time_values Tend__]);
+        valarray = -fliplr([past_valarray(1) past_valarray]);        
+        
     case 'until'
         I___ = eval(phi.interval);
         I___ = max([I___; 0 0]);
@@ -310,7 +353,11 @@ end
 % first time instant
 ind_ti = find(traj.time>=interval(1),1);
 if isempty(ind_ti)
-    time_values = [traj.time(1,end) traj.time(1,end)+1];
+    if ~isempty(traj.time)
+        time_values = [traj.time(1,end) traj.time(1,end)+1];
+    else
+        time_values = [];
+    end
     return
 end
 

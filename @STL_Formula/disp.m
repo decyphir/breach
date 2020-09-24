@@ -1,14 +1,14 @@
 function st = disp(phi, opt)
 %DISP displays a formula
-% 
+%
 % Synopsis: st = disp(phi[, opt])
-% 
+%
 % Inputs:
 %  - phi : the formula to display
 %  - opt : (Optional, default=1) when printing predicate, if -1, the
 %          function doesn't display the id, if 0, display predicates in
 %          full, otherwise, display id and not predicates
-% 
+%
 % Outputs:
 %  - st : the string
 %
@@ -26,14 +26,14 @@ end
 end
 
 function st = form_string(phi, opt)
-%FORM_STRING 
+%FORM_STRING
 %
 % Synopsis: st = form_string(phi, opt)
 %
 
 switch(phi.type)
-    case 'predicate' 
-        if(opt == 0 || ~isempty(regexp(phi.id,'.+__$', 'once')))  
+    case 'predicate'
+        if(opt == 0 || ~isempty(regexp(phi.id,'.+__$', 'once')))
             st = phi.st;
         else
             st = phi.id;
@@ -80,6 +80,38 @@ switch(phi.type)
             st = ['alw (' st ')'];
         else
             st = ['alw_' intst ' (' st ')'];
+        end
+        
+    case 'once'
+        st = form_string(phi.phi,opt);
+        
+        intst = phi.interval;
+        try
+            I = eval(phi.interval);
+        catch
+            I = [0 0];
+        end
+        
+        if(I==[0 inf])
+            st = ['once (' st ')'];
+        else
+            st = ['once_' intst ' (' st ')'];
+        end
+        
+    case 'historically'
+        st = form_string(phi.phi,opt);
+        
+        intst = phi.interval;
+        try
+            I = eval(phi.interval);
+        catch
+            I = [0 0];
+        end
+        
+        if(I==[0 inf])
+            st = ['hist (' st ')'];
+        else
+            st = ['hist_' intst ' (' st ')'];
         end
         
     case 'eventually'

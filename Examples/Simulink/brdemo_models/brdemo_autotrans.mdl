@@ -2,7 +2,7 @@ Model {
   Name			  "brdemo_autotrans"
   Version		  8.5
   MdlSubVersion		  0
-  SavedCharacterEncoding  "ISO-8859-1"
+  SavedCharacterEncoding  "US-ASCII"
   GraphicalInterface {
     NumRootInports	    2
     Inport {
@@ -32,7 +32,7 @@ Model {
       BusOutputAsStruct	      "off"
     }
     ParameterArgumentNames  ""
-    ComputedModelVersion    "1.277"
+    ComputedModelVersion    "1.278"
     NumModelReferences	    0
     NumTestPointedSignals   3
     TestPointedSignal {
@@ -77,7 +77,7 @@ Model {
       $ObjectID		      2
       $ClassName	      "Simulink.WindowInfo"
       IsActive		      [1]
-      Location		      [143.0, 23.0, 1280.0, 773.0]
+      Location		      [323.0, 79.0, 1280.0, 773.0]
       Object {
 	$PropName		"ModelBrowserInfo"
 	$ObjectID		3
@@ -102,8 +102,8 @@ Model {
 	ViewObjType		"SimulinkTopLevel"
 	LoadSaveID		"0"
 	Extents			[1246.0, 603.0]
-	ZoomFactor		[1.75]
-	Offset			[-39.5510204081632, 68.367346938775725]
+	ZoomFactor		[1.25]
+	Offset			[-181.95102040816317, 37.224489795918615]
       }
     }
   }
@@ -111,11 +111,11 @@ Model {
   Creator		  "The MathWorks Inc."
   UpdateHistory		  "UpdateHistoryNever"
   ModifiedByFormat	  "%<Auto>"
-  LastModifiedBy	  "alex"
+  LastModifiedBy	  "thaodang"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "Mon Jul 25 22:59:59 2016"
-  RTWModifiedTimeStamp	  391388395
-  ModelVersionFormat	  "1.%<AutoIncrement:277>"
+  LastModifiedDate	  "Wed Dec 11 17:02:58 2019"
+  RTWModifiedTimeStamp	  497984575
+  ModelVersionFormat	  "1.%<AutoIncrement:278>"
   ConfigurationManager	  "none"
   SampleTimeColors	  on
   SampleTimeAnnotations	  off
@@ -1020,7 +1020,7 @@ Model {
   }
   System {
     Name		    "brdemo_autotrans"
-    Location		    [143, 23, 1423, 796]
+    Location		    [323, 79, 1603, 852]
     Open		    on
     ModelBrowserVisibility  off
     ModelBrowserWidth	    200
@@ -1032,9 +1032,9 @@ Model {
     TiledPaperMargins	    [0.500000, 0.500000, 0.500000, 0.500000]
     TiledPageScale	    1
     ShowPageBoundaries	    off
-    ZoomFactor		    "175"
+    ZoomFactor		    "125"
     ReportName		    "simulink-default.rpt"
-    SIDHighWatermark	    "123"
+    SIDHighWatermark	    "125"
     Block {
       BlockType		      Inport
       Name		      "throttle"
@@ -1361,6 +1361,7 @@ Model {
 	  FunctionName		  "sf_sfun"
 	  Parameters		  "TWAIT"
 	  PortCounts		  "[3 2]"
+	  EnableBusSupport	  on
 	  Port {
 	    PortNumber		    2
 	    Name		    "gear"
@@ -2741,6 +2742,10 @@ Model {
       }
     }
     Line {
+      FontName		      "Helvetica"
+      FontSize		      9
+      FontWeight	      "normal"
+      FontAngle		      "normal"
       ZOrder		      22
       SrcBlock		      "throttle"
       SrcPort		      1

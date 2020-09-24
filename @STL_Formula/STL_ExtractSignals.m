@@ -18,7 +18,7 @@ signals = {};
 for im=1:numel(matches)
     signals{end+1} = tokens{im}{1};
 end
-sreserved = {'alw_', 'ev_','until_'};
+sreserved = {'alw_', 'ev_','until_', 'once_', 'hist_'};
 signals = setdiff(signals, sreserved);
 
 
@@ -35,7 +35,7 @@ if nargout>1
         end
     end
     
-    reserved = [ sreserved signals  {'alw', 'ev', 'and', 'or', '=>', 'not', 'until', 't', ...
+    reserved = [ sreserved signals  {'alw', 'ev','once', 'hist','and', 'or', '=>', 'not', 'until', 't', ...
         'abs', 'sin', 'cos', 'exp','tan', 'norm','sqrt'}];
     params = setdiff(params, reserved);
     params = unique(params);

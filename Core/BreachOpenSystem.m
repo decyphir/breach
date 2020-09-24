@@ -81,7 +81,7 @@ classdef BreachOpenSystem < BreachSystem
             % BreachOpenSystem.SetInputGen Attach a BreachSystem as input generator.
             
             opt.SetInputGenTime = false;
-            opt= varargin2struct(opt, varargin{:});
+            opt= varargin2struct_breach(opt, varargin{:});
             
             % look for property parameters and save them
             PropParams={};
@@ -355,6 +355,8 @@ classdef BreachOpenSystem < BreachSystem
                   dom = str2num(dom); %#ok<ST2NM>
               elseif iscell(dom)
                  dom = cell2mat(dom);
+              elseif size(cfg.domains,2)==2
+                  dom = [cfg.domains{ip,1}, cfg.domains{ip,2}];
               end
               
               if isfield(cfg,'values')

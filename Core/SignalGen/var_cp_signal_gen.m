@@ -110,7 +110,6 @@ classdef var_cp_signal_gen < signal_gen
                    end
                 end                
             end
-           
         end
         
                                         

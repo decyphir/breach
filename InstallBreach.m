@@ -7,7 +7,7 @@ InitBreach
 global BreachGlobOpt;
 options.verbose = 0;
 options.linear_interp = 0; 
-options = varargin2struct(options, varargin{:});
+options = varargin2struct_breach(options, varargin{:});
 
 if options.verbose ==0
     silent = 1;
@@ -18,6 +18,9 @@ if options.linear_interp ==0
 else
     BreachGlobOpt.disable_robust_linear_interpolation=0;
 end
+
+% Johan fix
+silent = 0;
 
 MEX = 'mex ';
 FLAGS = ' '; 

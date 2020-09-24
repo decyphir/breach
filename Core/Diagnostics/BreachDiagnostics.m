@@ -651,8 +651,7 @@ classdef BreachDiagnostics
                         if (flag2)
                            out2 = out2.addInterval(btime, etime);
                         end
-                    end
-                
+                    end                
                 case BreachOperator.AND
                     if (value == TwoBitValue.FT)
                         out1 = in1.addInterval(btime, etime);

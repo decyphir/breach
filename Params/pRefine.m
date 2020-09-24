@@ -4,7 +4,7 @@ function P = pRefine(P0, p, r, step)
 % the grid with p levels (See Saltelli's Books, chapter 3 or 4). We use the
 % suggested value for Delta: p/(2(p-1))
 %
-% Usage:  Pr = pRefine(P, p, r,step)
+% Usage:  Pr = pRefine(P, p,r,step)
 %
 % Input:
 %   - P   the initial parameter set. Only the first set of value of P will
@@ -39,6 +39,7 @@ if ~exist('step', 'var')
     step = 1;
 end
 
+rng(step, 'twister');
 P=SPurge(P0);
 
 k = numel(P0.dim);           % dimension

@@ -1,5 +1,5 @@
-function strct  = varargin2struct(strct, varargin)
-% varargin2struct(default_strct, varargin) Convert varargin given as pair
+function strct  = varargin2struct_breach(strct, varargin)
+% varargin2struct_breach(default_strct, varargin) Convert varargin given as pair
 % of name, values into a struct. Default is provided as strct.
 
 % read the acceptable names
@@ -13,7 +13,7 @@ if nArgs==1 % must be a struct
     opt_flds = fieldnames(opt);
     s = setdiff(opt_flds,optionNames);
     if ~isempty(s)
-        error('varargin2struct:invalid_options', [ s{1} ' is not a valid option.']);
+        error('varargin2struct_breach:invalid_options', [ s{1} ' is not a valid option.']);
     end
     
     for io = 1:length(opt_flds)

@@ -7,7 +7,7 @@ solver_opt = struct('num_path', 100, ...   % number of paths, i.e., set of
                 'rand_seed', 1, ...         % random seed for reproducibility    
                 'size_grid', 5 ...     % number of grid levels, intervals in each dim
     );
-solver_opt = varargin2struct(solver_opt, varargin{:});
+solver_opt = varargin2struct_breach(solver_opt, varargin{:});
 
 
 this.solver = 'morris';

@@ -276,7 +276,7 @@ classdef BreachSet < BreachStatus
             end
         end
         
-        %%  Params
+        %% Params
         function SetParam(this, params, values, is_spec_param)
             % BreachSet.SetParam(params, values [,  is_spec_param]) sets values to
             % parameters listed in params. If the set contains only one sample,
@@ -1168,7 +1168,40 @@ classdef BreachSet < BreachStatus
             this.CheckinDomainParam();
             this.ApplyParamGens();
         end
-                
+             
+        function Bm = MorrisSample(this, vars, ranges, num_path, size_grid, seed)
+            
+            if isempty(vars)
+                vars = this.GetVariables();                
+            end
+            
+            if isempty(ranges)
+                ranges = this.GetParamRanges(vars);                                           
+            end
+            
+            if isequal(size(ranges), [2 1])
+                ranges = [1 2]; 
+            end
+            
+            if isequal(size(ranges), [1 2])
+                ranges = repmat(ranges, numel(vars),1);
+            end
+            
+                        
+            Bm = BreachSet(vars);
+            Bm.SetParamRanges(vars, ranges);            
+            Bm.P.epsi = ((ranges(:,2)+ranges(:,1))/2)'; % legacy stuff
+            Pr = pRefine(Bm.P, size_grid,num_path,seed);
+            X0 = Pr.pts;
+            this.ResetParamSet;
+            this.SetParam(vars, X0)
+            this.P.opt_morris =struct('num_path',num_path,'size_grid',size_grid,'rand_seed',1);
+            this.P.D = Pr.D;
+            if nargout>=1
+                Bm.P = Pr;
+            end
+        end
+        
         %% Concatenation, ExtractSubset - needs some additional compatibility checks...
         function Concat(this, other, fast)
             if nargin<=2
@@ -1531,7 +1564,7 @@ classdef BreachSet < BreachStatus
                 folder_name = '';
             end
             options = struct('FolderName', folder_name, 'SaveBreachSystem', true, 'ExportToExcel', false, 'ExcelFileName', 'Results.xlsx');
-            options = varargin2struct(options, varargin{:});
+            options = varargin2struct_breach(options, varargin{:});
             
             if isempty(options.FolderName)
                 try
@@ -1600,8 +1633,8 @@ classdef BreachSet < BreachStatus
             end
             
             % Additional options
-            options = struct('FolderName', '','IncludesOnlySignals', [], 'ExcludeSignals', []);
-            options = varargin2struct(options, varargin{:});
+            options = struct('FolderName', []);
+            options = varargin2struct_breach(options, varargin{:});
             
             if isempty(options.FolderName)
                 options.FolderName = ['Results_' datestr(now, 'dd_mm_yyyy_HHMM')];
@@ -1670,7 +1703,7 @@ classdef BreachSet < BreachStatus
             
             % Options
             options = struct('WriteToFolder','');
-            options = varargin2struct(options, varargin{:});
+            options = varargin2struct_breach(options, varargin{:});
             
             if ~isempty(options.WriteToFolder)
                 if ~exist(options.WriteToFolder,'dir' )
@@ -2018,13 +2051,13 @@ classdef BreachSet < BreachStatus
                     end
                 end
                 st = sprintf([st '\n']);
-                if nargout == 0
-                    varargout = {};
-                    fprintf(st);
-                else
-                    varargout{1} = st;
-                end
             end
+            if nargout == 0
+                varargout = {};
+                fprintf(st);
+            else
+                varargout{1} = st;
+            end            
         end
                 
         function st = get_signal_attributes_string(this, sig) 

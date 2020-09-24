@@ -2,7 +2,7 @@ function CompileBlitzLib()
 
 MEX = 'mex ';
 INCLUDE = [ '-I.' filesep 'include '];
-FLAGS = ' -silent -c ';
+FLAGS = ' -c ';
 src_file = ['.' filesep 'src' filesep 'libblitz.cpp '];
 output_dir = ['-outdir .' filesep 'lib'];
 

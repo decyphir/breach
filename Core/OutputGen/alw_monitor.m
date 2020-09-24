@@ -20,14 +20,15 @@ classdef alw_monitor < stl_monitor
             this.init_tXp(time,X,p);
 
             % compute robustnes of top formula
-            [time, Xout] = this.get_standard_rob(this.subphi, time);
+            
             idx  = this.get_time_idx_interval(time,p);
-            Xout =  [Xout(1,:)<0 ;...  % violation flags
-                     Xout];         
-            Xout(end-1:end, ~idx) = NaN;
+            
+            [~ , rob] = this.get_standard_rob(this.subphi, time(idx));            
+            Xout = nan(2, numel(time));
+            Xout(1, idx) = rob<0;
+            Xout(2,idx) = rob;            
    
         end
-
         
         function [v, t, Xout] = eval(this, t, X,p)
             [t, Xout] = this.computeSignals(t, X,p);

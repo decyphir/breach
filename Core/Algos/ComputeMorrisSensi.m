@@ -1,17 +1,14 @@
-function res = ComputeMorrisSensi(R, B, varargin)
-%% ComputeMorrisSensi compute sensitivities using Morris method for all requirement in R. Assumes B is a set with ranges. 
-%  
+function [res, R] = ComputeMorrisSensi(R, B, num_path, objFunctions)
+%% ComputeMorrisSensi compute sensitivities using Morris method for all requirement in R. Assumes B is a set with ranges.
+%
 %  Note: if B is a BreachSimulinkSystem with no traces, we compute the
 %  Morris samples and corresponding traces and stores them in B. If B
 %  already contains Morris samples and traces they are not re-computed.
-
-opt = struct('num_path', 100, ...      % number of paths, i.e., set of
-                    ...                % samples providing 1 pair of samples per dim
-                'rand_seed', 1, ...    % random seed for reproducibility    
-                'size_grid', 5 ...     % number of grid levels, intervals in each dim
+opt = struct('num_path', num_path, ...      % number of paths, i.e., set of
+    ...                % samples providing 1 pair of samples per dim
+    'rand_seed', 1, ...    % random seed for reproducibility
+    'size_grid', 5 ...     % number of grid levels, intervals in each dim
     );
-
-opt = varargin2struct(opt, varargin{:});
 
 [vars, iv] = B.GetVariables(); % variables and indices
     
@@ -22,11 +19,11 @@ if ~isfield(B.P, 'opt_morris')||~isequal(opt, B.P.opt_morris)
     r = opt.num_path;
     p = opt.size_grid;
     s = opt.rand_seed;
-    Pr = pRefine(P, p,r,s);
+    Pr = pRefine(P,p,r,s);
     X0 = Pr.pts;
     B.ResetParamSet;
     B.SetParam(vars, X0)
-    B.P.opt_morris =opt;
+    B.P.opt_morris=opt;
     B.P.D = Pr.D;       
 end
 

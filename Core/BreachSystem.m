@@ -195,6 +195,9 @@ classdef BreachSystem < BreachSet
                 if tspan(end)<0
                     error('BreachSystem:SetTime:neg_time', 'Cannot set negative time.')
                 end
+                this.Sys.tspan = tspan;
+            else
+                this.Sys.tspan = tspan;
             end
             this.Sys.tspan = tspan;
         end
@@ -281,7 +284,7 @@ classdef BreachSystem < BreachSet
                     [~, stat] = FindParam(this.P, params_names);
                     p_not_found = params_names( stat==0 )';
                     this.SetParamSpec(p_not_found, cellfun(@(c) (params_prop.(c)), p_not_found),1);
-                end                
+                end
             end
             
             this.Specs(phi_id) = phi;
@@ -399,7 +402,7 @@ classdef BreachSystem < BreachSet
             
             % FIXME: this is going to break with multiple trajectories with
             % some of them containing NaN -
-              
+            
             if any(isnan(this.P.traj{1}.X))
                 tau = t_phi;
                 rob = t_phi;
@@ -545,16 +548,16 @@ classdef BreachSystem < BreachSet
             % BreachSet.PlotSatParams(req, params)
             
             % default options
-            opt.DispTitle = true;
-            opt = varargin2struct(opt, varargin{:});
-            
-            if ischar(params)
-                params = {params};
-            end
+            opt.DispTitle = true;  
+            opt = varargin2struct_breach(opt, varargin{:});
+         
+           if ischar(params)
+               params = {params};
+           end
             
             [valu, pvalu, val, pval] = this.GetSatValues(phi, params);
             if isa(phi, 'BreachRequirement')
-                phi = phi.formulas{1}.formula_id; 
+                phi = phi.formulas{1}.formula_id;
             end
             
             if isempty(valu)

@@ -26,7 +26,7 @@ obj_files = ['robustness' obj_ext ...
     ];
 
 MEX = 'mex ';
-FLAGS = ' -silent ';
+FLAGS = ' ';
 
 if isfield(BreachGlobOpt, 'disable_robust_linear_interpolation')
     if BreachGlobOpt.disable_robust_linear_interpolation==1  

@@ -12,7 +12,7 @@ opt = struct( ...
     );
 
 if nargin > 2
-    opt = varargin2struct(opt, varargin{:});
+    opt = varargin2struct_breach(opt, varargin{:});
 end
 
 this.solver_options = opt;

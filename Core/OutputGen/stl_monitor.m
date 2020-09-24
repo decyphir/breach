@@ -25,6 +25,8 @@ classdef stl_monitor < req_monitor
                 this.formula= STL_Formula(STL_NewID('phi'), formula);
             elseif isa(formula,'STL_Formula')
                 this.formula= formula;
+            elseif isa(formula, 'stl_monitor')
+                this.formula = formula.formula;
             else
                 error('stl_monitor:bad_constructor_arg', ...
                     'stl_monitor constructor requires a string or STL_Formula as argument.')
@@ -39,15 +41,12 @@ classdef stl_monitor < req_monitor
             if isempty(input_signals)&&isempty(output_signals) % if no IO specified, everybody is output and nobody input
                 this.formula = set_out_signal_names(this.formula, this.signals_in);
             end
-            this.init_P();
-            
+            this.init_P();            
         end
         
         function status = set_mode(this, flag1, flag2)            
             input_signals = get_in_signal_names(this.formula);
-            if ~isempty(input_signals)
-                
-                
+            if ~isempty(input_signals)                                
                 switch flag1
                     case {'in','out'}
                         this.inout = flag1;

@@ -46,10 +46,11 @@ dY = dY(idx);
 % N = 1;    %      --> set N here <--
 % is_EE_N = D(N,:)~=0;
 % EE_N = dY(is_EE_N);
-% figure ; plot([1:numel(EE_N)],EE_N,'.','LineWidth',0.1);
+% figure ; plot([1:numel(EE_N)],EE_N,'-.','LineWidth',0.1);
 %
 
-DY = repmat(dY/delta,[k 1]);
+% DY = repmat(dY/delta,[k 1]); % <-- Does NOT work in 2013b!
+DY = repmat(dY/delta, k, 1); % <-- What about this ?
 EE = DY.*D;
 r = numel(dY)/k;
 mu = 1/r*sum(EE, 2);

@@ -59,6 +59,8 @@ classdef from_file_signal_gen < signal_gen
                     pfe = which(fname{ifn});
                     if ~isempty(pfe)
                         files_list = {pfe};
+                    elseif  exist(fname{ifn}, 'file')
+                        files_list = fname(ifn);
                     else
                         files_list = {};
                     end

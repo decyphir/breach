@@ -31,7 +31,7 @@ classdef BreachOptionGui < handle
                title = 'Choose Options';
            end
             if nargin>1
-                options = varargin2struct(options, varargin{:});
+                options = varargin2struct_breach(options, varargin{:});
                 this.output = options;
                 this.choices = choices;
                 this.tips = tips;

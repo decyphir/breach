@@ -3,7 +3,7 @@ function solver_opt = setup_nelder_mead(this,x0, varargin)
 
 solver_opt = optimset();
 solver_opt = optimset(solver_opt, 'Display', 'off');
-this.x0 = (this.ub-this.lb)/2;
+this.x0 = (this.ub+this.lb)/2;
 
 if nargin>=2
     this.x0 = x0;

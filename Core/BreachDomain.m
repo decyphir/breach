@@ -47,7 +47,7 @@ classdef BreachDomain
                             if isempty(domain)||(size(domain,2)==2)
                                 this.domain = domain;
                             else
-                                error('BreachDomain:wrong_type', 'BreachDomain first argument should be the string ''double'', ''int'', ''enum'' or ''bool'', or an interval.')
+                                error('BreachDomain:wrong_type', 'BreachDomain second argument should be empty or an interval.')
                             end
                         case 'int'
                             this.type = 'int';

@@ -312,6 +312,7 @@ classdef BreachSamplesPlot < handle
                         txt{end+1} = [var_name ': ' num2str(var_value)];
                     end
                 end
+                txt = regexprep(txt,'_',' ');
             end
             
             %% Context menu
@@ -773,7 +774,9 @@ classdef BreachSamplesPlot < handle
                         txt{end+1} = [var_name ': ' num2str(var_value)];
                     end
                 end
+                txt = regexprep(txt,'_',' ');
             end
+            
             
             %% Context menu
             cm = uicontextmenu;

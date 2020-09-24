@@ -165,7 +165,7 @@ classdef fixed_cp_signal_gen < signal_gen
             opt.max_time = 3;
             opt.max_obj_eval = inf;
             opt.constraints = {}; 
-            opt = varargin2struct(opt, varargin{:});
+            opt = varargin2struct_breach(opt, varargin{:});
                         
             isig= find(strcmp(signal,this.signals),1);
             

@@ -261,7 +261,45 @@ switch(numel(varargin))
             phi = STL_Parse(phi,'ev',interval,phi1);
             return
         end
+
         
+        %% test once
+        [success, st1, st2] = parenthesisly_balanced_split(st, '\<once\>');
+        if success && isempty(st1)
+            phi1 = STL_Formula([phi.id '1__'],st2);
+            STLDB_Remove([phi.id '1__']);
+            phi = STL_Parse(phi, 'once', phi1);
+            return
+        end
+        
+        %% test once_[ti,tf]
+        [success, st1, st2, interval] = parenthesisly_balanced_split(st, '\<once_\[(.+?)\]\>');
+        if success && isempty(st1)
+            phi1 = STL_Formula([phi.id '1__'],st2);
+            STLDB_Remove([phi.id '1__']);
+            phi = STL_Parse(phi,'once',interval,phi1);
+            return
+        end
+   
+        %% test hist
+        [success, st1, st2] = parenthesisly_balanced_split(st, '\<hist\>');
+        if success && isempty(st1)
+            phi1 = STL_Formula([phi.id '1__'],st2);
+            STLDB_Remove([phi.id '1__']);
+            phi = STL_Parse(phi, 'hist', phi1);
+            return
+        end
+        
+        %% test hist_[ti,tf]
+        [success, st1, st2, interval] = parenthesisly_balanced_split(st, '\<hist_\[(.+?)\]\>');
+        if success && isempty(st1)
+            phi1 = STL_Formula([phi.id '1__'],st2);
+            STLDB_Remove([phi.id '1__']);
+            phi = STL_Parse(phi,'hist',interval,phi1);
+            return
+        end
+   
+                
         %% test av_eventually_[ti,tf]
         [success, st1, st2, interval] = parenthesisly_balanced_split(st, '\<av_ev_\[(.+?)\]\>');
         if success && isempty(st1)
@@ -270,7 +308,6 @@ switch(numel(varargin))
             phi = STL_Parse(phi,'av_ev',interval,phi1);
             return
         end
-
         
         %% test always
         [success,st1, st2] = parenthesisly_balanced_split(st, '\<alw\>');
@@ -420,6 +457,15 @@ switch(numel(varargin))
                 phi.phi = varargin{2};
                 phi.interval = '[0 inf]';
                 
+            case 'once'
+                phi.type = 'once' ;
+                phi.phi = varargin{2};
+                phi.interval = '[0 inf]';
+            case 'host'
+                phi.type = 'historically' ;
+                phi.phi = varargin{2};
+                phi.interval = '[0 inf]';
+                                
             case 'andn'
                 phi.type = 'andn';
                 phi.phin = varargin{2}; % array of STL_Formula
@@ -462,6 +508,16 @@ switch(numel(varargin))
                 phi.interval = varargin{2};
                 phi.phi = varargin{3};
 
+            case 'once'
+                phi.type = 'once' ;
+                phi.interval = varargin{2};
+                phi.phi = varargin{3};
+
+            case {'hist', 'historically'}
+                phi.type = 'historically' ;
+                phi.interval = varargin{2};
+                phi.phi = varargin{3};
+                
             case 'av_ev'
                 phi.type = 'av_eventually' ;
                 phi.interval = varargin{2};

@@ -1,7 +1,7 @@
 function display_morris_result(res, varargin)
 
 opt.SortBy = 'mu';
-opt = varargin2struct(opt,varargin{:});
+opt = varargin2struct_breach(opt,varargin{:});
 
 switch opt.SortBy
     case 'mu' 

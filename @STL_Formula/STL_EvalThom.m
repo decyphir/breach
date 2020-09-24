@@ -52,7 +52,7 @@ else
 end
 
 ii=1;
-num_dim = size(P_.pts,1); 
+num_dim = size(P_.pts,1);
 eval_str = [P_.ParamList(1:num_dim);num2cell(1:num_dim)];
 eval_str = sprintf('%s=P_.pts(%d,ii);',eval_str{:});
 eval(eval_str);
@@ -96,15 +96,15 @@ for ii=1:numTrajs % we loop on every traj in case we check more than one
         [val, time_values] = GetValues(Sys_, phi_, Pii, traj, interval);
         
         try
-            if(numel(t)==1) % we handle singular times
-                val__{ii} = val(1);
-            else
+ %           if(numel(t)==1) % we handle singular times
+ %               val__{ii} = val(1);
+ %           else
                 if isfield(BreachGlobOpt, 'disable_robust_linear_interpolation')&&BreachGlobOpt.disable_robust_linear_interpolation
                     val__{ii} = interp1(time_values, val, t, 'previous');
                 else
                     val__{ii} = interp1(time_values, val, t);
                 end
-            end
+ %           end
         catch % if val is empty
             val__{ii} = NaN(1,numel(t));
         end
@@ -220,7 +220,50 @@ switch(phi.type)
             valarray1 = [valarray1 valarray1(end)];
         end
         [time_values, valarray] = RobustEv(time_values1, valarray1, I___);
+    
+    case 'once'
+        I___ = eval(phi.interval);
+        I___ = max([I___; 0 0]);
+        I___(1) = min(I___(1), I___(2));
+               
+        next_interval = interval-[I___(1)+I___(2), I___(1)];
+        next_interval(1) = max(0, next_interval(1));        
+        [valarray1, time_values1] = GetValues(Sys, phi.phi, P, traj, next_interval);
         
+        % Flipping time, taking into account constant interpolation with
+        % previous 
+        Tend__ =  time_values1(end)+1; 
+        past_time_values1 = fliplr(Tend__-[time_values1 Tend__]);
+        past_valarray1 =    fliplr([valarray1(1) valarray1]);
+
+        [past_time_values, past_valarray] = RobustEv(past_time_values1, past_valarray1, I___);    
+
+        % Flipping back
+        time_values = fliplr(Tend__-[past_time_values Tend__]);
+        valarray = fliplr([past_valarray(1) past_valarray]);        
+    
+    case 'historically'
+        I___ = eval(phi.interval);
+        I___ = max([I___; 0 0]);
+        I___(1) = min(I___(1), I___(2));
+        
+        next_interval = interval-[I___(1)+I___(2), I___(1)];
+        next_interval(1) = max(0, next_interval(1));        
+        [valarray1, time_values1] = GetValues(Sys, phi.phi, P, traj, next_interval);        
+        
+        % Flipping time, taking into account constant interpolation with
+        % previous 
+        Tend__ =  time_values1(end)+1; 
+        past_time_values1 = fliplr(Tend__-[time_values1 Tend__]);
+        past_valarray1 =    fliplr([valarray1(1) valarray1]);
+
+        [past_time_values, past_valarray] = RobustEv(past_time_values1, -past_valarray1, I___);    
+        
+        % Flipping back
+        time_values = fliplr(Tend__-[past_time_values Tend__]);
+        valarray = -fliplr([past_valarray(1) past_valarray]);        
+        
+       
     case 'until'
         I___ = eval(phi.interval);
         I___ = max([I___; 0 0]);
@@ -256,14 +299,14 @@ if ~isempty(find(ibof, 1))
     time_ok = time_values(~ibof);
     if ~isempty(val_ok)
         warning('STL_Eval:Inf_or_Nan', 'Some values are NaN or inf for property %s (use warning(''off'', ''STL_Eval:Inf_or_Nan'') to disable warning)', disp(phi));
-    if numel(val_ok)==1
-        valarray(1,:) = val_ok;
-    else
-        valarray = interp1(time_ok, val_ok, time_values, 'nearest');
-    end
+        if numel(val_ok)==1
+            valarray(1,:) = val_ok;
+        else
+            valarray = interp1(time_ok, val_ok, time_values, 'nearest');
+        end
     else
         warning('STL_Eval:Inf_or_Nan', 'All values are NaN or inf for property %s', disp(phi));
-    end     
+    end
 end
 
 
@@ -306,7 +349,7 @@ end
 
 % Last time instant
 if(interval(end)==inf)
-        time_values = [time_values traj.time(1,ind_ti:end)];
+    time_values = [time_values traj.time(1,ind_ti:end)];
 else
     ind_tf = find(traj.time >= interval(end),1);
     if isempty(ind_tf)

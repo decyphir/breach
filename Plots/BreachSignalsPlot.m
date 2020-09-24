@@ -4,6 +4,7 @@ classdef BreachSignalsPlot < handle
         BrSet
         Fig
         Axes
+        
         ipts
     end
     

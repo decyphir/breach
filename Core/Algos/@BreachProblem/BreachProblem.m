@@ -67,6 +67,9 @@ classdef BreachProblem < BreachStatus
         
         constraints_fn    % constraints function
         robust_fn         % base robustness function - typically the robust satisfaction of some property by some trace
+        
+        %%Thao added
+        insigma
     end
     
     % properties related to the function to minimize
@@ -247,7 +250,7 @@ classdef BreachProblem < BreachStatus
             rfprintf_reset();
             
             % robustness
-            this.BrSys = BrSet.copy();
+            this.BrSys = this.BrSet.copy();
             
             this.BrSys.SetParam(this.params, this.x0(:,1), 'spec');
             [~, ia] = unique( this.BrSys.P.pts','rows');
@@ -307,7 +310,8 @@ classdef BreachProblem < BreachStatus
                 'quasi_rand_seed', 1,...
                 'num_quasi_rand_samples', 100 ...   % arbitrary - should be dim-dependant?  
             );
-            solver_opt= varargin2struct(solver_opt, varargin{:});
+            solver_opt= varargin2struct_breach(solver_opt, varargin{:});
+
         
             this.solver = 'quasi_random';
             this.solver_options = solver_opt; 
@@ -318,16 +322,19 @@ classdef BreachProblem < BreachStatus
                 'rand_seed', 1,...
                 'num_rand_samples', 100 ...   % arbitrary - should be dim-dependant?  
             );
-            solver_opt= varargin2struct(solver_opt, varargin{:});
+            solver_opt= varargin2struct_breach(solver_opt, varargin{:});
         
             this.solver = 'random';
             this.solver_options = solver_opt; 
         end
 
         
-        function solver_opt = setup_corners(this)
-            solver_opt = struct('num_corners', 100 ...   % arbitrary - should  be dim-dependant?  
+        function solver_opt = setup_corners(this, varargin)
+            solver_opt = struct('num_corners', 100, ...   % arbitrary - should  be dim-dependant?  
+            'group_by_inputs', true...
             );
+            solver_opt= varargin2struct_breach(solver_opt, varargin{:});        
+            
             this.solver = 'corners';
             this.solver_options = solver_opt; 
         end
@@ -400,7 +407,7 @@ classdef BreachProblem < BreachStatus
             %end
             
             if isempty(this.x0)
-               this.x0 = (this.ub-this.lb)/2; 
+               this.x0 = (this.ub+this.lb)/2; 
             end
             
             solver_opt.DispFinal='off';
@@ -412,6 +419,37 @@ classdef BreachProblem < BreachStatus
                 solver_opt.EvalParallel = 'yes';
             end
             this.solver = 'cmaes';
+            this.solver_options = solver_opt;
+        end
+        
+        function solver_opt = setup_gnmLausen(this)
+            %disp('Setting options for GNM Lausen solver - use help gnm for details');
+%             solver_opt = saoptimset('Display', 'off');
+%             solver_opt.Seed = 0;
+%             solver_opt.LBounds = this.lb;
+%             solver_opt.UBounds = this.ub;
+            
+            solver_opt.maxRestarts = 15; % maximum (probablistic or degenerated) restarts
+            solver_opt.maxEvals = 2500;  % maximum function evaluations
+            solver_opt.nPoints = 5;      % number of random points per restart
+
+            solver_opt.maxIter=250;      % maximum iterations per restart
+            solver_opt.alpha = 1;        % reflection coeff
+            solver_opt.beta = 0.5;       % contraction coeff
+            solver_opt.gamma = 2;        % expansion coeff
+            solver_opt.epsilon = 1e-9;   % T2 convergence test coefficient
+            solver_opt.ssigma = 5e-4;    % small simplex convergence test coefficient
+        
+            if isempty(this.x0)
+               this.x0 = (this.ub+this.lb)/2;
+            end
+            if ~isrow(this.x0)
+                 solver_opt.xinit = this.x0';
+            else
+                solver_opt.xinit = this.x0;
+            end
+            
+            this.solver = 'gnmLausen';
             this.solver_options = solver_opt;
         end
         
@@ -454,10 +492,31 @@ classdef BreachProblem < BreachStatus
                     res = this.solve_global_nelder_mead();
                     
                 case 'cmaes'
-                    
-                    [x, fval, counteval, stopflag, out, bestever] = cmaes(this.objective, this.x0', [], this.solver_options);
+                    %% set default sigma -- thao
+                    if isempty(this.insigma)
+                       sigmadefault = (this.ub-this.lb)/3;
+                       if ~isrow(sigmadefault)
+                           sigmadefault = sigmadefault'; 
+                       end
+                       this.insigma = sigmadefault';
+                    end
+                    %%
+                    [x, fval, counteval, stopflag, out, bestever] = cmaes(this.objective, this.x0', this.insigma, this.solver_options);
                     res = struct('x',x, 'fval',fval, 'counteval', counteval,  'stopflag', stopflag, 'out', out, 'bestever', bestever);
                     this.add_res(res);
+                    
+                 case 'gnmLausen'
+                    [x, fval, output, used_options] = gbnm(this.objective,this.lb,this.ub,this.solver_options);     
+                    res = struct('x', output.usedPoints, 'fval', output.usedVals,...
+                        'counteval', output.nEval, 'output', output, 'used_options', used_options);
+%                     === example of output for 2D problem:
+%                     usedPoints: [2×30 double]
+%                     usedVals: [1×30 double]
+%                     usedSimplex: {1×30 cell}
+%                     reason: {1×15 cell}
+%                     nEval: 831
+                    this.add_res(res);
+                    
 
                 case 'meta'
                     res = this.solve_meta();        

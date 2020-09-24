@@ -159,10 +159,10 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             options.Verbose = 1;
             options.MaxNumTabParam = 10;
             options.InitFn = '';
+            options = varargin2struct_breach(options, varargin{:});
             
-            global BreachGlobOpt;
-            options.DiskCachingRoot =[BreachGlobOpt.breach_dir filesep 'Ext' filesep 'ModelsData' filesep 'Cache'];
-            options = varargin2struct(options, varargin{:});
+            global BreachGlobOpt;                        
+            options.DiskCachingRoot = [BreachGlobOpt.breach_dir filesep 'Ext' filesep 'ModelsData' filesep 'Cache'] ;
             
             this.UseDiskCaching = options.UseDiskCaching;
             this.DiskCachingRoot = options.DiskCachingRoot;
@@ -1090,7 +1090,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 else
                     options.StoreTracesOnDisk = true;
                 end
-                options = varargin2struct(options, varargin{:});
+                options = varargin2struct_breach(options, varargin{:});
                 this.DiskCachingRoot = options.DiskCachingRoot;
                 this.Sys.StoreTracesOnDisk  = options.StoreTracesOnDisk;
             end
@@ -1105,8 +1105,8 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                     this.disp_msg(['Created caching folder:' this.Sys.DiskCachingFolder],2);
                 end
             else
-                This.DiskCaching='';
-                error(['Couldn''t create caching folder'  This.Sys.DiskCachingFolder '.']);
+                this.Sys.DiskCachingFolder='';
+                error(['Couldn''t create caching folder'  this.Sys.DiskCachingFolder '.']);
             end
         end
         
@@ -1157,7 +1157,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             
             % Additional options
             options = struct('FolderName', [], 'PreserveTracesOrdering', false);
-            options = varargin2struct(options, varargin{:});
+            options = varargin2struct_breach(options, varargin{:});
             
             if isempty(options.FolderName)
                 options.FolderName = [this.mdl.name '_Results_' datestr(now, 'dd_mm_yyyy_HHMM')];

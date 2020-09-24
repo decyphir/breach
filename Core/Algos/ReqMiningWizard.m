@@ -3,7 +3,7 @@ function rq_pb= ReqMiningWizard(varargin)
 options.ReqMiningProblem = []; 
 options.ParamSet = [];
 options.Requirement = [];
-opt = varargin2struct(options, varargin{:});
+opt = varargin2struct_breach(options, varargin{:});
 
 %% Step 1: Choose existing problem or create new one from set and requirement
 % Detect existing sets and problems

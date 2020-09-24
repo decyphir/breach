@@ -76,7 +76,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 			}
 		}
 	}
-	std::cout << "yev:" << *yev << " size:" << yev->size() << std::endl;
+	// std::cout << "yev:" << *yev << " size:" << yev->size() << std::endl;
 
 	int N = yev->size();
 	plhs[0] = mxCreateDoubleMatrix(1, N+1, mxREAL);

@@ -209,7 +209,7 @@ classdef DocRun < handle
         end
         
         function publish_html(this, op)
-            global BreachGlobOpt;
+            
             this.pre_run()
             if ~(exist(this.publish_html_dir,'dir'))
                 mkdir(this.publish_html_dir);

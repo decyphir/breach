@@ -1,4 +1,4 @@
-function out = STL_Break(phi, n)
+function [out, num_op, num_nested_temp_op]  = STL_Break(phi, n)
 % STL_BREAK breaks a formula into subformulas
 %
 %  Synopsys:  out = STL_Break(phi, [n])
@@ -33,12 +33,14 @@ function out = STL_Break(phi, n)
 %          [ ev ((x1[t]<1.0) and (not (x2[t]<3.0))) ]
 
 out = [];
+num_op=0; 
+num_nested_temp_op=0;
 
 if nargin==1
     n = inf;
 end
 
-if n <= 0;
+if n <= 0
     return;
 end
 
@@ -47,12 +49,36 @@ switch (phi.type)
     case 'predicate'
         out = phi;
         
-    case {'not', 'always', 'eventually'}
+    case 'not' 
+        [out1, num_op1, num_nested_temp_op1]  = STL_Break(phi.phi, n-1);
         
-        out = [STL_Break(phi.phi, n-1) phi] ;
+        out = [out1 phi] ;
+        num_op = num_op1+1;
+        num_nested_temp_op= num_nested_temp_op1;
+    
+    case{'always', 'eventually', 'historically', 'once'}
+        [out1, num_op1, num_nested_temp_op1]  = STL_Break(phi.phi, n-1);
         
-    case {'and', 'or', '=>', 'until'}
-        out = [STL_Break(phi.phi1, n-1) STL_Break(phi.phi2, n-1) phi];
+        out = [out1 phi] ;
+        num_op = num_op1+1;
+        num_nested_temp_op= num_nested_temp_op1+1;        
+        
+    case {'and', 'or', '=>'}
+        [out1, num_op1, num_nested_temp_op1]  = STL_Break(phi.phi1, n-1);
+        [out2, num_op2, num_nested_temp_op2]  = STL_Break(phi.phi2, n-1);
+        
+        out = [out1 out2 phi] ;
+        num_op = num_op1+num_op2+1;
+        num_nested_temp_op= max(num_nested_temp_op1, num_nested_temp_op2);        
+
+    case 'until'
+
+        [out1, num_op1, num_nested_temp_op1]  = STL_Break(phi.phi1, n-1);
+        [out2, num_op2, num_nested_temp_op2]  = STL_Break(phi.phi2, n-1);
+        
+        out = [out1 out2 phi] ;
+        num_op = num_op1+num_op2+1;
+        num_nested_temp_op= max(num_nested_temp_op1, num_nested_temp_op2)+1;        
 end
 
 % parameters 
