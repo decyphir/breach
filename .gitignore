@@ -36,3 +36,8 @@ Ext/ModelsData
 /Examples/docrun_backup.mat
 /Ext/Toolboxes/jsonlab/examples/selftest.*
 fileServerFolder
+docrun_backup.mat
+*.exe
+*.r2015a
+*_ert_rtw
+*.7z

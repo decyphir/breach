@@ -296,13 +296,17 @@ classdef BreachOpenSystem < BreachSystem
                     end
                 end
                 U.t = this.InputGenerator.P.traj{i_traj}.time';
-                U.u= this.InputGenerator.P.traj{i_traj}.X';  % assumes only input generator has only the input signals
-                % I know this will break on me eventually, hopefully not today
+                
+                idx_input_sigs = this.GetInputSignalsIdx;
+                for idx =1:numel(idx_input_sigs)
+                    sig= this.P.ParamList{idx_input_sigs(idx)};
+                    U.u(:,idx) = this.InputGenerator.GetSignalValues(sig, i_traj)';
+                end
             else
                 
                 this.InputGenerator.P = SetParam(this.InputGenerator.P,ig_params,pts_u); % FIXME: legacy use
                 this.InputGenerator.Sim(tspan);
-                                
+                
                 % if an inputspec is violated, sabotage U into NaN
                 if ~isempty(this.InputGenerator.Specs)
                     Uspecs = this.InputGenerator.Specs.values();
@@ -314,8 +318,8 @@ classdef BreachOpenSystem < BreachSystem
                         params_phi_u =  fieldnames(get_params(phi_u));
                         [idx_phi_u, found_u] = FindParam(this.P, params_phi_u);
                         idx_phi_u = idx_phi_u(found_u>0);
-                        if ~isempty(idx_phi_u)                             
-                             this.InputGenerator.P = SetParam(this.InputGenerator.P,params_phi_u(found_u>0),pts(idx_phi_u));
+                        if ~isempty(idx_phi_u)
+                            this.InputGenerator.P = SetParam(this.InputGenerator.P,params_phi_u(found_u>0),pts(idx_phi_u));
                         end
                         
                         rob = this.InputGenerator.CheckSpec(Uspecs{ip});

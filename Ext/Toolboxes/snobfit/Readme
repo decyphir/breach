@@ -1,0 +1,89 @@
+This package contains the MATLAB 7 package SNOBFIT 
+together with driver functions for optimizing some test functions
+coded in MATLAB. 
+
+
+SNOBFIT (Stable Noisy Optimization by Branch and FIT).
+is a MATLAB 7 package for the robust and fast solution of optimization
+problems with continuous variables varying within bounds, 
+possibly subject to additional soft constraints.
+Discrete variables are not supported.
+
+Objective function values must be provided by the user;
+care is taken that the optimization proceeds reasonably even when 
+the interface produces noisy or even occasionally undefined 
+results (hidden constraints). 
+The interface makes it possible to use SNOBFIT with new data entered 
+by hand, or by any automatic or semiautomatic experimental system. 
+
+This makes SNOBFIT very suitable for applications to the selection of 
+continuous parameter settings for simulations or experiments, 
+performed with the goal of optimizing some user-specified criterion.
+Since multiple data points can be entered, SNOBFIT can take advantage
+of parallel function evaluations.
+
+The method combines a branching strategy to enhance the chance of 
+finding a global minimum with local models; around the best point a full
+quadratic model is fitted. Various safeguards address many possible 
+pitfalls that may arise in practical applications, for which most other 
+optimization routines are ill-prepared. Soft constraints are taken care 
+of by a new penalty-type method with strong theoretical properties.
+
+
+In order to use SNOBFIT, one needs the MINQ package from
+    http://www.mat.univie.ac.at/~neum/software/minq
+and must add the corresponding directory to the Matlab path.
+
+
+This directory contains the following files:
+Readme           this file
+rsort.m          program for reverse sorting used in the SNOBFIT package
+snob5.m          subprogram called by SNOBFIT
+snobdriver.m     driver program for using SNOBFIT
+snobfit.[dvi,ps.gz,pdf] paper describing method and usage of the
+                 SNOBFIT package
+snobfit.m        main program (for bound constraints only)
+snobinput.m      subprogram called by SNOBFIT
+snoblocf.m       subprogram called by SNOBFIT
+snoblp.m         subprogram called by SNOBFIT
+snobnan.m        subprogram called by SNOBFIT 
+snobnewb.m       subprogram called by SNOBFIT
+snobnn.m         subprogram called by SNOBFIT
+snobpoint.m      subprogram called by SNOBFIT
+snobqfit.m       subprogram called by SNOBFIT
+snobqmin.m       subprogram called by SNOBFIT
+snobround.m      subprogram called by SNOBFIT
+snobsoftdriver.m driver program for using SNOBFIT with soft constraints
+snobsofttest.m   program for using SNOBFIT with soft constraints
+                 on the Hock-Schittkowski problems from the directory hsfun 
+                 (this directory needs to be added to the path)
+snobsplit.m      subprogram called by SNOBFIT
+snobtest.m       program for running SNOBFIT with (perturbed versions 
+                 of) the test functions from the directory testfun  
+                 (this directory needs to be added to the path)
+snobupdt.m       subprogram called by SNOBFIT 
+snobwarn.m       subprogram called by SNOBFIT
+softmerit.m      merit function of the soft optimality theorem, called by
+                 snobsoftdriver.m and snobsofttest.m
+
+Subdirectories:
+hsfun        code of some Hock-Schittkowski problems
+             hsdata.m     gives the standard bounds for the variables and
+                          constraints, standard starting point, global minimum
+                          and global minimizer for the implemented 
+                          Hock-Schittkowski functions
+             hsf<prob>.m  objective function of problem <prob>
+             hsF<prob>.m  constraints of problem <prob>
+testfun      code of some test functions
+             bra.m        Branin
+             cam.m        four-hump camel
+             defaults.m   gives the default box bounds, minima and 
+                          minimizers of the test functions
+             gpr.m        Goldstein-Price
+             hm3.m        Hartman3
+             hm6.m        Hartman6
+             ros.m        Rosenbrock    
+             sh10.m       Shekel10
+             sh5.m        Shekel5
+             sh7.m        Shekel7
+             shu.m        Shubert

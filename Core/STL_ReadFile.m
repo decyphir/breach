@@ -1,4 +1,6 @@
-function [props_names, props, signal_names, param_names, in_signal_names, out_signal_names] = STL_ReadFile(fname)
+function [props_names, props, signal_names, param_names, in_signal_names, out_signal_names] = STL_ReadFile(fname, onlyLoadLastFormula)
+
+
 %STL_READFILE reads formulas from a text file and loads them in the base
 %workspace 
 %
@@ -42,6 +44,12 @@ fid = fopen(fname,'r');
 if(fid==-1)
     error('STL_ReadFile:OpeningError',['Couldn''t open file ' fname]);
 end
+
+% JOHAN ADDED
+if nargin < 2
+    onlyLoadLastFormula = 0;
+end
+% END JOHAN ADDED
 
 tline = fgetl(fid);
 
@@ -150,12 +158,15 @@ while ischar(tline)
         tokens = regexp(tline, '(\w+)\s*:=(.*)','tokens');
         if ~isempty(tokens)
             % ok try wrapping up what we have so far before starting a new formula
-            if (~isempty(current_id)&& got_it == 0)
+            if (~isempty(current_id)&& got_it == 0) && ~onlyLoadLastFormula
                 try
                     phi = wrap_up(current_id, current_formula, new_params, in_signal_names, out_signal_names);
                     props = [props, {phi}]; %#ok<*AGROW>
                     props_names = [props_names, {current_id}];
                 catch err
+                    % JOHAN ADDED
+                    assignin('base', 'row_to_replace', num_line);
+                    % END JOHAN ADDED
                     fprintf(['ERROR: Problem with formula ' current_id ' at line ' ...
                         int2str(num_line-1) '\n']);
                     rethrow(err);
@@ -186,12 +197,15 @@ while ischar(tline)
     tline = fgetl(fid);
 end
 
-
+fclose(fid);
 try
     phi = wrap_up(current_id, current_formula, new_params, in_signal_names, out_signal_names);
     props = [props, {phi}];
     props_names = [props_names, {current_id}];
 catch err
+    % JOHAN ADDED
+    assignin('base', 'row_to_replace', num_line);
+    % END JOHAN ADDED
     fprintf(['ERROR: Problem with formula ' current_id ' at line ' ...
         int2str(num_line-1) '\n']);
     rethrow(err);

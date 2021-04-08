@@ -736,7 +736,6 @@ handles.current_var{nb_ax,2} = handles.current_var{1,2};
 handles.current_var{nb_ax,3} = handles.current_var{1,3};
 
 handles.current_plot{nb_ax} = [];
-
 figure;
 axes;
 ax = gca;
@@ -770,6 +769,12 @@ handles.current_var{nb_ax,1} = handles.current_var{2,1};
 handles.current_var{nb_ax,2} = handles.current_var{2,2};
 handles.current_var{nb_ax,3} = handles.current_var{2,3};
 
+%handles.current_sensi{nb_ax,1} = handles.current_sensi{2,1};
+%handles.current_sensi{nb_ax,2} = handles.current_sensi{2,2};
+%handles.current_sensi{nb_ax,3} = handles.current_sensi{2,3};
+handles.current_plot{nb_ax} = [];
+
+%handles.plot_sensi = [handles.plot_sensi handles.plot_sensi(2)];
 figure;
 axes;
 ax = gca;
@@ -1170,11 +1175,51 @@ if (nprop)  % plot values for a property
     ylabel(get_id(prop),'Interpreter','none');
     xlabel(['time']);
     
-    new_plot = plot(phi_tspan*time_mult, phi_val);
+    %new_plot = plot(phi_tspan*time_mult, phi_val);
     hold on;
-    plot([phi_tspan(1) phi_tspan(end)]*time_mult, [0 0],'-k');
-    stairs(phi_tspan*time_mult, (phi_val>0)*max(abs(phi_val))/2,'-r');
-    lgh = legend(short_disp(prop,100));
+    
+    % JOHAN CHANGE
+    new_plot = stairs(phi_tspan*time_mult, phi_val);
+    %plot([phi_tspan(1) phi_tspan(end)]*time_mult, [0 0],'-k');
+    stairs(phi_tspan*time_mult, (phi_val>=0)*max(abs(phi_val))/2,'-r');
+    % lgh = legend(short_disp(prop,100));
+    prop_type = get_type(prop);
+    prop_id = get_id(prop);
+    children = get_children(prop);
+    
+    child1_id = get_id(children{1});
+    child1_id = strrep(child1_id, '__', '_');
+    
+    if numel(children) > 1
+        child2_id = get_id(children{2});
+        child2_id = strrep(child2_id, '__', '_');
+    end
+    
+    if strcmp(prop_type,'always')
+        legendText1 = ['always(' child1_id ')'];
+        legendText2 = ['min_[t+a, t+b](' child1_id ')'];
+    elseif strcmp(prop_type,'or')
+        legendText1 = [child1_id ' or ' child2_id];
+        legendText2 = ['max(' child1_id ', ' child2_id ')'];
+    elseif strcmp(prop_type,'and')
+        legendText1 = [child1_id ' and ' child2_id];
+        legendText2 = ['min(' child1_id ', ' child2_id ')'];
+    elseif strcmp(prop_type,'not')
+        legendText1 = ['not(' child1_id ')'];
+        legendText2 = ['-' child1_id ''];
+    elseif strcmp(prop_type,'predicate')
+        legendText1 = get_st(prop);
+        legendText2 = get_st(prop);
+    elseif strcmp(prop_type,'=>')
+        legendText1 = [child1_id ' => ' child2_id];
+        legendText2 = ['max( - ' child1_id ', ' child2_id ')'];
+    else
+        legendText1 = 'Legend text missing!';
+        legendText2 = 'Robust text missing!';
+    end
+    lgh = legend(legendText1,legendText2);
+    % END JOHAN CHANGE
+    
     set(lgh,'Interpreter','none');
     
     new_plot = [];

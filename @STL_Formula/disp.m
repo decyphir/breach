@@ -129,6 +129,21 @@ switch(phi.type)
             st = ['ev_' intst ' (' st ')'];
         end
         
+    case 'av_eventually'
+        st = form_string(phi.phi,opt);
+        intst = phi.interval;
+        try
+            I = eval(phi.interval);
+        catch
+            I = [0 0];
+        end
+        
+        if(I==[0 inf])
+            st = ['av_ev (' st ')'];
+        else
+            st = ['av_ev_' intst ' (' st ')'];
+        end
+        
     case 'until'
         st1 = form_string(phi.phi1,opt);
         st2 = form_string(phi.phi2,opt);

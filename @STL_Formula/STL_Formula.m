@@ -1,32 +1,32 @@
 function [phi, phistruct] = STL_Formula(varargin)
 %STL_Formula Class representing Signal Temporal Logic Formulas
 %
-%   STL_Formula(id, phi_exp) returns a formula named id from a string 
-%   phi_exp constructed with the (simplified) grammar below. The id is 
-%   used to maintain a global database of defined formulas that can be 
-%   reused as sub-formulas. Note that it can be distinct from the variable  
+%   STL_Formula(id, phi_exp) returns a formula named id from a string
+%   phi_exp constructed with the (simplified) grammar below. The id is
+%   used to maintain a global database of defined formulas that can be
+%   reused as sub-formulas. Note that it can be distinct from the variable
 %   name used by Matlab, though it can be confusing. Hence the
-%   recommended use is, e.g., 
-%   
-%   phi = STL_Formula('phi',  'not ev (x[t] > 0)')  
-%   
-%   Formulas can have parameters, such as     
-%  
+%   recommended use is, e.g.,
+%
+%   phi = STL_Formula('phi',  'not ev (x[t] > 0)')
+%
+%   Formulas can have parameters, such as
+%
 %   phi = STL_Formula('phi',  'not ev (a*x[t] + b > c)')
 %
-%   In that case, default value is assigned to the parameters (0). To change 
+%   In that case, default value is assigned to the parameters (0). To change
 %   these values, use the get_params and set_params methods, e.g.:
 %
 %   phi = set_params(phi, {'a', 'b', 'c'}, [2, 1 0.5]);
 %   get_params(phi, {'a', 'b', 'c'})
-%    
-%   When equality comparator (==) is used, special parameters are defined for the 
-%   formula: alpha__ (default 1), zero_threshold__ (default 1e-13) and true_value__ (default 1). 
-%   They determine the threshold to decide when two quantities are equal and the quantitative 
-%   value to assign when this is the case. When equality doesn't hold, the quantitative satisfaction is 
-%   is alpha__ times the (negative) difference.         
-%    
-%STL_Formula Grammar     
+%
+%   When equality comparator (==) is used, special parameters are defined for the
+%   formula: alpha__ (default 1), zero_threshold__ (default 1e-13) and true_value__ (default 1).
+%   They determine the threshold to decide when two quantities are equal and the quantitative
+%   value to assign when this is the case. When equality doesn't hold, the quantitative satisfaction is
+%   is alpha__ times the (negative) difference.
+%
+%STL_Formula Grammar
 %
 %   phi_exp         := atom_predicate | unary_op phi_exp | phi_exp binary_op phi_exp
 %
@@ -42,18 +42,18 @@ function [phi, phistruct] = STL_Formula(varargin)
 %
 %   signal_exp      := any expression involving parameters and signal values that matlab can interpret to return an array
 %
-%   signal_value    := signal_id '[' time_exp ']' 
+%   signal_value    := signal_id '[' time_exp ']'
 %
-%   time_exp        := any expression involving the keyword 't' and parameters that matlab can interpret to return an array     
-%  
+%   time_exp        := any expression involving the keyword 't' and parameters that matlab can interpret to return an array
+%
 %   scalar_exp      := any expression involving parameters that matlab can interpret to return a scalar
-%   
-    
-    
+%
+
+
 %See also STL_ReadFile
 %
-    
-evalin('base','InitBreach');
+
+InitBreach;
 
 global BreachGlobOpt
 
@@ -73,14 +73,14 @@ if (nargin==1)
 end
 
 if(nargin==2)
-    % here we copy a formula 
+    % here we copy a formula
     if isa(varargin{2},'STL_Formula')
         phi = varargin{2};
         phi.id = varargin{1};
         phistruct = struct(phi);
         BreachGlobOpt.STLDB(phi.id) = phi;
         return;
-    elseif ischar(varargin{2}) % here we reference an existing formula 
+    elseif ischar(varargin{2}) % here we reference an existing formula
         st = varargin{2};
         st_trimmed = regexprep(st,'[()\s]','');
         if isKey(BreachGlobOpt.STLDB,st_trimmed)
@@ -110,6 +110,7 @@ phi.in_signal_names = {};
 phi.out_signal_names = {};
 phi.params = struct;
 phi.params_interval = struct;
+phi.semantics = 'max';
 varargin = varargin(2:end);
 
 switch numel(varargin)
@@ -143,6 +144,9 @@ if np>0
 end
 phistruct = struct(phi);
 BreachGlobOpt.STLDB(phi.id) = phi;
+
+%TESTRON: We set alpha and true_value to 10000
+phi = set_params(phi, {'true_value__', 'alpha__'}, [10000 10000]);
 
 end
 
@@ -185,6 +189,18 @@ switch(numel(varargin))
         st = varargin{1};
         st = regexprep(st, '^\s*', '');
         
+        % JOHAN ADDED
+        johanst = st;
+        if length(strfind(johanst,'('))==1 && length(strfind(johanst,')'))==1
+            par1 = strfind(johanst,'(');
+            par2 = strfind(johanst,')');
+            johanst = johanst(par1+1:par2-1);
+        end
+        
+        
+        assignin('base','var_to_replace',johanst);
+        % END JOHAN ADDED
+        
         %% test or
         [success, st1, st2] = parenthesisly_balanced_split(st, '\<or\>');
         if success
@@ -192,7 +208,31 @@ switch(numel(varargin))
             phi2 = STL_Formula([phi.id '2__'],st2);
             STLDB_Remove([phi.id '1__']);
             STLDB_Remove([phi.id '2__']);
-            phi = STL_Parse(phi,'or', phi1, phi2);
+            % JOHAN ADDED
+            if strcmp(phi1.st, 'inf>0')
+                % phi1 is true
+                % Set phi equal to phi1
+                phi1.id = phi.id;
+                phi = struct(phi1);
+            elseif strcmp(phi1.st, 'inf<0')
+                % phi1 is false
+                % Set phi equal to phi2
+                phi2.id = phi.id;
+                phi = struct(phi2);
+            elseif strcmp(phi2.st, 'inf>0')
+                % phi2 is true
+                % Set phi equal to phi2
+                phi2.id = phi.id;
+                phi = struct(phi2);
+            elseif strcmp(phi2.st, 'inf<0')
+                % phi2 is false
+                % Set phi equal to phi1
+                phi1.id = phi.id;
+                phi = struct(phi1);
+            else
+                % END JOHAN ADDED
+                phi = STL_Parse(phi,'or', phi1, phi2);
+            end
             return
         end
         
@@ -214,8 +254,31 @@ switch(numel(varargin))
             phi2 = STL_Formula([phi.id '2__'],st2);
             STLDB_Remove([phi.id '1__']);
             STLDB_Remove([phi.id '2__']);
-            
-            phi = STL_Parse(phi,'and', phi1, phi2);
+            % JOHAN ADDED
+            if strcmp(phi1.st, 'inf>0')
+                % phi1 is true
+                % Set phi equal to phi2
+                phi2.id = phi.id;
+                phi = struct(phi2);
+            elseif strcmp(phi1.st, 'inf<0')
+                % phi1 is false
+                % Set phi equal to phi1
+                phi1.id = phi.id;
+                phi = struct(phi1);
+            elseif strcmp(phi2.st, 'inf>0')
+                % phi2 is true
+                % Set phi equal to phi1
+                phi1.id = phi.id;
+                phi = struct(phi1);
+            elseif strcmp(phi2.st, 'inf<0')
+                % phi2 is false
+                % Set phi equal to phi2
+                phi2.id = phi.id;
+                phi = struct(phi2);
+            else
+                % END JOHAN ADDED
+                phi = STL_Parse(phi,'and', phi1, phi2);
+            end
             return
         end
         
@@ -258,7 +321,21 @@ switch(numel(varargin))
         if success && isempty(st1)
             phi1 = STL_Formula([phi.id '1__'],st2);
             STLDB_Remove([phi.id '1__']);
-            phi = STL_Parse(phi,'ev',interval,phi1);
+            phiWithoutPar = strrep(phi1.st, '(', '');
+            phiWithoutPar = strrep(phiWithoutPar, ')', '');
+            if strcmp(phiWithoutPar, 'inf>0')
+                phi.type='predicate';
+                phi.st = 'inf>0';
+                phi.params.fn = [ '(inf) - (0)' ];
+                phi.evalfn = @(mode,traj,t,params) feval('generic_predicate',mode,traj,t,params);
+            elseif strcmp(phiWithoutPar, 'inf<0')
+                phi.type='predicate';
+                phi.st = 'inf<0';
+                phi.params.fn = [ '(0) - (inf)' ];
+                phi.evalfn = @(mode,traj,t,params) feval('generic_predicate',mode,traj,t,params);
+            else
+                phi = STL_Parse(phi,'ev',interval,phi1);
+            end
             return
         end
 
@@ -271,13 +348,37 @@ switch(numel(varargin))
             phi = STL_Parse(phi, 'once', phi1);
             return
         end
+
+   
+        %% test hist
+        [success, st1, st2] = parenthesisly_balanced_split(st, '\<hist\>');
+        if success && isempty(st1)
+            phi1 = STL_Formula([phi.id '1__'],st2);
+            STLDB_Remove([phi.id '1__']);
+            phi = STL_Parse(phi, 'hist', phi1);
+            return
+        end
         
         %% test once_[ti,tf]
         [success, st1, st2, interval] = parenthesisly_balanced_split(st, '\<once_\[(.+?)\]\>');
         if success && isempty(st1)
             phi1 = STL_Formula([phi.id '1__'],st2);
             STLDB_Remove([phi.id '1__']);
-            phi = STL_Parse(phi,'once',interval,phi1);
+            phiWithoutPar = strrep(phi1.st, '(', '');
+            phiWithoutPar = strrep(phiWithoutPar, ')', '');
+            if strcmp(phiWithoutPar, 'inf>0')
+                phi.type='predicate';
+                phi.st = 'inf>0';
+                phi.params.fn = [ '(inf) - (0)' ];
+                phi.evalfn = @(mode,traj,t,params) feval('generic_predicate',mode,traj,t,params);
+            elseif strcmp(phiWithoutPar, 'inf<0')
+                phi.type='predicate';
+                phi.st = 'inf<0';
+                phi.params.fn = [ '(0) - (inf)' ];
+                phi.evalfn = @(mode,traj,t,params) feval('generic_predicate',mode,traj,t,params);
+            else
+                phi = STL_Parse(phi,'once',interval,phi1);
+            end
             return
         end
    
@@ -295,7 +396,21 @@ switch(numel(varargin))
         if success && isempty(st1)
             phi1 = STL_Formula([phi.id '1__'],st2);
             STLDB_Remove([phi.id '1__']);
-            phi = STL_Parse(phi,'hist',interval,phi1);
+            phiWithoutPar = strrep(phi1.st, '(', '');
+            phiWithoutPar = strrep(phiWithoutPar, ')', '');
+            if strcmp(phiWithoutPar, 'inf>0')
+                phi.type='predicate';
+                phi.st = 'inf>0';
+                phi.params.fn = [ '(inf) - (0)' ];
+                phi.evalfn = @(mode,traj,t,params) feval('generic_predicate',mode,traj,t,params);
+            elseif strcmp(phiWithoutPar, 'inf<0')
+                phi.type='predicate';
+                phi.st = 'inf<0';
+                phi.params.fn = [ '(0) - (inf)' ];
+                phi.evalfn = @(mode,traj,t,params) feval('generic_predicate',mode,traj,t,params);
+            else
+                phi = STL_Parse(phi,'hist',interval,phi1);
+            end
             return
         end
    
@@ -323,7 +438,21 @@ switch(numel(varargin))
         if success && isempty(st1)
             phi1 = STL_Formula([phi.id '1__'],st2);
             STLDB_Remove([phi.id '1__']);
-            phi = STL_Parse(phi,'alw',interval,phi1);
+            phiWithoutPar = strrep(phi1.st, '(', '');
+            phiWithoutPar = strrep(phiWithoutPar, ')', '');
+            if strcmp(phiWithoutPar, 'inf>0')
+                phi.type='predicate';
+                phi.st = 'inf>0';
+                phi.params.fn = [ '(inf) - (0)' ];
+                phi.evalfn = @(mode,traj,t,params) feval('generic_predicate',mode,traj,t,params);
+            elseif strcmp(phiWithoutPar, 'inf<0')
+                phi.type='predicate';
+                phi.st = 'inf<0';
+                phi.params.fn = [ '(0) - (inf)' ];
+                phi.evalfn = @(mode,traj,t,params) feval('generic_predicate',mode,traj,t,params);
+            else
+                phi = STL_Parse(phi,'alw',interval,phi1);
+            end
             return
         end
         
@@ -333,27 +462,73 @@ switch(numel(varargin))
         if success && isempty(st1)
             phi1 = STL_Formula([phi.id '1__'],st2);
             STLDB_Remove([phi.id '1__']);
-            phi = STL_Parse(phi, 'not', phi1);
+            phiWithoutPar = strrep(phi1.st, '(', '');
+            phiWithoutPar = strrep(phiWithoutPar, ')', '');
+            if strcmp(phiWithoutPar, 'inf>0')
+                phi.type='predicate';
+                phi.st = 'inf<0';
+                phi.params.fn = [ '(0) - (inf)' ];
+                phi.evalfn = @(mode,traj,t,params) feval('generic_predicate',mode,traj,t,params);
+            elseif strcmp(phiWithoutPar, 'inf<0')
+                phi.type='predicate';
+                phi.st = 'inf>0';
+                phi.params.fn = [ '(inf) - (0)' ];
+                phi.evalfn = @(mode,traj,t,params) feval('generic_predicate',mode,traj,t,params);
+            elseif strcmp(phi1.type, 'not')
+                % not(phi1) <=> not(not(phi1.phi)) <=> phi1.phi
+                % Set phi to phi1.phi
+                phi1.phi.id = phi.id;
+                phi = struct(phi1.phi);
+            else
+                phi = STL_Parse(phi, 'not', phi1);
+            end
             return
         end
         
         % test expr op expr | params
         
         % parse additional params
-        tokens = regexp(st, '(.+)\s*\|\s*(.+)','tokens');
-        if ~isempty(tokens)
-            st = tokens{1}{1};
-            param_st = tokens{1}{2};
-            param_tokens = regexp(param_st,'\s*,\s*','split');
-            for i=1:numel(param_tokens)
-                tk2 = regexp(param_tokens{i},'\s*(.+?)\s*=(.+)','tokens');
-                phi.params.default_params.(tk2{1}{1}) = eval(tk2{1}{2});
+        
+        % JOHAN EDIT: We comment out this parsing, which means we do not
+        % allow the use of "|" to define where parameters start
+        % This is to allow the use of " || " inside signal expressions
+        % (so that MATLAB can evaluate " or " in specific cases. 
+        % As of 2018-04-05, ' || ' is ONLY introduced into STL formulas
+        % inside sumToSTL.m, by the use of the function sumWithPhiExp()
+        
+%         tokens = regexp(st, '(.+)\s*\|\s*(.+)','tokens');
+%         if ~isempty(tokens)
+%             st = tokens{1}{1};
+%             param_st = tokens{1}{2};
+%             param_tokens = regexp(param_st,'\s*,\s*','split');
+%             for i=1:numel(param_tokens)
+%                 tk2 = regexp(param_tokens{i},'\s*(.+?)\s*=(.+)','tokens');
+%                 phi.params.default_params.(tk2{1}{1}) = eval(tk2{1}{2});
+%             end
+%         end
+
+        % If we reached here, we first want to check if the predicate can
+        % be evaluated to either 0 or 1 (i.e. it is "true" or "false")
+        try
+            stValue = eval(st);
+            if stValue == 1
+                % The predicate is TRUE
+                phi.type='predicate';
+                phi.st = 'inf>0';
+                phi.params.fn = [ '(inf) - (0)' ];
+                phi.evalfn = @(mode,traj,t,params) feval('generic_predicate',mode,traj,t,params);
+                return
+            elseif stValue == 0
+                % The predicate is FALSE
+                phi.type='predicate';
+                phi.st = 'inf<0';
+                phi.params.fn = [ '(0) - (inf)' ];
+                phi.evalfn = @(mode,traj,t,params) feval('generic_predicate',mode,traj,t,params);
+                return
             end
-        end
+        catch
         
         % parse operator
-       %% test predicate 
-
         [success, st1, st2] = parenthesisly_balanced_split(st, '<=');
         if success
             phi.type = 'predicate';
@@ -426,20 +601,75 @@ switch(numel(varargin))
         
         
         %% Maybe expression defined without >0
-        if isempty(regexp(st,'[>< ]','once'))
-            st = [st '>0'];
-            phi = STL_Parse(phi, st);
-            return;
-        end
+        % Johan comment: We don't do this check, since we instead check for
+        % this further down (if the formula has no comparison, then we
+        % change "st" to "not(st == 0)"). 
+%         if isempty(regexp(st,'[>< ]','once'))
+%             st = [st '>0'];
+%             phi = STL_Parse(phi, st);
+%             return;
+%         end
      
         %% Last possibility, the formula already exists - note: in that case
         % we ignore id and use the id of existing formula
-        try
-            st = regexprep(st,'[()\s]','');
-            phi = struct(BreachGlobOpt.STLDB(st));
-        catch
-            error('STL_Parse',['Unknown predicate or malformed formula: ' st]);
+        %         try
+        %             st = regexprep(st,'[()\s]','');
+        %             phi = struct(BreachGlobOpt.STLDB(st));
+        %         catch
+        % JOHAN CHANGE
+        
+        
+            
         end
+        %disp(['TESTRON: Changed predicate ' st ' to not(' st '==0)']);
+        st = ['not(' st '==0)'];
+        
+        % Below, basically copied from "not" case above
+        [success,st1, st2] = parenthesisly_balanced_split(st, '\<not\>');
+        if success && isempty(st1)
+            phi1 = STL_Formula([phi.id '1__'],st2);
+            STLDB_Remove([phi.id '1__']);
+            phiWithoutPar = strrep(phi1.st, '(', '');
+            phiWithoutPar = strrep(phiWithoutPar, ')', '');
+            if strcmp(phiWithoutPar, 'inf>0')
+                phi.type='predicate';
+                phi.st = 'inf<0';
+                phi.params.fn = [ '(0) - (inf)' ];
+                phi.evalfn = @(mode,traj,t,params) feval('generic_predicate',mode,traj,t,params);
+            elseif strcmp(phiWithoutPar, 'inf<0')
+                phi.type='predicate';
+                phi.st = 'inf>0';
+                phi.params.fn = [ '(inf) - (0)' ];
+                phi.evalfn = @(mode,traj,t,params) feval('generic_predicate',mode,traj,t,params);
+            else
+                phi = STL_Parse(phi, 'not', phi1);
+            end
+            return
+        end
+
+        % Below, basically copied from "==" case some rows above
+        % This was used when we replaced "st" with "st == 1"
+        %             [~, st1, st2] = parenthesisly_balanced_split(st, '==');
+        %             phi.type = 'predicate';
+        %             phi.st = st;
+        %             if ~isfield(phi.params, 'default_params')
+        %                 phi.params.default_params = struct;
+        %             end
+        %             if ~isfield(phi.params.default_params,'zero_threshold__')
+        %                 phi.params.default_params.zero_threshold__ = 1e-13;
+        %             end
+        %             if ~isfield(phi.params.default_params,'true_value__')
+        %                 phi.params.default_params.true_value__ = 1;
+        %             end
+        %             if ~isfield(phi.params.default_params,'alpha__')
+        %                 phi.params.default_params.alpha__ = 1;
+        %             end
+        %             phi.params.fn = [ 'fun__zero(abs(' st2 '-(' st1 ')),zero_threshold__,true_value__,alpha__)'];
+        %             phi.evalfn = @(mode,traj,t,params) feval('generic_predicate',mode,traj,t,params);
+        %             return
+        %error('STL_Parse',['Unknown predicate or malformed formula: ' st]);
+        % END JOHAN CHANGE
+        %         end
         
     case 2
         switch(varargin{1})

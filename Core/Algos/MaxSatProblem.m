@@ -38,12 +38,24 @@ classdef MaxSatProblem < BreachProblem
             this = this@BreachProblem(super_args{:});
         end
         
-        function [obj, cval] = objective_fn(this,x)
+        function [obj, cval, x_stoch] = objective_fn(this,x)
 
             % For falsification, default objective_fn is simply robust satisfaction of the least
-            this.Spec = this.R0.copy();
+            this.Spec.ResetEval();
+            
+            % checks stochastic domain
+            if ~isempty(this.stochastic_params)
+                this.BrStoch.ResetParamSet();
+                this.BrStoch.SampleDomain(size(x, 2));
+                x_stoch = this.BrStoch.GetParam(this.stochastic_params);
+                this.BrSys.SetParam(this.stochastic_params, x_stoch);
+            else
+                x_stoch = nan(0, size(x,2)); 
+            end
+                        
             this.robust_fn(x);
             robs = this.Spec.traces_vals;
+            
             if (~isempty(this.Spec.traces_vals_precond))
                 precond_robs = robs;
                 for itr = 1:size(this.Spec.traces_vals_precond,1)
@@ -81,7 +93,7 @@ classdef MaxSatProblem < BreachProblem
         end
         
         % Logging
-        function LogX(this, x, fval, cval)
+        function LogX(this, x, fval, cval, x_stoch)
             
             %  Logging satisfying parameters and traces
             [~, i_true] = find(fval>0);
@@ -97,7 +109,7 @@ classdef MaxSatProblem < BreachProblem
             end
             
             % Logging default stuff
-            this.LogX@BreachProblem(x, fval,cval);
+            this.LogX@BreachProblem(x, fval,cval, x_stoch);
             
         end
         

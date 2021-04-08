@@ -206,15 +206,43 @@ classdef BreachRequirement < BreachTraceSystem
                 end
                 
                 % eval requirement
+                execTimesForThisReq = zeros(1, numel(this.req_monitors));
                 for it = 1:num_traj
+                    currentTime = datestr(now, 'HH:MM:ss');
+                    if num_traj > 30 && (mod(it, 10) == 0)
+                        fprintf(['*** START traj ' num2str(it) '/' num2str(num_traj) ' at ' currentTime '\n']);
+                    end
+                    
                     if any(traces_vals_precond(it,:)<0)
-                        traces_vals(it, :)  = NaN;
+                        traces_vals( it, :)  = NaN;
                     else
                         for ipre = 1:numel(this.req_monitors)
+                            startTimeOfReq = tic;
                             req = this.req_monitors{ipre};
-                            [traces_vals(it, ipre), traces_vals_vac(it, ipre)]  = eval_req(this,req,it);
+                            
+                            [traces_vals(it, ipre), ...
+                                traces_vals_vac(it, ipre)]  = eval_req(this,req,it);
+                            execTimesForThisReq(ipre) = execTimesForThisReq(ipre) + toc(startTimeOfReq);
                         end
                     end
+                    % Finished the traj
+                    
+                end
+                
+                % Display the nSlowest slowest specifications
+                nSlowest = 5;
+                if (numel(execTimesForThisReq) > nSlowest) && (num_traj > 30)
+                    fprintf(['  Finished all trajs, ' num2str(nSlowest) ' slowest specs (out of ' num2str(numel(this.req_monitors)) '): ']);
+                    [sortedExecTimes, sortedSpecIndex] = sort(execTimesForThisReq, 'descend');
+                    for slowestCounter = 1:nSlowest
+                        thisIndex = sortedSpecIndex(slowestCounter);
+                        thisTime = sortedExecTimes(slowestCounter);
+                        fprintf([this.req_monitors{thisIndex}.name ' (' num2str(thisTime) 's)']);
+                        if slowestCounter < nSlowest
+                            fprintf(', ');
+                        end
+                    end
+                    fprintf('\n');
                 end
                 this.traces_vals_precond = traces_vals_precond;
                 this.traces_vals_vac = traces_vals_vac;
@@ -900,6 +928,8 @@ classdef BreachRequirement < BreachTraceSystem
                 for it = 1:numel(other.P.traj)
                     Pother.traj{it}.param(idx_trace_idx)=Pother.traj{it}.param(idx_trace_idx)+num_traj;
                 end
+                trace_idx_values = GetParam(Pother, 'data_trace_idx_');
+                Pother = SetParam(Pother, 'data_trace_idx_', trace_idx_values+num_traj);                                
             end
             this.P = SConcat(this.P, Pother, fast);
             
@@ -957,7 +987,9 @@ classdef BreachRequirement < BreachTraceSystem
             
         end
 
-        
+        function names = get_monitor_names(this)
+           names = cellfun(@(c)(c.name), this.req_monitors, 'UniformOutput', false); 
+        end
     end
     
     
@@ -1143,7 +1175,6 @@ classdef BreachRequirement < BreachTraceSystem
             end
             
         end
-
          
         function  [val, val_vac, traj] = pareval_req(this, req, traj, it)
         % parallel version     
@@ -1180,7 +1211,6 @@ classdef BreachRequirement < BreachTraceSystem
                 [val, ~, ~, val_vac]  = this.evalRequirement(req, time, Xin, p_in);
             end
         end
-
         
         function  [val, val_vac] = eval_req(this, req, it)
             val_vac = NaN;

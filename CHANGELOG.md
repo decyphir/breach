@@ -1,4 +1,9 @@
-Breach Change log
+# Release 1.9.0 
+
+- New solver: snobfit
+- New additive semantics, to be documented
+- Added Gui framework BreachGuiClass
+- various bugfixes and performance improvements 
 
 # Release 1.8.0
 
@@ -14,7 +19,6 @@ Breach Change log
 - Support for IA-STL 
 - Various improvement in BreachProblem
 - Simple pseudo random solver 
-
 
 # Release 1.6.2
 
@@ -35,8 +39,6 @@ Breach Change log
 
 ## Bugfixes 
 - Signature computation sometimes failed to properly link aliases 
-
-
 
 # Release 1.5.2
 

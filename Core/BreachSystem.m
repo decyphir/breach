@@ -68,77 +68,80 @@ classdef BreachSystem < BreachSet
         end
         
         function SetupParallel(this, NumWorkers)
-            
-            cluster = parcluster;
-            maxNumWorkers = cluster.NumWorkers;
-            
-            switch nargin
-                case 1
-                    NumWorkers = maxNumWorkers;
-                case 2
-                    NumWorkers = min(NumWorkers, maxNumWorkers);
-                otherwise
-            end
-            
-            % check existing workers
-            poolobj = gcp('nocreate'); % If no pool, do not create new one.
-            if isempty(poolobj)
-                currentNumWorkers = 0;
-            else
-                currentNumWorkers = poolobj.NumWorkers;
-            end
-            
-            if(currentNumWorkers ~= 0 && NumWorkers ~= 0 && (currentNumWorkers ~= NumWorkers))
-                this.StopParallel();
-                currentNumWorkers=0;
-            end
-            
-            if NumWorkers~=1 && currentNumWorkers == 0
-                distcomp.feature( 'LocalUseMpiexec', false );   %TODO: mathworks suggested this command. it prevents calling "Mpiexec". I'm not sure the needs of that.
-                poolobj=parpool(NumWorkers); %Matlab2013b or later
-            end
-            this.use_parallel = 1;
-            this.Sys.use_parallel = 1;
-            this.Sys.Parallel = NumWorkers;
-            
-            % run initialization function on all workers
-            if ~isempty(this.InitFn)
-                pctRunOnAll(this.InitFn);
-            end
-            
-            % setup the temp folders for the workers
-            cwd = pwd;
-            cd(this.ParallelTempRoot)
-            for ii = 1:NumWorkers
-                dirName = ['Worker' int2str(ii)];
-                if exist(dirName, 'dir') ~= 7
-                    mkdir(dirName);
+            if license('test','Distrib_Computing_Toolbox')
+                cluster = parcluster;
+                maxNumWorkers = cluster.NumWorkers;
+                
+                switch nargin
+                    case 1
+                        NumWorkers = maxNumWorkers;
+                    case 2
+                        NumWorkers = min(NumWorkers, maxNumWorkers);
+                    otherwise
                 end
                 
+                % check existing workers
+                poolobj = gcp('nocreate'); % If no pool, do not create new one.
+                if isempty(poolobj)
+                    currentNumWorkers = 0;
+                else
+                    currentNumWorkers = poolobj.NumWorkers;
+                end
+                
+                if(currentNumWorkers ~= 0 && NumWorkers ~= 0 && (currentNumWorkers ~= NumWorkers))
+                    this.StopParallel();
+                    currentNumWorkers=0;
+                end
+                
+                if NumWorkers~=1 && currentNumWorkers == 0
+                    distcomp.feature( 'LocalUseMpiexec', false );   %TODO: mathworks suggested this command. it prevents calling "Mpiexec". I'm not sure the needs of that.
+                    poolobj=parpool(NumWorkers); %Matlab2013b or later
+                end
+                this.use_parallel = 1;
+                this.Sys.use_parallel = 1;
+                this.Sys.Parallel = NumWorkers;
+                
+                % run initialization function on all workers
+                if ~isempty(this.InitFn)
+                    pctRunOnAll(this.InitFn);
+                end
+                
+                % setup the temp folders for the workers
+                cwd = pwd;
+                cd(this.ParallelTempRoot)
+                for ii = 1:NumWorkers
+                    dirName = ['Worker' int2str(ii)];
+                    if exist(dirName, 'dir') ~= 7
+                        mkdir(dirName);
+                    end
+                    
+                end
+                cd(cwd)
             end
-            cd(cwd)
         end
         
         % clear up the ModelsData/ParallelTemp folder
         function StopParallel(this)
-            cwd = pwd;
-            cd(this.ParallelTempRoot)
-            folders = dir(this.ParallelTempRoot);
-            names = {folders.name};
-            % delete the path for the current folder and parent folder
-            names(ismember(names,{'.', '..'})) = [];
-            status = 0;
-            for ii = 1:length(names)
-                for attempt = 1:4
-                    status = rmdir(names{ii}, 's');
-                    if status == 1
-                        break
+            if license('test','Distrib_Computing_Toolbox')
+                cwd = pwd;
+                cd(this.ParallelTempRoot)
+                folders = dir(this.ParallelTempRoot);
+                names = {folders.name};
+                % delete the path for the current folder and parent folder
+                names(ismember(names,{'.', '..'})) = [];
+                status = 0;
+                for ii = 1:length(names)
+                    for attempt = 1:4
+                        status = rmdir(names{ii}, 's');
+                        if status == 1
+                            break
+                        end
+                        pause(0.2*attempt)
                     end
-                    pause(0.2*attempt)
                 end
+                this.Sys.use_parallel = 0;
+                cd(cwd)
             end
-            this.Sys.use_parallel = 0;
-            cd(cwd)
         end
         
         function this = SetInitFn(this,Fn)
@@ -244,6 +247,7 @@ classdef BreachSystem < BreachSet
             
         end
         
+
         
         
         %% Specs
@@ -275,6 +279,9 @@ classdef BreachSystem < BreachSet
                 i_sig = FindParam(this.Sys, sig);
                 sig_not_found = find(i_sig>this.Sys.DimP, 1);
                 if ~isempty(sig_not_found)
+                    disp('sig_not_found: ');
+                    disp(sig_not_found);
+                    disp(sig(sig_not_found));
                     error('Some signals in specification are not part of the system.')
                 end
                 % Add property params
@@ -400,6 +407,17 @@ classdef BreachSystem < BreachSet
             Sim(this);
             this.CheckinDomainTraj();
             
+            % JOHAN ADDED
+
+            % This was used previously to save trajectory info to the
+            % folder 'trajectories'
+%             filesInTrajFolder = length(dir('trajectories')) - 2;
+%             tmpP = this.P;
+%             paramValues = values;
+%             load('nextReqToBeFalsified'); % Loads currentReq
+%             save(['trajectories/' num2str(filesInTrajFolder + 1) '.mat'],'tmpP','params','paramValues', 'currentReq');
+            % END JOHAN ADDED
+            
             % FIXME: this is going to break with multiple trajectories with
             % some of them containing NaN -
             
@@ -447,6 +465,16 @@ classdef BreachSystem < BreachSet
             Sim(this);
             this.CheckinDomainTraj();
             
+            % JOHAN ADDED
+            % This was used previously to save trajectory info to the
+            % folder 'trajectories'
+%             filesInTrajFolder = length(dir('trajectories')) - 2;
+%             tmpP = this.P;
+%             paramValues = values;
+%             load('nextReqToBeFalsified'); % Loads currentReq
+%             save(['trajectories/' num2str(filesInTrajFolder + 1) '.mat'],'tmpP','params','paramValues', 'currentReq');
+            % END JOHAN ADDED
+            
             % FIXME: this is going to break with multiple trajectories with
             % some of them containing NaN -
             if any(isnan(this.P.traj{1}.X))
@@ -454,11 +482,13 @@ classdef BreachSystem < BreachSet
                 rob = t_phi;
                 rob(:) = NaN;
             else
+                % TODO: This needs to be fixed for other objective
+                % functions!
                 [rob, tau] = STL_Eval_IO(this.Sys, phi, this.P, this.P.traj, inout, relabs, t_phi);
             end
             
         end
-        
+      
         function [robfn, BrSys] = GetRobustSatFn(this, phi, params, t_phi)
             % Return a function of the form robfn: p -> rob such that p is a
             % vector of values for parameters and robfn(p) is the
@@ -1008,7 +1038,7 @@ classdef BreachSystem < BreachSet
                 nb_traj = 0;
             end
             
-            st = ['BreachSystem ' this.Sys.name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' unique traces.'];
+            st = ['BreachSystem ' this.Sys.name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' unique traces.\n'];
             
             if nargout == 0
                 varargout = {};

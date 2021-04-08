@@ -69,7 +69,7 @@ classdef BreachSamplesPlot < handle
                     this.z_axis = var{3};
                 end
                 
-            elseif ~isa(this.BrSet, 'BreachRequirement')
+            elseif ~this.has_rob()
                 var = this.data.variables;
                 if numel(var)>=1
                     this.x_axis = var{1};
@@ -99,7 +99,7 @@ classdef BreachSamplesPlot < handle
             end
             
             all_pts = 1:num_samples;
-            if isa(this.BrSet, 'BreachRequirement')
+            if this.has_rob()
                 rob = this.summary.requirements.rob;
                 rob_vac =  this.summary.requirements.rob_vac;
             else
@@ -111,7 +111,7 @@ classdef BreachSamplesPlot < handle
             this.data.all_pts.idx = all_pts;
             
             %% robustnesses of each requirement            
-            if isa(this.BrSet, 'BreachRequirement')
+            if this.has_rob()
                 this.data.req_names = {};
                 for ir = 1:numel(this.BrSet.req_monitors)
                     name = this.BrSet.req_monitors{ir}.name;
@@ -177,6 +177,16 @@ classdef BreachSamplesPlot < handle
             vals_pos = rob';
             vals_pos(rob'<=0) = 0;
             
+            vals_cum_pos = vals_pos>=0;             
+            num_req = size(vals_pos,1);
+            for ir = 1:num_req % for each requirequirement
+              ifalse = find(vals_pos(ir,:)==0,1); 
+              if ifalse
+                vals_cum_pos(ir, ifalse:end)=0;                
+              end
+            end
+            vals_cum_neg = 1-vals_cum_pos;
+            
             vals_vac = vals_pos; 
             vals_vac(vals_pos<inf)=0;
             
@@ -186,17 +196,21 @@ classdef BreachSamplesPlot < handle
             
             % idx pos and neg
             num_vals_pos = sum(vals_pos>=0&vals_neg==0,1);
+            sum_num_vals_pos =sum(vals_cum_pos,1); 
             num_vals_neg = sum(vals_neg<0,1);
+            sum_num_vals_neg =sum(vals_cum_neg,1); 
             num_vals_vac = sum(vals_vac>0&vals_neg==0,1);
             idx_pos = num_vals_pos >0;
             idx_neg = num_vals_neg >0;
             idx_vac = num_vals_vac >0;
+            
             
             if any(idx_pos)
                 this.data.pos_pts.idx= all_pts(idx_pos);
                 this.data.pos_pts.idx_traj = this.BrSet.P.traj_ref(this.data.pos_pts.idx);
                 this.data.pos_pts.v_sum_pos = sum(vals_pos(:,idx_pos),1);
                 this.data.pos_pts.v_num_pos = num_vals_pos(idx_pos);
+                this.data.pos_pts.v_sum_num_pos = sum_num_vals_pos(idx_pos);
             end
 
             if any(idx_vac)
@@ -211,6 +225,7 @@ classdef BreachSamplesPlot < handle
                 this.data.neg_pts.idx_traj = this.BrSet.P.traj_ref(this.data.neg_pts.idx);
                 this.data.neg_pts.v_sum_neg = sum(vals_neg(:, idx_neg),1);
                 this.data.neg_pts.v_num_neg = -num_vals_neg(idx_neg);
+                this.data.neg_pts.v_sum_num_neg = -sum_num_vals_neg(idx_neg);
             end
             
         end
@@ -228,12 +243,19 @@ classdef BreachSamplesPlot < handle
             cla;
             grid on;
             
-            if isa(this.BrSet, 'BreachRequirement')
+            if this.has_rob()
                 this.update_req_plot();
             else
                 this.update_brset_plot();
             end
             
+        end
+        
+        function b = has_rob(this)
+           b = isa(this.BrSet, 'BreachRequirement')&&...           
+               isfield(this.summary,'requirements')&&...
+               isfield(this.summary.requirements,'rob')&&...
+               ~isempty(this.summary.requirements.rob);
         end
         
         function update_brset_plot(this)
@@ -345,14 +367,18 @@ classdef BreachSamplesPlot < handle
             set(cursor_h, 'UIContextMenu', cm);
             
             function ctxtfn_signals_plot(o,e)
-                if isempty(this.idx_tipped)
-                    it = 1;
+                if this.BrSet.hasTraj()
+                    if isempty(this.idx_tipped)
+                        it = 1;
+                    else
+                        it = this.idx_tipped(1);
+                    end
+                    sig = this.signature.signals{1};
+                    F = BreachSignalsPlot(this.BrSet,sig, it);
+                    set(F.Fig,'Name', ['Trace idx= ' num2str(it)]);
                 else
-                    it = this.idx_tipped(1);
+                    warning('BreachSamplesPlot:no_signal','No signal(s) to plot.');
                 end
-                sig = this.signature.signals{1};
-                F = BreachSignalsPlot(this.BrSet,sig, it);
-                set(F.Fig,'Name', ['Trace idx= ' num2str(it)]);
             end
             
             top_x = uimenu(cm, 'Label', ['Change x-axis']);
@@ -423,6 +449,11 @@ classdef BreachSamplesPlot < handle
                         ydata_pos = this.data.pos_pts.v_num_pos;
                         if any(strcmp(this.z_axis, none_z))
                             plot_this = @plot_num;
+                        end
+                    case 'sum_num'                        
+                        ydata_pos = this.data.pos_pts.v_sum_num_pos;
+                        if any(strcmp(this.z_axis, none_z))
+                            plot_this = @plot_sum_num;
                         end
                     otherwise
                         if ismember(this.y_axis, this.data.req_names)
@@ -546,6 +577,11 @@ classdef BreachSamplesPlot < handle
                         ydata_neg = this.data.neg_pts.v_num_neg;
                         if any(strcmp(this.z_axis, none_z))
                             plot_this = @plot_num;
+                        end
+                    case 'sum_num'
+                        ydata_neg = this.data.neg_pts.v_sum_num_neg;
+                        if any(strcmp(this.z_axis, none_z))
+                            plot_this = @plot_sum_num;
                         end
                     otherwise
                         if ismember(this.y_axis, this.data.req_names)
@@ -687,6 +723,47 @@ classdef BreachSamplesPlot < handle
                 leg = [leg {'#Falsified'}];                
             end            
             
+            function plot_sum_num()
+                
+                if has_pos&&~isempty(xdata_pos)
+                    bar_sum_pos()
+                end
+                
+                if has_neg&&~isempty(xdata_neg)
+                    bar_sum_neg();
+                end
+                
+                grid on;
+                xlabel(this.x_axis, 'Interpreter', 'None');
+                ylabel('Num. requirement falsified/satisfied');
+                set(gca, 'XTick', 1:numel(this.data.all_pts.idx), 'XLim', [0 numel(this.data.all_pts.idx)+1]);
+                legend(leg);
+            end
+
+            function bar_sum_pos()
+                if has_vac&&~isempty(xdata_vac)
+                    ydata_pos = this.data.pos_pts.v_sum_num_pos;
+                    ydata_vac = this.data.vac_pts.v_num_vac;
+                    this.pos_plot = bar([xdata_pos xdata_pos(end)+1], [ydata_pos nan] ,0.5,'g');
+                    hold on
+                    this.vac_plot = bar([xdata_vac xdata_vac(end)+1]+.1, [ydata_vac nan],0.4,'m');
+                    leg = {'#Satisfied', '#Vacuous Sat.'};
+                else
+                    ydata_pos = this.data.pos_pts.v_sum_num_pos;
+                    this.pos_plot = bar([xdata_pos xdata_pos(end)+1] , [ydata_pos nan] ,0.5,'g');
+                    hold on
+                    leg =[leg {'#Satisfied'}];
+                end
+            end
+            
+            function bar_sum_neg()
+                ydata_neg = this.data.neg_pts.v_sum_num_neg;
+                this.neg_plot = bar([xdata_neg xdata_neg(end)+1], [ydata_neg nan] ,0.5,'r');                
+                leg = [leg {'#Falsified'}];                
+            end            
+            
+            
+            
             function plot3_num()
                 if has_pos
                     ydata_pos = this.data.pos_pts.v_num_pos;
@@ -715,13 +792,13 @@ classdef BreachSamplesPlot < handle
             cursor_h.UpdateFcn = @myupdatefcn;
             cursor_h.SnapToDataVertex = 'on';
             
+            
             function [txt] = myupdatefcn(obj,event_obj)
                 pos = event_obj.Position;
                 ipos = find(event_obj.Target.XData==pos(1)&event_obj.Target.YData==pos(2),1);
                 is_neg = 0;
                 is_pos = 0;
-                is_vac = 0;
-                
+                is_vac = 0;                
                 
                 if isequal(this.neg_plot, event_obj.Target)
                     is_neg = 1;
@@ -782,7 +859,7 @@ classdef BreachSamplesPlot < handle
             cm = uicontextmenu;
             uimenu(cm, 'Label', 'Open signals plot','Callback', @ctxtfn_signals_plot)
             
-            if isa(this.BrSet, 'BreachRequirement')
+            if this.has_rob()
                 top_diag = uimenu(cm, 'Label', ['Plot diagnostics']);
                 for ir = 1:numel(this.summary.requirements.names)
                     uimenu(top_diag,'Label', this.summary.requirements.names{ir},'Callback', @(o,e)ctxtfn_plot_diagnostics(ir, o, e));
@@ -814,8 +891,9 @@ classdef BreachSamplesPlot < handle
             end
                                    
             top_y = uimenu(cm, 'Label', ['Change y-axis']);                        
-            uimenu(top_y, 'Label', 'Cumulative sums of robustness','Callback',@(o,e)(this.set_y_axis('sum')));
+            uimenu(top_y, 'Label', 'Sums of robustness','Callback',@(o,e)(this.set_y_axis('sum')));
             uimenu(top_y, 'Label', 'Number of Sat/False req.','Callback',@(o,e)(this.set_y_axis('num')));
+            uimenu(top_y, 'Label', 'Cumulative Numbers of Sat/False req.','Callback',@(o,e)(this.set_y_axis('sum_num')));
       
             if numel(this.data.variables)<10
                 top_var = uimenu(top_y, 'Label', 'Variable');

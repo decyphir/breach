@@ -27,7 +27,7 @@ B.SetParamRanges({'throttle_u0','brake_u1', 'throttle_u2', 'brake_u3'}, ...
 % to 0 (by default). Same for throttle_u1, etc.
 B.QuasiRandomSample(10); B.Sim();
 
-%% Plot multiple simaltions result
+%% Plot multiple simulations result
 B.PlotSignals({'throttle', 'brake','RPM', 'speed', 'gear'});
 
 %% Check property visually 

@@ -1,12 +1,17 @@
-function Nn = N2Nn(n,nb, num_new)
+function Nn = N2Nn(n,nb, num_new, varargin)
 %N2NN Builds a set of nb^n points in N^n (nb points per axes)
 %
-% Synopsis : Nn = N2Nn(n,nb, [num_new])
+% Synopsis : Nn = N2Nn(n,nb, [num_new, varargin])
 %
 %  The resulting set of points is sorted according to a heuristic which favors clusters of identical values.
 %  In particular, the two first column are uniform. In the corner
 %  computation case, this corresponds to the two extremal corners.
 %
+
+opt.randomize_order = true;
+opt.start_with_min_max = true;
+opt.sort_by_clusters = false;
+opt = varargin2struct_breach(opt,varargin{:});
 
 if isscalar(nb)
     nb = nb*ones(1,n);
@@ -60,8 +65,15 @@ else
     clust = find_size_min_cluster(Nn);
     [~, clust_sort ] = sort(clust, 1, 'descend');
     Nn = Nn(:, clust_sort);
+    
+    % throw in max frequency in 3 and 4 for good measure
+    h = size(Nn,1);
+    onetwos = repmat([1 2]',ceil(h/2),1);
+    onetwos = onetwos(1:h,1);
+    twoones = repmat([2 1]',ceil(h/2),1);
+    twoones = twoones(1:size(Nn,1),1);       
+    Nn = unique([Nn(:,1:2) twoones onetwos Nn(:,3:end)]', 'rows', 'stable')';        
     Nn = Nn(:,1:num_new);
-
 end
 end
 
@@ -91,9 +103,7 @@ if(n==1)
     Nn = p;
 else
     Nnm = N2NnIter(n-1,p,nb(1:end-1));
-    nbm = size(Nnm,2);
-    repmat(Nnm,1,nb(end));
-    kron(1:nb(end),ones(1,nb(1)));
+    nbm = size(Nnm,2);    
     Nn = [ repmat(Nnm,1,nb(end)) ; kron(1:nb(end),ones(1,nbm)) ];
 end
 end

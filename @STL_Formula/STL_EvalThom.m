@@ -162,12 +162,52 @@ switch(phi.type)
     case 'or'
         [valarray1, time_values1] = GetValues(Sys, phi.phi1, P, traj, interval);
         [valarray2, time_values2] = GetValues(Sys, phi.phi2, P, traj, interval);
-        [time_values, valarray] = RobustOr(time_values1, valarray1, time_values2, valarray2);
+        
+        switch phi.semantics
+            case 'max'
+                [time_values, valarray] = RobustOr(time_values1, valarray1, time_values2, valarray2);
+            case 'add'
+                % ||+
+                [time_values, valarray] = robustAndPlus(time_values1, -valarray1, time_values2, -valarray2);
+                valarray = -valarray;
+            case 'vbool_v1'
+                [time_values, valarray] = robustAndPlus_v1(time_values1, -valarray1, time_values2, -valarray2);
+                valarray = -valarray;
+            case 'MARV'
+                % On this level, MARV is just standard robustness, since
+                % MARV only applies to top-level "always"-operator.
+                [time_values, valarray] = RobustOr(time_values1, valarray1, time_values2, valarray2);
+            case 'constant'
+                [time_values, valarray] = RobustOr(time_values1, valarray1, time_values2, valarray2);
+            otherwise
+                error('Unknown robust semantics (phi.semantics)');
+        end
         
     case 'and'
         [valarray1, time_values1] = GetValues(Sys, phi.phi1, P, traj, interval);
         [valarray2, time_values2] = GetValues(Sys, phi.phi2, P, traj, interval);
-        [time_values, valarray] = RobustAnd(time_values1, valarray1, time_values2, valarray2);
+        
+        % JOHAN CHANGE
+        switch phi.semantics
+            case 'max'
+                % Standard and
+                [time_values, valarray] = RobustAnd(time_values1, valarray1, time_values2, valarray2);
+            case 'add'
+                % Koen's &+
+                [time_values, valarray] = robustAndPlus(time_values1, valarray1, time_values2, valarray2);
+            case 'vbool_v1'
+                % Old additive semantics
+                [time_values, valarray] = robustAndPlus_v1(time_values1, valarray1, time_values2, valarray2);
+            case 'MARV'
+                % On this level, MARV is just standard robustness, since
+                % MARV only applies to top-level "always"-operator.
+                [time_values, valarray] = RobustAnd(time_values1, valarray1, time_values2, valarray2);
+            case 'constant'
+                % Standard and
+                [time_values, valarray] = RobustAnd(time_values1, valarray1, time_values2, valarray2);
+            otherwise
+                error('Unknown robust semantics (phi.semantics)');
+        end
         
     case 'andn'
         n_phi = numel(phi.phin);
@@ -182,7 +222,27 @@ switch(phi.type)
         [valarray1, time_values1] = GetValues(Sys, phi.phi1, P, traj, interval);
         [valarray2, time_values2] = GetValues(Sys, phi.phi2, P, traj, interval);
         valarray1 = -valarray1;
-        [time_values, valarray] = RobustOr(time_values1, valarray1, time_values2, valarray2);
+        
+        switch phi.semantics
+            case 'max'
+                [time_values, valarray] = RobustOr(time_values1, valarray1, time_values2, valarray2);
+            case 'add'
+                % Standard implication, but with vbool andPlus
+                [time_values, valarray] = robustAndPlus(time_values1, -valarray1, time_values2, -valarray2);
+                valarray = -valarray;
+            case 'vbool_v1'
+                [time_values, valarray] = robustAndPlus_v1(time_values1, -valarray1, time_values2, -valarray2);
+                valarray = -valarray;
+            case 'MARV'
+                % On this level, MARV is just standard robustness, since
+                % MARV only applies to top-level "always"-operator.
+                [time_values, valarray] = RobustOr(time_values1, valarray1, time_values2, valarray2);
+            case 'constant'
+                [time_values, valarray] = RobustOr(time_values1, valarray1, time_values2, valarray2);
+            otherwise
+                error('Unknown robust semantics (phi.semantics)');
+        end
+        
         
     case 'always'
         I___ = eval(phi.interval);
@@ -190,12 +250,60 @@ switch(phi.type)
         I___(1) = min(I___(1), I___(2));
         next_interval = I___+interval;
         [valarray, time_values] = GetValues(Sys, phi.phi, P, traj, next_interval);
-        if(I___(end)~=inf)
-            time_values = [time_values time_values(end)+I___(end)];
-            valarray = [valarray valarray(end)];
+        % JOHAN FIX
+        % valarray is EMPTY if the formula is "true". The valarray is
+        % assigned Inf at all time steps, which is then "removed" to
+        % prevent unwanted behaviour.
+        % Solution: If valarray is empty, set the valarray to be
+        % true_value.
+        if isempty(valarray)
+            if isfield(phi.params.default_params,'true_value__')
+                % true_value__ is defined for phi
+                valarray = phi.params.default_params.true_value__;
+            else
+                % true_value__ is NOT defined for phi!!
+                warning('true_value__ is not defined for phi! Using true_value__ = 100.')
+                valarray = 100;
+            end
+            time_values = I___(1);
         end
-        [time_values, valarray] = RobustEv(time_values, -valarray, I___);
-        valarray = -valarray;
+        % END JOHAN FIX
+        
+        switch phi.semantics
+            case 'max'
+                if(I___(end)~=inf)
+                    time_values = [time_values time_values(end)+I___(end)];
+                    valarray = [valarray valarray(end)];
+                end
+                [time_values, valarray] = RobustEv(time_values, -valarray, I___);
+                valarray = -valarray;
+            case 'add'
+                %[time_values, valarray] = RobustAvEvRight(time_values, -valarray, I___);
+                %valarray = -valarray;
+                [time_values, valarray] = RobustAlways(time_values, valarray, I___);
+            case 'vbool_v1'
+                %[time_values, valarray] = RobustAvEvRight(time_values, -valarray, I___);
+                %valarray = -valarray;
+                [time_values, valarray] = RobustAlways_v1(time_values, valarray, I___);
+            case 'MARV'
+                % On this level, MARV is just standard robustness, since
+                % MARV only applies to top-level "always"-operator.
+                if(I___(end)~=inf)
+                    time_values = [time_values time_values(end)+I___(end)];
+                    valarray = [valarray valarray(end)];
+                end
+                [time_values, valarray] = RobustEv(time_values, -valarray, I___);
+                valarray = -valarray;
+            case 'constant'
+                if(I___(end)~=inf)
+                    time_values = [time_values time_values(end)+I___(end)];
+                    valarray = [valarray valarray(end)];
+                end
+                [time_values, valarray] = RobustEv(time_values, -valarray, I___);
+                valarray = -valarray;
+            otherwise
+                error('Unknown objective function!');
+        end
         
     case 'av_eventually'
         I___ = eval(phi.interval);
@@ -215,17 +323,44 @@ switch(phi.type)
         I___(1) = min(I___(1), I___(2));
         next_interval = I___+interval;
         [valarray1, time_values1] = GetValues(Sys, phi.phi, P, traj, next_interval);
-        if(I___(end)~=inf)
-            time_values1 = [time_values1 time_values1(end)+I___(end)];
-            valarray1 = [valarray1 valarray1(end)];
+        
+        switch phi.semantics
+            case 'max'
+                if(I___(end)~=inf)
+                    time_values1 = [time_values1 time_values1(end)+I___(end)];
+                    valarray1 = [valarray1 valarray1(end)];
+                end
+                [time_values, valarray] = RobustEv(time_values1, valarray1, I___);
+            case 'add'
+                [time_values, valarray] = RobustAlways(time_values1, -valarray1, I___);
+                valarray = -valarray;
+            case 'vbool_v1'
+                [time_values, valarray] = RobustAlways_v1(time_values1, -valarray1, I___);
+                valarray = -valarray;
+            case 'MARV'
+                % On this level, MARV is just standard robustness, since
+                % MARV only applies to top-level "always"-operator.
+                if(I___(end)~=inf)
+                    time_values1 = [time_values1 time_values1(end)+I___(end)];
+                    valarray1 = [valarray1 valarray1(end)];
+                end
+                [time_values, valarray] = RobustEv(time_values1, valarray1, I___);
+            case 'constant'
+                if(I___(end)~=inf)
+                    time_values1 = [time_values1 time_values1(end)+I___(end)];
+                    valarray1 = [valarray1 valarray1(end)];
+                end
+                [time_values, valarray] = RobustEv(time_values1, valarray1, I___);
+            otherwise
+                error('Unknown objective function!');
         end
-        [time_values, valarray] = RobustEv(time_values1, valarray1, I___);
     
     case 'once'
         I___ = eval(phi.interval);
         I___ = max([I___; 0 0]);
         I___(1) = min(I___(1), I___(2));
-               
+        
+        
         next_interval = interval-[I___(1)+I___(2), I___(1)];
         next_interval(1) = max(0, next_interval(1));        
         [valarray1, time_values1] = GetValues(Sys, phi.phi, P, traj, next_interval);
@@ -234,14 +369,31 @@ switch(phi.type)
         % previous 
         Tend__ =  time_values1(end)+1; 
         past_time_values1 = fliplr(Tend__-[time_values1 Tend__]);
-        past_valarray1 =    fliplr([valarray1(1) valarray1]);
-
-        [past_time_values, past_valarray] = RobustEv(past_time_values1, past_valarray1, I___);    
+        past_valarray1 =    fliplr([valarray1(1) valarray1]);               
+        
+        switch phi.semantics
+            case 'add'
+                [past_time_values, past_valarray] = RobustAlways(past_time_values1, -past_valarray1, I___);  
+                past_valarray = -past_valarray;
+            case 'max'
+                [past_time_values, past_valarray] = RobustEv(past_time_values1, past_valarray1, I___);  
+            case 'vbool_v1'
+                [past_time_values, past_valarray] = RobustAlways_v1(past_time_values1, -past_valarray1, I___);  
+                past_valarray = -past_valarray;
+            case 'MARV'
+                % On this level, MARV is just standard robustness, since
+                % MARV only applies to top-level "always"-operator.
+                [past_time_values, past_valarray] = RobustEv(past_time_values1, past_valarray1, I___);  
+            case 'constant'
+                [past_time_values, past_valarray] = RobustEv(past_time_values1, past_valarray1, I___);  
+            otherwise
+                error('Unknown objective function!');
+        end
 
         % Flipping back
         time_values = fliplr(Tend__-[past_time_values Tend__]);
-        valarray = fliplr([past_valarray(1) past_valarray]);        
-    
+        valarray = fliplr([past_valarray(1) past_valarray]);                  
+
     case 'historically'
         I___ = eval(phi.interval);
         I___ = max([I___; 0 0]);
@@ -255,14 +407,30 @@ switch(phi.type)
         % previous 
         Tend__ =  time_values1(end)+1; 
         past_time_values1 = fliplr(Tend__-[time_values1 Tend__]);
-        past_valarray1 =    fliplr([valarray1(1) valarray1]);
-
-        [past_time_values, past_valarray] = RobustEv(past_time_values1, -past_valarray1, I___);    
+        past_valarray1 =    fliplr([valarray1(1) valarray1]);        
+        
+        switch phi.semantics
+            case 'max'
+                [past_time_values, past_valarray] = RobustEv(past_time_values1, -past_valarray1, I___);  
+            case 'add'
+                [past_time_values, past_valarray] = RobustAlways(past_time_values1, past_valarray1, I___);  
+                past_valarray = -past_valarray;
+            case 'vbool_v1'
+                [past_time_values, past_valarray] = RobustAlways_v1(past_time_values1, past_valarray1, I___);  
+                past_valarray = -past_valarray;
+            case 'MARV'
+                % On this level, MARV is just standard robustness, since
+                % MARV only applies to top-level "always"-operator.
+                [past_time_values, past_valarray] = RobustEv(past_time_values1, -past_valarray1, I___);  
+            case 'constant'
+                [past_time_values, past_valarray] = RobustEv(past_time_values1, -past_valarray1, I___);  
+            otherwise
+                error('Unknown objective function!');
+        end
         
         % Flipping back
         time_values = fliplr(Tend__-[past_time_values Tend__]);
         valarray = -fliplr([past_valarray(1) past_valarray]);        
-        
        
     case 'until'
         I___ = eval(phi.interval);

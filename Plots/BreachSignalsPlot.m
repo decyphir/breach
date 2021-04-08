@@ -3,8 +3,7 @@ classdef BreachSignalsPlot < handle
     properties
         BrSet
         Fig
-        Axes
-        
+        Axes        
         ipts
     end
     
@@ -74,8 +73,7 @@ classdef BreachSignalsPlot < handle
             ax = this.AddAxesContextMenu(ax);
             % default to horizontal zoom mode
             h = zoom;
-            set(h,'Motion','horizontal','Enable','off');
-        
+            set(h,'Motion','horizontal','Enable','off');        
         end
                               
         function DeleteAxes(this, pos)
@@ -129,8 +127,7 @@ classdef BreachSignalsPlot < handle
                 sig = sigs{is};
                 this.plot_signal(sig, ax, itraces);
             end
-            this.update_legend(ax);
-            
+            this.update_legend(ax);            
         end
                    
         function PlotDiagnostics(this, req)

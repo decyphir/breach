@@ -77,13 +77,21 @@ fn_ = regexprep(fn_,'([^\.])\*', '$1\.*');
 fn_ = regexprep(fn_,'([^\.])\^', '$1\.^');
 
 % we capture variables involved in the formula
-[~,~,~,~,tokens] = regexp(fn_, ['^(\w+)\[.+?\]|'  ... 
-                                '\W(\w+)\[.+?\]|' ...
-                                'ddt\{\s*(\w+)\s*\}\[.+?\]|' ...
-                                'd\{\s*(\w+)\s*\}{.+?}\[.+?\]'...
-                                '\{(.+?)\}[.+?]']);
+[~,~,~,~,tokens] = regexp(fn_, ['^(\w+)\[.+?\]|'  ...
+    '\W(\w+)\[.+?\]|' ...
+    'ddt\{\s*(\w+)\s*\}\[.+?\]|' ...
+    'd\{\s*(\w+)\s*\}{.+?}\[.+?\]'...
+    '\{(.+?)\}[.+?]']);
 
 SigList = unique(cat(2,tokens{:}));
+% JOHAN ADDED
+% To make sure that "alw_" cannot be extracted as a predicate,
+% we do this:
+% alwIdx = find(strcmp(SigList, 'alw_'));
+% if ~isempty(alwIdx)
+%     SigList(alwIdx) = [];
+% end
+% END JOHAN ADDED
 for ii_var = 1:numel(SigList)
     pcurr = SigList{ii_var};
     i_var = FindParam(Sys, pcurr);

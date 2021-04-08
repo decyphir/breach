@@ -90,4 +90,12 @@ switch nargin
         [val, tau] = STL_EvalThom_Gen(Sys, phi, P, trajs, partition, relabs, taus);
 end
 
+% Apply constant semantics, if needed
+constSemanticsVal = 100; 
+if strcmp(phi.semantics, 'constant')
+    val(val >= 0) = constSemanticsVal;
+    val(val < 0) = -constSemanticsVal;
+end
+
+
 end

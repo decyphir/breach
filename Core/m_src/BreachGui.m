@@ -1321,20 +1321,24 @@ function button_break_prop_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 Br = get_current_set(handles);
-if ~isempty(Br)
+%JOHAN UGLY FIX
 prop = handles.properties.(handles.current_prop);
+%prop = handles.properties.phi;
+% END JOHAN UGLY FIX
 props = STL_Break(prop);
 
 for i = 1:numel(props)
     PHI_ = props(i);
-    eval([get_id(PHI_) '=PHI_']);
-    handles.properties.(get_id(props(i))) = props(i);
-    Br.AddSpec(props(i));
+    this_id = get_id(PHI_);
+    this_id = strrep(this_id, '__', '_');
+    PHI_ = set_id(PHI_, this_id);
+    eval([this_id '=PHI_;']);
+    handles.properties.(this_id) = PHI_;
+    Br.AddSpec(PHI_);
 end
 
 handles = update_properties_panel(handles);
 guidata(hObject, handles);
-end
 
 % --- Executes on key press with focus on breach and none of its controls.
 function breach_KeyPressFcn(hObject, eventdata, handles)

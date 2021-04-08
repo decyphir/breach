@@ -44,6 +44,23 @@ classdef stl_monitor < req_monitor
             this.init_P();            
         end
         
+        function set_in_signal_names(this, sigs)
+           this.formula = set_in_signal_names(this.formula,sigs,1);
+        end
+        
+        function set_out_signal_names(this, sigs)
+           this.formula = set_out_signal_names(this.formula,sigs,1);
+        end        
+        
+        function sigs_in = get_in_signal_names(this)            
+            sigs_in = get_in_signal_names(this.formula);
+        end
+        
+        function sigs_out = get_out_signal_names(this)            
+           sigs_out = get_out_signal_names(this.formula);
+        end
+        
+                
         function status = set_mode(this, flag1, flag2)            
             input_signals = get_in_signal_names(this.formula);
             if ~isempty(input_signals)                                
@@ -68,7 +85,7 @@ classdef stl_monitor < req_monitor
         function [flag1,flag2] = get_mode(this)
             flag1 = this.inout;
             flag2 = this.relabs;
-        end
+        end    
         
         function [time, Xout] = computeSignals(this, time, X, p)
             this.init_tXp(time,X,p);

@@ -227,23 +227,35 @@ switch Sys.type
         
         if isfield(Sys, 'Parallel')&&Sys.Parallel&&numel(ipts)>1
             
-            for idx = ipts
-                f(idx) = parfeval(@(ii)task_sim(Sys,P0,tspan,ii), 1, idx);
-            end
-            trajs = cell(1, numel(ipts));
-            
-            for idx = ipts
-                % fetchNext blocks until more results are available, and
-                % returns the index into f that is now complete, as well
-                % as the value computed by f.
-                [completedIdx, value] = fetchNext(f);
-                trajs{completedIdx} = value;
-                if Verbose >=1
-                    if(numel(ipts)>1)                        
-                        rfprintf(['Computed ' num2str(idx) '/' num2str(numel(ipts)) ' simulations of ' model])
+            %% Parallel computation            
+            trajs = cell(1, numel(ipts));            
+            batch_size = 100; 
+            start_idx = 1;
+            end_idx = min(batch_size,numel(ipts));
+            num_computed = 0; 
+            while start_idx <numel(ipts) 
+                
+                for idx = start_idx:end_idx
+                    f(P0.traj_ref(ipts(idx))) = parfeval(@(ii)task_sim(Sys,P0,tspan,ii), 1, ipts(idx));  % puts ipts(idx) in the queue, such a way that completeIdx will point to the right pos in trajs cell
+                end
+                
+                for idx = start_idx:end_idx
+                    % fetchNext blocks until more results are available, and
+                    % returns the index into f that is now complete, as well
+                    % as the value computed by f.
+                    [completedIdx, value] = fetchNext(f);   % fetches something in the queue, which is completedIdx
+                    trajs{completedIdx} = value;
+                    num_computed =num_computed+1;
+                    if Verbose >=1
+                        if(numel(ipts)>1)
+                            rfprintf(['Computed ' num2str(num_computed) '/' num2str(numel(ipts)) ' simulations of ' model])
+                        end
                     end
                 end
-            end
+                start_idx = end_idx+1;
+                end_idx = min(end_idx+batch_size,numel(ipts));
+            end            
+            
             
             Pf.traj = trajs;
             for ii=ipts
@@ -258,7 +270,7 @@ switch Sys.type
             end
             
         else
-            
+            %% Serial computation
             trajs = cell(1, numel(ipts));
             icount = 0;
             for ii = ipts

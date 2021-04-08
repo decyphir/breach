@@ -11,7 +11,7 @@ xp = x(x>threshold);
 %  y(x>threshold) = -alpha*sqrt(xp.^2 -threshold^2);
 %  y(x<=threshold)= max_true_value*sqrt(1-xm.^2/threshold^2);
 
-y(x>threshold) = -alpha*xp;
+y(x>threshold) = -alpha;
 y(x<=threshold)= max_true_value;
 
 end

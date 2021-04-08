@@ -94,4 +94,11 @@ switch nargin
         end
 end
 
+% Apply constant semantics, if needed
+constSemanticsVal = 100; 
+if strcmp(phi.semantics, 'constant')
+    val(val >= 0) = constSemanticsVal;
+    val(val < 0) = -constSemanticsVal;
+end
+
 end

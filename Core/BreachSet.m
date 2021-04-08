@@ -321,7 +321,9 @@ classdef BreachSet < BreachStatus
             num_values = size(values, 2);
             saved_traj = false;
             
-            if ischar(is_spec_param)&&strcmp(is_spec_param, 'combine')
+            if ischar(is_spec_param)&&strcmp(is_spec_param, 'combine')&&...
+                ~(num_pts==1) % no need to combine (and mess order) in this case
+                
                 if this.hasTraj()
                     traj= this.P.traj;
                     saved_traj = true;
@@ -450,7 +452,7 @@ classdef BreachSet < BreachStatus
             end
                             
             this.ApplyParamGens();
-        end
+        end                
         
         function ApplyParamGens(this, params)
             if ~isempty(this.ParamGens)
@@ -487,7 +489,39 @@ classdef BreachSet < BreachStatus
                 values = values(:, ip);
             end
         end
-        
+     
+        function [values, i1, i2] = GetUParam(this,params,argu)
+            % [values, i1, i2] = GetUParam(this, params,argu) returns unique values of parameters
+            % i1 are indices of unique values, i2 is a cell of (unique) indices
+            % for where the unique values were found. argu is an argument for
+            % unique function call (for 'stable' essentially)
+            %
+            
+            if nargin<3
+                argu = 0;
+            end
+            
+            all_values = this.GetParam(params);
+            if argu
+                [values, i1, ib] = unique(all_values','rows', argu);
+            else
+                [values, i1, ib] = unique(all_values','rows');
+            end
+            
+            values = values';
+            if nargout >= 1
+                i1 = i1';
+            end
+            
+            if nargout >=2
+                ib = ib';
+                i2 = cell(1,numel(i1));
+                for ind = 1:numel(i1)
+                    i2{ind} = find(ib==ind);
+                end
+            end
+        end
+                
         function ResetParamSet(this)
             % ResetParamSet remove samples and keeps one in the domain
             this.P = SPurge(this.P);
@@ -623,6 +657,18 @@ classdef BreachSet < BreachStatus
             params =   this.P.ParamList(ipr);
         end
                 
+        function SetEmptyDomain(this, params)
+            
+            if ~iscell(params)
+                params = {params};
+            end
+            for idx_param = 1:numel(params)
+                idx_param_in_this = FindParam(this.P, params{idx_param});
+                this.Domains(idx_param_in_this).domain = [];
+            end
+            
+        end
+        
         %% Signals       
         function  this =  SetSignalMap(this, varargin)
             % SetSignalMap defines aliases for signals - used by GetSignalValues 
@@ -872,11 +918,12 @@ classdef BreachSet < BreachStatus
             
             X = cell(nb_traj,1);
             for i_traj = 1:numel(itrajs)
-                Xi = this.P.traj{itrajs(i_traj)}.X;
+                traj = this.P.traj{itrajs(i_traj)};
+                Xi = traj.X;
                 if (~exist('t','var'))
                     X{i_traj} = Xi(signals_idx,:);
                 else
-                    X{i_traj} = interp1(this.P.traj{itrajs(i_traj)}.time, Xi(signals_idx,:)',t)';
+                    X{i_traj} = interp1(traj.time, Xi(signals_idx,:)',t)';
                     if numel(signals_idx)==1
                         X{i_traj} = X{i_traj}';
                     end
@@ -1168,6 +1215,18 @@ classdef BreachSet < BreachStatus
             this.CheckinDomainParam();
             this.ApplyParamGens();
         end
+        
+        function PseudoRandomSample(this, nb_sample)
+            % Pseudo-random sampling
+            
+            this.ResetParamSet();
+            
+            newP = TestronRefine(this.P, nb_sample);
+            
+            this.P = newP;          
+            this.CheckinDomainParam();
+            this.ApplyParamGens();
+        end
              
         function Bm = MorrisSample(this, vars, ranges, num_path, size_grid, seed)
             
@@ -1209,11 +1268,25 @@ classdef BreachSet < BreachStatus
             end
             this.P = SConcat(this.P, other.P, fast);
         end
-        
+       
         function other  = ExtractSubset(this, idx)
             other = this.copy();
             other.P = Sselect(this.P, idx);
         end
+        
+        function SavedTrajectorySample(this, paramValues)
+            % TESTRON
+            % Fixes the "sampling" for a stored trajectory
+            
+            this.ResetParamSet();
+            
+            newP = SavedTrajectoryRefine(this.P, paramValues);
+            
+            this.P = newP;
+            this.CheckinDomainParam();
+        end
+       
+        
         
         %% Plot parameters
         function PlotParams(this, varargin)

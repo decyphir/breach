@@ -32,7 +32,51 @@ classdef alw_monitor < stl_monitor
         
         function [v, t, Xout] = eval(this, t, X,p)
             [t, Xout] = this.computeSignals(t, X,p);
-            v = min(Xout(end,:));
+            idx  = this.get_time_idx_interval(t,p);
+            Xout(end-1,:) = Xout(end,:)<0;         % violation flags
+            Xout(end-1:end, ~idx) = NaN;
+            
+            % Xout(end, idx) array of obj function values inside alw()
+            % t(idx) array of corresponding times
+            
+            % We want to use the same implementation as in
+            % @STL_Formula/private/RobustAlways.m. However, since it's a
+            % private function, we cannot reach it. Therefore, we have
+            % copies called
+            % alw_monitor_RobustAlways.m
+            % alw_monitor_RobustAlways_v1.m
+            % These function are in the Core/OutputGen folder. 
+            time_values = t(idx);
+            valarray = Xout(end,idx);
+            I___ = [time_values(1) time_values(end)];
+            semantics = get_semantics(this.formula);
+            switch semantics
+                case 'max'
+                    v = min(valarray);
+                case 'add'
+                    %[time_values, valarray] = RobustAvEvRight(time_values, -valarray, I___);
+                    %valarray = -valarray;
+                    [~, val_output] = alw_monitor_RobustAlways(time_values, valarray, I___);
+                    v = val_output(1);
+                case 'vbool_v1'
+                    %[time_values, valarray] = RobustAvEvRight(time_values, -valarray, I___);
+                    %valarray = -valarray;
+                    [~, val_output] = alw_monitor_RobustAlways_v1(time_values, valarray, I___);
+                    v = val_output(1);
+                case 'MARV'
+                    [~, val_output] = alw_monitor_MARV(time_values, valarray, I___);
+                    v = min(val_output);
+				case 'constant'
+                    standardVal = min(valarray);
+                    if standardVal >= 0
+                        v = 100;
+                    else
+                        v = -100;
+                    end
+                otherwise
+                    error('Unknown objective function!');
+            end
+
         end
         
         function varargout = disp(this)

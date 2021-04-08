@@ -1413,7 +1413,10 @@ while isempty(stopflag)
     if stopOnEqualFunctionValues
       arrEqualFunvals = [countiter arrEqualFunvals(1:end-1)];
       % stop if this happens in more than 33%
-      if arrEqualFunvals(end) > countiter - 3 * length(arrEqualFunvals)
+      % JOHAN EDIT
+      %if arrEqualFunvals(end) > countiter - 3 * length(arrEqualFunvals)
+      if false
+      % END JOHAN EDIT
         stopflag(end+1) = {'equalfunvals'}; 
       end
     else

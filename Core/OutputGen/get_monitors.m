@@ -42,12 +42,15 @@ end
         p0 = monitor.p0;
         switch (get_type(monitor.formula))
             case  {'alw', 'always'}
-                child = get_children(monitor.formula);
-                if strcmp(get_type(child{1}), '=>')
-                    monitor = alw_A_implies_B_monitor(formula);
-                else
+                if ~isa(monitor, 'alw_monitor')
                     monitor = alw_monitor(formula);
                 end
+%                 child = get_children(monitor.formula);
+%                 if strcmp(get_type(child{1}), '=>')
+%                     monitor = alw_A_implies_B_monitor(formula);
+%                 else
+%                     monitor = alw_monitor(formula);
+%                 end
 %            case {'ev', 'eventually'}
 %                monitor  = ev_monitor(formula);
 %             case {'until'}

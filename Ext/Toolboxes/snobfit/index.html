@@ -1,0 +1,82 @@
+<HTML>
+<HEAD>
+<TITLE>SNOBFIT</TITLE>
+</HEAD>
+<BODY bgcolor="#ffffff">
+
+<H1>SNOBFIT</H1>
+
+SNOBFIT (Stable Noisy Optimization by Branch and FIT)
+is a MATLAB 6 package for the robust and fast solution of 
+noisy optimization problems with continuous variables varying 
+within bound, possibly subject to additional soft constraints.
+Discrete variables are not supported.
+<P>
+Objective function values must be provided by a file-based interface;
+care is taken that the optimization proceeds reasonably even when 
+the interface produces noisy or even occasionally undefined 
+results (hidden constraints). 
+The interface makes it possible to use SNOBFIT with new data entered 
+by hand, or by any automatic or semiautomatic experimental system. 
+<P>
+This makes SNOBFIT very suitable for applications to the selection of 
+continuous parameter settings for simulations or experiments, 
+performed with the goal of optimizing some user-specified criterion.
+Since multiple data points can be entered, SNOBFIT can take advantage
+of parallel function evaluations.
+<P>
+The method combines a branching strategy to enhance the chance of 
+finding a global minimum with a sequential quadratic programming 
+method based on fitted quadratic models to have good local properties.
+Various safeguards address many possible pitfalls that may arise in
+practical applications, for which most other optimization routines 
+are ill-prepared. Soft constraints are taken care of by a new 
+penalty-type method with strong theoretical properties.
+<P>
+In order to use SNOBFIT, one needs the 
+<A HREF="http://www.mat.univie.ac.at/~neum/software/minq">
+MINQ</A> bound-constrained quadratic programming package.
+<P>
+The gzipped tar file
+<A HREF="http://www.mat.univie.ac.at/~neum/software/snobfit/snobfit_v2.1.tar.gz">
+snobfit_v2.1.tar.gz</A> (561K) contains the Matlab source 
+code, drivers, test examples for Version 2.1 (2007), and the paper
+<UL>
+<A HREF="http://www.mat.univie.ac.at/~neum/papers.html#snobfit">
+SNOBFIT - Stable Noisy Optimization by Branch and Fit</A>
+by W. Huyer and A. Neumaier.
+</UL>
+<P>
+This paper describes the usage of the package and the method 
+implemented. Please quote this paper when using this package in
+scientific work.
+<P>
+(The gzipped tar files
+<A HREF="http://www.mat.univie.ac.at/~neum/software/snobfit/snobfit_v1.tar.gz">snobfit_v1.tar.gz</A> (329K) 
+and
+<A HREF="http://www.mat.univie.ac.at/~neum/software/snobfit/snobfit_v2.tar.gz">snobfit_v2.tar.gz</A> (329K) 
+contains the Matlab source code, drivers, test examples and 
+documentation for the obsolete Version 1 (2004)
+and Version 2 (2006). They contain some bugs and should no longer
+be used.)
+<P>
+
+
+
+<HR>
+<A HREF="http://www.mat.univie.ac.at/~neum/glopt.html">
+Global (and Local) Optimization</A><BR>
+<A HREF="http://www.mat.univie.ac.at/~neum/stat.html">
+Statistics Links</A><BR>
+<A HREF="http://www.mat.univie.ac.at/~neum/software.html">
+Mathematical Software</A>
+<P>
+<A HREF="http://www.mat.univie.ac.at/~neum">my home page</A> 
+(http://www.mat.univie.ac.at/~neum)<BR>
+<P>
+<ADDRESS>
+Arnold Neumaier (Arnold.Neumaier@univie.ac.at)
+</ADDRESS>
+</BODY>
+</HTML>
+
