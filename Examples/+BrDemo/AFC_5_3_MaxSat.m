@@ -8,7 +8,6 @@ BrAFC
 
 %%
 % Load some properties.
-
 STL_ReadFile('AFC_simple_spec.stl');
 
 

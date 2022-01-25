@@ -62,7 +62,7 @@ classdef random_signal_gen < signal_gen
             end
             
             if  isempty(this.p0)
-                this.p0 = repmat( [0 0 1 -1 1] , 1, numel(signals));
+                this.p0 = repmat( [0 0.1 1 -1 1] , 1, numel(signals));
             end
            
             % domains 
@@ -70,7 +70,7 @@ classdef random_signal_gen < signal_gen
             
         end
         
-        function X = computeSignals(this,p, time)
+        function [X, time] = computeSignals(this,p, time)
             if size(p,1) ==1
                 p = p';
             end

@@ -18,7 +18,7 @@ param t1=1
     
   
 # Other formulas 
-param vmax=150, t1=1, rpm_min=4000, rpm_max = 5000
+param vmin= 50, vmax=150, t1=1, rpm_min=4000, rpm_max = 5000
 
 speed_bnded := speed[t] < vmax  
   RPM_bnded := RPM[t] < rpm_max

@@ -4,7 +4,6 @@ function [res, R] = ComputeMorrisSensi(R, B, num_path, randomSeed)
 %  Note: if B is a BreachSimulinkSystem with no traces, we compute the
 %  Morris samples and corresponding traces and stores them in B. If B
 %  already contains Morris samples and traces they are not re-computed.
-
 if nargin < 4
     randomSeed = 1;
 end
@@ -46,9 +45,14 @@ for ir =  1:numel(R.req_monitors)
     [res{ir}.mu, res{ir}.mustar, res{ir}.sigma, ...
         res{ir}.sigmastar, res{ir}.EE] = ...
         EEffects(res{ir}.rob, B.P.D, opt.size_grid);
-    %res{objFunctionCounter, ir}.R = R;
-    %fprintf(['\nSensitivities for ' R.req_monitors{ir}.name]);
-    %display_morris_result(res{objFunctionCounter, ir});
+    
+    % Also add the 'D' matrix to res, so that we later on can check which
+    % parameter was changed at which simulation
+    res{ir}.D = B.P.D;
 end
 
 end
+
+
+
+

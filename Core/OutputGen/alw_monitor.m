@@ -10,7 +10,7 @@ classdef alw_monitor < stl_monitor
             this.subphi = get_children(this.formula);
             this.subphi = this.subphi{1};
             this.signals = {[this.formula_id '_violation'],... 
-                            [this.formula_id '_quant_sat']};
+                                    [this.formula_id '_quant_sat']};
                 
             this.interval = get_interval(formula);
             this.init_P();
@@ -28,6 +28,22 @@ classdef alw_monitor < stl_monitor
             Xout(1, idx) = rob<0;
             Xout(2,idx) = rob;            
    
+        end
+        
+        function is_sensitive = ...
+                get_structural_sensitivity(this, time, X1, X2, p)
+            
+            % init for given time
+            this.init_tXp(time, X1, p);
+            traj1 = this.P.traj{1};
+            this.init_tXp(time, X2, p);
+            traj2 = this.P.traj{1};
+            
+            idx = this.get_time_idx_interval(time, p);
+            
+            is_sensitive = ...
+                STL_Eval_Structural_Sensitivity(this.Sys, this.formula, ...
+                this.P0, traj1, traj2, this.inout, this.relabs, time(idx));
         end
         
         function [v, t, Xout] = eval(this, t, X,p)

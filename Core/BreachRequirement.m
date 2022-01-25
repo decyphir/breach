@@ -24,26 +24,43 @@ classdef BreachRequirement < BreachTraceSystem
         function this = BreachRequirement(req_monitors, postprocess_signal_gens, precond_monitors)
             
             this = this@BreachTraceSystem({}, [], {'data_trace_idx_'});
-            if nargin>0
-                % Adds requirement monitors, at least one
-                this.req_monitors = {};
-                this.AddReq(req_monitors);
-                
-                % Add output gens
-                this.postprocess_signal_gens={};
-                if exist('postprocess_signal_gens', 'var')&&~isempty(postprocess_signal_gens)
-                    this.AddPostProcess(postprocess_signal_gens);
+            % Adds requirement monitors, at least one
+            this.req_monitors = {};
+            
+            if nargin>=1                
+                if strcmp(req_monitors,'random')
+                    switch nargin 
+                        case 2
+                            this.AddRandReq(postprocess_signal_gens);
+                            postprocess_signal_gens = {};
+                        case 3
+                            this.AddRandReq(postprocess_signal_gens, precond_monitors);
+                            postprocess_signal_gens = {};
+                            precond_monitors = {};
+                        otherwise
+                            this.AddRandReq();
+                    end
+                else                    
+                    this.AddReq(req_monitors);
                 end
-                
-                % precondition requirements
-                this.precond_monitors = {};
-                if  exist('precond_monitors', 'var')&&~isempty(precond_monitors)
-                    this.AddPreCond(precond_monitors);
-                end
-                
-                % Reset signal map and figure out what signals are required input signals
-                this.ResetSigMap();
+            else
+                this.AddRandReq();
             end
+            
+            % Add output gens
+            this.postprocess_signal_gens={};
+            if exist('postprocess_signal_gens', 'var')&&~isempty(postprocess_signal_gens)
+                this.AddPostProcess(postprocess_signal_gens);
+            end
+            
+            % precondition requirements
+            this.precond_monitors = {};
+            if  exist('precond_monitors', 'var')&&~isempty(precond_monitors)
+                this.AddPreCond(precond_monitors);
+            end
+            
+            % Reset signal map and figure out what signals are required input signals
+            this.ResetSigMap();
             
         end
         
@@ -52,10 +69,30 @@ classdef BreachRequirement < BreachTraceSystem
             [~, monitors] = get_monitors(req_monitors);
             for ifo = 1:numel(monitors)
                 this.AddOutput(monitors{ifo});
+                monitors{ifo}.R = this;
             end
             this.req_monitors = [this.req_monitors monitors];
             this.signals_in = this.get_signals_in();
         end
+        
+        function AddRandReq(this, n, Ops)
+            % Adds n random stl formula with given operators                                    
+            if nargin == 1
+                st_phi = rand_formula(1);                
+                this.AddReq(st_phi);
+            else
+                if nargin<2
+                    n = 1;
+                end
+                if ~exist('Ops','var')||isempty(Ops)
+                    Ops = {'and', 'ev', 'evI', 'alw'};                
+                end
+                st_phi = rand_formula(n,Ops);               
+                this.AddReq(st_phi);
+            end                        
+           
+        end
+        
         
         function AddPostProcess(this, postprocess_signal_gens)
             
@@ -168,6 +205,29 @@ classdef BreachRequirement < BreachTraceSystem
             this.BrSet =[];
         end
         
+        function isSensitive = ...
+                evalStructuralSensitivity(this, traj_index1, traj_index2, this_monitor)
+            
+            X1 = this.GetSignalValues(this_monitor.signals_in, traj_index1);
+            X2 = this.GetSignalValues(this_monitor.signals_in, traj_index2);
+            
+            if all(all(X1 == X2))
+                isSensitive = 0;
+                return
+            end
+            
+            idx_par_req = FindParam(this.P, this_monitor.params);
+            
+            % We only take p_in and time from traj1 - assume they are same
+            % as traj2
+            p_in = this.P.traj{traj_index1}.param(1, idx_par_req)';
+            time = this.P.traj{traj_index1}.time;
+            
+            
+            isSensitive = ...
+                this_monitor.get_structural_sensitivity(time, X1, X2, p_in);
+        end
+        
         function [global_val, traces_vals, traces_vals_precond, traces_vals_vac] = Eval(this, varargin)
             % BreachRequirement.Eval returns evaluation of the requirement -
             % compute it for all traces available and returns min (implicit
@@ -190,14 +250,14 @@ classdef BreachRequirement < BreachTraceSystem
             % evalTrace
             new= this.getBrSet(varargin{:});
             if new
-                num_traj = numel(this.P.traj);
-                traces_vals = nan(num_traj, numel(this.req_monitors));
-                traces_vals_vac = nan(num_traj, numel(this.req_monitors));
-                traces_vals_precond = nan(num_traj, numel(this.precond_monitors));
+                num_eval = this.GetNbParamVectors();% numel(this.P.traj);
+                traces_vals = nan(num_eval, numel(this.req_monitors));
+                traces_vals_vac = nan(num_eval, numel(this.req_monitors));
+                traces_vals_precond = nan(num_eval, numel(this.precond_monitors));
                 
                 % eval pre conditions
                 if ~isempty(this.precond_monitors)
-                    for it = 1:num_traj
+                    for it = 1:num_eval
                         for ipre = 1:numel(this.precond_monitors)
                             req = this.precond_monitors{ipre};
                             traces_vals_precond(it, ipre)  = eval_req(this,req,it);
@@ -207,10 +267,10 @@ classdef BreachRequirement < BreachTraceSystem
                 
                 % eval requirement
                 execTimesForThisReq = zeros(1, numel(this.req_monitors));
-                for it = 1:num_traj
+                for it = 1:num_eval
                     currentTime = datestr(now, 'HH:MM:ss');
-                    if num_traj > 30 && (mod(it, 10) == 0)
-                        fprintf(['*** START traj ' num2str(it) '/' num2str(num_traj) ' at ' currentTime '\n']);
+                    if num_eval > 30 && (mod(it, 10) == 0)
+                        fprintf(['*** START traj ' num2str(it) '/' num2str(num_eval) ' at ' currentTime '\n']);
                     end
                     
                     if any(traces_vals_precond(it,:)<0)
@@ -231,7 +291,7 @@ classdef BreachRequirement < BreachTraceSystem
                 
                 % Display the nSlowest slowest specifications
                 nSlowest = 5;
-                if (numel(execTimesForThisReq) > nSlowest) && (num_traj > 30)
+                if (numel(execTimesForThisReq) > nSlowest) && (num_eval > 30)
                     fprintf(['  Finished all trajs, ' num2str(nSlowest) ' slowest specs (out of ' num2str(numel(this.req_monitors)) '): ']);
                     [sortedExecTimes, sortedSpecIndex] = sort(execTimesForThisReq, 'descend');
                     for slowestCounter = 1:nSlowest
@@ -333,7 +393,7 @@ classdef BreachRequirement < BreachTraceSystem
                 end
             end
             for ia = 1:numel(F.Axes)
-                F.update_legend(F.Axes(ia));
+                F.update_legend(F.Axes(ia).ax);
             end        
             
             
@@ -489,6 +549,7 @@ classdef BreachRequirement < BreachTraceSystem
                 end
             end
         end
+        
         function [X, idxR] = GetSignalValues(this,varargin)
             % GetSignalValues if not found, look into BrSet
             nb_traj = 0;
@@ -576,16 +637,39 @@ classdef BreachRequirement < BreachTraceSystem
             end
         end
         
-        function PlotRobustSat(this, varargin)
-            this.BrSet.PlotRobustSat(varargin{:});
+        function [time, rob] = GetRobustSat(this,req,trace_num, expr)
+           if nargin <= 1
+               req = this.req_monitors{1};
+           elseif isnumeric(req)
+               req = this.req_monitors{req};
+           elseif ischar(req)
+               req = this.get_req_from_name(req); 
+           end
+           assert(isa(req, 'stl_monitor'));
+                      
+           if nargin <= 2
+              trace_num = 1;  
+           end
+           traj = this.P.traj{trace_num}; 
+           t = traj.time;
+           idx_par_req = FindParam(this.P, req.params);
+           p_in = traj.param(1, idx_par_req);
+           Xin = this.GetSignalValues(req.signals_in,trace_num);           
+           req.init_tXp(t,Xin,p_in);
+           phi_tmp = STL_Formula('phi_tmp__', expr);
+           IA_flag = false;
+           [time,rob] = req.get_standard_rob(phi_tmp,t,IA_flag);
+           
         end
                 
-        function req = get_req_from_name(this, req_name)
+        function [req, idx_req] = get_req_from_name(this, req_name)
             
             req = [];
+            idx_req = 0;
             for ir = 1:numel(this.precond_monitors)
                 if strcmp(this.precond_monitors{ir}.name, req_name)
                     req = this.precond_monitors{ir};
+                    idx_req = -ir; 
                     return;
                 end
             end
@@ -593,6 +677,7 @@ classdef BreachRequirement < BreachTraceSystem
             for ir = 1:numel(this.req_monitors)
                 if strcmp(this.req_monitors{ir}.name, req_name)
                     req = this.req_monitors{ir};
+                    idx_req = ir;
                     return;
                 end
             end
@@ -1148,8 +1233,9 @@ classdef BreachRequirement < BreachTraceSystem
                 B.SetupParallel();
             end
             
-            B.Sim();
-            
+            if isa(B, 'BreachSystem')
+                B.Sim();
+            end
             % initialize or reset traces
             num_pts = size(B.P.pts,2);
                         
@@ -1159,6 +1245,8 @@ classdef BreachRequirement < BreachTraceSystem
                 itrajs = 1:num_pts;
             end
             
+            % Note: for requirements with no signal output, we could do
+            % without trajR, but will see later...
             for it =1:num_pts
                 trajR = struct();
                 trajR.param = zeros(1,this.Sys.DimX);
@@ -1169,11 +1257,14 @@ classdef BreachRequirement < BreachTraceSystem
                 else
                     trajR.param = [trajR.param B.P.pts(idxB_paramR,it)'];
                 end
-                trajR.time = B.P.traj{itrajs(it)}.time;
+                if B.hasTraj()
+                    trajR.time = B.P.traj{itrajs(it)}.time;
+                else
+                    trajR.time = [0 1]; % some default time, not sure where else to pick a time vector
+                end
                 trajR.X = NaN(this.Sys.DimX, numel(trajR.time));
                 this.AddTrace(trajR);
             end
-            
         end
          
         function  [val, val_vac, traj] = pareval_req(this, req, traj, it)
@@ -1213,12 +1304,12 @@ classdef BreachRequirement < BreachTraceSystem
         end
         
         function  [val, val_vac] = eval_req(this, req, it)
-            val_vac = NaN;
-            
+            val_vac = NaN;            
             time = this.P.traj{it}.time;                        
             idx_sig_req = FindParam(this.P, req.signals);
             idx_par_req = FindParam(this.P, req.params);
             p_in = this.P.traj{it}.param(1, idx_par_req)';
+            
             if ~isempty(req.signals_in)
                 Xin = this.GetSignalValues(req.signals_in, it);
             else
@@ -1241,6 +1332,7 @@ classdef BreachRequirement < BreachTraceSystem
             if ~isempty(idx_sig_req)
                 [val , this.P.traj{it}.time, Xout, val_vac] ...
                     = this.evalRequirement(req, time, Xin, p_in);
+                
                 this.P.traj{it}.X( idx_sig_req,:) = Xout;
             else
                 [val, ~, ~, val_vac]  = this.evalRequirement(req, time, Xin, p_in);

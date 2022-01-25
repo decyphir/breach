@@ -1,4 +1,4 @@
-classdef postprocess_fcn_wrapper < output_gen
+classdef postprocess_fcn_wrapper < signal_gen
     properties
         fun
     end

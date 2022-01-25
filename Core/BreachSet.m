@@ -99,21 +99,34 @@ classdef BreachSet < BreachStatus
             this.sigMapInv = containers.Map();
             this.AliasMap = containers.Map(); 
             
-            this.EpsGridMapObj = containers.Map('UniformValues',false);
-            this.DeltaGridMapObj = containers.Map('KeyType','char','ValueType','int32');
-
+            this.EpsGridMapObj = containers.Map();
+            this.DeltaGridMapObj = containers.Map();
+            
+            if nargin>=1 && ischar(Sys)
+                Sys= {Sys};
+            end
+            
+            
             switch nargin
                 case 0
                     return;
                 case 1
                     if isaSys(Sys)
-                        this.P = CreateParamSet(Sys);
+                        this.P = CreateParamSet(Sys);                    
                     elseif iscell(Sys) % assumes parameter names
                         Sys = CreateSystem({}, Sys, zeros(1, numel(Sys)));
                         this.P = CreateParamSet(Sys);
                     end
                 case 2
-                    this.P = CreateParamSet(Sys, params);
+                    if isaSys(Sys)
+                        this.P = CreateParamSet(Sys,params);
+                    elseif iscell(Sys) % assumes parameter names
+                        ranges = params;                        
+                        params = Sys;                        
+                        Sys = CreateSystem({}, Sys, zeros(1, numel(Sys)));                        
+                        this.P = CreateParamSet(Sys,params,ranges);
+                        this.SetParamRanges(params,ranges);
+                    end                    
                 case 3
                     this.P = CreateParamSet(Sys, params, ranges);
             end
@@ -241,25 +254,9 @@ classdef BreachSet < BreachStatus
         end
         
         function CheckinDomain(this)
-            % BreachSet.CheckinDomain() Enforce parameters and signals to
-            % adhere to their domains
+            % BreachSet.CheckinDomain() Enforce parameters to adhere to their domains            
             this.CheckinDomainParam();
             this.CheckinDomainTraj();
-        end
-        
-        function CheckinDomainParam(this)
-            pts = this.P.pts;
-            if numel(this.Domains)< size(pts,1)
-                this.Domains(size(pts,1)) = BreachDomain();
-            end
-            for  i =this.P.DimX+1:size(pts,1)
-                if ~isequal(this.Domains(i).type, 'double')||~isempty(this.Domains(i).domain)
-                    pts(i,:) = this.Domains(i).checkin(pts(i,:));
-                end
-            end
-            
-            this.P.pts = pts;
-            
         end
         
         function CheckinDomainTraj(this)
@@ -268,13 +265,89 @@ classdef BreachSet < BreachStatus
             if this.hasTraj()
                 for itraj = 1:numel(this.P.traj)
                     for  i=1:this.P.DimX
-                        if ~isempty(this.Domains(i).domain)
+                        if ~isequal(this.Domains(i).type, 'double')||~isempty(this.Domains(i).domain)
                             this.P.traj{itraj}.X(i,:) = this.Domains(i).checkin(this.P.traj{itraj}.X(i,:));
                         end
                     end
                 end
             end
         end
+        
+        function CheckinDomainParam(this)
+            pts = this.P.pts;
+            if numel(this.Domains)< size(pts,1)
+                this.Domains(size(pts,1)) = BreachDomain();
+            end
+            for i=this.P.DimX+1:size(pts,1)
+                if ~isequal(this.Domains(i).type, 'double')||~isempty(this.Domains(i).domain)
+                    pts(i,:) = this.Domains(i).checkin(pts(i,:));
+                end
+            end            
+            this.P.pts = pts;            
+        end
+        
+        function Bg = GridFilter(this, delta)
+        %  Bg = this.GridFilter(delta)
+        % 
+        %  delta is a number of sample per dimensions, either vector or scalar
+        % 
+        
+        [params, idx_params] = this.GetVariables();
+        if ~isempty(params)
+            if isscalar(delta)
+                delta = repmat(delta, 1, numel(params));
+            elseif numel(delta)~=numel(params)
+                error('delta should be the same size as the number of variable parameters in the set.');
+            end
+            %Bg = BreachSet(params);
+            for ip = 1:numel(params)
+                p = params{ip};
+                
+                this_domain = this.Domains(idx_params(ip)+this.P.DimX);
+                if ~isequal(this_domain.type,'double') % shall strikes back at me when double is not the only non integer domain...
+                    grid_domain(ip) = this_domain;
+                else
+                    dom = this_domain.domain;
+                    dom = linspace(dom(1),dom(2), delta(ip)); % delta samples in dim ip
+                    grid_domain(ip) = BreachDomain('enum',dom);
+                end
+                %  
+            end
+        end
+        
+        pts = this.GetParam(params);
+        bg_params = [params {'count' 'idx'}];
+        Bg = BreachSet(bg_params);
+        Bg.SetDomain(bg_params, [grid_domain BreachDomain('int'), BreachDomain('int')]);
+        for i_pts = 1:size(pts,2)
+            pt = pts(:,i_pts);            
+            for i_dim=1:numel(params)
+                if ~isequal(grid_domain(i_dim).type, 'double')||~isempty(grid_domain(i_dim).domain)
+                    pt(i_dim) = grid_domain(i_dim).checkin(pt(i_dim)); % is a grid point now
+                end
+            end
+            % pt is now a grid pts, we add it to the map            
+            hash = DataHash(pt);
+            if Bg.DeltaGridMapObj.isKey(hash)
+                grid_pt = Bg.DeltaGridMapObj(hash);
+                grid_pt.count = grid_pt.count+1;
+                grid_pt.idx(end+1) = i_pts;
+            else
+                grid_pt.pt = pt;
+                grid_pt.count = 1;
+                grid_pt.idx = i_pts;                
+            end
+            Bg.DeltaGridMapObj(hash) = grid_pt;
+        end
+        grid_pts = Bg.DeltaGridMapObj.values;
+        num_pts = numel(grid_pts);
+        pts = zeros(numel(bg_params), num_pts);
+        for i_pt= 1:num_pts
+            pts(:, i_pt) = [grid_pts{i_pt}.pt; grid_pts{i_pt}.count ; grid_pts{i_pt}.idx(1)];
+        end
+        Bg.SetParam(bg_params,pts);
+        end
+        
         
         %% Params
         function SetParam(this, params, values, is_spec_param)
@@ -284,9 +357,15 @@ classdef BreachSet < BreachStatus
             % several samples and there is only one value, set this value to
             % all samples. Otherwise, returns an error.
             
+            if nargin==2               
+               values = params;
+               params = this.GetParamList();                
+            end
+            
+            
             if (~exist('is_spec_param', 'var'))
                 is_spec_param = false;
-            end
+            end                                                            
             
             ip = FindParam(this.P, params);
             i_not_sys = find(ip>this.P.DimP);
@@ -340,6 +419,15 @@ classdef BreachSet < BreachStatus
                     this.P.Xf = saved_Xf;
                 end
                 this.P = SetParam(this.P, params, values(:, idx(2,:)));
+            
+            elseif ischar(is_spec_param)&&strcmp(is_spec_param, 'append')
+                
+                new_values = [GetParam(this.P, params) values];
+                this.P.pts = [this.P.pts repmat(this.P.pts(:,end),1, size(values, 2))];
+                this.P.epsi= [this.P.epsi repmat(this.P.epsi(:,end),1, size(values, 2))];
+                this.P.selected = zeros(1, size(new_values, 2));
+                this.P = SetParam(this.P, params, new_values);  
+                
             else  % legacy, i.e., not combine version
                 if num_values==1 || num_values == num_pts
                     this.P = SetParam(this.P, params, values);
@@ -356,6 +444,18 @@ classdef BreachSet < BreachStatus
             this.ApplyParamGens(params);
                        
         end
+        
+        function AddParam(this, params,values)
+        % short for SetParam(..., 'append')
+        
+            if nargin == 2
+                values = params;
+                params = this.GetParamList;
+            end        
+            this.SetParam(params, values, 'append');        
+        
+        end
+
         
         function SetParamCfg(this, list_cfg)
             % SetParamCfg applies a cfg structure to set parameters. Struct
@@ -442,7 +542,12 @@ classdef BreachSet < BreachStatus
             
             % create/update domain of input parameters
             this.SetParam(pg.params, pg.p0, true);
-            this.SetDomain(pg.params, pg.domain);
+            if ~isempty(pg.domain)
+                this.SetDomain(pg.params, pg.domain);
+            else
+                domain = repmat(BreachDomain, 1, numel(pg.params));
+                this.SetDomain(pg.params, domain);
+            end
             
             % update domain of output parameters
             if ~isempty(pg.domain_out)
@@ -484,6 +589,10 @@ classdef BreachSet < BreachStatus
         end
         
         function values = GetParam(this, params, ip)
+            if nargin==1||isempty(params)
+                params= this.GetParamList;
+            end                           
+            
             values = GetParam(this.P,params);
             if exist('ip', 'var')
                 values = values(:, ip);
@@ -521,7 +630,14 @@ classdef BreachSet < BreachStatus
                 end
             end
         end
-                
+
+        function RemoveDuplicateParams(this)
+            params = this.GetVariables();
+            [~, i1, ~] = GetUParam(this,params,'stable');            
+            this.P = Sselect(this.P, i1); 
+        end
+        
+        
         function ResetParamSet(this)
             % ResetParamSet remove samples and keeps one in the domain
             this.P = SPurge(this.P);
@@ -1089,6 +1205,11 @@ classdef BreachSet < BreachStatus
             domains = this.Domains(idx_param);
             domains =  num2cell(domains); % convert array to cell
             
+            if isempty(domains)
+                error('sample:empty_domain', 'Domain to sample is empty or undefined.');
+            end
+            
+            
             if ~exist('method')||isempty(method)
                 method = 'rand';
             end
@@ -1261,7 +1382,8 @@ classdef BreachSet < BreachStatus
             end
         end
         
-        %% Concatenation, ExtractSubset - needs some additional compatibility checks...
+        %% Concatenation, ExtractSubset - needs some additional compatibility checks...                
+        
         function Concat(this, other, fast)
             if nargin<=2
                fast = false; 
@@ -1289,6 +1411,38 @@ classdef BreachSet < BreachStatus
         
         
         %% Plot parameters
+        function ax= PlotPts(this, params, ax, varargin)
+            % Simple plot function.
+            if ~exist('params','var')
+                params = this.GetParamList();
+            end
+            
+            if ~exist('ax','var')
+                ax = gca;
+            end
+            
+            if isempty(varargin)
+                varargin = {'bx'};
+            end
+            
+            switch numel(params)
+                case 1
+                    values = this.GetParam(params);
+                    axes(ax);
+                    plot(values, 0*values, varargin{:});
+                    
+                case 2
+                    values = this.GetParam(params);
+                    axes(ax);
+                    plot(values(1,:), values(2,:), varargin{:});
+                otherwise
+                    params =params(1:3);
+                    values = this.GetParam(params);
+                    axes(ax);
+                    plot3(values(1,:), values(2,:), values(3,:), varargin{:});
+            end
+        end
+        
         function PlotParams(this, varargin)
             % Plot parameters
             gca;
@@ -1815,7 +1969,9 @@ classdef BreachSet < BreachStatus
                 end
             end
         end
-        
+ 
+%% Signatures
+
         function [signature, signals, params] = GetSignature(this, signal_list, param_list)
             %  GetSignature returns information about signals and parameters 
             
@@ -2047,6 +2203,8 @@ classdef BreachSet < BreachStatus
                 end
             end
         end
+
+        %% Stuff
         
         function ExportToExcel(this, excel_file)
             [summary, traces] = this.ExportTracesToStruct();
@@ -2201,8 +2359,7 @@ classdef BreachSet < BreachStatus
                 varargout{1} = st;
             end
         end
-          
-        
+                  
         %% Misc
         function s= isSignal(this,params)
             idx_s = FindParam(this.P, params);

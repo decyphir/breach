@@ -38,7 +38,7 @@ classdef merge_signal_gen < signal_gen
             
         end
         
-        function X = computeSignals(this,p, time)
+        function [X, time] = computeSignals(this,p, time)
             X = zeros(0, numel(time));
             for isg = 1:numel(this.sgs)
                 sg = this.sgs{isg};

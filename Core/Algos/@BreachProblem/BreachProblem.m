@@ -119,10 +119,18 @@ classdef BreachProblem < BreachStatus
         
     end
     
+    % callbacks
+    
+    properties
+       callback_obj  % called after each objective computation
+       freq_update=1   % affects display and callbacks     
+       is_paused = false
+    end
+    
+    
     % misc options
     properties
-        display = 'on'
-        freq_update = 1 
+        display = 'on'        
         use_parallel = 0
         max_time = inf
         time_start = tic
@@ -504,6 +512,20 @@ classdef BreachProblem < BreachStatus
             this.display = 'off';
             this.solver_options = solver_opt;
         end
+		
+		function solver_opt = setup_adaptive_corners(this, varargin)
+            % Adaptive corners will shut down if no new falsification happens in
+			% (relative_threshold)*(num_corners) consecutive simulations. 
+            this.solver = 'adaptive_corners';
+            solver_opt.lb = this.lb;
+            solver_opt.ub = this.ub;
+            solver_opt.relative_threshold = 0.25;
+            solver_opt.num_corners = 100; % Arbitrary, make sure to change
+            solver_opt= varargin2struct_breach(solver_opt, varargin{:});   
+            
+            this.display = 'off';
+            this.solver_options = solver_opt;
+        end
         
         function solver_opt = setup_uniform_random(this, varargin)
             this.solver = 'uniform_random';
@@ -835,7 +857,10 @@ classdef BreachProblem < BreachStatus
                     res = struct('bestRob',[],'bestSample',[],'nTests',[],'bestCost',[],'paramVal',[],'falsified',[],'time',[]);
                     res.bestSample = xbest;
                     res.bestRob = fbest;
-
+                    
+                case 'adaptive_corners'
+                    res = this.solve_adaptive_corners();
+                    
                 otherwise
                     res = feval(this.solver, problem);
                     this.add_res(res);
@@ -956,7 +981,7 @@ classdef BreachProblem < BreachStatus
             
         end
         
-        % check the MIP options for suppoted solvers and change the this.params
+        % check the MIP options for supported solvers and change the this.params
         function setup_mixed_int_optim(this, method)
             if ~exist('method')||isempty(method)
                 method = 'map_enum_to_int';
@@ -1116,6 +1141,13 @@ classdef BreachProblem < BreachStatus
                             % update status
                             if ~rem(this.nb_obj_eval,this.freq_update)
                                 this.display_status();
+                                % callback
+                                if ~isempty(this.callback_obj)
+                                   e.name ='obj_computed';
+                                   e.values.fval = fval;                                   
+                                   e.values.nb_obj_eval=this.nb_obj_eval;
+                                   this.callback_obj(this, e);
+                                end
                             end
 
                         end
@@ -1182,7 +1214,8 @@ classdef BreachProblem < BreachStatus
         function b = stopping(this)
             b = (this.time_spent >= this.max_time) ||...
                 (this.nb_obj_eval>= this.max_obj_eval) || ...
-                (this.num_consecutive_constraints_failed >= this.max_consecutive_constraints_failed);
+                (this.num_consecutive_constraints_failed >= this.max_consecutive_constraints_failed)||...
+                this.is_paused;
         end
               
         %% Misc methods

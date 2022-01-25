@@ -10,7 +10,7 @@ classdef from_file_pattern_signal_gen < signal_gen
             [this.params,this.p0, this.pattern] = guess_filename_params(fname);                         
         end
         
-        function X= computeSignals(this, p, time)
+        function [X, time] = computeSignals(this, p, time)
             fname = sprintf(this.pattern,p);
             X = zeros(numel(this.signals), numel(time));
             try 

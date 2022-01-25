@@ -55,7 +55,12 @@ if isfield(params, 'pre_pred') % if the predicate has been optimized
               lval = abs(ltr(val, dt__));
               sval = sign(val);
               val = sval.*min([rval; lval]);
-       end
+      end
+      if isfield(BreachGlobOpt, 'NormalizePredicates')
+          if BreachGlobOpt.NormalizePredicates
+              val = normalize_rob(val);
+          end
+      end
     end
     return;
 end
@@ -84,19 +89,10 @@ fn_ = regexprep(fn_,'([^\.])\^', '$1\.^');
     '\{(.+?)\}[.+?]']);
 
 SigList = unique(cat(2,tokens{:}));
-% JOHAN ADDED
-% To make sure that "alw_" cannot be extracted as a predicate,
-% we do this:
-% alwIdx = find(strcmp(SigList, 'alw_'));
-% if ~isempty(alwIdx)
-%     SigList(alwIdx) = [];
-% end
-% END JOHAN ADDED
 for ii_var = 1:numel(SigList)
     pcurr = SigList{ii_var};
     i_var = FindParam(Sys, pcurr);
-    
-    
+        
     % test if current variable is found at the beginning of the predicate
     [start_idx, end_idx, ~, matches, tokens] = regexp(fn_, ['^' pcurr '\[(.+?)\]']);
     
@@ -192,8 +188,25 @@ if isfield(BreachGlobOpt, 'RobustSemantics')
             rval = abs(rtr(val, dt__));
             lval = abs(ltr(val,dt__));
             sval = sign(val);
-            val = sval.*(rval+lval)/2;
-    end
+            val = sval.*(rval+lval)/2;                
+    end            
+end
+if isfield(BreachGlobOpt, 'NormalizePredicates')
+    val = normalize_rob(val);        
 end
 
+    
+end
+
+
+function val = normalize_rob(val)
+    % normalize values into the range [-1, +1] by scaling by 
+    % max(abs(min),abs(max))
+    scaling_factor = max(abs(min(val)),  abs(max(val)));
+    if scaling_factor == 0
+        % If all values are 0, scaling_factor = 0
+        % Avoid division by zero by just returning val as it is
+        return
+    end
+    val = val/scaling_factor;   
 end

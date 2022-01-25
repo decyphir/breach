@@ -12,7 +12,11 @@ num_corners =  min(this.max_obj_eval,this.solver_options.num_corners);
 if this.solver_options.group_by_inputs
     
     % Creates BreachSet with one param per group
-    sigs = this.BrSys.InputGenerator.GetAllSignalsList();
+    try
+        sigs = this.BrSys.InputGenerator.GetAllSignalsList();
+    catch
+        sigs = {};
+    end
     grouparams = this.params;
     groupinputs_reps = {};
     ig=1;  

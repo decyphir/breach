@@ -139,6 +139,7 @@ classdef FalsificationProblem < BreachProblem
             if this.BrSys.UseDiskCaching
                 FileSave = [this.BrSys.DiskCachingRoot filesep 'FalsificationProblem_Runs.mat'];
                 varname = this.whoamI;
+                warning('off','MATLAB:Figure:FigureSavedToMATFile');
                 if ~evalin('base', ['exist(''' varname ''', ''var'')'])
                     assignin('base', varname,this);
                     evalin('base', ['save(''' FileSave ''',''' varname ''');']);
@@ -146,7 +147,7 @@ classdef FalsificationProblem < BreachProblem
                 else
                     evalin('base', ['save(''' FileSave ''',''' varname ''');']);
                 end
-                
+                warning('on','MATLAB:Figure:FigureSavedToMATFile');                
             end
         end
         

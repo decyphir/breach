@@ -114,10 +114,10 @@ classdef BreachSignalGen < BreachSystem
                idx_psg = FindParam(this.P, sg.params);
                p_isg = p(idx_psg);
                ns = numel(sg.signals);
-               X(cur_is:cur_is+ns-1, :) = sg.computeSignals(p_isg, tspan);
+               [X(cur_is:cur_is+ns-1, :), tspan]= sg.computeSignals(p_isg, tspan);
                cur_is = cur_is+ ns;
             end
-            
+                        
         end
         
         function SetParam(this, params, values, varargin)

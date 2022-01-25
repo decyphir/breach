@@ -20,5 +20,7 @@ else
     % already a cell checks size
     if numel(arg)~=num_args
         error('check_arg_is_cell', 'Wrong number of element in argument cell.');
+    else
+        arg_cell = arg;
     end
 end

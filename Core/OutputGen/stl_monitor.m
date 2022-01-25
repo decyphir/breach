@@ -1,5 +1,5 @@
 classdef stl_monitor < req_monitor
-    
+    % req_monitor wrapper for class STL_Formula
     properties
         P0
         P
@@ -33,6 +33,8 @@ classdef stl_monitor < req_monitor
             end
             this.formula_id = get_id(this.formula);
             this.name =  get_id(this.formula);
+            %this.params_out = {['rho_'  this.name]};
+            %this.params_out_domain = BreachDomain();
             
             % collect signals and params names
             [this.signals_in, this.params, this.p0] = STL_ExtractSignals(this.formula);
@@ -59,8 +61,7 @@ classdef stl_monitor < req_monitor
         function sigs_out = get_out_signal_names(this)            
            sigs_out = get_out_signal_names(this.formula);
         end
-        
-                
+                        
         function status = set_mode(this, flag1, flag2)            
             input_signals = get_in_signal_names(this.formula);
             if ~isempty(input_signals)                                
@@ -226,7 +227,7 @@ classdef stl_monitor < req_monitor
                 plot(sample.time, sample.value, 'x', 'Color',color);            
             end
             t0 = this.P.traj{1}.time;
-            set(ax, 'XLim', [0 t0(end)]);
+            set(ax, 'XLim', [t0(1) t0(end)]);
             
         end
         
@@ -246,18 +247,41 @@ classdef stl_monitor < req_monitor
             end
         end
         
-        function [time, rob] = get_standard_rob(this, phi, time)
-            switch this.inout
-                case {'in','out'}
-                    switch this.relabs
-                        case {'rel','abs'}
-                            [rob, time] = STL_Eval_IO(this.Sys, phi, this.P0, this.P.traj{1}, this.inout, this.relabs, time);
-                        otherwise
-                            [rob, time] = STL_Eval_IO(this.Sys, phi, this.P0, this.P.traj{1}, this.inout, 'rel', time);
-                    end
-                otherwise
-                    [rob, time] = STL_Eval(this.Sys, phi, this.P0,this.P.traj{1},time);
+        function [time, rob] = get_standard_rob(this, phi, time, IA_flag)
+            
+            if nargin<4
+                IA_flag = true;
             end
+            if IA_flag
+                switch this.inout
+                    case {'in','out'}
+                        switch this.relabs
+                            case {'rel','abs'}
+                                [rob, time] = STL_Eval_IO(this.Sys, phi, this.P0, this.P.traj{1}, this.inout, this.relabs, time);
+                            otherwise
+                                [rob, time] = STL_Eval_IO(this.Sys, phi, this.P0, this.P.traj{1}, this.inout, 'rel', time);
+                        end
+                    otherwise
+                        [rob, time] = STL_Eval(this.Sys, phi, this.P0,this.P.traj{1},time);
+                end
+            else
+                [rob, time] = STL_Eval(this.Sys, phi, this.P0,this.P.traj{1},time);
+            end
+        end
+        
+        function is_sensitive = ...
+                get_structural_sensitivity(this, time, X1, X2, p)
+            
+            % init for given time
+            this.init_tXp(time, X1, p);
+            traj1 = this.P.traj{1};
+            this.init_tXp(time, X2, p);
+            traj2 = this.P.traj{1};
+            
+            % evaluate sensitivity at time 0
+            is_sensitive = ...
+                STL_Eval_Structural_Sensitivity(this.Sys, this.formula, ...
+                this.P0, traj1, traj2, this.inout, this.relabs, 0);
         end
         
         function varargout = disp(this)
@@ -268,15 +292,15 @@ classdef stl_monitor < req_monitor
                 st_pred = [];
                 preds = STL_ExtractPredicates(phi);
                 for ip = 1:numel(preds)
-                    id = get_id(preds(ip));
-                    status(ip)= STL_CheckID(id);
+                    id{ip} = get_id(preds(ip));
+                    status(ip)= STL_CheckID(id{ip});
                 end
                 
                 if any(status==1)
                     st_pred = '  where \n';
                     for ip = 1:numel(preds)
                         if status(ip)==1
-                            st_pred =   sprintf([ st_pred '%s := %s \n' ],id,disp(preds(ip)));
+                            st_pred =   sprintf([ st_pred '%s := %s \n' ],id{ip},disp(preds(ip)));
                         end
                     end
                 end
@@ -291,8 +315,18 @@ classdef stl_monitor < req_monitor
             end            
             
         end
-    end
+    
    
+    function assign_params(this, p)
+            if nargin==1
+               p = GetParam(this.P0, this.params);
+            end
+            % assign_params fetch parameters and assign them in the current context
+            for ip = 1:numel(this.params)
+                assignin('caller', this.params{ip},p(ip));
+            end
+        end
+    end
     methods (Access=protected)
         function [phi, diag_map] = diag(this, phi, rob, diag_map, flag)
             
@@ -396,15 +430,109 @@ classdef stl_monitor < req_monitor
             end
         end
         
-        function assign_params(this, p)
-            if nargin==1
-               p = GetParam(this.P, this.params);
+        function [mnu, diag_map] = get_mnu(this, phi, rob, diag_map, flag)
+            
+            in_implicant = diag_map(get_id(phi));
+            samples = in_implicant.getSignificantSamples();
+          
+            psis = get_children(phi);
+            switch(get_type(phi))
+                case 'predicate'
+                    signal_names = STL_ExtractSignals(phi);
+                    for i=1:length(signal_names)
+                        signal_name = signal_names{i};
+                        signal = rob(signal_name);
+                        if(~diag_map.isKey(signal_name))
+                            out_implicant = BreachImplicant;
+                            intervals = in_implicant.getIntervals();
+                            for j=1:length(intervals)
+                                interval = intervals(j);
+                                out_implicant = out_implicant.addInterval(interval.begin, interval.end);
+                            end
+                            samples = in_implicant.getSignificantSamples();
+                            for j=1:length(samples)
+                                sample = samples(j);
+                                value = interp1(signal.times, signal.values, sample.time, 'previous');
+                                out_implicant = out_implicant.addSignificantSample(sample.time, value);
+                            end
+                            diag_map(signal_name) = out_implicant;
+                        end
+                    end
+                    
+                case 'not'
+                    signal = rob(get_id(psis{1}));
+                    if(flag)
+                        [implicant] = BreachDiagnostics.diag_not_t(signal, in_implicant, samples);
+                    else
+                        [implicant] = BreachDiagnostics.diag_not_f(signal, in_implicant, samples);
+                    end
+                    diag_map(get_id(psis{1})) = implicant;
+                    [psis{1}, diag_map] = this.diag(psis{1}, rob, diag_map, ~flag);
+                case 'or'
+                    signal1 = rob(get_id(psis{1}));
+                    signal2 = rob(get_id(psis{2}));
+                    if(flag)
+                        [implicant1, implicant2] = BreachDiagnostics.diag_or_t(signal1, signal2, in_implicant, samples);
+                    else
+                        [implicant1, implicant2] = BreachDiagnostics.diag_or_f(signal1, signal2, in_implicant, samples);
+                    end
+                    diag_map(get_id(psis{1})) = implicant1;
+                    diag_map(get_id(psis{2})) = implicant2;
+                    [psis{1}, diag_map] = this.diag(psis{1}, rob, diag_map, flag);
+                    [psis{2}, diag_map] = this.diag(psis{2}, rob, diag_map, flag);
+                case 'and'
+                    signal1 = rob(get_id(psis{1}));
+                    signal2 = rob(get_id(psis{2}));
+                    if(flag)
+                        [implicant1, implicant2] = BreachDiagnostics.diag_and_t(signal1, signal2, in_implicant, samples);
+                    else
+                        [implicant1, implicant2] = BreachDiagnostics.diag_and_f(signal1, signal2, in_implicant, samples);
+                    end
+                    diag_map(get_id(psis{1})) = implicant1;
+                    diag_map(get_id(psis{2})) = implicant2;
+                    [psis{1}, diag_map] = this.diag(psis{1}, rob, diag_map, flag);
+                    [psis{2}, diag_map] = this.diag(psis{2}, rob, diag_map, flag);
+                case '=>'
+                    signal1 = rob(get_id(psis{1}));
+                    signal2 = rob(get_id(psis{2}));
+                    if(flag)
+                        [implicant1, implicant2] = BreachDiagnostics.diag_implies_t(signal1, signal2, in_implicant, samples);
+                    else
+                        [implicant1, implicant2] = BreachDiagnostics.diag_implies_f(signal1, signal2, in_implicant, samples);
+                    end
+                    diag_map(get_id(psis{1})) = implicant1;
+                    diag_map(get_id(psis{2})) = implicant2;
+                    [psis{1}, diag_map] = this.diag(psis{1}, rob, diag_map, flag);
+                    [psis{2}, diag_map] = this.diag(psis{2}, rob, diag_map, flag);
+                case 'always'
+                    signal = rob(get_id(psis{1}));
+                    I = this.get_interval(phi);
+                    bound.begin = I(1);
+                    bound.end = min(I(2),max(signal.times));
+                    if(flag)
+                        [implicant] = BreachDiagnostics.diag_alw_t(signal, bound, in_implicant, samples);
+                    else
+                        [implicant] = BreachDiagnostics.diag_alw_f(signal, bound, in_implicant, samples);
+                    end
+                    
+                    diag_map(get_id(psis{1})) = implicant;
+                    [psis{1}, diag_map] = this.diag(psis{1}, rob, diag_map, flag);
+                case 'eventually'
+                    signal = rob(get_id(psis{1}));
+                    I = this.get_interval(phi);
+                    bound.begin = I(1);
+                    bound.end = min(I(2),max(signal.times));
+                    if(flag)
+                        [implicant] = BreachDiagnostics.diag_ev_t(signal, bound, in_implicant, samples);
+                    else
+                        [implicant] = BreachDiagnostics.diag_ev_f(signal, bound, in_implicant, samples);
+                    end
+                    diag_map(get_id(psis{1})) = implicant;
+                    [psis{1}, diag_map] = this.diag(psis{1}, rob, diag_map, flag);
             end
-            % assign_params fetch parameters and assign them in the current context
-            for ip = 1:numel(this.params)
-                assignin('caller', this.params{ip},p(ip));
-            end
-        end
+        end                                                                
+        
+   
         
         function I = get_interval(this__, phi___)
             if nargin==1

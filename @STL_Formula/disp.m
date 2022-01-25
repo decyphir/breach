@@ -31,6 +31,13 @@ function st = form_string(phi, opt)
 % Synopsis: st = form_string(phi, opt)
 %
 
+if opt==2
+    opt = -2;
+elseif opt==-2
+   st = phi.id;
+   return
+end
+
 switch(phi.type)
     case 'predicate'
         if(opt == 0 || ~isempty(regexp(phi.id,'.+__$', 'once')))

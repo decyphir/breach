@@ -1,6 +1,4 @@
 function [props_names, props, signal_names, param_names, in_signal_names, out_signal_names] = STL_ReadFile(fname, onlyLoadLastFormula)
-
-
 %STL_READFILE reads formulas from a text file and loads them in the base
 %workspace 
 %
@@ -164,9 +162,7 @@ while ischar(tline)
                     props = [props, {phi}]; %#ok<*AGROW>
                     props_names = [props_names, {current_id}];
                 catch err
-                    % JOHAN ADDED
                     assignin('base', 'row_to_replace', num_line);
-                    % END JOHAN ADDED
                     fprintf(['ERROR: Problem with formula ' current_id ' at line ' ...
                         int2str(num_line-1) '\n']);
                     rethrow(err);
@@ -202,10 +198,8 @@ try
     phi = wrap_up(current_id, current_formula, new_params, in_signal_names, out_signal_names);
     props = [props, {phi}];
     props_names = [props_names, {current_id}];
-catch err
-    % JOHAN ADDED
-    assignin('base', 'row_to_replace', num_line);
-    % END JOHAN ADDED
+catch err   
+    assignin('base', 'row_to_replace', num_line);    
     fprintf(['ERROR: Problem with formula ' current_id ' at line ' ...
         int2str(num_line-1) '\n']);
     rethrow(err);
@@ -225,13 +219,19 @@ phi = set_out_signal_names(phi, out_signal_names);
 % new_params
 % Note: will let function names, mex-files etc be overriden  
 
-params = {};
-[~,~, ~, matches, tokens] = regexp(disp(phi,0), '(\<\w+\>)');
-for im=1:numel(matches)
-        params{end+1} = tokens{im}{1};
-end
+[~, params] = STL_ExtractSignals(phi);
+% params = {};
+% [~,~, ~, matches, tokens] = regexp(disp(phi,0), '(\<\w+\>)');
+% for im=1:numel(matches)
+%         params{end+1} = tokens{im}{1};
+% end
 
 fn = fieldnames(new_params)';
+undef_params= setdiff(params, fn);
+if not(isempty(undef_params)) 
+    undefs = list_manip.to_string(undef_params);
+    warning('STL_ReadFile:undef_params', 'Parameter(s) %s appear in formula current_id but are undeclared, default to 0. ', undefs);
+end
 for np = fn
    if ~any(strcmp(np{1},params))
        new_params = rmfield(new_params, np{1});

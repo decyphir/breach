@@ -4,13 +4,17 @@ function ResetBreach(b)
 global BreachGlobOpt
 d = [BreachGlobOpt.breach_dir filesep 'Ext' filesep 'ModelsData'];
 if nargin<1
-    b=0;
+    choice = questdlg('Remove models data files?');
+    if strcmp(choice,'Yes')
+        b = 1;
+    end
 end
 
-if b||questdlg('Remove models data files?')
+if b
   try 
-      rmdir([d filesep 'slprj'], 's');
+      fprintf('Deleting all files and folders in %s ... \n', d);
+      rmdir([d filesep 'slprj'], 's');         
       rmdir([d filesep 'ParallelTemp'], 's');
-      delete([d filesep '*.*'])
+      delete([d filesep '*.*'])      
   end
 end

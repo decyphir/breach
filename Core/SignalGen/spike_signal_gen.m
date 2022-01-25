@@ -68,7 +68,7 @@ classdef spike_signal_gen < signal_gen
         end
       
             
-        function X = computeSignals(this, p, time) % compute the signals
+        function [X, time] = computeSignals(this, p, time) % compute the signals
             if numel(p) ~= 4*numel(this.signals)
                 error('Wrong number of parameters for computing spike signal.' )
             end

@@ -279,11 +279,18 @@ classdef BreachSamplesPlot < handle
                     y_label = 'idx sample';
                 case 'auto'
                     if isempty(this.data.variables)
-                        y_label = B.P.ParamList(B.P.DimX+1);
+                        if B.P.DimP>B.P.DimX
+                            y_label = B.P.ParamList(B.P.DimX+1);
+                        else
+                            y_label = '';
+                        end
                     else
                         y_label = this.data.variables{1};
                     end
                     ydata = B.GetParam(y_label,idx);
+                    if isempty(ydata)
+                        ydata = xdata*0;
+                    end
                 otherwise  % assumes y_axis is a parameter name
                     ydata = B.GetParam(this.y_axis, idx);
                     y_label = this.y_axis;
@@ -375,7 +382,6 @@ classdef BreachSamplesPlot < handle
                     end
                     sig = this.signature.signals{1};
                     F = BreachSignalsPlot(this.BrSet,sig, it);
-                    set(F.Fig,'Name', ['Trace idx= ' num2str(it)]);
                 else
                     warning('BreachSamplesPlot:no_signal','No signal(s) to plot.');
                 end
@@ -401,8 +407,7 @@ classdef BreachSamplesPlot < handle
             
             
         end
-        
-        
+                
         function update_req_plot(this)
             
             B = this.BrSet.BrSet;
@@ -1011,8 +1016,7 @@ classdef BreachSamplesPlot < handle
                     it = this.idx_tipped(1);
                 end
                 sig = this.signature.signals{1};
-                F = BreachSignalsPlot(this.BrSet,sig, it);
-                set(F.Fig,'Name', ['Trace idx= ' num2str(it)]);
+                F = BreachSignalsPlot(this.BrSet,sig, it);                
             end
             
         end

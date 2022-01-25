@@ -36,7 +36,7 @@ classdef switch_signal_gen < signal_gen
             
         end
         
-        function  X = computeSignals(this, p, time)
+        function  [X, time] = computeSignals(this, p, time)
             idx_sg = p(1);
             sg = this.sgs{idx_sg};
             idx_p=this.sg_1st_param_idx(idx_sg);

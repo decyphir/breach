@@ -36,7 +36,7 @@ classdef pulse_signal_gen < signal_gen
             
         end
         
-        function X = computeSignals(this,p, time) % compute the signals
+        function [X, time] = computeSignals(this,p, time) % compute the signals
             nb_p = 5;
             if numel(p) ~= nb_p*numel(this.signals)
                 error('Wrong number of parameters for computing constant signal.' )

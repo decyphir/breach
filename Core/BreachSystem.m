@@ -4,7 +4,7 @@ classdef BreachSystem < BreachSet
     % It combines a system structure (Sys) with a parameter set (P)
     % into one object so that basic operations can be done in one
     % command instead of several and with fewer arguments. BreachSystem
-    % class is derivated from BreachSet. Type help BreachSet to view
+    % class is derived from BreachSet. Type help BreachSet to view
     % properties and methods of the parent class.
     %
     % BreachSystem Properties
@@ -35,7 +35,7 @@ classdef BreachSystem < BreachSet
     
     methods
         
-        %% Constructor
+       %% Constructor
         function this = BreachSystem(varargin)
             InitBreach;
             this.Specs = containers.Map();
@@ -44,8 +44,7 @@ classdef BreachSystem < BreachSet
             
             switch nargin
                 case 0 % do nothing
-                case 1 % Should be a Sys structure
-                    
+                case 1 % Should be a Sys structure                    
                     inSys = varargin{1};
                     if isaSys(inSys)
                         this.Sys = inSys;
@@ -189,22 +188,14 @@ classdef BreachSystem < BreachSet
         function SetTime(this,tspan)
             if ischar(tspan)  % if time is an expression, test it in base
                 try
-                    T= evalin('base', tspan);
+                    tspan = evalin('base', tspan);
                 catch
-                    error('BreachSystem:SetTime:undef', 'Cannot evaluate time.expression %s', tspan);
+                    error('BreachSystem:SetTime:undef', 'Cannot evaluate time expression %s', tspan);
                 end
-            elseif isscalar(tspan)  % standard case
-                tspan = [0 tspan];
-                if tspan(end)<0
-                    error('BreachSystem:SetTime:neg_time', 'Cannot set negative time.')
-                end
-                this.Sys.tspan = tspan;
             else
-                this.Sys.tspan = tspan;
-            end
-            this.Sys.tspan = tspan;
+                this.P.Sys.tspan = check_sim_time(tspan);
+            end                        
         end
-        
         function time = GetTime(this)
             time = this.Sys.tspan;
         end
@@ -212,7 +203,9 @@ classdef BreachSystem < BreachSet
         function Sim(this,tspan)
             % BreachSystem.Sim(time) Performs a simulation from the parameter
             % vector(s) defined in P
-            evalin('base', this.InitFn);
+            if ~isempty(this.InitFn)
+                evalin('base', this.InitFn);
+            end
             this.CheckinDomainParam();
             if nargin==1
                 if this.hasTraj()
@@ -227,7 +220,9 @@ classdef BreachSystem < BreachSet
             if this.verbose>=1
                 this.dispTraceStatus();
             end
-        end
+        end                
+        
+        
         
         %% Signals Enveloppe
         
@@ -925,7 +920,16 @@ classdef BreachSystem < BreachSet
             
             % Add parameters
             pdoms = {};
-            [params, ipar]  =setdiff(output.params, this.P.ParamList, 'stable');
+            if ~isempty( output.params_out)
+                params = union(output.params, output.params_out, 'stable');
+            else
+                params = output.params;
+            end
+            
+            p0 = [output.p0 nan(numel(output.params_out),1)];
+            if ~isempty(params)
+                [params, ipar]  = setdiff(params, this.P.ParamList, 'stable');
+            end
             if ~isempty(params)
                 for par = params
                     if output.domains.isKey(par{1})
@@ -935,7 +939,7 @@ classdef BreachSystem < BreachSet
                     end
                 end
                 
-                this.Sys.p = [this.Sys.p ;output.p0(ipar)'];
+                this.Sys.p = [this.Sys.p ; p0(ipar)'];
                 this.Sys.ParamList = [this.Sys.ParamList params];
                 this.Sys.DimP = this.Sys.DimP+numel(params);
                 
@@ -1058,7 +1062,8 @@ classdef BreachSystem < BreachSet
         end
         
         
-       %% GUI
+%% GUI
+
         function new_phi  = AddSpecGUI(this)
             signals = this.Sys.ParamList(1:this.Sys.DimX);
             new_phi = STL_TemplateGUI('varargin', signals);
@@ -1098,9 +1103,7 @@ classdef BreachSystem < BreachSet
             BreachTrajGui(this,args);
         end
         
-        
-        
-        
+                        
         %% Experimental
         function report = Analysis(this)
             

@@ -13,7 +13,7 @@ classdef from_workspace_signal_gen < signal_gen
             end
         end
         
-        function X= computeSignals(this, p, time)
+        function [X, time]= computeSignals(this, p, time)
 
             X = zeros(numel(this.signals), numel(time));
             for isig = 1:numel(this.signals)

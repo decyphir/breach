@@ -58,7 +58,10 @@ classdef BreachDomain
                             end
                         case {'enum'}
                              this.type = type;
-                             if isnumeric(domain)&& size(domain, 1) ==1
+                             if isnumeric(domain)&& (size(domain, 1) ==1|| size(domain, 2) ==1)
+                                if size(domain, 2) ==1
+                                    domain = domain';
+                                end
                                 this.enum = domain;
                                 this.domain = [min(domain) max(domain)];
                              else

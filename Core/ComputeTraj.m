@@ -82,10 +82,6 @@ if isfield(Sys, 'init_fun')
     P0 = Sys.init_fun(P0);
 end
 
-if isfield(P0, 'init_fun')
-    P0 = P0.init_fun(P0);
-end
-
 % if no trajectories to compute, we return the param set itself
 if(isfield(P0, 'traj_to_compute') && isempty(P0.traj_to_compute))
     if isfield(P0, 'traj')&&isfield(P0, 'traj_ref') 
@@ -162,10 +158,7 @@ switch Sys.type
                 rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
             end
         end
-        
-        if ischar(tspan) 
-            tspan = evalin('base', tspan);
-        end
+            
         icount = 0;
         for ii = ipts
             iref = P0.traj_ref(ii);
@@ -209,7 +202,6 @@ switch Sys.type
         end
         
         Pf.traj_to_compute = [];
-%       Pf.traj_ref = 1:numel(Pf.traj); % fill field traj_ref (one to one mapping)
         
     case 'Simulink'
         model = Sys.mdl;

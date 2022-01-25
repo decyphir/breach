@@ -13,10 +13,14 @@ classdef signal_gen <handle
     % var_cp_signal_gen, pulse_signal_gen, step_signal_gen
     
     properties
+        signals_in
         signals         % names of the signals it generates
         signals_domain  % domains for signals. If empty, all double, unbounded
         params          % parameters such as control points, etc
         params_domain   % domains for parameters. If empty, all double, unbounded   
+        params_out      % signal_gen can also compute new parameters 
+        params_out_domain
+        domains = containers.Map()  % maps all of the above to their respective domains, supposedly (TODO)
         p0              % default values
     end
       
@@ -125,6 +129,14 @@ classdef signal_gen <handle
                 f = fill(t2, inBetween, 'k', 'FaceAlpha', 0.1);
             end
         end                               
+        function assign_params(this, p)
+            % assign_params fetch parameters and assign them in the current context
+            for ip = 1:numel(this.params)
+                assignin('caller', this.params{ip},p(ip));
+            end
+        end
+        
+        
         
    end
     

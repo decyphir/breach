@@ -79,7 +79,7 @@ classdef var_step_signal_gen < signal_gen
             
         end
         
-        function X = computeSignals(this,p, time) % compute the signals
+        function [X, time] = computeSignals(this,p, time) % compute the signals
             
             if size(p,1) ==1
                 p = p';

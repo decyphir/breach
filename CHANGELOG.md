@@ -1,3 +1,18 @@
+# Release 1.10.0
+- updated README.md
+- **really** updated README.md
+- like, now, it might be worth reading
+- like, it even has an example of BreachSystem with a custom sim function
+- and more details about BreachTraceSystem for monitoring data
+- though there had to be some fixes in those two classes
+- also minor changes in demo files
+- plus minor things I don't remember
+
+# Release 1.9.1
+
+- Fixed demo BrDemo.from_file_signal_gen
+- BreachTraceSystem new method GenTraceIdx
+
 # Release 1.9.0 
 
 - New solver: snobfit

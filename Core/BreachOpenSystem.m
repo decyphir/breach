@@ -33,7 +33,7 @@ classdef BreachOpenSystem < BreachSystem
             this.CheckinDomainParam();
             
             if this.use_precomputed_inputs % Input generator drives the thing
-                ig_params  = this.InputGenerator.GetSysParamList();
+                ig_params = this.InputGenerator.GetParamList();
                 all_pts_u = this.InputGenerator.GetParam(ig_params);
                 this.SetParam(ig_params, all_pts_u);
             end
@@ -52,8 +52,8 @@ classdef BreachOpenSystem < BreachSystem
                 
                 if isnumeric(U)
                     DimU = this.InputMap.Count();
-                    if size(U, 2)~=DimU+1;
-                        err_msg= fprintf('Input must be an array with %d columns, first one being time.',DimU);
+                    if size(U, 2)~=DimU+1
+                        err_msg= sprintf('Input must be an array with %d columns, first one being time.',DimU);
                         error(err_msg);
                     end
                     Us.t = U(:,1);
@@ -187,6 +187,12 @@ classdef BreachOpenSystem < BreachSystem
                 end
             end
             
+            % if IG is a BreachTraceSystem with no index list, generate it
+            if isempty(IG.GetSysParamList)
+                IG.GenTraceIdx('input_trace_idx');
+            end
+            
+            
             this.InputGenerator = IG;
             
             % Adds parameters for new input generator
@@ -198,8 +204,7 @@ classdef BreachOpenSystem < BreachSystem
             this.SignalRanges = [];
             this.P = CreateParamSet(this.Sys);
             this.P.epsi(:,:) = 0;
-            
-            
+                        
             % Sets the new input function for ComputeTraj
             % FIXME?: tilde?
             this.Sys.init_u = @(~, pts, tspan) (InitU(this,pts,tspan));
@@ -216,7 +221,7 @@ classdef BreachOpenSystem < BreachSystem
 
             % Copy or init ParamSrc
             
-            %% Init param sources, if not done already
+          %% Init param sources, if not done already
             for ip = IG.P.DimX+1:numel(IG.P.ParamList)
                 p  =IG.P.ParamList{ip};
                 if IG.ParamSrc.isKey(p)
@@ -230,7 +235,6 @@ classdef BreachOpenSystem < BreachSystem
             if opt.SetInputGenTime
                 this.SetTime(IG.GetTime());
             end
-
             
             % Restore env and prop parameters
             if ~isempty(PropParams)
@@ -243,6 +247,14 @@ classdef BreachOpenSystem < BreachSystem
             
             % Final checkin 
             this.CheckinDomain();
+            
+            % if IG is a trace domain, use_precomputed_inputs is true by
+            % default
+            if isa(IG, 'BreachTraceSystem')
+                this.use_precomputed_inputs = true;
+            else
+                this.use_precomputed_inputs = false;
+            end
             
         end
         
@@ -371,8 +383,7 @@ classdef BreachOpenSystem < BreachSystem
               else
                   val = this.GetParam(p);
               end
-             
-              
+                           
               this.SetDomain(p,typ,dom);               
               this.SetParam(p, val);
               [~, found] = FindParam(IG.P, p);

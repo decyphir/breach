@@ -43,7 +43,7 @@ else
         Nn = N2NnIter(n,p,nb);
     else % this is where we need some smarts, let's do simple first
         rng(1, 'twister');  % seed random generator to get deterministic results
-        if max_num_new < 1e6 %  if max_num_new is still reasonable, just truncate full grid
+        if max_num_new < 1e5 %  if max_num_new is still reasonable, just truncate full grid
             Nn =  N2NnIter(n,p,nb);
             %FullNn =  N2NnIter(n,p,nb);
             %idx= randperm(max_num_new);
@@ -51,7 +51,7 @@ else
             % always include/starts with min and max corners
             %Nn =  unique([ones(n,1) nb' Nn(:,2:end)]', 'rows','stable')';
         else % otherwise random stuff until we get enough unique vectors
-            Nn = unique(RandNn(n,nb,1e7)', 'rows', 'stable')';
+            Nn = unique(RandNn(n,nb,1e6)', 'rows', 'stable')';
             while size(Nn, 2) < num_new
                 Nn_more = RandNn(n,nb,num_new);
                 Nn =  unique([Nn Nn_more]', 'rows','stable')';

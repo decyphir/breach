@@ -59,11 +59,9 @@ function Sys = CreateExternSystem(name, vars, params, p0, simfn)
     end
   end
   
+  Sys.type = 'Extern';
   if exist('simfn','var')
-      Sys.type = 'Extern';
       Sys.sim = simfn;
-  else
-      Sys.type = 'traces';
   end
   Sys.tspan= 0:.1:1;
   Sys.Dir = pwd;

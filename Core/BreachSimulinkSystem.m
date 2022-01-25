@@ -49,7 +49,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             InitBreach();
             
             if nargin ==0
-                    return;                   
+                 return;                   
             end
             
             if exist('p0', 'var')&&iscell(p0)
@@ -209,18 +209,39 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
         end
         
+        function ME=EnableFastRestart(this)
+            mdl_breach = this.Sys.mdl;   
+            try
+                load_system(mdl_breach);
+                set_param(mdl_breach, 'FastRestart', 'on');
+                save_system(mdl_breach);
+                ME=0;
+            catch ME
+               warning('BreachSimulinkSystem:no_fast_restart', ['Did not manage to enable fast restart for ' this.Sys.mdl]);
+           end
+        end
+        
+        
         %% Interface creation
         function [sig_in, sig_out, sig_fw, params, sig_build_params] = CreateInterface(this, mdl, params, p0, signals)
-            %% Copy the model
+            %% Checks model file
+            if ~isfile(mdl)
+                [~,mdl] = fileparts(mdl);                
+            end            
+            try 
+                load_system(mdl);
+            catch
+                error('BreachSimulinkSystem:not_a_simulink_model','%s does not exists or is not a valid Simulink filename',mdl);
+            end
             
+            %% Copy the model            
             %  Get Breach directory
             global BreachGlobOpt
             breach_dir = BreachGlobOpt.breach_dir;
             breach_data_dir = [breach_dir filesep 'Ext' filesep 'ModelsData' ];
             
             % Give it a name
-            mdl_breach = [mdl '_breach'];
-            load_system(mdl);
+            mdl_breach = [mdl '_breach'];            
             
             close_system(mdl_breach,0);
             save_system(mdl,[breach_data_dir filesep mdl_breach]);
@@ -1150,106 +1171,6 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 end
             end
         end
-
-%         function sig_log = FindLoggedSignals(this)
-%             %
-%             % converts a simulink output to a data structure Breach can handle
-%             %
-%             
-%             %Run the model for time 0 to check proper initialization and collect signal names
-%             tspan = evalin('base', 'tspan;');
-%             assignin('base','tspan',[0 eps]);
-%             assignin('base','t__',0);
-%             assignin('base','u__',zeros(1, numel(this.Sys.InputList)));
-%             
-%             simout = sim(this.Sys.mdl);
-%             assignin('base','tspan',tspan);
-%             
-%             %% Outputs and scopes
-%             Vars = simout.who;
-%             lenVars = numel(Vars);
-%             sig_log = {};
-%             
-%             for iV = 1:lenVars
-%                 Y = get(simout,Vars{iV});
-%                 if ~isempty(Y)
-%                     
-%                     if ~strcmp(Vars{iV}, 'tout')&&~strcmp(Vars{iV},'logsout')&&(isstruct(Y))
-%                         for iS=1:numel(Y.signals)
-%                             signame = Y.signals(iS).label;
-%                             if ~ismember(signame,sig_log)
-%                                 
-%                                 nbdim = size(double(Y.signals(iS).values),2);
-%                                 if (nbdim==1)
-%                                     sig_log = {sig_log{:} signame };
-%                                 else
-%                                     for idim = 1:nbdim
-%                                         signamei = [signame '_' num2str(idim)  '_'];
-%                                         sig_log = {sig_log{:} signamei};
-%                                     end
-%                                 end
-%                             end
-%                         end
-%                     end
-%                 end
-%             end
-%             
-%             logs = simout.get('logsout');
-%             
-%             if ~isempty(logs)
-%                 logs_names = logs.getElementNames();
-%                 
-%                 %% logs
-%                 for ilg = 1:numel(logs_names)
-%                     if ~(ismember(logs_names{ilg}, sig_log))
-%                         signame = logs_names{ilg};
-%                         if ~ismember(signame,sig_log)
-%                             
-%                             sig = logs.getElement(signame);
-%                             % JOHAN CHANGE
-%                             try
-%                                 if sig.numElements > 1
-%                                     sig = get(sig,1);
-%                                 end
-%                             catch
-%                                 % Do nothing
-%                             end
-%                             
-%                             try
-%                                 nbdim = size(sig.Values.Data,2);
-%                             catch 
-%                                 % Sometimes, this doesn't work
-%                                 nbdim = length(fieldnames(sig.Values));
-%                             end
-%                             
-%                             % NOTE!
-%                             % Do we want to split multidimensional signals
-%                             % or not?
-%                             % For logged signals, currently we do NOT!
-%                             sig_log = {sig_log{:} signame};
-%                             
-%                             % Alternatively, if we WANT to split them, use
-%                             % the code below INSTEAD:
-%                             
-%                             % naming multidimensional signal= name_signal_i_
-% %                             if nbdim==1
-% %                                 sig_log = {sig_log{:} signame};
-% %                             else
-% %                                 for idim =1:nbdim
-% %                                     signamei = [signame '_' num2str(idim)  '_'];
-% %                                     sig_log = {sig_log{:} signamei};
-% %                                 end
-% %                             end
-%                             % END JOHAN CHANGE
-%                             
-%                             
-%                             
-%                             
-%                         end
-%                     end
-%                 end
-%             end
-%         end
         
         function U = InitU(this,pts,tspan)
             % Computes input values
@@ -1265,22 +1186,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
                 
             end
         end
-        
-        % Old function Sim
-%         function Sim(this, tspan, U)
-%             switch nargin
-%                 case 1
-%                     Sim@BreachOpenSystem(this);
-%                 case 2
-%                     Sim@BreachOpenSystem(this, tspan);
-%                 case 3
-%                     Sim@BreachOpenSystem(this, tspan, U);
-%             end
-%             if this.use_parallel == 0 % don't autosave in parallel mode
-%                 %save_system(this.Sys.mdl);
-%             end
-%         end
-
+ 
         %% Misc
         function S = GetSignature(this, varargin)
             S = GetSignature@BreachOpenSystem(this, varargin{:});

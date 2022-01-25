@@ -9,11 +9,13 @@ end
 
 grd = xmin:delta:xmax;
 
-Gabove = repmat(grd', 1, size(x,2));
-Gbelow = Gabove(2:end,:);
-Gbelow(end+1,:) = inf;
+Glow = repmat(grd', 1, size(x,2));
+Gup = Glow(2:end,:);
+Gup(end+1,:) = inf;
 
 X = repmat(x, size(grd,2),1);
-Xin = (X>= Gabove)&(X<Gbelow);
+Xin = (X==Glow)|(X>Glow)&(X<Gup)|X==Gup;
 
 cnt = sum(Xin,2)';
+
+

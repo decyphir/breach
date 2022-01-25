@@ -38,7 +38,7 @@ classdef step_signal_gen < signal_gen
             params = this.params;
         end
             
-        function X = computeSignals(this,p, time) % compute the signals
+        function [X, time] = computeSignals(this,p, time) % compute the signals
             if numel(p) ~= 3*numel(this.signals)
                 error('Wrong number of parameters for computing constant signal.' )
             end
