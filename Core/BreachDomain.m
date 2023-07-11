@@ -5,9 +5,9 @@ classdef BreachDomain
     % 
      
     properties
-        type='double'     % can be 'int', 'bool', 'enum', 'double'
-        domain            % always be an interval, empty means singleton
-        enum              % only  used with type enum and 'bool'
+        type='double'    % can be 'int', 'bool', 'enum', 'double'
+        domain                % always be an interval, empty means singleton
+        enum                    % only  used with type enum and 'bool'
     end
     
     methods
@@ -93,6 +93,14 @@ classdef BreachDomain
             bool = isequal(this.type, 'double') && isempty(this.domain);
         end
         
+        function bool = is_out(this,x)
+            % bool = BreachDomain.is_out(x)
+            % returns true if x is not inside domain interval
+            bool = (~isempty(this.domain))&&...
+                       ((x>this.domain(2))||(x<this.domain(1)));
+        end
+        
+
         function [new_x, is_in, dist]   = checkin(this,x)
         % BreachDomain.checkin(x) checks      
             switch this.type
@@ -135,7 +143,7 @@ classdef BreachDomain
         function x = checkin_enum(this,x)
             for ix= 1:numel(x)
                 [~ , imin] = min(abs(this.enum-x(ix)));
-                x(ix) = this.enum(imin);
+                x(ix) = this.enum(imin);                
             end
         end
        
@@ -156,10 +164,7 @@ classdef BreachDomain
                     'sample_all cannot sample a double domain.');
           end
         end
-            
-          
-        
-                     
+                                                   
         function new_x = sample_rand(this, num_samples)
             % assumes bounded domain
             assert(~isempty(this.domain), ...
@@ -216,12 +221,11 @@ classdef BreachDomain
             new_x = linspace(this.domain(1),this.domain(2), num_samples);
             new_x = this.checkin(new_x);
         end
-        
-        
+                
         function x = sample(varargin)
         % sample multi domain sampling. See BreachSet.SampleDomain
             
-            %% process parameters
+          %% process parameters
             
             % first arguments are domains
            i =2; 
@@ -248,7 +252,6 @@ classdef BreachDomain
                 i = i+1;
                 max_num_samples = varargin{i};
             end
-            
             
             % if all is selected, combine new samples
             combine_x=0;
@@ -297,8 +300,7 @@ classdef BreachDomain
                 end
                 num_x(ip) = numel(x{ip});
             end
-            
-            
+                        
             % Combine new samples  --> this is where we need some smarts 
             if num_dom>1
                 if combine_x
@@ -317,10 +319,8 @@ classdef BreachDomain
             else
                 x= x{1};
             end
-            
-            
+                        
          end
-        
-        
+                
     end
 end

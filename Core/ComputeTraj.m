@@ -109,7 +109,9 @@ if strcmp(Sys.type,'traces') % No model
     for ii = 1:numel(Pf.traj)
         Pf.traj{ii}.param = Pf.pts(1:Pf.DimP,ii)';
     end
- elseif(isfield(P0,'traj_to_compute') &&...
+    Pf = Preset_traj_ref(Pf); % also checks consistency of initial signal values in pts and traj
+
+elseif(isfield(P0,'traj_to_compute') &&...
          ~isempty(P0.traj_to_compute) && ~isequal(P0.traj_to_compute,1:size(P0.pts,2))&&... % some traces have already be computed
          isfield(P0, 'traj')&&~isempty(P0.traj)&&isequal(P0.traj{1}.time, tspan))     %  some traces have been computed on the same tspan
      % Here, we assume:
@@ -169,6 +171,7 @@ switch Sys.type
             end
             
             [traj.time, traj.X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
+            %[traj.time, traj.X] = Sys.sim(Sys, tspan, P0.pts(Sys.DimX+1:end,ii)); 
             traj.param = P0.pts(1:P0.DimP,ii)';
             
             if isfield(Sys, 'output_gens')
@@ -336,6 +339,18 @@ switch Sys.type
             Pf = Pf.traj;
         end
         
+end
+
+% enforce consistency of pts and init traj values
+
+use_caching = isfield(Sys,'DiskCachingFolder')&&(~isempty(Sys.DiskCachingFolder));
+if ~use_caching % maybe too slow with large traces in cache. else warning ? or make sure this is done somewhere else TODO 
+  for ii = 1:size(Pf.pts, 2)
+      itraj = Pf.traj_ref(ii);      
+      X0 = Pf.traj{itraj}.X(:,1);
+      Pf.pts(1:Pf.DimX,ii) = X0;
+      Pf.traj{itraj}.param(1:numel(X0)) = X0';
+  end
 end
 
 if(isfield(Sys,'time_mult') && ~isfield(Pf,'time_mult'))

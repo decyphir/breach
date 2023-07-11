@@ -37,6 +37,7 @@ end
 if ~isnumeric(proj)
     proj = FindParam(P,proj);
 end
+
 proj = proj(proj>0);
 proj = proj(proj<=size(P.pts,1));
 if isempty(proj)

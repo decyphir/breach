@@ -81,6 +81,19 @@ classdef list_manip
                 end
             end            
         end
+        
+        function st =  to_string_values(l, v, sep)
+            % display list of name: value            
+            if nargin <3
+                sep= '\n';
+            end    
+            st = [l{1} ': ' num2str(v(1))];
+            if numel(l)>1
+                for n = 2:numel(l)
+                    st=  [st sep [l{n} ': ' num2str(v(n))]];
+                end
+            end            
+        end
     end
     
 end

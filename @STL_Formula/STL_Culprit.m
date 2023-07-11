@@ -88,7 +88,7 @@ if strcmp(phi.type, 'predicate')
     t = tau*ones(1,numParamSet);
     [mu{:}] = deal(phi); % fill mu with phi
     for ii = 1:numParamSet
-        traj_time = P.traj{P.traj_ref(ii}).time;
+        traj_time = P.traj{P.traj_ref(ii)}.time;
         idx(ii) = find(traj_time>=tau,1,'first'); % index of tau if tau belong in traj_time
         if isempty(idx(ii))
             idx(ii) = traj_time(end); % there is no time point higher than tau
@@ -107,7 +107,7 @@ else
     %
     mus = STL_ExtractPredicates(phi);
     for ii = 1:numParamSet % for each param set
-        traj = P.traj{P.traj_ref(ii});
+        traj = P.traj{P.traj_ref(ii)};
         Pi = Sselect(P,ii);
         found = false;
         jj = 1;

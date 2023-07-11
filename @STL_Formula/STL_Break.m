@@ -1,4 +1,4 @@
-function [out, num_op, num_nested_temp_op]  = STL_Break(phi, n)
+function [out, num_op, num_nested_temp_op]  = STL_Break(phi, n, skip_params)
 % STL_BREAK breaks a formula into subformulas
 %
 %  Synopsys:  out = STL_Break(phi, [n])
@@ -38,6 +38,7 @@ num_nested_temp_op=0;
 
 if nargin==1
     n = inf;
+    skip_params = false;
 end
 
 if n <= 0

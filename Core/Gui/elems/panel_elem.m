@@ -1,10 +1,7 @@
 classdef panel_elem < gui_elem
      
     properties
-       layout       
-       margin_top = .02
-       margin_bot = .025
-       
+       layout         
     end
     
     methods
@@ -14,8 +11,8 @@ classdef panel_elem < gui_elem
             this.layout = layout;
             this.wleft =.025;  % default internal margins smaller for panels
             this.wright =.025;
-            this.htop  =.025;
-            this.hbot  = .025;
+            this.htop  =.05;
+            this.hbot  = .05;
         end
         
                 

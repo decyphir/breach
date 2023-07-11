@@ -136,7 +136,18 @@ classdef BreachTraceSystem < BreachSystem
                             traj.X(isig,:) = trace.inputs.values(idx_sig,:);
                         end
                     end
-                    
+                elseif all(isfield(trace,{'time', 'signals','params'})) %  reading one struct obtained from a SaveResult
+                    traj.time= trace.time;
+                    signals = this.GetSignalNames();
+                    traj.X = zeros(numel(signals),numel(traj.time));
+                    for isig = 1:numel(signals)
+                        idx_sig = find(strcmp(trace.signals.names, signals{isig}),1);
+                        if isempty(idx_sig)
+                            error('BreachTraceSystem:signal_not_found', 'Signal %s not found', signals{isig});
+                        end
+                        traj.X(isig,:) = trace.signals.values(idx_sig,:);
+                    end
+                    params = trace.params.values;
                 elseif all(isfield(trace,{'time', 'signals'})) %  reading one struct obtained from a SaveResult
                     traj.time= trace.time;
                     signals = this.GetSignalNames();
@@ -177,7 +188,7 @@ classdef BreachTraceSystem < BreachSystem
                 if numel(params)~= num_p
                     error('BreachTraceSystem:wrong_param', 'Wrong number of parameters (last argument), should be %d', this.P.DimP-this.P.DimX);
                 else
-                    traj.param(this.DimX+1:end) = reshape(params, 1, num_p);
+                    traj.param(this.Sys.DimX+1:end) = reshape(params, 1, num_p);
                 end
                 
             end

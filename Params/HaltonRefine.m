@@ -36,7 +36,7 @@ function P = HaltonRefine(P, nb, varargin)
 %See also QuasiRefine Refine RandomLogRefine LogNRefine
 %
 
-if(nb<=1)
+if(nb<1)
     return;
 end
 

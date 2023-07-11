@@ -1,0 +1,23 @@
+pta
+module m
+s : [0..3] init 0;
+x : clock;
+y : clock;
+
+invariant
+       y<15
+endinvariant
+
+//Coasting to see, save fuel
+[a] (s=0) & (y>2) -> (s'=3) & (x'=0) & (y'=0); //acceleration to coasting 00
+[b] (s=3) & (y>1) -> (s'=2) & (x'=0) & (y'=0); //coasting to brake 01
+[c] (s=3) & (y>1) -> (s'=0) & (x'=0) & (y'=0); //coasting to acceleration 10
+
+//Braking cycle
+[d] (s=0) & (y>2) -> (s'=2) & (x'=0) & (y'=0);         //acceleration to braking 01
+[e] (s=1) & (y>1) & (y<2) -> (s'=2) & (y'=0);          //coasting to brake 01
+[f] (s=2) & (y>1) & (y<2) -> (s'=1) & (y'=0);          //brake to coasting 00
+[g] (s=2) & (y>1) & (x>3) -> (s'=0) & (x'=0) & (y'=0); //brake to acceleration 10
+[h] (s=1) & (y>1) & (x>3) -> (s'=0) & (x'=0) & (y'=0); //coasting to acceleration 10
+
+endmodule

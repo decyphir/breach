@@ -41,6 +41,10 @@ fid = fopen(fname,'r');
 
 if(fid==-1)
     error('STL_ReadFile:OpeningError',['Couldn''t open file ' fname]);
+else
+    if nargout==0
+        fprintf('---\nReading file %s for STL formulas\n---\n', fname);
+    end
 end
 
 % JOHAN ADDED
@@ -161,6 +165,10 @@ while ischar(tline)
                     phi = wrap_up(current_id, current_formula, new_params, in_signal_names, out_signal_names);
                     props = [props, {phi}]; %#ok<*AGROW>
                     props_names = [props_names, {current_id}];
+                    if nargout==0
+                        fprintf('%s = %s\n', current_id, current_formula);
+                    end
+
                 catch err
                     assignin('base', 'row_to_replace', num_line);
                     fprintf(['ERROR: Problem with formula ' current_id ' at line ' ...
@@ -174,7 +182,7 @@ while ischar(tline)
             current_id = tokens{1}{1};
             try
                 assignin('base', current_id, 0);
-                assignin('caller', current_id,0);
+                assignin('caller', current_id,0);                
             catch
                 error('STL_ReadFile:IdError',[current_id ' on line ' int2str(num_line) ' is not a valid id.']);
             end
@@ -198,6 +206,10 @@ try
     phi = wrap_up(current_id, current_formula, new_params, in_signal_names, out_signal_names);
     props = [props, {phi}];
     props_names = [props_names, {current_id}];
+    if nargout==0
+        fprintf('%s = %s\n', current_id, current_formula);
+    end
+
 catch err   
     assignin('base', 'row_to_replace', num_line);    
     fprintf(['ERROR: Problem with formula ' current_id ' at line ' ...

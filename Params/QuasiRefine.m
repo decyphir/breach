@@ -37,7 +37,7 @@ function P = QuasiRefine(P, nb, varargin)
 %
 
 %  process inputs
-if(nb<=1)
+if(nb<1)
     return;
 end
 nb = floor(nb);

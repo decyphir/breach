@@ -41,7 +41,7 @@ classdef sinusoid_signal_gen < signal_gen
             for i_s = 0:numel(this.signals)-1 
                 % with the variable order: base, amp, decay, freq                   
                 pi_s = p(4*i_s+1:4*i_s+4);         
-                X(i_s+1,:) = pi_s(1) + pi_s(2) * exp(pi_s(3)*time) .* sin(pi_s(4)*time);                
+                X(i_s+1,:) = pi_s(1) + pi_s(2) * exp(pi_s(3)*time) .* sin(2*pi*pi_s(4)*time);                
             end
            
         end

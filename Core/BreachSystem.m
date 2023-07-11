@@ -55,6 +55,7 @@ classdef BreachSystem < BreachSet
                 otherwise % creates an extern system
                     if ~(exist(varargin{1})==4) % tests if the first argument is a Simulink model
                         this.Sys = CreateExternSystem(varargin{:});
+                        
                     else
                         warning('First argument is the name of a Simulink model - consider using BreachSimulinkSystem instead');
                     end
@@ -63,7 +64,9 @@ classdef BreachSystem < BreachSet
             this.SignalRanges = [];
             if (isaSys(this.Sys))
                 this.P = CreateParamSet(this.Sys);
-            end
+                this.Domains = repmat(BreachDomain(), 1, this.Sys.DimP);
+            end            
+
         end
         
         function SetupParallel(this, NumWorkers)
@@ -157,6 +160,44 @@ classdef BreachSystem < BreachSet
             end
         end
         
+        function  Bout = parSim(this, varargin) 
+        % ALPHA tentative simpler parallel implementation. 
+        
+        if isempty(gcp('nocreate'))
+            gcp;
+        end
+        if ~isempty(this.InitFn)
+            pctRunOnAll(this.InitFn);
+        end
+        
+        num_sim = this.GetNbParamVectors();
+        num_task = num_sim; 
+        if num_sim == 1
+            this.Sim(varargin{:})
+        else
+            % create tasks systems
+
+            for i = 1:num_sim
+                Btask(i) = this.ExtractSubset(i);
+            end
+           
+            fprintf(2,[repmat('|',1,num_task) ' 100%%\n\n']);           
+            parfor i = 1:num_task
+                Btask(i).Sim(varargin{:});
+                Bres{i} = Btask(i).copy(); % need to actually copy to get trace data                
+                fprintf('\b|\n');                
+            end
+            fprintf('\n');
+            Bout = Bres{1}.copy();
+            for i = 2:num_task
+                Bout.Concat(Bres{i},1)                
+            end
+            this.P = Bout.P;
+        end
+            
+        end
+        
+        
         %% Parameters
         % Get and set default parameter values (defined in Sys)
         function values = GetDefaultParam(this, params)
@@ -193,7 +234,7 @@ classdef BreachSystem < BreachSet
                     error('BreachSystem:SetTime:undef', 'Cannot evaluate time expression %s', tspan);
                 end
             else
-                this.P.Sys.tspan = check_sim_time(tspan);
+                this.Sys.tspan = check_sim_time(tspan);
             end                        
         end
         function time = GetTime(this)
@@ -240,10 +281,7 @@ classdef BreachSystem < BreachSet
             end
             
             
-        end
-        
-
-        
+        end                
         
         %% Specs
         function phi = AddSpec(this, varargin)
@@ -402,17 +440,6 @@ classdef BreachSystem < BreachSet
             Sim(this);
             this.CheckinDomainTraj();
             
-            % JOHAN ADDED
-
-            % This was used previously to save trajectory info to the
-            % folder 'trajectories'
-%             filesInTrajFolder = length(dir('trajectories')) - 2;
-%             tmpP = this.P;
-%             paramValues = values;
-%             load('nextReqToBeFalsified'); % Loads currentReq
-%             save(['trajectories/' num2str(filesInTrajFolder + 1) '.mat'],'tmpP','params','paramValues', 'currentReq');
-            % END JOHAN ADDED
-            
             % FIXME: this is going to break with multiple trajectories with
             % some of them containing NaN -
             
@@ -459,16 +486,6 @@ classdef BreachSystem < BreachSet
             this.CheckinDomainParam();
             Sim(this);
             this.CheckinDomainTraj();
-            
-            % JOHAN ADDED
-            % This was used previously to save trajectory info to the
-            % folder 'trajectories'
-%             filesInTrajFolder = length(dir('trajectories')) - 2;
-%             tmpP = this.P;
-%             paramValues = values;
-%             load('nextReqToBeFalsified'); % Loads currentReq
-%             save(['trajectories/' num2str(filesInTrajFolder + 1) '.mat'],'tmpP','params','paramValues', 'currentReq');
-            % END JOHAN ADDED
             
             % FIXME: this is going to break with multiple trajectories with
             % some of them containing NaN -
@@ -1035,24 +1052,23 @@ classdef BreachSystem < BreachSet
             end
         end
         
+        
         function varargout = disp(this)
-            if isfield(this.P, 'traj')
-                nb_traj = numel(this.P.traj);
-            else
-                nb_traj = 0;
-            end
-            
-            st = ['BreachSystem ' this.Sys.name '. It contains ' num2str(this.GetNbParamVectors()) ' samples and ' num2str(nb_traj) ' unique traces.\n'];
+        
+            str = 'BreachSystem object.\n';
+            str = [str this.disp_short_description()]; 
             
             if nargout == 0
                 varargout = {};
-                fprintf(st);
+                fprintf(str);
             else
-                varargout{1} = st;
+                varargout{1} = str;
             end
             
         end
-        
+
+
+
         function assignin_ws_p0(this)
             ip = 0;
             for p = this.Sys.ParamList

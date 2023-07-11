@@ -41,3 +41,7 @@ docrun_backup.mat
 *_ert_rtw
 *.7z
 *.slxc
+/Online/onlineMonitorlib.a
+AbstractFuelControl_breach_acc.*
+Examples/Wordgen/driving_TA.pcmp
+Examples/Wordgen/res.txt

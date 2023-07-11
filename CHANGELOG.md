@@ -1,3 +1,8 @@
+# Release 1.11.0
+- Coverage features, to be documented
+- GUI stuff, tbdocu itou
+- Fixes and stuff, tbdocu too but less
+
 # Release 1.10.0
 - updated README.md
 - **really** updated README.md

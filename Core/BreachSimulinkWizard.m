@@ -174,7 +174,7 @@ end
 evalin('base', [opt.VariableName '=BreachSimulinkSystem(''' Name ''', params__,[],sigs__,IG__,opt__ );']);
 Br = evalin('base',opt.VariableName);
 gu = Br.SetInputGenGUI();
-uiwait(gu);
+uiwait(gu.main);
 
 clean;
 
