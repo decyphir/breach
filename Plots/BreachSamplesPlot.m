@@ -179,7 +179,7 @@ classdef BreachSamplesPlot < handle
             
             vals_cum_pos = vals_pos>=0;             
             num_req = size(vals_pos,1);
-            for ir = 1:num_req % for each requirequirement
+            for ir = 1:num_req % for each requirement
               ifalse = find(vals_pos(ir,:)==0,1); 
               if ifalse
                 vals_cum_pos(ir, ifalse:end)=0;                

@@ -64,8 +64,7 @@ classdef cp_signal_gen < signal_gen
             if isempty(this.p0)
                 this.p0=p0;
             end
-            
-            
+                        
            this.params_domain = repmat(BreachDomain(), 1, numel(this.params));
            this.signals_domain = repmat(BreachDomain(), 1, numel(this.signals));
  
@@ -101,7 +100,12 @@ classdef cp_signal_gen < signal_gen
         end
         
         function type = getType(this)
-            type = 'varstep';
+            type = 'cp';
         end
+        
+        function args = getSignalGenArgs(this)
+            args = {'cp','method'};         
+        end
+        
     end
 end

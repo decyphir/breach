@@ -5,11 +5,12 @@ classdef BreachSignalsPlot < handle
         Fig
         Axes            
         Summary
+        annot
     end
         
     properties(SetAccess=protected, GetAccess=public)
        ipts       
-       zero_rob_line_name = 'zero robustness line'
+       zero_rob_line_name = 'zero robustness line'        
     end
     
     methods
@@ -132,6 +133,19 @@ classdef BreachSignalsPlot < handle
             end
         end
         
+        function ClearAxes(this,pos)
+            if nargin<2
+                pos=1;
+            end
+            ax=  this.Axes.ax(pos);
+            cla(ax);
+            axes(ax);
+            this.Axes(pos).signals = {};
+            title('');
+            legend off;
+        end
+
+
         function AddSignals(this,sigs,ax,itraces)
             if ischar(sigs)
                 sigs = {sigs};
@@ -241,7 +255,33 @@ classdef BreachSignalsPlot < handle
             this.update_legend(ax);
             
         end
-              
+
+        function set_disp_param(this,params)        
+            this.annot.show_params = params;
+            this.update_annot()
+        end
+        
+        function update_annot(this)
+            if isstruct(this.annot)&&~isempty(this.Axes)               
+                ax = this.Axes(1).ax;
+                l = legend(ax);
+                if isfield(this.annot,'show_params')&&~isempty(this.annot.show_params)
+                    params = this.annot.show_params;
+                    values = this.BrSet.GetParam(params, this.ipts);
+                    sta = list_manip.to_string_values(params, values);
+                    pos = get(l,'Position');
+                    posa = pos + [0 -pos(4) 0 0];
+                    if ~isfield(this.annot,'params_textbox')||isempty(this.annot.params_textbox)                        
+                        this.annot.params_textbox = annotation('textbox',posa, 'String', sprintf(sta), 'FitBoxToText', 'on', 'Interpreter', 'None', 'EdgeColor',[1 1 1]);
+                    else
+                        delete(this.annot.params_textbox);
+                        this.annot.params_textbox = annotation('textbox',posa, 'String', sprintf(sta), 'FitBoxToText', 'on', 'Interpreter', 'None', 'EdgeColor',[1 1 1]);
+                    end
+                    
+                end                
+            end
+        end
+        
         function update_legend(this, ax)
             l = legend('-DynamicLegend');
             c = flipud(get(ax, 'Children'));
@@ -275,7 +315,8 @@ classdef BreachSignalsPlot < handle
                         st{end+1} = lst;
                     end
                 end
-                    
+                
+                
             end
             
             if num_patch>0
@@ -326,8 +367,9 @@ classdef BreachSignalsPlot < handle
         end
         
         function set_ipts(this,ipts)
-            this.ipts= ipts;
+            this.ipts= ipts;           
             this.update_axes();
+            this.update_annot();
             this.update_title();
         end
 
@@ -338,6 +380,7 @@ classdef BreachSignalsPlot < handle
             end
             this.ipts = min(this.ipts+num, this.Summary.num_traces);
             this.update_axes();
+            this.update_annot();
             this.update_title();
         end
         
@@ -347,6 +390,7 @@ classdef BreachSignalsPlot < handle
             end
             this.ipts = max(1,this.ipts-num);
             this.update_axes();
+            this.update_annot();
             this.update_title();
         end        
         
@@ -463,7 +507,7 @@ classdef BreachSignalsPlot < handle
             uimenu(cm, 'Label', 'Add axes below', 'Callback', @(o,e)ctxtfn_add_axes_below(ax, o,e));
             uimenu(cm, 'Label', 'Reset axes','Separator', 'on', 'Callback', @(o,e)ctxtfn_reset_axes(ax, o,e));
             uimenu(cm, 'Label', 'Delete axes', 'Callback', @(o,e)ctxtfn_delete_axes(ax, o,e));
-                                               
+
             function ctxtfn_add_axes_above(ax, ~,~)
                 for ia = 1:numel(this.Axes)
                     if isequal(ax,this.Axes(ia).ax)
@@ -525,7 +569,7 @@ classdef BreachSignalsPlot < handle
                 i0 = 1;
             end
             
-            [st_phis, phi_ids, not_expanded] =tree_disp(phi,0,2);
+            [st_phis, ~, not_expanded] =tree_disp(phi,0,2);
             for i = i0:numel(st_phis)
                 
                 phi_str = strtrim(st_phis{i});
@@ -612,41 +656,59 @@ classdef BreachSignalsPlot < handle
                 l = [];
                 return
             end
-                
+
             pos = this.get_pos_from_ax(ax);
-                                    
-            this.Axes(pos).signals = union(this.Axes(pos).signals, sig);            
+
+            this.Axes(pos).signals = union(this.Axes(pos).signals, sig);
             if ~exist('ipts', 'var')
                 ipts= this.ipts;
             end
-            
+
             axes(ax);
             hold on;
-            itraj = unique(this.BrSet.P.traj_ref(ipts), 'stable');
-            
+            itraj_list = unique(this.BrSet.P.traj_ref(ipts), 'stable');
+
             if ~iscell(sig)
                 sig= {sig};
-            end 
-            time = this.BrSet.P.traj{itraj}.time;
-            ch = get(ax,'Children');            
-            if isempty(ch)
-               set(ax, 'XLimMode', 'auto', 'YLimMode', 'auto');
             end
-                                    
-            for s = sig                
-                % find out if it's a robustness signal or not
-                if isa(this.BrSet,'BreachRequirement')
-                    [~, b, ~, bb]= this.BrSet.FindSignalsIdx(s{1});
-                else
-                    b=true;
+
+
+            for itraj=itraj_list
+                time = this.BrSet.P.traj{itraj}.time;
+                ch = get(ax,'Children');
+                if isempty(ch)
+                    set(ax, 'XLimMode', 'auto', 'YLimMode', 'auto');
                 end
-                if b||bb                    
-                    sig_values = this.BrSet.GetSignalValues(s{1}, itraj);
-                    l = this.get_line_from_signal_name(ax, s{1});
-                    if isempty(l)
-                        l = plot(time , sig_values, 'DisplayName', s{1});
+
+                for s = sig
+                    % find out if it's a robustness signal or not
+                    if isa(this.BrSet,'BreachRequirement')
+                        [~, b, ~, bb]= this.BrSet.FindSignalsIdx(s{1});
                     else
-                        set(l, 'XData',time,'YData',sig_values);
+                        b=true;
+                    end
+                    if b||bb
+                        sig_values = this.BrSet.GetSignalValues(s{1}, itraj);
+                        l = this.get_line_from_signal_name(ax, s{1});
+                        if isempty(l)
+                            l = plot(time , sig_values, 'DisplayName', s{1});
+                        else
+                            set(l, 'XData',time,'YData',sig_values);
+                        end
+
+                    else % try robustnes... should be obsolete
+                        warning('Not sure what I am doing here, plot_signal but trying robustness signal ?');
+                        l = this.get_line_from_signal_name(ax, s{1});
+                        [t,r]= this.BrSet.GetRobustSat(1, itraj, s{1});
+                        if isempty(l)
+                            l = plot(t, r, 'DisplayName', s{1});
+                        else
+                            set(l,'XData',t,'YData',r);
+                        end
+                        if isempty(this.get_line_from_signal_name(ax,this.zero_rob_line_name))
+                            plot(time, 0*time, 'DisplayName', this.zero_rob_line_name, 'LineStyle', '--', 'Color','r');
+                        end
+
                     end
                     
                 else % try robustnes... should be obsolete
@@ -664,8 +726,9 @@ classdef BreachSignalsPlot < handle
                     
                 end
             end
-            
+
         end
               
     end
 end
+

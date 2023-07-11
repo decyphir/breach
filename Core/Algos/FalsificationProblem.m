@@ -5,8 +5,8 @@ classdef FalsificationProblem < BreachProblem
     %    BrSet_False -  BreachSet updated with falsifying parameter vectors
     %                   and traces whenever some are found
     %    X_false     -  parameter values found falsifying the formula
-    %    StopAtFalse - (default: true) if true, will stop as soon as a falsifying
-    %                   parameter is found.
+    %    StopAtFalse - (default: 1)  number of counter example to find
+    %    before stopping. If not a finite integer, never stop 
     %
     %  FalsificationProblem Methods
     %    GetBrSet_False - returns BrSet_False
@@ -17,7 +17,7 @@ classdef FalsificationProblem < BreachProblem
         BrSet_False
         X_false
         obj_false
-        StopAtFalse=true
+        StopAtFalse=1
         Rio_Mode
         Rio_Mode_log=[]
         val_max=inf
@@ -180,7 +180,13 @@ classdef FalsificationProblem < BreachProblem
         
         function b = stopping(this)
             b =  this.stopping@BreachProblem();
-            b= b||(this.StopAtFalse&&any(this.obj_best<0));        
+            
+            if this.StopAtFalse~=0 && ... % StopAtFalse is not false
+                rem(this.StopAtFalse,1)==0 &&...  % StopAtFalse is integer                    
+                this.StopAtFalse<=sum(this.obj_log<0) % found enough
+                b = true;
+            end
+            
         end
         
         function [BrFalse, BrFalse_Err, BrFalse_badU] = GetFalse(this)

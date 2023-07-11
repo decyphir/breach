@@ -73,7 +73,7 @@ classdef BreachProblem < BreachStatus
     end
     
     % properties related to the function to minimize
-    properties
+    properties 
         BrSet
         BrSys         % BreachSystem - reset for each objective evaluation
         BrSet_Best    
@@ -133,8 +133,6 @@ classdef BreachProblem < BreachStatus
         display = 'on'        
         use_parallel = 0
         max_time = inf
-        time_start = tic
-        time_spent = 0
         nb_obj_eval = 0
         max_obj_eval = 300
         num_constraints_failed = 0
@@ -143,6 +141,11 @@ classdef BreachProblem < BreachStatus
         mixed_integer_optim_solvers = {'ga'};
     end
     
+    properties (Hidden=true)
+        time_start = tic
+        time_spent = 0        
+    end
+
     %% Static Methods
     methods (Static)
        
@@ -537,6 +540,20 @@ classdef BreachProblem < BreachStatus
             this.solver_options = solver_opt;
         end
         
+        function solver_opt = setup_turbo(this, varargin)
+            this.solver = 'turbo';
+            %this.solver_options.num_corners = length(this.ub);
+            solver_opt.lb = this.lb;
+            solver_opt.ub = this.ub;
+            solver_opt.start_sample = [];
+            solver_opt.start_function_values = [];
+            solver_opt.use_java_runtime_call = 1;
+            solver_opt= varargin2struct_breach(solver_opt, varargin{:});   
+            
+            this.display = 'on';
+            this.solver_options = solver_opt;
+        end
+        
         function solver_opt = setup_gnmLausen(this)
             %disp('Setting options for GNM Lausen solver - use help gnm for details');
 %             solver_opt = saoptimset('Display', 'off');
@@ -719,21 +736,18 @@ classdef BreachProblem < BreachStatus
                     res = struct('x',x, 'fval',fval, 'counteval', counteval,  'stopflag', stopflag, 'out', out, 'bestever', bestever);
                     this.add_res(res);
                     
-                 case 'gnmLausen'
-                    [x, fval, output, used_options] = gbnm(this.objective,this.lb,this.ub,this.solver_options);     
+                case 'turbo'
+                    res = this.solve_turbo();
+                    
+                case 'gnmLausen'
+                    [x, fval, output, used_options] = gbnm(this.objective,this.lb,this.ub,this.solver_options);
                     res = struct('x', output.usedPoints, 'fval', output.usedVals,...
                         'counteval', output.nEval, 'output', output, 'used_options', used_options);
-%                     === example of output for 2D problem:
-%                     usedPoints: [2×30 double]
-%                     usedVals: [1×30 double]
-%                     usedSimplex: {1×30 cell}
-%                     reason: {1×15 cell}
-%                     nEval: 831
                     this.add_res(res);
                     
-
+                    
                 case 'meta'
-                    res = this.solve_meta();        
+                    res = this.solve_meta();
                     
                 case 'ga'
                     res = solve_ga(this, problem);
@@ -784,16 +798,6 @@ classdef BreachProblem < BreachStatus
                         [x,fval,exitflag,output] = feval(this.solver, problem);
                         res = struct('x',x,'fval',fval, 'exitflag', exitflag, 'output', output);                        
                         
-%                         num_works = this.BrSys.Sys.Parallel;
-%                         for idx = 1:num_works
-%                             F(idx) = parfeval(this.solver, 4, problem);
-%                         end
-%                         res = cell(1,num_works);
-%                         for idx = 1:num_works
-%                             [completedIdx, x, fval,exitflag,output] = fetchNext(F);
-%                             this.nb_obj_eval = this.nb_obj_eval + output.funccount;
-%                             res{completedIdx} = struct('x',x,'fval',fval, 'exitflag', exitflag, 'output', output);
-%                         end
                     else
                         [x,fval,exitflag,output] = feval(this.solver, problem);
                         res = struct('x',x,'fval',fval, 'exitflag', exitflag, 'output', output);                        
@@ -832,8 +836,6 @@ classdef BreachProblem < BreachStatus
                             end
                         end
                         
-                        
-                        
                         % Store if it's best
                         if min(rob) < fbest
                             xbest = x;
@@ -849,9 +851,13 @@ classdef BreachProblem < BreachStatus
                         end
                         
                         % Exit if robustness negative
-                        if this.StopAtFalse && min(rob) < 0 
-                            disp(['FALSIFIED at sample ' num2str(iterationCounter) '!']);
-                            break
+                        
+                        if min(rob)<0 
+                            this.StopAtFalse = this.StopAtFalse-1;                        
+                            if this.StopAtFalse==1 && min(rob) < 0
+                                disp(['FALSIFIED at sample ' num2str(iterationCounter) '!']);
+                                break
+                            end
                         end
                     end
                     res = struct('bestRob',[],'bestSample',[],'nTests',[],'bestCost',[],'paramVal',[],'falsified',[],'time',[]);
@@ -866,9 +872,7 @@ classdef BreachProblem < BreachStatus
                     this.add_res(res);
                     
             end
-            % TESTRON: Mute these outputs
             this.DispResultMsg(); 
-            %this.Display_Best_Results(this.obj_best, this.x_best);
             
             %% Saving run in cache folder
             this.SaveInCache();
@@ -1048,8 +1052,7 @@ classdef BreachProblem < BreachStatus
             this.BrSys.SetupDiskCaching(varargin{:});
         end
         
-        %% Objective function and wrapper        
-        
+        %% Objective function and wrapper                
         function [obj, cval, x_stoch] = objective_fn(this,x)
             
             % reset this.Spec
@@ -1354,6 +1357,25 @@ classdef BreachProblem < BreachStatus
             end
         end
    
+
+%% Display function
+
+         function varargout = disp_variables(this)
+            variables = list_manip.to_string(this.params);
+            
+            
+            
+            st = sprintf('Variables:  %s. \n',variables);
+            
+            if nargout == 0
+                varargout = {};
+                fprintf(st);
+            else
+                varargout{1} = st;
+            end                      
+            
+        end
+
     end
     
     methods (Access=protected)

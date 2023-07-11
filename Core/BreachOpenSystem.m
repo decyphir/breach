@@ -476,6 +476,81 @@ classdef BreachOpenSystem < BreachSystem
                 atts = [atts {'model_param'}];
             end
         end
+
+        function [sigs_in, sigs_out] = GetI0SignalsList(this)
+            sig_list = this.P.ParamList(1:this.P.DimX);
+            idx = this.GetInputSignalsIdx();
+            sigs_in = sig_list(idx);            
+            sigs_out = setdiff(sig_list, sigs_in, 'stable');
+        end
+
+     %% Disp
+
+       function varargout = disp_signals(this)
+            max_length = 200;
+            sig_list = this.P.ParamList(1:this.P.DimX);
+            if isfield(this.P, 'traj')
+                num_traces = numel(this.P.traj);
+            else
+                num_traces = 0;
+            end
+         
+            switch num_traces
+                case 0
+                    str_num = '0 trace.\n';
+                case 1
+                    str_num = '1 trace.\n';
+                otherwise
+                    str_num= [num2str(num_traces) ' traces\n'];
+            end                      
+    
+
+            [in_sigs, out_sigs] = this.GetI0SignalsList();
+            % inputs
+            switch numel(in_sigs)
+                case 0
+                    str_in = '0 input signals.\n----\n';
+                case 1
+                    str_in = ['1 input signal: ' in_sigs{1} '.\n'];
+                    list_input_gen =  cellfun(@(c)(class(c)), this.InputGenerator.signalGenerators, 'UniformOutput', false);
+                    str_input_gen = ['Input generator: ' list_manip.to_string(list_input_gen) '.\n----\n'];
+                    str_in = [str_in str_input_gen];
+                otherwise
+                    str_in_sig_list = list_manip.to_string(in_sigs, ', ');
+                    if numel(str_in_sig_list) > max_length
+                        str_in_sig_list = [str_in_sig_list(1:max_length) ', ...'];
+                    end
+                    str_in = [num2str(numel(in_sigs)) ' input signals: ' str_in_sig_list '\n'];
+                    list_input_gen =  cellfun(@(c)(class(c)), this.InputGenerator.signalGenerators, 'UniformOutput', false);
+                    str_input_gen = ['Input generator(s): ' list_manip.to_string(list_input_gen) '.\n----\n'];
+                    str_in = [str_in str_input_gen];
+            end
+
+           
+            % outputs
+            switch numel(out_sigs)
+                case 0
+                    str_out = '0 output signals.\n';
+                case 1
+                    str_out = ['1 output signal: ' out_sigs{1} '.\n'];
+                otherwise
+                    str_out_sig_list = list_manip.to_string(out_sigs, ', ');
+                    if numel(str_out_sig_list) > max_length
+                        str_out_sig_list = [str_out_sig_list(1:max_length) ', ...'];
+                    end
+                    str = [str_in num2str(numel(out_sigs)) ' output signals: ' str_out_sig_list '.\n' ];
+            end
+            str = [str str_num];
+
+            if nargout == 0
+                varargout = {};
+                fprintf(str);
+            else
+                varargout{1} = str;
+            end
+        end
+
+
     end
 end
 

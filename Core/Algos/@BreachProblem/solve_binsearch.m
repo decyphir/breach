@@ -39,5 +39,5 @@ this.obj_best = rob;
 this.X_log = p;
 this.obj_log = rob;
 this.BrSet.SetParam(this.params, p, true);
-this.BrSet.CheckSpec(phi);
+%this.BrSet.CheckSpec(phi);
 end

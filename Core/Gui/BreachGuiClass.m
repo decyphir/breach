@@ -43,11 +43,20 @@ classdef BreachGuiClass < handle
             hs2= this.create_separator('hsep.1');
             hs2.h = 0.1;
             
+            hs2bis= this.create_separator('hsep.2');
+            hs2bis.h = 0.2;
+            
             hs25 = this.create_separator('hsep.25');
             hs25.h = 0.25;
             
-            hs3= this.create_separator('hsep.5');
-            hs3.h = 0.5;
+            hs3 = this.create_separator('hsep.3');
+            hs3.h = 0.3;
+            
+            hs4 = this.create_separator('hsep.4');
+            hs4.h = 0.4;
+                        
+            hs5= this.create_separator('hsep.5');
+            hs5.h = 0.5;
             
             ws1= this.create_separator('wsep.05');
             ws1.w = 0.05;
@@ -58,12 +67,12 @@ classdef BreachGuiClass < handle
             this.create_separator('wsep.5',  .5,1);
             
             this.create_separator('fullsep', 1, 1);
-            %% create scaling invisible button
+          %% create scaling invisible button
             button_scale = this.create_button('button_scale');
             this.set_by_id('button_scale', 'enable', 'off', 'Position', [0 0 this.wunit this.hunit]);
             
             
-            %% Creates default ok and cancel buttons
+          %% Creates default ok and cancel buttons
             
             button_ok = this.create_button('button_ok','Ok',@(o,e)(this.button_ok_callback(o)));
             button_cancel = this.create_button('button_cancel','Cancel',@(o,e)(this.button_cancel_callback()));
@@ -165,7 +174,7 @@ classdef BreachGuiClass < handle
             this.uimap(id)= e;
             
         end
-        
+                        
         function e = create_slider(this, id, string, callback, w,h)
             if ~exist('callback','var')||isempty(callback)
                 callback = @(o,e)(this.zcallback(id,o,e));
@@ -312,9 +321,7 @@ classdef BreachGuiClass < handle
             if ~exist('callback','var')||isempty(callback)
                 callback = @(o,e)(this.zcallback(id,o,e));
             end
-            
-            
-            
+                                    
             
             g = uicontrol('Parent',this.hdle,...
                 'Style','listbox',...
@@ -438,8 +445,9 @@ classdef BreachGuiClass < handle
             this.uimap(id)= e;
             
         end
-        
+          
         function e = create_panel(this, id, string, layout)
+            
             if nargin<3
                 string = [id ' panel'];
             end
@@ -450,6 +458,10 @@ classdef BreachGuiClass < handle
                 'FontSize', this.font_size,...
                 'Units', 'pixel',...
                 'visible', 'off');
+            
+            
+            
+            layout = [{{'hsep.5'}}; layout;  {{'hsep.2'}}];
             [w, h] = get_layout_sz(this, layout);
             
             e = panel_elem(p, layout);
@@ -467,6 +479,306 @@ classdef BreachGuiClass < handle
             this.uimap(id)= e;
         end
         
+        %% Advanced elements
+        function e = create_changing_button(this, id,names, callback )
+        % button cycling through a list of options
+        
+        e = create_button(this,id, names{1},@(o,e)(callback_changing));
+        
+        this.data_gui.(id).Value= 1;
+        this.data_gui.(id).String = names{1};
+        this.data_gui.(id).StringList =names;
+        num_options = numel(names);
+        
+            function callback_changing()
+                idx = this.data_gui.(id).Value;
+                if idx==num_options
+                    idx = 1;
+                else
+                    idx=idx+1;
+                end           
+                this.data_gui.(id).Value=idx;
+                this.data_gui.(id).String = this.data_gui.(id).StringList{idx};
+                update(); 
+            end
+            
+            function update()                
+                set(e.hdle, 'String', this.data_gui.(id).String);
+                callback();
+            end
+        end
+                       
+        function  e = create_domain_slider(this, id, name, domain, value, callback)
+         % Creates a slider from a BreachDomain    
+            id_min = [id '_min'];
+            id_val = [id '_val'];
+            id_max = [id '_max'];
+            id_slider = [id '_slider'];
+            
+            e_min = this.create_edit(id_min, num2str(0), @(o,e)(callback_edit()),  1/4, 1/2);
+            e_min.htop = e_min.htop/2;
+            e_min.wright=0;
+            
+            e_val =this.create_edit(id_val, num2str(0.5),@(o,e)(callback_edit()), 1/2, 1/2);
+            e_val.htop = e_val.htop/2;
+            e_val.wleft = e_val.wleft/2;
+            e_val.wright = e_val.wright/2;
+            
+            e_max = this.create_edit(id_max, num2str(1),@(o,e)(callback_edit()), 1/4, 1/2);
+            e_max.wleft = 0;
+            e_max.htop = e_max.htop/2;
+            
+            e_slider= this.create_slider(id_slider, name, @(o,e)(callback_slider()));
+            
+            this.set_h(id_slider, 1/2);
+            this.set_w(id_slider, 1);
+            
+            %% create panel
+            layout_panel =  { ...                
+                {id_min, id_val, id_max}; ...
+                {id_slider};...                
+                };
+            
+            string = name;
+            e = this.create_panel(id,string,  layout_panel);
+                       
+          %% Setup values of stuff                      
+            value = domain.checkin(value);
+            this.data_gui.(id).name =name;
+            this.data_gui.(id).domain =domain;
+            this.data_gui.(id).value = value;           
+            this.data_gui.(id).callback = callback;
+            
+            function callback_edit()                
+              
+                bug= 0;
+                dom = this.data_gui.(id).domain.domain;
+                if isempty(dom)
+                    old_min = -inf;
+                    old_max = inf;                    
+                else
+                    old_min = dom(1);
+                old_max =dom(2);                
+                end
+                old_value = this.data_gui.(id).value;
+                
+                min_value  = str2double(get(e_min.hdle, 'String'));                                
+                if isnan(min_value)
+                    bug= 1;
+                    min_value = old_min;
+                end                
+                max_value  = str2double(get(e_max.hdle, 'String'));
+                if isnan(max_value)
+                    bug= 1;
+                    max_value = old_max;
+                end
+                val  = str2double(get(e_val.hdle, 'String'));                   
+                if isnan(val)
+                    bug= 1;
+                    val = old_value;
+                end
+
+                if max_value-min_value<0
+                    bug = 1;
+                    if old_max ~= max_value
+                        max_value = min_value;
+                    else
+                        min_value= max_value;
+                    end
+                end
+                
+                if bug||~(isequal(old_min,min_value)&&isequal(old_max,max_value)&&isequal(old_value,val))
+                    if min_value == -inf && max_value== inf
+                        this.data_gui.(id).domain.domain = [];
+                    else
+                        this.data_gui.(id).domain.domain = [min_value, max_value];
+                    end
+                    this.data_gui.(id).value = this.data_gui.(id).domain.checkin(val);
+                    update(~bug&&~isequal(this.data_gui.(id).value,old_value ));
+                end
+            end                        
+            
+            function callback_slider()
+                
+                dom = this.data_gui.(id).domain;
+                val=  get(e_slider.hdle,'Value');
+                if strcmp(dom.type,'enum')
+                  m =str2double( get(e_min.hdle,'String'));
+                  M =str2double( get(e_max.hdle,'String'));
+                  enum = dom.enum;                  
+                  enum = enum(enum>=m);
+                  enum = enum(enum<=M);
+                   val = enum(val);
+                else
+                    val = this.data_gui.(id).domain.checkin(val);
+                end
+                
+                old_value = this.data_gui.(id).value;
+                
+                if ~isequal(old_value , val)
+                    this.data_gui.(id).value = val;
+                    update(true);
+                end
+            end
+            
+            function update(call)
+                      this.update_domain_slider(id, call);
+            end
+                
+        end
+               
+        function update_domain_slider(this, id, call)
+                % if call is true, call user provided callback of the slider. 
+                % reads Breach Domain and value. value is in domain already.
+                name =   this.data_gui.(id).name;
+                dom = this.data_gui.(id).domain.domain;
+                val = this.data_gui.(id).value;                
+                
+                id_min = [id '_min'];
+                id_val = [id '_val'];
+                id_max = [id '_max'];
+                id_slider = [id '_slider'];
+                
+                e = this.uimap(id);
+                e_slider = this.uimap(id_slider);
+                e_min = this.uimap(id_min);
+                e_max = this.uimap(id_max);
+                e_val = this.uimap(id_val);
+
+                if isempty(dom)
+                    min = '-inf';
+                    max = 'inf';
+                    min_slider= val-10;
+                    max_slider = val+10;
+                elseif (dom(1) ==-inf) && dom(2)<inf
+                    min = '-inf';
+                    max = num2str(dom(2));
+                    min_slider= val-100;
+                    max_slider = dom(2);                                          
+                elseif (dom(2) ==inf) && dom(1)>-inf
+                    min = num2str(dom(1));
+                    max = 'inf';                   
+                    min_slider= dom(1);
+                    max_slider = val+100;                                          
+                else
+                    min = num2str(dom(1));
+                    max = num2str(dom(2));
+                    min_slider= dom(1);
+                    max_slider = dom(2);                                          
+                end
+                                                        
+                switch this.data_gui.(id).domain.type
+                    case 'bool'
+                        min = 0;
+                        max = 1;
+                                                
+                        set(e_slider.hdle,'Max',1);
+                        set(e_slider.hdle,'Min',0);                        
+                        set(e_slider.hdle,'SliderStep',[1 1]);
+                        set(e_slider.hdle,'Value', val);                                      
+                    
+                    
+                    case 'int'
+                        
+                        min = ceil(str2num(min));
+                        max = floor(str2num(max));
+                        min_slider= ceil(min_slider);                        
+                        max_slider = floor(max_slider);                        
+                        if min_slider == max_slider
+                            max_slider = max_slider+1;
+                        end
+                        
+                        set(e_slider.hdle,'Min', min_slider);
+                        set(e_slider.hdle,'Max', max_slider);
+                        set(e_slider.hdle,'Value', val);                       
+                        set(e_slider.hdle,'SliderStep',[1 10]/(max_slider - min_slider));
+                    
+                    case 'enum'
+                        enum = this.data_gui.(id).domain.enum;
+                        enum = enum(enum>=str2double(min));
+                        enum = enum(enum<=str2double(max));
+                        if isempty(enum)
+                            enum = nan;                                                    
+                        end
+                        min_slider = 1;
+                        max_slider = numel(enum);
+                        val_slider = find(val==enum,1);
+                        if isempty(val_slider)
+                            val_slider = 1;
+                            val = nan;
+                        end
+                        if min_slider==max_slider
+                            max_slider=min_slider+1;
+                        end
+                        
+                        set(e_slider.hdle,'Min', min_slider);
+                        set(e_slider.hdle,'Max', max_slider);
+                        set(e_slider.hdle,'Value', val_slider);
+                        set(e_slider.hdle,'SliderStep',[1 10]/(max_slider - min_slider));                                           
+                    otherwise
+                        if min_slider == max_slider
+                            max_slider = max_slider+10*eps;
+                        end                        
+                        
+                        set(e_slider.hdle,'Min', min_slider);
+                        set(e_slider.hdle,'Max', max_slider);
+                        set(e_slider.hdle,'Value', val);                                        
+                end
+                set(e_min.hdle,'String', num2str(min));
+                set(e_max.hdle,'String', num2str(max));
+                set(e_val.hdle,'String', num2str(val));
+                
+                set(e.hdle,'Title', [name   '  (' this.data_gui.(id).domain.short_disp() ')']); 
+                if call
+                      this.data_gui.(id).callback();
+                end
+        end
+       
+        function e = create_radio_panel(this,id,title, list, cb_fun) 
+            this.data_gui.(id).list = list;
+            num_radios = numel(list);
+            
+            this.data_gui.(id).idx_selected = zeros(1,num_radios);
+            this.data_gui.(id).selected='';
+            
+           
+            layout_panel = cell(num_radios,1); 
+            id_radios = cell(num_radios);
+            for ir = 1:num_radios
+                id_radios{ir} = [id '_radio' num2str(ir)];
+                this.create_radio(id_radios{ir}, list{ir}, @(o,e)(callback_radio(ir)));                
+                layout_panel{ir,1} = id_radios(ir);
+            end
+                                    
+            e = this.create_panel(id,title,layout_panel);
+            callback_radio(1);
+            
+            function callback_radio(idx_r)
+                old_selected = this.data_gui.(id).idx_selected;
+                this.data_gui.(id).idx_selected = zeros(1,num_radios);
+                this.data_gui.(id).idx_selected(idx_r) = 1;
+                this.data_gui.(id).selected= list{idx_r};                            
+                if ~isequal(old_selected, this.data_gui.(id).idx_selected)
+                     update();         
+                     drawnow;
+                     cb_fun(idx_r);
+                end
+            end            
+            
+            function update()
+                for ir = 1:num_radios                    
+                    id_radio =[id '_radio' num2str(ir)];
+                    if this.data_gui.(id).idx_selected(ir)
+                        this.set_by_id(id_radio, 'Value',1);
+                    else
+                        this.set_by_id(id_radio, 'Value',0);
+                    end
+                end                
+                                
+            end
+            
+        end
+       
         
         %% Callbacks
         function button_ok_callback(this, hobj)
@@ -479,7 +791,7 @@ classdef BreachGuiClass < handle
             this.output=[];
             close(this.hdle);
         end
-        
+       
     end
     
     %% Layout
@@ -487,13 +799,13 @@ classdef BreachGuiClass < handle
         layout   % cell of cells of dimension n x 1 where n is number of rows
         
         font_name = 'Arial'
-        font_size = 11
+        font_size = 10
         max_char = 80
         
         hdle  % handle to GUI top dialog window
         
-        wunit = 500
-        hunit = 50
+        wunit = 400
+        hunit = 40
                 
     end
     
@@ -710,6 +1022,10 @@ classdef BreachGuiClass < handle
     %% Templates
     
     methods
+        
+        
+        
+        
         
         %% A template for a button. Replace truc with some label.
         function this = button_template(this, mode,name,string,callback,w,h)

@@ -20,6 +20,10 @@ function fig_resize(h, x_scal, y_scal)
 %   fig_resize(gcf, 2, 0.5)
 %
 
+if nargin==2
+    y_scal=x_scal;
+end
+
 old_pos = get(h,'Position');
 %pos([1 2]) = [0 0];
 pos = old_pos;

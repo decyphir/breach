@@ -31,6 +31,7 @@ else
     num_traj=0;
 end
 
+
 pts_indices_to_compute = find(~logical(P.traj_ref));
 if isempty(pts_indices_to_compute)
     P.traj_to_compute = [];

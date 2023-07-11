@@ -1187,6 +1187,25 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             end
         end
  
+        %% Disp
+      
+
+
+      function varargout = disp(this)
+        
+            str = sprintf('BreachSimulink object for model %s.\n',this.mdl.name);
+            str = [str this.disp_short_description()]; 
+            
+            if nargout == 0
+                varargout = {};
+                fprintf(str);
+            else
+                varargout{1} = str;
+            end
+            
+        end
+        
+     
         %% Misc
         function S = GetSignature(this, varargin)
             S = GetSignature@BreachOpenSystem(this, varargin{:});
@@ -1276,8 +1295,8 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         
         function hash = get_hash(this)
             st.signals = this.GetSignalsList();
-            st.params = this.GetParamList();
-            
+            st.params = this.GetParamList();            
+            hash= DataHash(st);
         end
             
         %% Export result
@@ -1502,7 +1521,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             
         end
         
-        function  st = disp(this)
+        function  st = disp_old(this)
             if isfield(this.P, 'traj')
                 nb_traj = numel(this.P.traj);
             else

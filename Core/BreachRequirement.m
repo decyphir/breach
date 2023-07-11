@@ -20,7 +20,7 @@ classdef BreachRequirement < BreachTraceSystem
     end
     
     methods
-        
+       %% Construction 
         function this = BreachRequirement(req_monitors, postprocess_signal_gens, precond_monitors)
             
             this = this@BreachTraceSystem({}, [], {'data_trace_idx_'});
@@ -92,8 +92,7 @@ classdef BreachRequirement < BreachTraceSystem
             end                        
            
         end
-        
-        
+               
         function AddPostProcess(this, postprocess_signal_gens)
             
             if ~iscell(postprocess_signal_gens)
@@ -141,6 +140,8 @@ classdef BreachRequirement < BreachTraceSystem
             this.signals_in = this.get_signals_in();
         end
         
+        %% Evaluation
+
         function ResetEval(this)
             this.BrSet = [];         
             this.SetParam('data_trace_idx_', 0);
@@ -268,11 +269,12 @@ classdef BreachRequirement < BreachTraceSystem
                 % eval requirement
                 execTimesForThisReq = zeros(1, numel(this.req_monitors));
                 for it = 1:num_eval
-                    currentTime = datestr(now, 'HH:MM:ss');
-                    if num_eval > 30 && (mod(it, 10) == 0)
-                        fprintf(['*** START traj ' num2str(it) '/' num2str(num_eval) ' at ' currentTime '\n']);
+                    if this.verbose>=2
+                        currentTime = datestr(now, 'HH:MM:ss');
+                        if num_eval > 30 && (mod(it, 10) == 0)
+                            fprintf(['*** START traj ' num2str(it) '/' num2str(num_eval) ' at ' currentTime '\n']);
+                        end
                     end
-                    
                     if any(traces_vals_precond(it,:)<0)
                         traces_vals( it, :)  = NaN;
                     else
@@ -358,6 +360,7 @@ classdef BreachRequirement < BreachTraceSystem
             end
         end
         
+        %% Post Evaluation
         function F = PlotDiagnostics(this, idx_req_monitors, itraj)
             if nargin<2
                 idx_req_monitors = 1;            
@@ -428,72 +431,14 @@ classdef BreachRequirement < BreachTraceSystem
             h = BreachSignalsPlot(this,varargin{:});
         end
         
-        function summary = GetSummary(this, varargin)
-            
-            summary = GetStatement(this);
-            summary.signature = this.GetSignature(varargin{:});
-            summary.num_violations_per_trace =sum(this.traces_vals<0 , 2 )';
-            [~,idxm ] = sort(summary.num_violations_per_trace, 2, 'descend');
-            summary.idx_traces_with_most_violations = idxm;
-            
+        function Rfalse = GetFalseSubset(this)
+            Rfalse = [];
+            idx_false = find( sum(this.traces_vals<0,2) );
+            if ~isempty(idx_false)
+                Rfalse =this.ExtractSubset(idx_false);
+            end
         end
-        
-        function summary = GetStatement(this)
-            
-            if this.CountTraces()==1
-                summary.statement = sprintf('%d trace evaluated', this.CountTraces());
-            else
-                summary.statement = sprintf('%d traces evaluated', this.CountTraces());
-            end
-            summary.num_traces_evaluated =size(this.traces_vals,1);
-            summary.requirements.names = cell(1,numel(this.req_monitors));
-            for ir = 1:numel(this.req_monitors)
-                if isa(this.req_monitors{ir}, 'stl_monitor')
-                    summary.requirements.names{ir} = this.req_monitors{ir}.formula_id;
-                else
-                    summary.requirements.names{ir} = class(this.req_monitors{ir});
-                end
-            end
-            if summary.num_traces_evaluated>0
-                summary.val = this.val;
-                summary.requirements.rob = this.traces_vals;
-                summary.requirements.rob_vac = this.traces_vals_vac;
-                summary.requirements.sat = this.traces_vals >=0;
-                summary.num_requirements = size(this.traces_vals,2);
-                if summary.num_requirements == 1
-                    summary.statement = sprintf([summary.statement ' on %d requirement'], summary.num_requirements);
-                else
-                    summary.statement = sprintf([summary.statement ' on %d requirements'], summary.num_requirements);
-                end
-                summary.num_traces_violations = sum( any(this.traces_vals<0, 2) );
-                summary.statement = sprintf([summary.statement ', %d traces have violations'], summary.num_traces_violations);
-                summary.num_total_violations =  sum( sum(this.traces_vals<0) );
-                if  summary.num_total_violations == 1
-                    summary.statement = sprintf([summary.statement ', %d requirement violation' ], summary.num_traces_violations);
-                elseif summary.num_total_violations >1
-                    summary.statement = sprintf([summary.statement ', %d requirement violations total' ], summary.num_traces_violations);
-                end
-                
-                summary.num_vacuous_sat = sum(sum(summary.requirements.rob == inf));
-                
-                if  summary.num_vacuous_sat == 1
-                    summary.statement = sprintf([summary.statement ', %d vacuous satisfaction.' ], summary.num_vacuous_sat);
-                elseif summary.num_vacuous_sat >1
-                    summary.statement = sprintf([summary.statement ', %d vacuous satisfactions.' ], summary.num_vacuous_sat);
-                else
-                    summary.statement = [summary.statement '.'];
-                end
-                
-                
-            else
-                summary.statement = [summary.statement '.'];
-            end
-            if isa(this.BrSet, 'BreachImportData')
-                summary.file_names = this.BrSet.signalGenerators{1}.file_list;
-            end
-            
-        end
-        
+
         function values = GetParam(this, params, ip)
             % GetParam if not found, look into BrSet
             [idx, ifound] = FindParam(this.P, params);
@@ -518,34 +463,6 @@ classdef BreachRequirement < BreachTraceSystem
                 for it = 1:numel(ip)
                     ipts = find(this.BrSet.P.traj_ref==ip(it),1);
                     values(idx_data,it) = this.BrSet.GetParam(params_data, ipts);
-                end
-            end
-        end
-        
-        function [idx, ifound, idxB, ifoundB] = FindSignalsIdx(this, signals )
-            if ischar(signals)
-                signals = {signals};
-            end
-            idxB = zeros(1, numel(signals)); ifoundB = zeros(1, numel(signals));
-            [idx, ifound] = FindSignalsIdx@BreachSet(this, signals);   %
-            
-            if any(~ifound)&&isa(this.BrSet, 'BreachSet')   % if not a signal of the requirement, look into BrSet (system) signals
-                idx_not_found = find(~ifound);
-                for isig = 1:numel(idx_not_found)
-                    s0 = signals{idx_not_found(isig)};
-                    aliases = this.getAliases(s0);                                                                                
-                    
-                    [idx_s, ifound_s] = FindParam(this.P, aliases);
-                    if any(ifound_s) % one alias is the one !
-                        idx(idx_not_found(isig)) = idx_s(find(ifound_s, 1));
-                        ifound(idx_not_found(isig)) = 1;
-                    elseif (~isempty(this.BrSet))
-                        [idx_sB, ifB] = FindSignalsIdx(this.BrSet, aliases);
-                        if (any(ifB))
-                            idxB(idx_not_found(isig)) = idx_sB(find(ifB, 1));
-                            ifoundB(idx_not_found(isig)) = 1;
-                        end
-                    end
                 end
             end
         end
@@ -615,6 +532,92 @@ classdef BreachRequirement < BreachTraceSystem
                 end
             end
         end
+        
+        function Rextract = ExtractSubset(this, idx)
+            Rextract = this.copy(); % likely overkill...
+            Rextract.P = Sselect(this.P,idx);            
+            if ~isempty(this.BrSet)
+                Rextract.BrSet.P = Sselect(this.BrSet.P, idx);                
+            end
+
+            if ~isempty(this.traces_vals)
+                Rextract.traces_vals = this.traces_vals(idx,:);
+            end
+            if ~isempty(this.traces_vals_precond)
+                Rextract.traces_vals_precond = this.traces_vals_precond(idx,:);
+            end
+
+            global_val = min(min(Rextract.traces_vals));
+            global_precond_val = min(min(Rextract.traces_vals_precond));
+            Rextract.val = min([global_val,-global_precond_val]);
+            
+        end
+        
+        function summary = GetSummary(this, varargin)
+            
+            summary = GetStatement(this);
+            summary.signature = this.GetSignature(varargin{:});
+            summary.num_violations_per_trace =sum(this.traces_vals<0 , 2 )';
+            [~,idxm ] = sort(summary.num_violations_per_trace, 2, 'descend');
+            summary.idx_traces_with_most_violations = idxm;
+            
+        end
+        
+        function summary = GetStatement(this)
+            
+            if this.CountTraces()==1
+                summary.statement = sprintf('%d trace evaluated', this.CountTraces());
+            else
+                summary.statement = sprintf('%d traces evaluated', this.CountTraces());
+            end
+            summary.num_traces_evaluated =size(this.traces_vals,1);
+            summary.requirements.names = cell(1,numel(this.req_monitors));
+            for ir = 1:numel(this.req_monitors)
+                if isa(this.req_monitors{ir}, 'stl_monitor')
+                    summary.requirements.names{ir} = this.req_monitors{ir}.formula_id;
+                else
+                    summary.requirements.names{ir} = class(this.req_monitors{ir});
+                end
+            end
+            if summary.num_traces_evaluated>0
+                summary.val = this.val;
+                summary.requirements.rob = this.traces_vals;
+                summary.requirements.rob_vac = this.traces_vals_vac;
+                summary.requirements.sat = this.traces_vals >=0;
+                summary.num_requirements = size(this.traces_vals,2);
+                if summary.num_requirements == 1
+                    summary.statement = sprintf([summary.statement ' on %d requirement'], summary.num_requirements);
+                else
+                    summary.statement = sprintf([summary.statement ' on %d requirements'], summary.num_requirements);
+                end
+                summary.num_traces_violations = sum( any(this.traces_vals<0, 2) );
+                summary.statement = sprintf([summary.statement ', %d traces have violations'], summary.num_traces_violations);
+                summary.num_total_violations =  sum( sum(this.traces_vals<0) );
+                if  summary.num_total_violations == 1
+                    summary.statement = sprintf([summary.statement ', %d requirement violation' ], summary.num_traces_violations);
+                elseif summary.num_total_violations >1
+                    summary.statement = sprintf([summary.statement ', %d requirement violations total' ], summary.num_traces_violations);
+                end
+                
+                summary.num_vacuous_sat = sum(sum(summary.requirements.rob == inf));
+                
+                if  summary.num_vacuous_sat == 1
+                    summary.statement = sprintf([summary.statement ', %d vacuous satisfaction.' ], summary.num_vacuous_sat);
+                elseif summary.num_vacuous_sat >1
+                    summary.statement = sprintf([summary.statement ', %d vacuous satisfactions.' ], summary.num_vacuous_sat);
+                else
+                    summary.statement = [summary.statement '.'];
+                end
+                
+                
+            else
+                summary.statement = [summary.statement '.'];
+            end
+            if isa(this.BrSet, 'BreachImportData')
+                summary.file_names = this.BrSet.signalGenerators{1}.file_list;
+            end
+            
+        end
          
         function dom  = GetDomain(this, param)
             if ischar(param)
@@ -662,6 +665,34 @@ classdef BreachRequirement < BreachTraceSystem
            
         end
                 
+        function [idx, ifound, idxB, ifoundB] = FindSignalsIdx(this, signals )
+            if ischar(signals)
+                signals = {signals};
+            end
+            idxB = zeros(1, numel(signals)); ifoundB = zeros(1, numel(signals));
+            [idx, ifound] = FindSignalsIdx@BreachSet(this, signals);   %
+            
+            if any(~ifound)&&isa(this.BrSet, 'BreachSet')   % if not a signal of the requirement, look into BrSet (system) signals
+                idx_not_found = find(~ifound);
+                for isig = 1:numel(idx_not_found)
+                    s0 = signals{idx_not_found(isig)};
+                    aliases = this.getAliases(s0);                                                                                
+                    
+                    [idx_s, ifound_s] = FindParam(this.P, aliases);
+                    if any(ifound_s) % one alias is the one !
+                        idx(idx_not_found(isig)) = idx_s(find(ifound_s, 1));
+                        ifound(idx_not_found(isig)) = 1;
+                    elseif (~isempty(this.BrSet))
+                        [idx_sB, ifB] = FindSignalsIdx(this.BrSet, aliases);
+                        if (any(ifB))
+                            idxB(idx_not_found(isig)) = idx_sB(find(ifB, 1));
+                            ifoundB(idx_not_found(isig)) = 1;
+                        end
+                    end
+                end
+            end
+        end
+               
         function [req, idx_req] = get_req_from_name(this, req_name)
             
             req = [];
@@ -684,6 +715,7 @@ classdef BreachRequirement < BreachTraceSystem
         end
                 
         %% Display
+          
         function varargout = disp(this)
             signals_in_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.signals_in, 'UniformOutput', false));
             signals_in_st = ['{' signals_in_st(1:end-2) '}'];
@@ -1075,6 +1107,94 @@ classdef BreachRequirement < BreachTraceSystem
         function names = get_monitor_names(this)
            names = cellfun(@(c)(c.name), this.req_monitors, 'UniformOutput', false); 
         end
+ 
+
+        function  varargout = dispwip(this)
+
+
+            str = [class(this) ' object.\n'];
+            str = [str this.disp_req_monitors()]; 
+            str_params = this.disp_params_in();
+            if ~isempty(str_params)
+                str = [str str_params];
+            end
+           
+            str_signals = this.disp_signals_in();
+            if ~isempty(str_signals)
+                str = [str str_signals];
+            end
+         
+            if nargout == 0
+                varargout = {};
+                fprintf(str);
+                fprintf(['\n<a href="matlab:'  this.whoamI '.PrintAll()"' '>...More details...\n</a>']);           
+            else
+                varargout{1} = str;
+            end
+            
+        
+        end
+
+
+        function  varargout = disp_req_monitors(this)
+
+            mons = list_manip.to_string(this.get_monitor_names(),', ');
+            str = ['Monitor(s): ' mons '\n'];
+            
+
+            if nargout == 0
+                varargout = {};
+                fprintf(str);
+            else
+                varargout{1} = str;
+            end
+            
+        
+        end
+
+        function  varargout = disp_params_in(this)
+
+            params_in = setdiff(this.GetParamList(), 'data_trace_idx_', 'stable');
+            if isempty(params_in)
+                str = '';
+            else
+                params_in_str = list_manip.to_string(params_in,', ');
+
+                str = ['Parameters: ' params_in_str '\n'];
+            end
+            if nargout == 0
+                varargout = {};
+                fprintf(str);
+            else
+                varargout{1} = str;
+            end
+            
+        
+        end
+    
+
+        function  varargout = disp_signals_in(this)
+
+            signals_in = this.get_signals_in();
+            if isempty(signals_in)
+                str = '';
+            else
+                signals_in_str = list_manip.to_string(signals_in,', ');
+
+                str = ['Signal(s): ' signals_in_str '\n'];
+            end
+            if nargout == 0
+                varargout = {};
+                fprintf(str);
+            else
+                varargout{1} = str;
+            end
+            
+        
+        end
+    
+
+
     end
     
     
@@ -1316,7 +1436,7 @@ classdef BreachRequirement < BreachTraceSystem
                 Xin = [];
             end
             % checks if a signal is missing (need postprocess)
-            while any(isnan(Xin))
+            while any(all(isnan(Xin),2))
                 % should do only one iteration if postprocessing function are
                 % properly ordered following dependency
                 for ipp = 1:numel(this.postprocess_signal_gens)
