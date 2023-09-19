@@ -38,8 +38,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
         MdlVars                      % List of variables used by the model
         SimInModelsDataFolder=false
         StopAtSimulinkError=false
-        mdl
-        DiskCachingRoot
+        mdl        
     end
     
     
@@ -803,7 +802,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             %end
         end
         
-        function [tout, X, status] = sim_breach(this, Sys, tspan, pts)
+        function [tout, X, pts, status] = sim_breach(this, Sys, tspan, pts)
             %
             % BreachSimulinkSystem.sim_breach Generic wrapper function that runs a Simulink model and collect signal
             % data in Breach format (called by ComputeTraj)
@@ -1237,54 +1236,7 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             warning('off', 'BreachSimulinkSystem:get_checksum_failed');
         end
         
-        %% Disk Caching
-        % TODO adapt to BreachSystem
-        function SetupDiskCaching(this, varargin)
-            %  BreachSimulinkSystem.SetupDiskCaching
-            
-            this.UseDiskCaching = true;
-            if nargin>1
-                options.DiskCachingRoot  = this.DiskCachingRoot;
-                if isfield(this.Sys, 'StoreTracesOnDisk')
-                    options.StoreTracesOnDisk = this.Sys.StoreTracesOnDisk;
-                else
-                    options.StoreTracesOnDisk = true;
-                end
-                options = varargin2struct_breach(options, varargin{:});
-                this.DiskCachingRoot = options.DiskCachingRoot;
-                this.Sys.StoreTracesOnDisk  = options.StoreTracesOnDisk;
-            end
-            
-            % The following creates the cache folder if not done already
-            this.Sys.DiskCachingFolder= this.GetCachingFolder();
-            [success,~, msg_id] = mkdir(this.Sys.DiskCachingFolder);
-            if success == 1
-                if isequal(msg_id, 'MATLAB:MKDIR:DirectoryExists')
-                    this.disp_msg(['Using existing caching folder: ' this.Sys.DiskCachingFolder],2);
-                else
-                    this.disp_msg(['Created caching folder:' this.Sys.DiskCachingFolder],2);
-                end
-            else
-                this.Sys.DiskCachingFolder='';
-                error(['Couldn''t create caching folder'  this.Sys.DiskCachingFolder '.']);
-            end
-        end
-        
-        function ClearDiskCache(this)
-            folder = this.GetCachingFolder();
-            [status, message, messageid] = rmdir(folder, 's');
-            if status~=1
-                if ~strcmp(messageid, 'MATLAB:RMDIR:NotADirectory')
-                    error(message);
-                end
-            else
-                this.disp_msg(['Removed cache folder '  folder],2);
-            end
-            if isfield(this.Sys, 'StoreTracesOnDisk')&&this.Sys.StoreTracesOnDisk
-                this.ResetSimulations();
-            end
-        end
-        
+        %% Disk Caching        
         function caching_folder_name= GetCachingFolder(this, CacheRoot)
             if nargin<=1
                 CacheRoot = this.DiskCachingRoot;
@@ -1293,12 +1245,8 @@ classdef BreachSimulinkSystem < BreachOpenSystem
             caching_folder_name = [CacheRoot filesep mdl_hash];
         end
         
-        function hash = get_hash(this)
-            st.signals = this.GetSignalsList();
-            st.params = this.GetParamList();            
-            hash= DataHash(st);
-        end
-            
+        
+        
         %% Export result
         function [summary, traces] = ExportTracesToStruct(this,i_traces, varargin)
             % BreachSimulinkSystem.ExportTracesToStruct

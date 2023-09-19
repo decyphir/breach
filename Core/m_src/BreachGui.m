@@ -22,7 +22,7 @@ function varargout = BreachGui(varargin)
 
 % Edit the above text to modify the response to help BreachGui
 
-% Last Modified by GUIDE v2.5 19-Jan-2018 12:50:58
+% Last Modified by GUIDE v2.5 15-Sep-2023 16:55:43
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -90,6 +90,7 @@ end
 %% Init properties panel
 handles.idx_prop= 1;
 handles.current_prop = '';
+handles.current_req_set = '';
 handles.properties = struct;
 
 %% Init modif panel
@@ -100,7 +101,9 @@ handles.halton = 0;
 handles.refine_args = 0;
 handles.select_cells = [];
 handles.current_plot_pts = {};
+handles.current_working_set  ='';
 handles.working_sets = struct;
+handles.req_sets = struct;
 
 % Init param pts plot
 handles.current_plot{1} =[];
@@ -123,31 +126,31 @@ guidata(hObject, handles);
 
 function handles = update_all(handles, BrGUI)
 
-    fnames = fieldnames(handles.working_sets);
-    if ~isempty(fnames)
-        if isempty(BrGUI)
-            BrGUI = handles.current_set;
-        end
-        
-        igui = find(strcmp(fnames, handles.current_set));
-        set(handles.working_sets_listbox, 'Value', igui);
-        
-        Sys = BrGUI.Sys;
-        if (isfield(Sys,'tspan'))
-            set( handles.edit_time, 'String', get_time_string(Sys.tspan));
-        else
-            set( handles.edit_time, 'String', get_time_string(0:.01:1));
-        end
-        
-        handles.show_params = BrGUI.P.ParamList;
-        
-        handles = update_working_sets_panel(handles);
-        handles = update_modif_panel(handles);
-        handles = update_properties_panel(handles);
-        handles = set_default_plot(handles);
-        handles = plot_pts(handles);
-        
-   end
+fnames = fieldnames(handles.working_sets);
+if ~isempty(fnames)
+    if isempty(BrGUI)
+        BrGUI = handles.current_set;
+    end
+    
+    igui = find(strcmp(fnames, handles.current_set));
+    set(handles.working_sets_listbox, 'Value', igui);
+    
+    Sys = BrGUI.Sys;
+    if (isfield(Sys,'tspan'))
+        set( handles.edit_time, 'String', get_time_string(Sys.tspan));
+    else
+        set( handles.edit_time, 'String', get_time_string(0:.01:1));
+    end
+    
+    handles.show_params = BrGUI.P.ParamList;
+    
+    handles = update_working_sets_panel(handles);
+    handles = update_modif_panel(handles);
+    handles = update_properties_panel(handles);
+    handles = set_default_plot(handles);
+    handles = plot_pts(handles);
+    
+end
 
 function [handles, BrGUI] = get_param_sets(handles, BrGUI)
 % find all param sets in workspace
@@ -155,7 +158,12 @@ ws_var = evalin('base', 'who');
 for iv= 1:numel(ws_var)
     % is this a BreachSet?
     BB__ = evalin('base', ws_var{iv});
-    if isa(BB__, 'BreachSet')&&(~isequal(ws_var{iv}, 'ans')) % found one, keep it, exclude ans
+    
+    if isa(BB__,'BreachRequirement')&&(~isequal(ws_var{iv}, 'ans'))
+        handles.req_sets.(ws_var{iv}) = BB__;
+        handles.current_req_set = ws_var{iv};
+        
+    elseif isa(BB__, 'BreachSet')&&(~isequal(ws_var{iv}, 'ans')) % found one, keep it, exclude ans
         handles.working_sets.(ws_var{iv}) = BB__;
         if isempty(BrGUI)
             BrGUI = BB__;
@@ -164,35 +172,36 @@ for iv= 1:numel(ws_var)
             if BrGUI== BB__ % this is the caller
                 handles.current_set = ws_var{iv};
             end
-        end
-    elseif isa(BB__,'BreachProblem')
+        end     
         
-%         set_name  = [ws_var{iv} '__BrSet'];
-%         handles.working_sets.(set_name) = BB__.BrSet;
-%         if isempty(BrGUI)
-%             BrGUI = BB__.BrSet;
-%             handles.current_set = set_name;
+%     elseif isa(BB__,'BreachProblem')  
+%         
+%         %         set_name  = [ws_var{iv} '__BrSet'];
+%         %         handles.working_sets.(set_name) = BB__.BrSet;
+%         %         if isempty(BrGUI)
+%         %             BrGUI = BB__.BrSet;
+%         %             handles.current_set = set_name;
+%         %         end
+%         
+%         if isprop(BB__, 'BrSet_Best')&& ~isempty(BB__.BrSet_Best)
+%             set_name  = [ws_var{iv} '__Best'];
+%             handles.working_sets.(set_name) = BB__.GetBrSet_Best;
+%             if isempty(BrGUI)
+%                 BrGUI = BB__.GetBrSet_Best;
+%                 handles.current_set = set_name;
+%             end
 %         end
-        
-        if isprop(BB__, 'BrSet_Best')&& ~isempty(BB__.BrSet_Best)
-            set_name  = [ws_var{iv} '__Best'];
-            handles.working_sets.(set_name) = BB__.GetBrSet_Best;
-            if isempty(BrGUI)
-                BrGUI = BB__.GetBrSet_Best;
-                handles.current_set = set_name;
-            end
-        end
-        
-        if isprop(BB__, 'BrSet_Logged')&& ~isempty(BB__.BrSet_Logged)
-            set_name  = [ws_var{iv} '__Logged'];
-            handles.working_sets.(set_name) = BB__.BrSet_Logged;
-            if isempty(BrGUI)
-                BrGUI = BB__.BrSet_Logged;
-                handles.current_set = set_name;
-            end
-        end
-        
-    end
+%         
+%         if isprop(BB__, 'BrSet_Logged')&& ~isempty(BB__.BrSet_Logged)
+%             set_name  = [ws_var{iv} '__Logged'];
+%             handles.working_sets.(set_name) = BB__.BrSet_Logged;
+%             if isempty(BrGUI)
+%                 BrGUI = BB__.BrSet_Logged;
+%                 handles.current_set = set_name;
+%             end
+%         end
+%         
+     end
 end
 
 function h_scat = get_scatter_handle()
@@ -255,37 +264,37 @@ end
 
 % --- Executes on button press in button_remove_set.
 function button_remove_set_Callback(hObject, eventdata, handles)
-    Br = get_current_set(handles);
-    if ~isempty(Br)
+Br = get_current_set(handles);
+if ~isempty(Br)
+    
+    old_name = handles.current_set;
+    fn = fieldnames(handles.working_sets);
+    if numel(fn)>1
+        st = fn{get(handles.working_sets_listbox,'Value')};
+        val = get(handles.working_sets_listbox,'Value');
         
-        old_name = handles.current_set;
-        fn = fieldnames(handles.working_sets);
-        if numel(fn)>1
-            st = fn{get(handles.working_sets_listbox,'Value')};
-            val = get(handles.working_sets_listbox,'Value');
-            
-            if (val>1)
-                val = val-1;
-                set(handles.working_sets_listbox,'Value', val);
-                handles.current_set = fn{val};
-            else
-                handles.current_set = fn{val+1};
-            end
-            
-            handles.working_sets = rmfield(handles.working_sets,st);
-            evalin('base', ['clear ' old_name]);
-            
-            
-            handles.show_params = Br.P.ParamList;
-            
-            handles =update_working_sets_panel(handles);
-            handles= update_properties_panel(handles);
-            handles =update_modif_panel(handles);
-            handles = set_default_plot(handles);
-            handles = plot_pts(handles);
-            guidata(hObject,handles);
+        if (val>1)
+            val = val-1;
+            set(handles.working_sets_listbox,'Value', val);
+            handles.current_set = fn{val};
+        else
+            handles.current_set = fn{val+1};
         end
+        
+        handles.working_sets = rmfield(handles.working_sets,st);
+        evalin('base', ['clear ' old_name]);
+        
+        
+        handles.show_params = Br.P.ParamList;
+        
+        handles =update_working_sets_panel(handles);
+        handles= update_properties_panel(handles);
+        handles =update_modif_panel(handles);
+        handles = set_default_plot(handles);
+        handles = plot_pts(handles);
+        guidata(hObject,handles);
     end
+end
 
 % --- Executes on selection change in working_sets_listbox.
 function working_sets_listbox_Callback(hObject, eventdata, handles)
@@ -293,6 +302,7 @@ contents = get(hObject,'String');
 if ~isempty(contents)
     fn = fieldnames(handles.working_sets);
     set_name = fn{get(hObject,'Value')};
+    handles.current_working_set = set_name;
     handles.current_set = set_name;
     handles.current_pts = 1;
     Br = get_current_set(handles);
@@ -493,20 +503,20 @@ load_breachset(hObject,handles);
 
 function load_breachset(hObject, handles)
 
-    [FileName,PathName] = uigetfile('*.mat','Load Parameter Set...');
-    if(FileName==0)
-        return;
-    end
-    
-    handles.working_sets_file_name = [PathName, FileName];
-    Br = get_current_set(handles);
-    %handles.working_sets = evalin('base', ['load(''' handles.working_sets_file_name ''')']);
-    evalin('base', ['load(''' handles.working_sets_file_name ''')']);
-    handles = get_param_sets(handles, Br);
-    handles = update_all(handles,  Br);
-    
-    guidata(hObject,handles);
-   
+[FileName,PathName] = uigetfile('*.mat','Load Parameter Set...');
+if(FileName==0)
+    return;
+end
+
+handles.working_sets_file_name = [PathName, FileName];
+Br = get_current_set(handles);
+%handles.working_sets = evalin('base', ['load(''' handles.working_sets_file_name ''')']);
+evalin('base', ['load(''' handles.working_sets_file_name ''')']);
+handles = get_param_sets(handles, Br);
+handles = update_all(handles,  Br);
+
+guidata(hObject,handles);
+
 % --------------------------------------------------------------------
 function menu_save_as_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_save_as (see GCBO)
@@ -643,7 +653,7 @@ function listbox_prop_Callback(hObject, eventdata, handles)
 idx_prop = get(hObject,'Value');
 fnames = fieldnames(handles.properties);
 handles.current_prop = fnames{idx_prop};
-prop = handles.properties.(handles.current_prop);
+prop = handles.properties.(handles.current_prop).formula;
 
 info_msg = disp(prop,0);
 def_par = get_params(prop);
@@ -675,22 +685,16 @@ end
 
 % --- Executes on button press in button_check_property.
 function button_check_property_Callback(hObject, eventdata, handles)
-Br = get_current_set(handles);
-if ~isempty(Br)&&~isempty(handles.current_prop) 
-    if ~Br.hasTraj
-        handles = info(handles, 'No traces to check requirement on. Run simulations first.');
-        guidata(hObject,handles);
-        return;
-    end 
-    prop = handles.properties.(handles.current_prop);  
+Br = get_current_working_set(handles);
+R = get_current_req_set(handles);
+
+if ~isempty(Br)&&~isempty(R)        
     handles = info(handles, 'Computing satisfaction of formula...');
-    Br.CheckSpec(prop);
-    Br.SortbyRob();
-    Br.SortbySat();
+    R.Eval(Br);
     handles = info(handles, 'Computing satisfaction of formula... Done.');
     
     handles = update_working_sets_panel(handles);
-    %handles = update_modif_panel(handles);
+    handles = update_modif_panel(handles);
     plot_pts(handles);
     handles = update_properties_panel(handles);
     guidata(hObject,handles);
@@ -729,6 +733,7 @@ if ~isempty(Br)
     guidata(hObject, handles);
 end
 
+
 function handles = update_working_sets_panel(handles)
 
 %% Set title
@@ -741,7 +746,8 @@ set(handles.working_sets_panel,'Title',str_name );
 % Filter out invalid entries
 fn = fieldnames(handles.working_sets);
 
-for ii=1:numel(fn)
+% See if I update this indication, for now, disable
+for ii=1:-1;numel(fn)
     pref = '';
     
     if isfield(handles.working_sets.(fn{ii}).P,'traj_ref')
@@ -750,7 +756,7 @@ for ii=1:numel(fn)
         elseif any(handles.working_sets.(fn{ii}).P.traj_ref~=0)
             pref = [pref,'+']; %#ok<AGROW>
         end
-    elseif isfield(handles.working_sets.(fn{ii}).P,'traj');
+    elseif isfield(handles.working_sets.(fn{ii}).P,'traj')
         pref = [pref, '*']; %#ok<AGROW>
     end
     
@@ -762,35 +768,35 @@ set(handles.working_sets_listbox,'String', fn);
 set(handles.edit_rename,'String',handles.current_set);
 
 function handles = update_properties_panel(handles)
-Br = get_current_set(handles);
-if ~isempty(Br)
-    
-    str_name = ['Requirements of ' handles.current_set ];
+
+if ~isempty(handles.req_sets)
+    set(handles.panel_properties, 'Visible','on');
+    %% Set title
+    str_name = 'Requirements';
     if (numel(str_name)>35)
         str_name= [str_name(1:30) '...' str_name(end-5:end)];
     end
     set(handles.panel_properties,'Title',str_name );
     
-    handles.properties = struct;
-    specs = Br.Specs;
-    specs_names = specs.keys();
+    %% Update listbox_req_sets
+    req_sets = fieldnames(handles.req_sets);
+    set(handles.listbox_req_sets, 'String', req_sets);
     
-    for iprop = 1:numel(specs_names)
-        this_name= specs_names{iprop};
-        handles.properties.(this_name) = specs(this_name);
+    %% Update listbox_prop
+    handles.properties = struct;
+    R = handles.req_sets.(handles.current_req_set);
+    specs = R.req_monitors;
+    
+    for iprop = 1:numel(specs)
+        this_name= specs{iprop}.name;
+        handles.properties.(this_name) = specs{iprop};
     end
     
-    fnames = fieldnames(handles.properties);
-    
+    fnames = fieldnames(handles.properties);    
     content={};
     for i = 1:numel(fnames)
-        st = disp(handles.properties.(fnames{i}),-1);
-        iprop = find_prop(fnames{i},  Br.P);
-        if (iprop)
-            content = {content{:}, ['*' fnames{i} ': ' st]};
-        else
-            content = {content{:}, [fnames{i} ': ' st]};
-        end
+        st = disp(handles.properties.(fnames{i}).formula,-1);
+        content = {content{:}, [fnames{i} ': ' st]};        
     end
     
     set(handles.listbox_prop,'String', content);
@@ -806,6 +812,8 @@ if ~isempty(Br)
         set(handles.listbox_prop, 'Value',val);
         handles.current_prop = fnames{val};
     end
+else 
+    set(handles.panel_properties, 'Visible','off');
 end
 
 function handles= fill_uitable(handles)
@@ -818,7 +826,7 @@ if ~isempty(Br)
     h_tb= handles.uitable_params;
     % filter out invalid parameters (occurs when changing BreachSet to
     % another with different input generator for example
-    handles.show_params = intersect(handles.show_params, Br.P.ParamList,'stable'); 
+    handles.show_params = intersect(handles.show_params, Br.P.ParamList,'stable');
     
     current_pts = Br.GetParam(handles.show_params,k);
     domains = Br.GetDomain(handles.show_params);
@@ -851,7 +859,7 @@ if ~isempty(Br)
     set(handles.button_parallel, 'Value', Br.use_parallel~=0);
     
     %% Title
-    modif_panel_title = Br.disp();
+    modif_panel_title = ['Content of set ' Br.whoamI];
     set(handles.modif_param_panel,'Title', modif_panel_title);
     
     %% parameters listbox
@@ -882,6 +890,13 @@ end
 %% Plot function
 function handles= plot_pts(handles)
 Br = get_current_set(handles);
+if ~isempty(Br)   
+     cla(gca, 'reset');
+    BreachSamplesPlot(Br, {}, 'Fig', gcf, 'ax', gca);
+end    
+
+function handles= plot_pts_old(handles)
+Br = get_current_set(handles);
 if ~isempty(Br)
     if ~isfield(Br.P,'selected')
         Br.P.selected = zeros(size(Br.P.pts,2));
@@ -889,7 +904,7 @@ if ~isempty(Br)
     
     %% Determines projection
     params_to_plot = handles.current_plot_pts;
-    if isempty(params_to_plot);
+    if isempty(params_to_plot)
         return;
     end
     %% Reset axes
@@ -902,7 +917,7 @@ if ~isempty(Br)
     hold on;
     set(gca, 'XTickMode','auto', 'YTickMode', 'auto', 'ZTickMode', 'auto',...
         'XLimMode', 'auto', 'YLimMode', 'auto', 'ZLimMode', 'auto');
-    xlabel('');   ylabel('');   zlabel(''); 
+    xlabel('');   ylabel('');   zlabel('');
     if numel(params_to_plot)>=3
         view(3);
     else
@@ -914,9 +929,9 @@ if ~isempty(Br)
     var_dom_to_plot = intersect(params_to_plot,var,'stable');
     if isequal(var_dom_to_plot, params_to_plot)
         hold on;
-         Br.PlotDomain(var_dom_to_plot);
+        Br.PlotDomain(var_dom_to_plot);
     end
-
+    
     %end
     %% Determines property
     spec_id = handles.current_prop;
@@ -1007,18 +1022,18 @@ req = handles.current_prop;
 
 
 % --------------------------------------------------------------------
-    function menu_falsify_Callback(hObject, eventdata, handles)
-        Br = get_current_set(handles);
-        if ~isempty(Br)
-            req = get_current_req_name(handles);
-            pb = FalsifWizard('ParamSet', handles.current_set,'Requirement', req);
-            if ~isempty(pb)
-                pb.solve();
-                handles = get_param_sets(handles,Br);
-                handles = update_working_sets_panel(handles);
-                guidata(hObject, handles);
-            end
-        end
+function menu_falsify_Callback(hObject, eventdata, handles)
+Br = get_current_set(handles);
+if ~isempty(Br)
+    req = get_current_req_name(handles);
+    pb = FalsifWizard('ParamSet', handles.current_set,'Requirement', req);
+    if ~isempty(pb)
+        pb.solve();
+        handles = get_param_sets(handles,Br);
+        handles = update_working_sets_panel(handles);
+        guidata(hObject, handles);
+    end
+end
 
 % --------------------------------------------------------------------
 function menu_select_Callback(hObject, eventdata, handles)
@@ -1094,7 +1109,7 @@ end
 function menu_unselect_Callback(hObject, eventdata, handles)
 Br = get_current_set(handles);
 if ~isempty(Br)
-    Br.P.selected = 0* Br.P.selected;    
+    Br.P.selected = 0* Br.P.selected;
     handles = plot_pts(handles);
     guidata(hObject,handles);
 end
@@ -1114,21 +1129,21 @@ if ~isempty(Br)
     end
 end
 
-    function i = find_prop(st, P)
-        i=0;
-        
-        if ~isfield(P, 'props_names')
-            return;
-        else
-            props_names =  P.props_names;
-        end
-        
-        for k = 1:numel(props_names)
-            if strcmp(st,props_names{k})
-                i = k;
-                return;
-            end
-        end
+function i = find_prop(st, P)
+i=0;
+
+if ~isfield(P, 'props_names')
+    return;
+else
+    props_names =  P.props_names;
+end
+
+for k = 1:numel(props_names)
+    if strcmp(st,props_names{k})
+        i = k;
+        return;
+    end
+end
 
 % --- Executes on button press in button_del_property.
 function button_del_property_Callback(hObject, eventdata, handles)
@@ -1247,7 +1262,7 @@ function menu_properties_Callback(hObject, eventdata, handles)
 
 % --- Executes on button press in button_explore_traj.
 function button_explore_traj_Callback(hObject, eventdata, handles)
-Br = get_current_set(handles);
+Br = get_current_working_set(handles);
 if ~isempty(Br)
     h = BreachTrajGui(Br, handles);
 end
@@ -1363,7 +1378,7 @@ if ~isempty(Br)
         val = cat(1,Br.P.props_values(iprop,:).val);
         val = val(:,1);
         Br.P.selected = (val<val_threshold)';
-    end   
+    end
     handles = plot_pts(handles);
     guidata(hObject,handles);
 end
@@ -1733,13 +1748,15 @@ guidata(hObject, handles);
 
 % --- Executes on button press in button_sample.
 function button_sample_Callback(hObject, eventdata, handles)
-try
-    handles = run_sample_domain(handles);
+try        
+    handles = update_sample_args(handles);
     Br = get_current_set(handles);
     if ~isempty(Br)
-        modif_panel_title = Br.disp();
-        set(handles.modif_param_panel,'Title', modif_panel_title);
-        plot_pts(handles);
+        Br.SampleDomain(handles.selected_params, ...
+            handles.sample_arg_num_samples,...
+            handles.sample_arg_method,...
+            handles.sample_arg_multi);
+        handles = update_modif_panel(handles);        
         guidata(hObject,handles);
     end
 catch
@@ -1775,7 +1792,7 @@ if ~isempty(Br)
     
     if numel(BInputData.GetParamList)>1
         params_all = BInputData.GetParamList;
-        params = select_cell_gui(params_all(2:end), params_all(2:end), 'Select system parameters to import from files');    
+        params = select_cell_gui(params_all(2:end), params_all(2:end), 'Select system parameters to import from files');
         if isequal(params,0)
             return
         end
@@ -1847,10 +1864,41 @@ if ~isempty(Br)
 end
 
 function Br = get_current_set(handles)
-Br = [];
-try
+
+try % working set
     Br = handles.working_sets.(handles.current_set);
+catch
+    Br = [];
 end
+
+if isempty(Br) % try req set
+try % 
+    Br = handles.req_sets.(handles.current_set);
+catch    
+    Br = [];
+end
+end
+
+
+function Br = get_current_working_set(handles)
+
+try % working set
+    Br = handles.working_sets.(handles.current_working_set);
+catch
+    Br = [];
+end
+
+function R = get_current_req_set(handles)
+
+try % 
+    R = handles.req_sets.(handles.current_req_set);
+catch    
+    R = [];
+end
+
+
+
+
 
 % --------------------------------------------------------------------
 function menu_set_input_gen_Callback(hObject, eventdata, handles)
@@ -1950,9 +1998,9 @@ Br = get_current_set(handles);
 if ~isempty(Br)
     req = get_current_req_name(handles);
     if isempty(req)
-    pb = ReqMiningWizard('ParamSet', handles.current_set);
-    else    
-    pb = ReqMiningWizard('ParamSet', handles.current_set,'Requirement', req);
+        pb = ReqMiningWizard('ParamSet', handles.current_set);
+    else
+        pb = ReqMiningWizard('ParamSet', handles.current_set,'Requirement', req);
     end
     if ~isempty(pb)
         pb.solve();
@@ -1979,38 +2027,79 @@ end
 % --------------------------------------------------------------------
 function menu_export_to_excel_Callback(hObject, eventdata, handles)
 
-    Br = get_current_set(handles);
+Br = get_current_set(handles);
 
-    if ~isempty(Br)
-        opt.FileName = 'Results.xlsx';
-        choices.FileName = 'string';
-        tips.FileName = 'Choose a name for Excel file.';
-        
-        gu = BreachOptionGui('Export to Excel sheet', opt, choices, tips);
-        uiwait(gu.dlg);
-        if ~isempty(gu.output)
-            if isa(Br, 'BreachImportData')
-               Br.ExportToExcel('FileName', gu.output.FileName);
-            elseif isa(Br.InputGenerator, 'BreachImportData')
-                % Let's cheat
-                Bi = Br.InputGenerator.copy();
-                Bi.P = Br.P;  % arrrg.
-                Bi.ExportToExcel('FileName', gu.output.FileName);
-            elseif isa(Br, 'BreachSimulinkSystem')
-               Br.ExportToExcel(gu.output.FileName);
-            else
-                handles = info(handles, 'Export to Excel not supported for this type of system.');
-                guidata(hObject, handles);
-            end
+if ~isempty(Br)
+    opt.FileName = 'Results.xlsx';
+    choices.FileName = 'string';
+    tips.FileName = 'Choose a name for Excel file.';
+    
+    gu = BreachOptionGui('Export to Excel sheet', opt, choices, tips);
+    uiwait(gu.dlg);
+    if ~isempty(gu.output)
+        if isa(Br, 'BreachImportData')
+            Br.ExportToExcel('FileName', gu.output.FileName);
+        elseif isa(Br.InputGenerator, 'BreachImportData')
+            % Let's cheat
+            Bi = Br.InputGenerator.copy();
+            Bi.P = Br.P;  % arrrg.
+            Bi.ExportToExcel('FileName', gu.output.FileName);
+        elseif isa(Br, 'BreachSimulinkSystem')
+            Br.ExportToExcel(gu.output.FileName);
+        else
+            handles = info(handles, 'Export to Excel not supported for this type of system.');
+            guidata(hObject, handles);
         end
     end
-    
-
-
-
+end
 
 % --- Executes during object creation, after setting all properties.
 function breach_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to breach (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes on selection change in listbox_req_sets.
+function listbox_req_sets_Callback(hObject, eventdata, handles)
+% hObject    handle to listbox_req_sets (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+contents = get(hObject,'String');
+if ~isempty(contents)
+    fn = fieldnames(handles.req_sets);
+    set_name = fn{get(hObject,'Value')};
+    handles.current_req_set = set_name;
+    handles.current_set = set_name;
+    handles.current_pts = 1;
+    Br = get_current_set(handles);
+    if ~isempty(Br)
+        handles.show_params = Br.P.ParamList;
+        
+        handles = update_working_sets_panel(handles);
+        handles = update_properties_panel(handles);
+        handles = update_modif_panel(handles);
+        
+        handles = set_default_plot(handles);
+        handles = plot_pts(handles);
+        guidata(hObject, handles);
+    end
+end
+
+
+
+
+
+
+% --- Executes during object creation, after setting all properties.
+function listbox_req_sets_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to listbox_req_sets (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

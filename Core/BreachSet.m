@@ -627,7 +627,7 @@ classdef BreachSet < BreachStatus
         function ranges = GetParamRanges(this, params)
             % BreachSet.GetParamRanges
             i_params = FindParam(this.P, params);
-            ranges= zeros(numel(params),2);
+            ranges= zeros(numel(i_params),2);
             ranges(:,1) = -inf;
             ranges(:,2) = inf;
 

@@ -1,3 +1,17 @@
+# Release 1.11.1
+- BreachRequirement SplitEval and BreachSamplesPlot default to sum plot
+- sim function now requires to return status as last output argument
+- BreachProblemGUI simple GUI control 
+- BreachProblem callback_new_best  
+- disk caching for arbitrary BreachSystem, keeps/load traces in memory by default
+
+## Minor
+- fix sign of obj function display during MaxSatProblem solving
+- new function get_struct_hash
+- fix GetParam for BreachRequirement error when param does not exist (returns [], as for BreachSets)
+- fix ExtractSubset for BreachRequirement when traces are present
+- fix small display number of total violations bug 
+
 # Release 1.11.0
 - Coverage features, to be documented
 - GUI stuff, tbdocu itou

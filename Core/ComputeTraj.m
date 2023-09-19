@@ -152,62 +152,67 @@ ipts = P0.traj_to_compute; % all hell let loose, trusting
 ii=0;
 
 switch Sys.type
-    case 'Extern'
-        model = Sys.name;
-        if Verbose==1
-            if(numel(ipts)>1)
-                rfprintf_reset();
-                rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
-            end
+%     
+%     case 'Extern'        
+%         model = Sys.name;
+%         if Verbose==1
+%             if(numel(ipts)>1)
+%                 rfprintf_reset();
+%                 rfprintf(['Computed ' num2str(ii) '/' num2str(numel(ipts)) ' simulations of ' model])
+%             end
+%         end
+%             
+%         icount = 0;
+%         for ii = ipts
+%             iref = P0.traj_ref(ii);
+%             if isfield(Sys,'init_u')
+%                 U = Sys.init_u(Sys.ParamList(Sys.DimX-Sys.DimU+1:Sys.DimX), P0.pts(1:Sys.DimP,ii), tspan);
+%                 assignin('base','t__',U.t);
+%                 assignin('base', 'u__',U.u);
+%             end
+%             
+%             [traj.time, traj.X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
+%             %[traj.time, traj.X] = Sys.sim(Sys, tspan, P0.pts(Sys.DimX+1:end,ii)); 
+%             traj.param = P0.pts(1:P0.DimP,ii)';
+%             
+%             if isfield(Sys, 'output_gens')
+%                 for io = 1:numel(Sys.output_gens)
+%                     og = Sys.output_gens{io};
+%                     % Find in_signals
+%                     is = FindParam(Sys, og.signals_in);
+%                     ip = FindParam(P0, og.params);
+%                     X_in = traj.X(is, :);
+%                     pts_in = P0.pts(ip,ii);
+%                     [traj.time, Xout_i] = og.computeSignals(traj.time, X_in, pts_in);
+%                     traj.X = [traj.X ;Xout_i ];
+%                 end
+%             end
+%             
+%             Pf.traj{iref} = traj;
+%             Pf.Xf(:,iref) = zeros(Pf.DimX,1);
+%             icount = icount+1;
+%                     
+%             if Verbose==1
+%                 if(numel(ipts)>1)
+%                     rfprintf(['Computed ' num2str(icount) '/' num2str(numel(ipts)) ' simulations of ' model])
+%                 end
+%             end
+%             
+%         end
+%         if Verbose==1
+%             if(numel(ipts)>1)
+%                 fprintf('\n');
+%             end
+%         end
+%         
+%         Pf.traj_to_compute = [];
+%         
+    case {'Extern','Simulink'}
+        if isfield(Sys, 'mdl')
+            model = Sys.mdl;
+        else
+            model = Sys.name;
         end
-            
-        icount = 0;
-        for ii = ipts
-            iref = P0.traj_ref(ii);
-            if isfield(Sys,'init_u')
-                U = Sys.init_u(Sys.ParamList(Sys.DimX-Sys.DimU+1:Sys.DimX), P0.pts(1:Sys.DimP,ii), tspan);
-                assignin('base','t__',U.t);
-                assignin('base', 'u__',U.u);
-            end
-            
-            [traj.time, traj.X] = Sys.sim(Sys, tspan, P0.pts(:,ii));
-            %[traj.time, traj.X] = Sys.sim(Sys, tspan, P0.pts(Sys.DimX+1:end,ii)); 
-            traj.param = P0.pts(1:P0.DimP,ii)';
-            
-            if isfield(Sys, 'output_gens')
-                for io = 1:numel(Sys.output_gens)
-                    og = Sys.output_gens{io};
-                    % Find in_signals
-                    is = FindParam(Sys, og.signals_in);
-                    ip = FindParam(P0, og.params);
-                    X_in = traj.X(is, :);
-                    pts_in = P0.pts(ip,ii);
-                    [traj.time, Xout_i] = og.computeSignals(traj.time, X_in, pts_in);
-                    traj.X = [traj.X ;Xout_i ];
-                end
-            end
-            
-            Pf.traj{iref} = traj;
-            Pf.Xf(:,iref) = zeros(Pf.DimX,1);
-            icount = icount+1;
-                    
-            if Verbose==1
-                if(numel(ipts)>1)
-                    rfprintf(['Computed ' num2str(icount) '/' num2str(numel(ipts)) ' simulations of ' model])
-                end
-            end
-            
-        end
-        if Verbose==1
-            if(numel(ipts)>1)
-                fprintf('\n');
-            end
-        end
-        
-        Pf.traj_to_compute = [];
-        
-    case 'Simulink'
-        model = Sys.mdl;
         
         if Verbose==1
             if(numel(ipts)>1)
@@ -343,8 +348,9 @@ end
 
 % enforce consistency of pts and init traj values
 
-use_caching = isfield(Sys,'DiskCachingFolder')&&(~isempty(Sys.DiskCachingFolder));
-if ~use_caching % maybe too slow with large traces in cache. else warning ? or make sure this is done somewhere else TODO 
+use_cached_traces= isfield(Sys,'StoreTracesOnDisk')&&Sys.StoreTracesOnDisk;
+
+if ~use_cached_traces % maybe too slow with large traces in cache. else warning ? or make sure this is done somewhere else TODO 
   for ii = 1:size(Pf.pts, 2)
       itraj = Pf.traj_ref(ii);      
       X0 = Pf.traj{itraj}.X(:,1);
@@ -377,7 +383,7 @@ end
 
 if do_compute
     
-    [traj.time, traj.X,traj.status] = Sys.sim(Sys, tspan, P0.pts(:,ii));
+    [traj.time, traj.X, P0.pts(:,ii), traj.status] = Sys.sim(Sys, tspan, P0.pts(:,ii));
     traj.param = P0.pts(1:P0.DimP,ii)';
     
     % compute outputs  - should we do something when status is not right?
@@ -397,9 +403,15 @@ if do_compute
     end
     
     if use_caching % cache new trace
-        traj.Properties.Writable = false;
+        traj.Properties.Writable = false;      
     end
 end
+
+if use_caching&&isfield(Sys, 'StoreTracesOnDisk')&&~Sys.StoreTracesOnDisk
+    %clear traj;
+    traj = load(cache_traj_filename);
+end
+
 end
 
 

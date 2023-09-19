@@ -81,7 +81,7 @@ classdef MaxSatProblem < BreachProblem
         function ResetObjective(this, varargin)
             ResetObjective@BreachProblem(this, varargin{:});
             this.X_true = [];
-            this.BrSet_True = [];
+            this.BrSet_True = [];            
         end
         
         
@@ -135,8 +135,7 @@ classdef MaxSatProblem < BreachProblem
                 [BrTrue, BrTrue_Err, BrTrue_badU] = this.ExportBrSet(BrTrue);
                 
             end
-            
-            
+                        
         end
         
        
@@ -149,5 +148,26 @@ classdef MaxSatProblem < BreachProblem
             fprintf('\n');
         end
         
+        
+    end
+    
+    methods (Access=protected)
+        function display_status(this,fval,cval,obj_best)
+            if ~strcmp(this.display,'off')
+                if nargin==1
+                    obj = this.Spec.val;
+                    if ~isempty(this.Spec.precond_monitors)
+                        cval = min(min(this.Spec.traces_vals_precond)); % bof bof
+                    else
+                        cval = NaN;
+                    end
+                end
+                if nargin<4
+                    obj_best= -this.obj_best;
+                end
+                
+                display_status@BreachProblem(this, obj, cval, obj_best);
+            end
+        end
     end
 end

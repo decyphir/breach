@@ -40,6 +40,18 @@ classdef BreachRequirement < BreachTraceSystem
                         otherwise
                             this.AddRandReq();
                     end
+                
+                elseif ischar(req_monitors)&&exist(req_monitors, 'file')
+                    phis = STL_ReadFile(req_monitors);
+
+                    if nargin==1
+                        reqs= phis;
+                    else
+                        reqs = postprocess_signal_gens;
+                        postprocess_signal_gens = {};
+                    end
+                    this.AddReq(reqs);
+               
                 else                    
                     this.AddReq(req_monitors);
                 end
@@ -141,7 +153,6 @@ classdef BreachRequirement < BreachTraceSystem
         end
         
         %% Evaluation
-
         function ResetEval(this)
             this.BrSet = [];         
             this.SetParam('data_trace_idx_', 0);
@@ -267,13 +278,19 @@ classdef BreachRequirement < BreachTraceSystem
                 end
                 
                 % eval requirement
+                it=1;
+                if num_eval>1&&this.verbose>=1                    
+                    rfprintf_reset();
+                    rfprintf(['Eval requirements on ' num2str(it) '/' num2str(num_eval) ' traces.']);
+                end
                 execTimesForThisReq = zeros(1, numel(this.req_monitors));
                 for it = 1:num_eval
-                    if this.verbose>=2
-                        currentTime = datestr(now, 'HH:MM:ss');
-                        if num_eval > 30 && (mod(it, 10) == 0)
-                            fprintf(['*** START traj ' num2str(it) '/' num2str(num_eval) ' at ' currentTime '\n']);
-                        end
+                    if this.verbose>=1&&num_eval>1
+                        %currentTime = datestr(now, 'HH:MM:ss');
+                        %if num_eval > 30 && (mod(it, 10) == 0)
+                        %    fprintf(['*** START traj ' num2str(it) '/' num2str(num_eval) ' at ' currentTime '\n']);
+                        %end                        
+                        rfprintf(['Eval requirements on ' num2str(it) '/' num2str(num_eval) ' traces.']);
                     end
                     if any(traces_vals_precond(it,:)<0)
                         traces_vals( it, :)  = NaN;
@@ -290,10 +307,13 @@ classdef BreachRequirement < BreachTraceSystem
                     % Finished the traj
                     
                 end
+                if this.verbose>=1&&num_eval>1
+                        fprintf('\n');
+                end
                 
                 % Display the nSlowest slowest specifications
                 nSlowest = 5;
-                if (numel(execTimesForThisReq) > nSlowest) && (num_eval > 30)
+                if (numel(execTimesForThisReq) > nSlowest) && (num_eval > 30)&&this.verbose>=1
                     fprintf(['  Finished all trajs, ' num2str(nSlowest) ' slowest specs (out of ' num2str(numel(this.req_monitors)) '): ']);
                     [sortedExecTimes, sortedSpecIndex] = sort(execTimesForThisReq, 'descend');
                     for slowestCounter = 1:nSlowest
@@ -361,6 +381,8 @@ classdef BreachRequirement < BreachTraceSystem
         end
         
         %% Post Evaluation
+        % extract robustness values
+          
         function F = PlotDiagnostics(this, idx_req_monitors, itraj)
             if nargin<2
                 idx_req_monitors = 1;            
@@ -430,7 +452,36 @@ classdef BreachRequirement < BreachTraceSystem
         function h = PlotSignals(this,varargin)
             h = BreachSignalsPlot(this,varargin{:});
         end
-        
+
+        function h = PlotRobustSat(this, depth,trace_num, req, tau)
+        % Plots robust satisfaction of an STL formula, legacy version
+            if ~exist('req','var')||isempty(req)
+                req = this.req_monitors{1};
+            elseif isscalar(req)&&isnumeric(req)
+                req= this.req_monitors{req};
+            elseif ischar(req)
+                req =  this.get_req_from_name(req);
+            end
+
+            if ~exist('trace_num','var')||isempty(trace_num)
+                trace_num = 1;
+            end
+            
+            if(~exist('tau','var')||isempty(tau)) % also manage empty cell
+                tau = [];
+            end
+            
+            if ~exist('depth','var')||isempty(depth)
+                depth = inf;
+            end
+
+            this.eval_req(req,trace_num);
+            h = gcf;
+            req.plot_robust_sat_legacy(depth, tau);
+
+        end
+
+
         function Rfalse = GetFalseSubset(this)
             Rfalse = [];
             idx_false = find( sum(this.traces_vals<0,2) );
@@ -440,7 +491,8 @@ classdef BreachRequirement < BreachTraceSystem
         end
 
         function values = GetParam(this, params, ip)
-            % GetParam if not found, look into BrSet
+            % GetParam if not found, look into BrSet. If one is not found,
+            % return empty... FIXME maybe
             [idx, ifound] = FindParam(this.P, params);
             if ~exist('ip', 'var')
                 ip = 1:size(this.P.pts,2);
@@ -460,9 +512,15 @@ classdef BreachRequirement < BreachTraceSystem
                 if ~isempty(params_req)
                     values(idx_req,:) = this.GetParam(params_req, ip);
                 end
-                for it = 1:numel(ip)
-                    ipts = find(this.BrSet.P.traj_ref==ip(it),1);
-                    values(idx_data,it) = this.BrSet.GetParam(params_data, ipts);
+                
+                [idx_brset, ifound_data] = FindParam(this.BrSet.P, params_data);
+                if ~(all(ifound_data))
+                    values=[];
+                else
+                    for it = 1:numel(ip)
+                        ipts = find(this.BrSet.P.traj_ref==ip(it),1);
+                        values(idx_data,it) = this.BrSet.GetParam(idx_brset, ipts);
+                    end
                 end
             end
         end
@@ -535,9 +593,26 @@ classdef BreachRequirement < BreachTraceSystem
         
         function Rextract = ExtractSubset(this, idx)
             Rextract = this.copy(); % likely overkill...
-            Rextract.P = Sselect(this.P,idx);            
+            Rextract.P = Sselect(this.P,idx);
             if ~isempty(this.BrSet)
-                Rextract.BrSet.P = Sselect(this.BrSet.P, idx);                
+                Rextract.BrSet = this.BrSet.ExtractSubset(idx); % double overkill, great
+                % Changing traj_ref stuff manually - we can't mess with this so easily, need
+                % to change traj.param and match P.pts, because
+                % data_trace_idx_ is system parameter... also assume no
+                % 'spec_param' here (go figure this, if you're not me ;-))
+                if isfield(Rextract.BrSet.P, 'traj')
+                    idx_tr_id= this.Sys.DimX+1;
+                    Rextract.P.pts(idx_tr_id,:) = Rextract.BrSet.P.traj_ref;
+                    if  isfield(Rextract.P,'traj')
+                        for itraj = 1:numel(Rextract.P.traj)
+                            Rextract.P.traj{itraj}.param(idx_tr_id)= Rextract.P.pts(idx_tr_id,itraj);
+                        end
+                    else
+                        warning('BreachRequirement:ExtractSubset: traj in BrSet but not in R ?');
+                    end
+
+                end
+
             end
 
             if ~isempty(this.traces_vals)
@@ -550,9 +625,58 @@ classdef BreachRequirement < BreachTraceSystem
             global_val = min(min(Rextract.traces_vals));
             global_precond_val = min(min(Rextract.traces_vals_precond));
             Rextract.val = min([global_val,-global_precond_val]);
-            
+
         end
         
+        function [vals_sorted, idx_sorted] = get_vals_sorted(this)
+          % sort  according to first requirement TODO extend to multiple,
+          % or select one, and or lexico etc
+            if isempty(this.traces_vals)
+                vals_sorted = [];
+                idx_sorted = [];
+            else
+                [vals_sorted, idx_sorted] = sort(this.traces_vals(:,1)');
+            end
+        end
+
+        function [R1, R2,idx1, idx2] = SplitEval(this, varargin)
+        % Split set into false and true by default
+
+        val_threshold = 0.;
+        if numel(varargin) == 1
+            if isnumeric(varargin{1})
+                val_threshold= varargin{1};
+            end
+        end
+
+        [vals_sorted, idx_sorted] = get_vals_sorted(this);
+        R1= [];
+        R2= [];
+
+        if ~isempty(vals_sorted) % we've got values to sort
+            idx_neg = find(vals_sorted<=val_threshold);
+            if isempty(idx_neg) % all pos
+                R1 = [];
+                idx2 = idx_sorted;
+            else % some neg
+                if numel(idx_neg)==numel(idx_sorted) % all neg
+                    idx1 = idx_sorted;
+                    idx2 = [];
+                else % some pos and some neg
+                    idx1 = idx_sorted(idx_neg);
+                    idx_pos = vals_sorted>val_threshold;
+                    idx2 = idx_sorted(idx_pos);
+                end
+                R1= this.ExtractSubset(idx1);
+            end
+            if nargout>1
+                if ~isempty(idx2)
+                    R2 = this.ExtractSubset(idx2);
+                end
+            end
+        end
+        end
+ 
         function summary = GetSummary(this, varargin)
             
             summary = GetStatement(this);
@@ -596,7 +720,7 @@ classdef BreachRequirement < BreachTraceSystem
                 if  summary.num_total_violations == 1
                     summary.statement = sprintf([summary.statement ', %d requirement violation' ], summary.num_traces_violations);
                 elseif summary.num_total_violations >1
-                    summary.statement = sprintf([summary.statement ', %d requirement violations total' ], summary.num_traces_violations);
+                    summary.statement = sprintf([summary.statement ', %d requirement violations total' ], summary.num_total_violations);
                 end
                 
                 summary.num_vacuous_sat = sum(sum(summary.requirements.rob == inf));
@@ -714,104 +838,6 @@ classdef BreachRequirement < BreachTraceSystem
             end
         end
                 
-        %% Display
-          
-        function varargout = disp(this)
-            signals_in_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.signals_in, 'UniformOutput', false));
-            signals_in_st = ['{' signals_in_st(1:end-2) '}'];
-            summary = this.GetStatement();
-            
-            st = sprintf('BreachRequirement object for signal(s): %s. %s\n', signals_in_st, summary.statement);
-            
-            if nargout == 0
-                varargout = {};
-                fprintf(st);
-            else
-                varargout{1} = st;
-            end                      
-            
-        end
-        
-        function varargout = PrintFormula(this)
-            st = '';
-            if ~isempty(this.precond_monitors)
-                st = sprintf([st '--- PRECONDITIONS ---\n']);
-                for ifo = 1:numel(this.precond_monitors)
-                    st = [st this.precond_monitors{ifo}.disp()];
-                end
-                st = [st '\n'];
-            end
-            st = sprintf([st '--- REQUIREMENT FORMULAS ---\n']);
-            for ifo = 1:numel(this.req_monitors)
-                st = [st  this.req_monitors{ifo}.disp() sprintf('\n')];
-            end
-            st = sprintf([st '\n']);
-        
-            if nargout == 0
-                varargout = {};
-                fprintf(st);
-            else
-                varargout{1} = st;
-            end
-               
-        end
-        
-        function varargout = PrintSignals(this)
-            st = sprintf('---- SIGNALS IN ----\n');
-            for isig = 1:numel(this.signals_in)
-                sig = this.signals_in{isig};
-                st = [st sprintf('%s %s\n', sig, this.get_signal_attributes_string(sig))];
-            end
-            st = sprintf([st '\n']);
-            
-            if this.P.DimX>0
-                st= sprintf([st '---- SIGNALS  OUT ----\n']);
-                for isig = 1:this.P.DimX
-                    st = [st sprintf('%s %s\n', this.P.ParamList{isig}, this.get_signal_attributes_string(this.P.ParamList{isig}))];
-                end
-                st = sprintf([ st '\n']);
-            end
-            
-            if ~isempty(this.postprocess_signal_gens)
-                for iog = 1:numel(this.postprocess_signal_gens)
-                    if iog==1
-                        st = sprintf([st '--- POSTPROCESSING ---\n']); 
-                    end
-                    signals_in_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.postprocess_signal_gens{iog}.signals_in, 'UniformOutput', false));
-                    signals_in_st = ['{' signals_in_st(1:end-2) '}'];
-                    signals_out_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.postprocess_signal_gens{iog}.signals, 'UniformOutput', false));
-                    signals_out_st = ['{' signals_out_st(1:end-2) '}'];
-                    st =  [st sprintf('%s --> %s\n',signals_in_st, signals_out_st)];
-                end
-                st = sprintf([ st '\n']);
-            end
-            if ~isempty(this.sigMap)
-                st = [st this.PrintAliases() '\n'];
-            end
-            
-            if nargout == 0
-                varargout = {};
-                fprintf(st);
-            else
-                varargout{1} = st;
-            end
-            
-        end
-        
-        function varargout = PrintAll(this)
-            st =this.PrintFormula();
-            st = sprintf([st this.PrintSignals()]);
-            st = sprintf([st this.PrintParams()]);
-            
-             if nargout == 0
-                varargout = {};
-                fprintf(st);
-            else
-                varargout{1} = st;
-             end
-             
-        end
-                                
         function  atts = get_signal_attributes(this, sig)
             % returns nature to be included in signature
             % should req_input, additional_test_data_signal,
@@ -1108,9 +1134,107 @@ classdef BreachRequirement < BreachTraceSystem
            names = cellfun(@(c)(c.name), this.req_monitors, 'UniformOutput', false); 
         end
  
-
+        
+        %% Display
+          
+        function varargout = disp(this)
+            signals_in_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.signals_in, 'UniformOutput', false));
+            signals_in_st = ['{' signals_in_st(1:end-2) '}'];
+            summary = this.GetStatement();
+            
+            st = sprintf('BreachRequirement object for signal(s): %s. %s\n', signals_in_st, summary.statement);
+            
+            if nargout == 0
+                varargout = {};
+                fprintf(st);
+            else
+                varargout{1} = st;
+            end                      
+            
+        end
+        
+        function varargout = PrintFormula(this)
+            st = '';
+            if ~isempty(this.precond_monitors)
+                st = sprintf([st '--- PRECONDITIONS ---\n']);
+                for ifo = 1:numel(this.precond_monitors)
+                    st = [st this.precond_monitors{ifo}.disp()];
+                end
+                st = [st '\n'];
+            end
+            st = sprintf([st '--- REQUIREMENT FORMULAS ---\n']);
+            for ifo = 1:numel(this.req_monitors)
+                st = [st  this.req_monitors{ifo}.disp() sprintf('\n')];
+            end
+            st = sprintf([st '\n']);
+        
+            if nargout == 0
+                varargout = {};
+                fprintf(st);
+            else
+                varargout{1} = st;
+            end
+               
+        end
+        
+        function varargout = PrintSignals(this)
+            st = sprintf('---- SIGNALS IN ----\n');
+            for isig = 1:numel(this.signals_in)
+                sig = this.signals_in{isig};
+                st = [st sprintf('%s %s\n', sig, this.get_signal_attributes_string(sig))];
+            end
+            st = sprintf([st '\n']);
+            
+            if this.P.DimX>0
+                st= sprintf([st '---- SIGNALS  OUT ----\n']);
+                for isig = 1:this.P.DimX
+                    st = [st sprintf('%s %s\n', this.P.ParamList{isig}, this.get_signal_attributes_string(this.P.ParamList{isig}))];
+                end
+                st = sprintf([ st '\n']);
+            end
+            
+            if ~isempty(this.postprocess_signal_gens)
+                for iog = 1:numel(this.postprocess_signal_gens)
+                    if iog==1
+                        st = sprintf([st '--- POSTPROCESSING ---\n']); 
+                    end
+                    signals_in_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.postprocess_signal_gens{iog}.signals_in, 'UniformOutput', false));
+                    signals_in_st = ['{' signals_in_st(1:end-2) '}'];
+                    signals_out_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.postprocess_signal_gens{iog}.signals, 'UniformOutput', false));
+                    signals_out_st = ['{' signals_out_st(1:end-2) '}'];
+                    st =  [st sprintf('%s --> %s\n',signals_in_st, signals_out_st)];
+                end
+                st = sprintf([ st '\n']);
+            end
+            if ~isempty(this.sigMap)
+                st = [st this.PrintAliases() '\n'];
+            end
+            
+            if nargout == 0
+                varargout = {};
+                fprintf(st);
+            else
+                varargout{1} = st;
+            end
+            
+        end
+        
+        function varargout = PrintAll(this)
+            st =this.PrintFormula();
+            st = sprintf([st this.PrintSignals()]);
+            st = sprintf([st this.PrintParams()]);
+            
+             if nargout == 0
+                varargout = {};
+                fprintf(st);
+            else
+                varargout{1} = st;
+             end
+             
+        end
+ 
+        
         function  varargout = dispwip(this)
-
 
             str = [class(this) ' object.\n'];
             str = [str this.disp_req_monitors()]; 
@@ -1135,13 +1259,11 @@ classdef BreachRequirement < BreachTraceSystem
         
         end
 
-
         function  varargout = disp_req_monitors(this)
 
             mons = list_manip.to_string(this.get_monitor_names(),', ');
             str = ['Monitor(s): ' mons '\n'];
             
-
             if nargout == 0
                 varargout = {};
                 fprintf(str);
@@ -1172,7 +1294,6 @@ classdef BreachRequirement < BreachTraceSystem
         
         end
     
-
         function  varargout = disp_signals_in(this)
 
             signals_in = this.get_signals_in();
@@ -1192,10 +1313,8 @@ classdef BreachRequirement < BreachTraceSystem
             
         
         end
-    
 
-
-    end
+end
     
     
     %% Protected methods

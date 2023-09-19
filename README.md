@@ -294,7 +294,7 @@ Bweather =  BreachSystem('weather', ...                 % system name
 Then `Bweather` can be used to compute multiple traces varying parameters, monitor STL specifications, perform falsification, etc. Below is the complete, commented code for the  `sim_weather` function:
 
 ```matlab
-function [t_out, X,p] = sim_weather(Sys, t_in, p) 
+function [t_out, X,p, status] = sim_weather(Sys, t_in, p) 
 %  sim_weather computes one trace of the weather system, given a set of parameter vectors p
 %  and a time specification t_in. 
 %  
@@ -334,5 +334,6 @@ X = [temperature;
      humidity]; 
 t_out = t_in;             
 
+status = 0; % everything went well, should be -1 otherwise
 end
 ```

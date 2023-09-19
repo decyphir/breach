@@ -31,6 +31,7 @@ classdef BreachSystem < BreachSet
         ParallelTempRoot = ''   % the default temporary folder for parallel computing
         InitFn = ''             % Initialization function
         UseDiskCaching=false   %  set by SetupDiskCaching
+        DiskCachingRoot
     end
     
     methods
@@ -261,9 +262,83 @@ classdef BreachSystem < BreachSet
             if this.verbose>=1
                 this.dispTraceStatus();
             end
-        end                
+        end
         
+        %% Disk caching
+        function SetupDiskCaching(this, varargin)
+            %  BreachSimulinkSystem.SetupDiskCaching
+            
+            options.DiskCachingRoot  = this.DiskCachingRoot;
+            if isfield(this.Sys, 'StoreTracesOnDisk')
+                options.StoreTracesOnDisk = this.Sys.StoreTracesOnDisk;
+            else
+                options.StoreTracesOnDisk = false;
+            end
+            options = varargin2struct_breach(options, varargin{:});
+            this.DiskCachingRoot = options.DiskCachingRoot;
+            this.Sys.StoreTracesOnDisk  = options.StoreTracesOnDisk;
+            
+            % The following creates the cache folder if not done already
+            this.Sys.DiskCachingFolder= this.GetCachingFolder();
+            [success,~, msg_id] = mkdir(this.Sys.DiskCachingFolder);
+            if success == 1
+                if isequal(msg_id, 'MATLAB:MKDIR:DirectoryExists')
+                    this.disp_msg(['Using existing caching folder: ' this.Sys.DiskCachingFolder],2);
+                else
+                    this.disp_msg(['Created caching folder:' this.Sys.DiskCachingFolder],2);
+                end
+            else
+                this.Sys.DiskCachingFolder='';
+                error(['Couldn''t create caching folder'  this.Sys.DiskCachingFolder '.']);
+            end
+            
+            this.UseDiskCaching = true;
+            
+        end
         
+        function ClearDiskCache(this)
+            folder = this.GetCachingFolder();
+            [status, message, messageid] = rmdir(folder, 's');
+            if status~=1
+                if ~strcmp(messageid, 'MATLAB:RMDIR:NotADirectory')
+                    error(message);
+                end
+            else
+                this.disp_msg(['Removed cache folder '  folder],2);
+            end
+            if isfield(this.Sys, 'StoreTracesOnDisk')&&this.Sys.StoreTracesOnDisk
+                this.ResetSimulations();
+            end
+        end
+        
+        function caching_folder_name= GetCachingFolder(this, CacheRoot)
+            if nargin<=1
+                CacheRoot = this.DiskCachingRoot;
+            end
+            
+            if isempty(CacheRoot)
+               CacheRoot=['.' filesep 'breach_traj_cache']; 
+            end
+                
+            Sys_to_hash = this.Sys;
+            if isfield(this.Sys, 'DiskCachingFolder')
+                Sys_to_hash = rmfield(Sys_to_hash, 'DiskCachingFolder');
+            end
+            if isfield(this.Sys, 'StoreTracesOnDisk')
+                Sys_to_hash = rmfield(Sys_to_hash, 'StoreTracesOnDisk');
+            end
+            
+            
+            mdl_hash = get_struct_hash(Sys_to_hash);
+            
+            caching_folder_name = [CacheRoot filesep mdl_hash];
+        end
+        
+        function hash = get_hash(this)
+            st.signals = this.GetSignalsList();
+            st.params = this.GetParamList();            
+            hash= DataHash(st);
+        end
         
         %% Signals Enveloppe
         
@@ -283,7 +358,7 @@ classdef BreachSystem < BreachSet
             
         end                
         
-        %% Specs
+        %% Specs (Legacy)
         function phi = AddSpec(this, varargin)
             % AddSpec Adds a specification
             global BreachGlobOpt
@@ -746,7 +821,7 @@ classdef BreachSystem < BreachSet
                 end
             end
             
-            function scatter3dPlot(x,y,z,val)
+        function scatter3dPlot(x,y,z,val)
                 
                 hold on
                 grid on;

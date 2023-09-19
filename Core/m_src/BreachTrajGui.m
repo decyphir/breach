@@ -76,7 +76,7 @@ end
 handles.BrSys = varargin{1};
 handles_main = varargin{2};
 handles.protected_names = fieldnames(handles_main.working_sets);
-handles.properties= handles_main.properties;
+handles.properties= struct();%handles_main.properties; % TODO 
 
 if isfield(handles_main, 'TrajSet')
     handles.TrajSet = handles_main.TrajSet;

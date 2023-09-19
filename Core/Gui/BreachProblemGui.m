@@ -1,6 +1,7 @@
 classdef BreachProblemGui < BreachGuiClass
     properties
         pb
+        pause_requested
     end
     
     
@@ -23,17 +24,22 @@ classdef BreachProblemGui < BreachGuiClass
             
             switch id
                 case 'button_stop'
-                    this.pb.is_paused = 1;                    
-                    
+                    this.pause_requested = 1;                                        
+                
                 case 'button_resume'
+                    this.pause_requested= 0;
                     this.pb.is_paused = 0; 
                     this.pb.solve();
                     
                 case 'pb'
                     ax=this.uimap('ax_main').hdle;                    
                     axes(ax);
+                    grid on;
                     plot(1:this.pb.nb_obj_eval, this.pb.obj_log); 
                     drawnow
+                    if this.pause_requested
+                        this.pb.is_paused= 1;
+                    end
             end
             
         end

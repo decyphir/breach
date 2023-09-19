@@ -145,7 +145,6 @@ classdef BreachSignalsPlot < handle
             legend off;
         end
 
-
         function AddSignals(this,sigs,ax,itraces)
             if ischar(sigs)
                 sigs = {sigs};
@@ -184,6 +183,7 @@ classdef BreachSignalsPlot < handle
         end
                                    
         function AddRobSignals(this,sigs,ax,itraces,ireq)
+            
             if ischar(sigs)
                 sigs = {sigs};
             end
@@ -427,6 +427,8 @@ classdef BreachSignalsPlot < handle
     methods (Access=protected)
          
         function ax = AddAxesContextMenu(this, ax)
+         % Creates context menu
+         
             cm = uicontextmenu(this.Fig);
             set(ax, 'UIContextMenu', cm);
             

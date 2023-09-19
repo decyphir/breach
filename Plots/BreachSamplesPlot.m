@@ -32,17 +32,28 @@ classdef BreachSamplesPlot < handle
             end
             
             opt.Fig = 'create';
+            opt.ax = 'create';
+            opt = varargin2struct_breach(opt, varargin{:});
+            
             
             this.BrSet = BrSet;
             
             if strcmp(opt.Fig,'create')
                 this.Fig = figure;
+            elseif isa(opt.Fig, 'handle')
+                this.Fig = opt.Fig;
+            end
+            
+            if strcmp(opt.ax,'create')
+                this.ax = axes;
+            elseif isa(opt.ax, 'handle')
+                this.ax = opt.ax;
             end
             
             this.summary = BrSet.GetSummary();
             this.signature = this.summary.signature;
             
-            if exist('params','var')
+            if exist('params','var')&&~isempty(params)
                 if ischar(params)
                     this.params = {params};
                 else
@@ -203,8 +214,7 @@ classdef BreachSamplesPlot < handle
             idx_pos = num_vals_pos >0;
             idx_neg = num_vals_neg >0;
             idx_vac = num_vals_vac >0;
-            
-            
+                  
             if any(idx_pos)
                 this.data.pos_pts.idx= all_pts(idx_pos);
                 this.data.pos_pts.idx_traj = this.BrSet.P.traj_ref(this.data.pos_pts.idx);
@@ -444,12 +454,10 @@ classdef BreachSamplesPlot < handle
                 end
                 
                 switch this.y_axis
-                    case 'auto'
-                        plot_this = @plot_num;
-                        
-                    case 'sum'
+                    case {'auto', 'sum'}
                         ydata_pos = this.data.pos_pts.v_sum_pos;
                         plot_this = @plot_sum;
+                        
                     case 'num'
                         ydata_pos = this.data.pos_pts.v_num_pos;
                         if any(strcmp(this.z_axis, none_z))
@@ -509,10 +517,7 @@ classdef BreachSamplesPlot < handle
                 end
                 
                 switch this.y_axis
-                    case 'auto'
-                        plot_this = @plot_num; % default
-                        
-                    case 'sum'
+                    case {'auto', 'sum'} % default 
                         ydata_vac = this.data.vac_pts.v_sum_vac;
                         plot_this = @plot_sum;
                     case 'num'
@@ -571,9 +576,7 @@ classdef BreachSamplesPlot < handle
                 end
                 
                 switch this.y_axis
-                    case 'auto'
-                        plot_this=@plot_num;
-                    case 'sum'
+                    case {'sum', 'auto'}
                         ydata_neg = this.data.neg_pts.v_sum_neg;
                         if any(strcmp(this.z_axis, none_z))
                             plot_this = @plot_sum;

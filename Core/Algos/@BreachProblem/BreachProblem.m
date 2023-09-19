@@ -92,6 +92,7 @@ classdef BreachProblem < BreachStatus
         res
         X_log
         obj_log
+        constraints_log
         x_best
         obj_best   = inf
         log_traces = true
@@ -126,8 +127,7 @@ classdef BreachProblem < BreachStatus
        freq_update=1   % affects display and callbacks     
        is_paused = false
     end
-    
-    
+        
     % misc options
     properties
         display = 'on'        
@@ -222,6 +222,10 @@ classdef BreachProblem < BreachStatus
                 % reset display
                 rfprintf_reset();
             end
+        end
+        
+        function x0 = generate_new_x0(this)
+            x0 = (this.ub-this.lb).*rand(length(this.ub),1) + this.lb;
         end
         
         function Reset_x0(this)
@@ -732,8 +736,16 @@ classdef BreachProblem < BreachStatus
                        this.insigma = sigmadefault';
                     end
                     %%
+                    if isfield(this.solver_options,'start_sample')
+                        this.solver_options=rmfield(this.solver_options, 'start_sample');
+                    end
+                    if isfield(this.solver_options,'start_function_values')
+                        this.solver_options=rmfield(this.solver_options, 'start_function_values');
+                    end
+                    
                     [x, fval, counteval, stopflag, out, bestever] = cmaes(this.objective, this.x0', this.insigma, this.solver_options);
-                    res = struct('x',x, 'fval',fval, 'counteval', counteval,  'stopflag', stopflag, 'out', out, 'bestever', bestever);
+                    res = struct('x',x, 'fval',fval, 'counteval', counteval, 'out', out, 'bestever', bestever);
+                    res.stopflag = stopflag;
                     this.add_res(res);
                     
                 case 'turbo'
@@ -945,11 +957,7 @@ classdef BreachProblem < BreachStatus
             end
             
         end
-        
-        function x0 = generate_new_x0(this)
-            x0 = (this.ub-this.lb).*rand(length(this.ub),1) + this.lb;
-        end
-        
+               
         function problem = get_problem(this)
             
             if numel(this.Spec.req_monitors)>1
@@ -1149,7 +1157,7 @@ classdef BreachProblem < BreachStatus
                                    e.name ='obj_computed';
                                    e.values.fval = fval;                                   
                                    e.values.nb_obj_eval=this.nb_obj_eval;
-                                   this.callback_obj(this, e);
+                                   this.callback_obj(this,e);
                                 end
                             end
 
@@ -1231,6 +1239,11 @@ classdef BreachProblem < BreachStatus
         function LogX(this, x, fval, cval, x_stoch)
             % LogX logs values tried by the optimizer
 
+            this.X_log = [this.X_log x];
+            this.obj_log = [this.obj_log fval];
+            this.constraints_log = [this.constraints_log cval];
+            this.X_stochastic_log = [this.X_stochastic_log x_stoch];                
+            
             if cval>=0
                 this.num_consecutive_constraints_failed = 0;
                 
@@ -1311,11 +1324,11 @@ classdef BreachProblem < BreachStatus
         function Rbest = GetBest(this,varargin)
             Rbest = this.GetBrSet_Best(varargin{:});
         end
-    
-        
+
+        %% Display functions
+
         function Display_X(this, param_values)
-            if ~isempty(param_values)
-                
+            if ~isempty(param_values)                
                 for ip = 1:numel(this.params)
                     value = param_values(ip);
                     fprintf( '        %s = %g\n', this.params{ip},value)
@@ -1357,13 +1370,8 @@ classdef BreachProblem < BreachStatus
             end
         end
    
-
-%% Display function
-
-         function varargout = disp_variables(this)
+        function varargout = disp_variables(this)
             variables = list_manip.to_string(this.params);
-            
-            
             
             st = sprintf('Variables:  %s. \n',variables);
             
@@ -1372,10 +1380,12 @@ classdef BreachProblem < BreachStatus
                 fprintf(st);
             else
                 varargout{1} = st;
-            end                      
+            end
             
         end
-
+        
+        
+        
     end
     
     methods (Access=protected)
@@ -1391,7 +1401,7 @@ classdef BreachProblem < BreachStatus
             fprintf(hd_st);
         end
         
-        function display_status(this,fval,cval)
+        function display_status(this,fval,cval,obj_best)
             
             if ~strcmp(this.display,'off')
                 if nargin==1
@@ -1399,10 +1409,15 @@ classdef BreachProblem < BreachStatus
                     if ~isempty(this.Spec.precond_monitors)
                         cval = min(min(this.Spec.traces_vals_precond)); % bof bof
                     end
+                    
+                end
+                if nargin <4
+                    obj_best = this.obj_best;
                 end
                 
+                
                 st__= sprintf('     %5d                    %7.1f               [%s]     (%s)', ...
-                    this.nb_obj_eval, this.time_spent,  num2str(fval','%+5.5e '), num2str(this.obj_best', '%+5.5e '));
+                    this.nb_obj_eval, this.time_spent,  num2str(fval','%+5.5e '), num2str(obj_best', '%+5.5e '));
                 if ~isempty(this.Spec.precond_monitors)
                     st__ = sprintf([st__ '           [%s (%g)]\n'], num2str(cval', '%+5.5e '), this.num_consecutive_constraints_failed);
                 else
@@ -1417,6 +1432,7 @@ classdef BreachProblem < BreachStatus
                         rfprintf(st__);
                 end
             end
+            
         end
         
         function [BrOut, Berr,  BbadU] = ExportBrSet(this,B)
@@ -1452,6 +1468,11 @@ classdef BreachProblem < BreachStatus
  
         function add_res(this,res)
         % appends new optimization result
+            
+            if ~isfield(res, 'solver')
+                res.solver = this.solver;
+            end
+            
             if isempty(this.res)
                 this.res = res;
             elseif isstruct(this.res)
@@ -1459,6 +1480,43 @@ classdef BreachProblem < BreachStatus
                 this.res = res_list;
             else
                 this.res{end+1} = res; 
+            end
+            
+        end
+                    
+        %function disp_res_history(this)
+            
+        %end
+        
+        function [Ball, Bres] = get_param_set_from_res(this)
+            
+            if isempty(this.res)
+               Ball = [];
+               Bres = [];
+            else 
+                if isstruct(this.res)
+                   res_list = {this.res};                     
+                else                    
+                    res_list = this.res;                    
+                end
+                
+                assert(iscell(res_list));
+                B0 = BreachSet([this.params {'obj_val' 'constraints_val'}]);
+                for ip = 1:numel(this.params)
+                    B0.SetDomain(this.params{ip}, this.domains(ip));
+                end              
+                Ball = B0.copy();
+                
+                Ball.SetParam(this.params, this.X_log);
+                Ball.SetParam('obj_val', this.obj_val);
+                Ball.SetParam('constraints_val', this.constraints_fn);
+                
+                if nargout==2  
+                   Bres = Ball;
+                   disp('Not yet implemented.');
+                end
+                
+                
             end
         end
     end

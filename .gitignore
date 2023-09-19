@@ -5,6 +5,8 @@
 *_breach.slx
 *_param_sets.mat
 *_properties.mat
+*~
+tmp/
 
 Examples/*.dat
 Examples/variablescmaes.mat

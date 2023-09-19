@@ -47,11 +47,9 @@ else
     end
 end
 
-% JOHAN ADDED
 if nargin < 2
     onlyLoadLastFormula = 0;
 end
-% END JOHAN ADDED
 
 tline = fgetl(fid);
 

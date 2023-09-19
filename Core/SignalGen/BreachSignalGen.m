@@ -99,8 +99,9 @@ classdef BreachSignalGen < BreachSystem
             
         end
         
-        function [tspan, X] = breachSimWrapper(this, Sys, tspan, p)
+        function [tspan, X, p, status] = breachSimWrapper(this, Sys, tspan, p)
             
+            status=0; 
             if numel(tspan)==1
                tspan = 0:this.dt_default:tspan; 
             elseif numel(tspan)==2
@@ -111,7 +112,7 @@ classdef BreachSignalGen < BreachSystem
             
             for isg = 1:numel(this.signalGenerators)
                sg = this.signalGenerators{isg};
-               idx_psg = FindParam(this.P, sg.params)-this.Sys.DimX;
+               idx_psg = FindParam(this.P, sg.params);%-this.Sys.DimX;
                p_isg = p(idx_psg);
                ns = numel(sg.signals);
                [X(cur_is:cur_is+ns-1, :), tspan]= sg.computeSignals(p_isg, tspan);
