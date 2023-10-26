@@ -594,15 +594,20 @@ classdef BreachRequirement < BreachTraceSystem
         function Rextract = ExtractSubset(this, idx)
             Rextract = this.copy(); % likely overkill...
             Rextract.P = Sselect(this.P,idx);
+
             if ~isempty(this.BrSet)
-                Rextract.BrSet = this.BrSet.ExtractSubset(idx); % double overkill, great
+                Rextract.BrSet = this.BrSet.ExtractSubset(idx); 
+                
+                %  Rextract.BrSet = this.BrSet.ExtractSubset(idx); % double overkill, great
                 % Changing traj_ref stuff manually - we can't mess with this so easily, need
                 % to change traj.param and match P.pts, because
                 % data_trace_idx_ is system parameter... also assume no
-                % 'spec_param' here (go figure this, if you're not me ;-))
+                % 'spec_param' here (go figure this out, if you're not me ;-))
+                
                 if isfield(Rextract.BrSet.P, 'traj')
                     idx_tr_id= this.Sys.DimX+1;
                     Rextract.P.pts(idx_tr_id,:) = Rextract.BrSet.P.traj_ref;
+                    
                     if  isfield(Rextract.P,'traj')
                         for itraj = 1:numel(Rextract.P.traj)
                             Rextract.P.traj{itraj}.param(idx_tr_id)= Rextract.P.pts(idx_tr_id,itraj);
@@ -1064,6 +1069,13 @@ classdef BreachRequirement < BreachTraceSystem
             if nargin<=2
                 fast = false;
             end
+            % Concat BrSet
+            if isempty(this.BrSet)
+                this.BrSet = other.BrSet; % and pray... 
+            elseif ~isempty(other.BrSet)
+                this.BrSet.Concat(other.BrSet,fast)
+            end
+        
             Pother = other.P;
             idx_trace_idx = this.P.DimX+1;
             if isfield(this.P, 'traj')&&isfield(Pother, 'traj') % param needs to be consistent with trace_idx 

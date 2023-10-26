@@ -1,3 +1,16 @@
+# Release 1.11.2
+- Fix BreachRequirement Concat method
+- Fix LogX in BreachProblem somehow double logging
+- Fix R_log in BreachProblem (somehow a consequence of above fix)
+- Fix stopping condition in MaxSatProblem when found true
+- Fix SaveInCache bug
+- Display objective funtion to minimize, not maximize for max sat problem
+- Fix BreachSignalsPlot not displaying the right signals
+- Added option sort to GetLog for BreachProblem
+- Fix snobfit default arguments 
+- Fix BreachProblem constructor with params and ranges not defining domains
+
+
 # Release 1.11.1
 - BreachRequirement SplitEval and BreachSamplesPlot default to sum plot
 - sim function now requires to return status as last output argument

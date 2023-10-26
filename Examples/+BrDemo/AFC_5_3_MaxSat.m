@@ -8,7 +8,9 @@ BrAFC
 
 %%
 % Load some properties.
-STL_ReadFile('AFC_simple_spec.stl');
+tol = 6.6e-3;
+R = BreachRequirement('AFC_simple_spec.stl', 'AF_alw_ok');
+R.SetParam('tol', tol);
 
 
 %% Maximizing Satisfaction
@@ -17,13 +19,12 @@ STL_ReadFile('AFC_simple_spec.stl');
 
 %% 
 % One possible use case is tuning control parameters.
-AFC_MaxSat = BrAFC.copy();
+B = BrAFC.copy();
 % Create the max sat problem and solve it
-max_sat_problem = MaxSatProblem(AFC_MaxSat, AF_alw_ok,...
+max_sat_pb = MaxSatProblem(B, R,...
                                 {'ki', 'kp'}, ...       % we look for a better PI controller. 
-                                [0. 0.3; 0.01 0.1]);
-max_sat_problem.max_time= 120; % give it some more computation time 
-max_sat_problem.solve();
+                                [0. 0.1; 0.01 0.1]);
+max_sat_pb.solve();
 
 %%
 % The best robustness value obtained is positive, which means we found
@@ -32,11 +33,11 @@ max_sat_problem.solve();
 %% Maximizing Satisfaction - Plot
 % Maybe it is not so good though.
 
-AFC_Best = max_sat_problem.GetBrSet_Best();
+AFC_Best = max_sat_pb.GetBrSet_Best();
 AFC_Best.BrSet.PlotSignals({'AF'}, [], {'LineWidth', 2});
 set(gca, 'XLim', [10 40], 'FontSize',14, 'LineWidth', 2);
-plot([0 41], (1+0.01)*[14.7 14.7],'r');
-plot([0 41], (1-0.01)*[14.7 14.7],'r');
+plot([0 41], (1+tol)*[14.7 14.7],'r');
+plot([0 41], (1-tol)*[14.7 14.7],'r');
 
 %% Adjusting Requirement
 % We maximized the satisfaction of AF_alw_tol, but this resulted in an
@@ -48,23 +49,30 @@ type AFC_settling_spec.stl
 %% Maximizing for the New Requirement
 % Defining and solving the max sat problem with settling property
 
-AFC_MaxSat = BrAFC.copy();
+B = BrAFC.copy();
+R = BreachRequirement('AF_alw_settle and AF_alw_ok');
+R.SetParam('tol', tol);
+R.SetParam('dt', 0.1);
+R.SetParam('epsi', 1e-2);
+R.SetParam('t_start', 10);
+R.SetParam('t_end', 10);
+
 % Create the max sat problem and solve it
-max_sat_problem = MaxSatProblem(AFC_MaxSat, AF_alw_settle,...
+max_sat_pb = MaxSatProblem(B, R,...
                            {'ki', 'kp'}, ...       
-                           [0. 0.2; 0.0 0.05]);
-max_sat_problem.solve();
+                           [0. 0.1; 0.01 0.1]);
+max_sat_pb.solve();
 
 %%
 % The solver found a satisfactory solution that should behave better. 
 
 %% Maximizing for the New Requirement - Plot
 
-AFC_Best = max_sat_problem.GetBrSet_Best();
+AFC_Best = max_sat_pb.GetBrSet_Best();
 AFC_Best.BrSet.PlotSignals({'AF'}, [], {'LineWidth', 2});
 set(gca, 'XLim', [10 40], 'FontSize',14, 'LineWidth', 2);
-plot([0 41], (1+0.01)*[14.7 14.7],'r');
-plot([0 41], (1-0.01)*[14.7 14.7],'r');
+plot([0 41], (1+tol)*[14.7 14.7],'r');
+plot([0 41], (1-tol)*[14.7 14.7],'r');
 
 %% Maximizing Satisfaction For Multiple Inputs
 % Tuning PI for only one input is likely not sufficient. Below we try to
@@ -80,3 +88,9 @@ max_sat_problem_grid.solve();
 %% 
 % If the solver doesn't find a solution, we can again try another one,
 % increase the simulation budget, change the problem, etc. 
+
+AFC_Best = max_sat_problem_grid.GetBrSet_Best();
+AFC_Best.BrSet.PlotSignals({'AF'}, [], {'LineWidth', 2});
+set(gca, 'XLim', [10 40], 'FontSize',14, 'LineWidth', 2);
+plot([0 41], (1+tol)*[14.7 14.7],'r');
+plot([0 41], (1-tol)*[14.7 14.7],'r');

@@ -16,7 +16,8 @@ classdef MaxSatProblem < BreachProblem
     properties
         BrSet_True
         X_true
-        StopAtTrue=false
+        StopAtTrue=1
+        obj_true
     end    
     
     methods
@@ -39,8 +40,8 @@ classdef MaxSatProblem < BreachProblem
         end
         
         function [obj, cval, x_stoch] = objective_fn(this,x)
+        % here obj is the opposite of robustness, so we still try to make it negative. 
 
-            % For falsification, default objective_fn is simply robust satisfaction of the least
             this.Spec.ResetEval();
             
             % checks stochastic domain
@@ -65,10 +66,10 @@ classdef MaxSatProblem < BreachProblem
                     end
                 end
             end
-            robs = -robs;
-            NaN_idx = isnan(robs); % if rob is undefined, make it inf to ignore it
-            robs(NaN_idx) = -inf;
-            obj = max(robs,[],1)';
+            objs = -robs; % possible array of values corresponding to multiple objectives
+            NaN_idx = isnan(objs); % if undefined, make it -inf to ignore it
+            objs(NaN_idx) = -inf;
+            obj = max(objs,[],1)'; % we want to make all of them negative 
             cval = inf;
             if (~isempty(this.Spec.traces_vals_precond))
                 NaN_idx = isnan(precond_robs); % if rob is undefined, make it inf to ignore it
@@ -81,6 +82,7 @@ classdef MaxSatProblem < BreachProblem
         function ResetObjective(this, varargin)
             ResetObjective@BreachProblem(this, varargin{:});
             this.X_true = [];
+            this.obj_true = [];
             this.BrSet_True = [];            
         end
         
@@ -94,53 +96,66 @@ classdef MaxSatProblem < BreachProblem
         
         % Logging
         function LogX(this, x, fval, cval, x_stoch)
-            
-            %  Logging satisfying parameters and traces
-            [~, i_true] = find(fval>0);
+
+            % Logging default stuff
+            this.LogX@BreachProblem(x, fval, cval,x_stoch);
+            % this.Rio_Mode_log = [ this.Rio_Mode_log this.Rio_Mode ];  % not sure what this is useful for
+
+            %  Logging satisfying parameters found
+            [~, i_true] = find(max(fval)<0);  % for max sat, we need all fval to be negative, so all robustness are positive 
             if ~isempty(i_true)
-                this.X_true = [this.X_true x(:,i_true)];                              
-                if (this.log_traces)&&~this.use_parallel
+                this.X_true = [this.X_true x(:,i_true)];
+                this.obj_true = [this.obj_true fval(:,i_true)];
+                if (this.log_traces)%&&~this.use_parallel&&~(this.BrSet.UseDiskCaching)  % FIXME - logging flags and methods need be revised
                     if isempty(this.BrSet_True)
-                        this.BrSet_True = this.BrSys.copy();
+                        if ~isempty(this.Spec.BrSet)
+                            this.BrSet_True = this.Spec.BrSet.copy();
+                        end
                     else
                         this.BrSet_True.Concat(this.BrSys, true);
                     end
                 end
             end
-            
-            % Logging default stuff
-            this.LogX@BreachProblem(x, fval,cval, x_stoch);
-            
+
+        end
+
+        function b = stopping(this)
+           
+            b =  this.stopping@BreachProblem();
+
+            if this.StopAtTrue~=0 && ... % StopAtTrue is not false
+                    rem(this.StopAtTrue,1)==0 &&...  % StopAtTrue is integer
+                    this.StopAtTrue<=sum(this.obj_log<0) % found enough
+                b = true;
+            end
+
         end
         
-        function b = stopping(this)
-            b =  this.stopping@BreachProblem();
-            b= b||(this.StopAtTrue&&this.obj_best>0);
-        end
+        
         
         function [BrTrue, BrTrue_Err, BrTrue_badU] = GetBrSet_True(this)
             BrTrue = [];
             if this.log_traces&&~this.use_parallel 
                 BrTrue = this.BrSet_True;
             else
-                [~, i_false] = find(this.obj_log<0);
-                if ~isempty(i_false)
+                [~, i_true] = find(max(fval,[],1)<0);  % for max sat, we need all fval to be negative, so all robustness are positive
+                if ~isempty(i_true)
                     BrTrue = this.BrSys.copy();
-                    BrTrue.SetParam(this.params, this.X_log(:, i_false));
+                    BrTrue.SetParam(this.params, this.X_log(:, i_true));
                     if this.BrSys.UseDiskCaching
                         BrTrue.Sim();
                     end
                 end
-                
+
                 [BrTrue, BrTrue_Err, BrTrue_badU] = this.ExportBrSet(BrTrue);
-                
+
             end
                         
         end
         
        
         function DispResultMsg(this)
-            fprintf('\n ---- Best robustness value %g found at\n', -this.obj_best);
+            fprintf('\n ---- Best value %g found at\n', this.obj_best);
             param_values = this.x_best;
             for ip = 1:numel(this.params)
                 fprintf( '        %s = %g\n', this.params{ip},param_values(ip))
@@ -150,24 +165,25 @@ classdef MaxSatProblem < BreachProblem
         
         
     end
-    
-    methods (Access=protected)
-        function display_status(this,fval,cval,obj_best)
-            if ~strcmp(this.display,'off')
-                if nargin==1
-                    obj = this.Spec.val;
-                    if ~isempty(this.Spec.precond_monitors)
-                        cval = min(min(this.Spec.traces_vals_precond)); % bof bof
-                    else
-                        cval = NaN;
-                    end
-                end
-                if nargin<4
-                    obj_best= -this.obj_best;
-                end
-                
-                display_status@BreachProblem(this, obj, cval, obj_best);
-            end
-        end
-    end
+   % Should we display -fval or +fval ? For now, for consistency with falsif, we display fval, which we always minimize 
+   % methods (Access=protected)
+        %function display_status(this, fval, cval, obj_best)
+        %  if ~strcmp(this.display,'off')
+        %        if nargin==1
+        %            obj = this.Spec.val;
+        %            if ~isempty(this.Spec.precond_monitors)
+        %                cval = min(min(this.Spec.traces_vals_precond)); % bof bof
+        %            else
+        %                cval = NaN;
+        %            end
+        %        end
+        %       if nargin<4
+        %           obj_best= -this.obj_best;
+        %       end
+        %
+        %       
+        %        display_status@BreachProblem(this, obj, cval, obj_best);
+        %   end
+        %end
+    %end
 end

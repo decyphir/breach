@@ -267,7 +267,6 @@ classdef BreachProblem < BreachStatus
                 end
             end
             this.params= params;
-            this.domains = BrSet.GetDomain(params);
             
             if ~exist('ranges', 'var')
                 ranges = BrSet.GetParamRanges(params);
@@ -280,7 +279,8 @@ classdef BreachProblem < BreachStatus
                 this.BrSet.ResetDomains(); % FIXME does not handle properly enum/int domains
                 this.BrSet.SetDomain(params, 'double', ranges);
             end
-           
+           this.domains = this.BrSet.GetDomain(params);
+            
             this.lb = lb__;
             this.ub = ub__;            
             
@@ -887,7 +887,7 @@ classdef BreachProblem < BreachStatus
             this.DispResultMsg(); 
             
             %% Saving run in cache folder
-            this.SaveInCache();
+            %this.SaveInCache();
             
             % For some solvers we do not return the startSample
             if ~exist('startSample', 'var')
@@ -897,7 +897,7 @@ classdef BreachProblem < BreachStatus
         
         function SaveInCache(this)
             if this.BrSys.UseDiskCaching
-                FileSave = [this.BrSys.DiskCachingRoot filesep class(this) '_Runs.mat'];
+                FileSave = [this.BrSys.Sys.DiskCachingRoot filesep class(this) '_Runs.mat'];
                 evalin('base', ['save(''' FileSave ''',''' this.whoamI ''');']);
             end
         end
@@ -1151,7 +1151,7 @@ classdef BreachProblem < BreachStatus
 
                             % update status
                             if ~rem(this.nb_obj_eval,this.freq_update)
-                                this.display_status();
+                                this.display_status(fval(:,iter), cval(:,iter) );
                                 % callback
                                 if ~isempty(this.callback_obj)
                                    e.name ='obj_computed';
@@ -1242,43 +1242,40 @@ classdef BreachProblem < BreachStatus
             this.X_log = [this.X_log x];
             this.obj_log = [this.obj_log fval];
             this.constraints_log = [this.constraints_log cval];
-            this.X_stochastic_log = [this.X_stochastic_log x_stoch];                
-            
+            this.X_stochastic_log = [this.X_stochastic_log x_stoch];
+
+            if (this.log_traces)%&&~(this.use_parallel)&&~(this.BrSet.UseDiskCaching) % FIXME - logging flags and methods need be revised
+                if isempty(this.BrSet_Logged)
+                    this.BrSet_Logged = this.BrSys.copy();
+                    this.R_log = this.Spec.copy();
+                else
+                    this.BrSet_Logged.Concat(this.BrSys, true); % fast concat
+                    this.R_log.Concat(this.Spec, true);
+                end
+            end
+
+            [fmin , imin] = min(min(fval));
+            x_min =x(:, imin);
+            if fmin < this.obj_best
+                this.x_best = x_min;
+                this.obj_best = fval(:,imin);
+                this.BrSet_Best = this.BrSys.copy(); % could be more efficient - also suspicious when several x...
+            end
+
+            % num_eval
+            this.nb_obj_eval= numel(this.obj_log(1,:));
+
             if cval>=0
                 this.num_consecutive_constraints_failed = 0;
-                
-                this.X_log = [this.X_log x];
-                this.obj_log = [this.obj_log fval];
-                this.X_stochastic_log = [this.X_stochastic_log x_stoch];
-                if (this.log_traces)%&&~(this.use_parallel)&&~(this.BrSet.UseDiskCaching) % FIXME - logging flags and methods need be revised
-                    if isempty(this.BrSet_Logged)
-                        this.BrSet_Logged = this.BrSys.copy();
-                        this.R_log = this.Spec.copy();
-                    else
-                        this.BrSet_Logged.Concat(this.BrSys, true); % fast concat
-                        this.R_log.Concat(this.Spec, true);
-                    end
-                end
-                
-                [fmin , imin] = min(min(fval));
-                x_min =x(:, imin);
-                if fmin < this.obj_best
-                    this.x_best = x_min;
-                    this.obj_best = fval(:,imin);
-                    this.BrSet_Best = this.BrSys.copy(); % could be more efficient - also suspicious when several x...
-                end
-                
-                % num_eval
-                this.nb_obj_eval= numel(this.obj_log(1,:));
             else
-                 this.num_consecutive_constraints_failed = this.num_consecutive_constraints_failed+1;
-                 this.num_constraints_failed = this.num_constraints_failed+1;                
-            end
-            if rem(this.nb_obj_eval+this.num_constraints_failed,this.freq_update)
-                % TODO: what should be here?
+                this.num_consecutive_constraints_failed = this.num_consecutive_constraints_failed+1;
+                this.num_constraints_failed = this.num_constraints_failed+1;
+                if rem(this.nb_obj_eval+this.num_constraints_failed,this.freq_update)
+                    % TODO: what should be here?
+                end
             end
         end
-         
+     
         function [BrOut, Berr, BbadU] = GetBrSet_Logged(this)
             % GetBrSet_Logged gets BreachSet object containing parameters and traces computed during optimization
             BrOut = this.BrSet_Logged;
@@ -1313,12 +1310,36 @@ classdef BreachProblem < BreachStatus
             summary = BLog.SaveResults(varargin{:});
          end
         
-        function Rlog = GetLog(this,varargin)
-            if isempty(this.X_log)
-                Rlog =[];
+        function [Rlog, Blog] = GetLog(this,varargin)
+        % returns log of BreachRequirement (this.Spec) and a simple set of
+        % X and obj values
+
+        opts.sort = 0; %+1 ascending
+        opts = varargin2struct_breach(opts, varargin{:});
+
+        if isempty(this.X_log)
+            Rlog =[];
+            Blog = [];
+        else
+            R = this.GetBrSet_Logged();
+            B = BreachSet([this.params 'obj_val']);
+            B.SetParam(this.params, this.X_log);
+            B.SetParam('obj_val', this.obj_log);
+            if opts.sort
+                if opts.sort == 1
+                    [sorted_obj, isort] = sort(this.obj_log, 'ascend');
+                else
+                    [sorted_obj, isort] = sort(this.obj_log, 'descend');
+                end
+
+                Rlog = R.ExtractSubset(isort);
+                Blog = B.ExtractSubset(isort);
             else
-                Rlog = this.GetBrSet_Logged(varargin{:});
+                Rlog = R;
+                Blog  = B;
             end
+        end
+            
         end
         
         function Rbest = GetBest(this,varargin)

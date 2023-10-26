@@ -24,7 +24,7 @@ npoint = 1;   % number of random start points to be generated
 nreq = n+6;     % no. of points to be generated in each call to SNOBFIT
 if isempty(startSample)
     % No startSample given
-    startSample = testronGetNewSample([this.lb this.ub]);
+    startSample = this.generate_new_x0();
 else
     % Start sample is already given in the variable
     % startSample as an input to this function
@@ -78,7 +78,7 @@ printFlag = 1;
 while ncall0 < ncall % repeat till ncall function values are reached
     % (if the stopping criterion is not fulfilled first)
     if ncall0 == npoint  % initial call
-        disp(['Initial robustness value: ' num2str(f(1))]);
+        disp(['Initial objective value: ' num2str(f(1))]);
         
         [request,xbest,fbest] = snobfit(file,x,f,params,dx);
         %ncall0,xbest,fbest;
@@ -186,11 +186,11 @@ while ncall0 < ncall % repeat till ncall function values are reached
                     disp([num2str(totalCounter) ': NEW BEST: ' num2str(bestForPrint)]);
                 end
                 if bestForPrint < 0
-                    disp(['FALSIFIED at sample ' num2str(totalCounter) '!']);
+                    disp(['SOLVED at sample ' num2str(totalCounter) '!']);
                     printFlag = 0;
                 end
             elseif mod(totalCounter, this.freq_update)==0 && printFlag && ~this.stopping
-                fprintf([num2str(totalCounter) ': Rob: ' num2str(f(j,1)) '\t\tBEST:' num2str(bestForPrint) '\n']);
+                fprintf([num2str(totalCounter) ': Obj: ' num2str(f(j,1)) '\t\tBEST:' num2str(bestForPrint) '\n']);
             end
         end
     end
@@ -216,8 +216,8 @@ while ncall0 < ncall % repeat till ncall function values are reached
 end
 %ncall0,xbest,fbest  % show number of function values, best point and
 % function value
-res = struct('bestRob',[],'bestSample',[],'nTests',[],'bestCost',[],'paramVal',[],'falsified',[],'time',[]);
+res = struct('bestObj',[],'bestSample',[],'nTests',[],'bestCost',[],'paramVal',[],'falsified',[],'time',[]);
 res.bestSample = xbest;
-res.bestRob = fbest;
+res.bestObj = fbest;
 
 end

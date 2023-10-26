@@ -668,14 +668,15 @@ classdef BreachSignalsPlot < handle
 
             axes(ax);
             hold on;
-            itraj_list = unique(this.BrSet.P.traj_ref(ipts), 'stable');
+            %itraj_list = unique(this.BrSet.P.traj_ref(ipts), 'stable');
 
             if ~iscell(sig)
                 sig= {sig};
             end
 
 
-            for itraj=itraj_list
+            for ipt=ipts
+                itraj = this.BrSet.P.traj_ref(ipt);
                 time = this.BrSet.P.traj{itraj}.time;
                 ch = get(ax,'Children');
                 if isempty(ch)
@@ -690,7 +691,7 @@ classdef BreachSignalsPlot < handle
                         b=true;
                     end
                     if b||bb
-                        sig_values = this.BrSet.GetSignalValues(s{1}, itraj);
+                        sig_values = this.BrSet.GetSignalValues(s{1}, ipts);
                         l = this.get_line_from_signal_name(ax, s{1});
                         if isempty(l)
                             l = plot(time , sig_values, 'DisplayName', s{1});
@@ -701,7 +702,7 @@ classdef BreachSignalsPlot < handle
                     else % try robustnes... should be obsolete
                         warning('Not sure what I am doing here, plot_signal but trying robustness signal ?');
                         l = this.get_line_from_signal_name(ax, s{1});
-                        [t,r]= this.BrSet.GetRobustSat(1, itraj, s{1});
+                        [t,r]= this.BrSet.GetRobustSat(1, ipt, s{1});
                         if isempty(l)
                             l = plot(t, r, 'DisplayName', s{1});
                         else
