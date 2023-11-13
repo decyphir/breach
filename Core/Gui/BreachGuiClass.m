@@ -348,7 +348,7 @@ classdef BreachGuiClass < handle
         
         function e = create_table(this,id, data, callback, w,h)
             
-            if nargin<3
+            if nargin<3||isempty(data)
                 data = {'',[]};
             end
             

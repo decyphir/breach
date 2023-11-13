@@ -2,12 +2,10 @@ function [params, p0, domains] = read_uitable_params(h_uitable)
 % read_uitable_params Takes a uitable element and reads parameter values and domains
 
 data = get(h_uitable, 'Data');
-
 for irow = 1:size(data,1)
     
     % param name
     params{irow} = data{irow,1};
-    
     
     if isnumeric(data{irow,2})
         p0(irow,1)  =data{irow,2};

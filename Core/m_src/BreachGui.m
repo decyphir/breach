@@ -769,7 +769,7 @@ set(handles.edit_rename,'String',handles.current_set);
 
 function handles = update_properties_panel(handles)
 
-if ~isempty(handles.req_sets)
+if ~isempty(fieldnames(handles.req_sets))
     set(handles.panel_properties, 'Visible','on');
     %% Set title
     str_name = 'Requirements';
@@ -784,6 +784,7 @@ if ~isempty(handles.req_sets)
     
     %% Update listbox_prop
     handles.properties = struct;
+    
     R = handles.req_sets.(handles.current_req_set);
     specs = R.req_monitors;
     

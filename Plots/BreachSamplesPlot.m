@@ -268,6 +268,7 @@ classdef BreachSamplesPlot < handle
                ~isempty(this.summary.requirements.rob);
         end
         
+        
         function update_brset_plot(this)
             B = this.BrSet;
             idx = this.data.pos_pts.idx;
@@ -307,7 +308,8 @@ classdef BreachSamplesPlot < handle
             end
             
             % zdata
-            none_z = 'none (2D plot)';
+            none_z = {'none (2D plot)', 'none','', '2D'};
+            
             switch this.z_axis
                 case none_z
                     this.pos_plot = plot(xdata,ydata,'.b', 'MarkerSize', 20);
@@ -333,7 +335,12 @@ classdef BreachSamplesPlot < handle
             
             function [txt] = myupdatefcn(obj,event_obj)
                 pos = event_obj.Position;
-                ipos = find(event_obj.Target.XData==pos(1)&event_obj.Target.YData==pos(2),1);
+                if ismember(this.z_axis,none_z)
+                    ipos = find(event_obj.Target.XData==pos(1)&event_obj.Target.YData==pos(2),1);
+                else
+                    ipos = find(event_obj.Target.XData==pos(1)&event_obj.Target.YData==pos(2)&event_obj.Target.ZData==pos(3),1);              
+                end
+                
                 i_pts = idx(ipos);
                 
                 this.idx_tipped = i_pts;
@@ -371,7 +378,7 @@ classdef BreachSamplesPlot < handle
             end
             
             top_z = uimenu(cm_proj, 'Label', ['Change z-axis']);
-            uimenu(top_z, 'Label', none_z,'Callback',@(o,e)(this.set_z_axis(none_z)));
+            uimenu(top_z, 'Label', none_z{1},'Callback',@(o,e)(this.set_z_axis(none_z{1})));
             for ip = 1:numel(this.data.variables)
                 uimenu(top_z, 'Label', this.data.variables{ip},'Callback',@(o,e)(this.set_z_axis(this.data.variables{ip})));
             end
@@ -410,7 +417,7 @@ classdef BreachSamplesPlot < handle
             end
             
             top_z = uimenu(cm, 'Label', ['Change z-axis']);
-            uimenu(top_z, 'Label', none_z,'Callback',@(o,e)(this.set_z_axis(none_z)));
+            uimenu(top_z, 'Label', none_z{1},'Callback',@(o,e)(this.set_z_axis(none_z{1})));
             for ip = 1:numel(this.data.variables)
                 uimenu(top_z, 'Label', this.data.variables{ip},'Callback',@(o,e)(this.set_z_axis(this.data.variables{ip})));
             end
@@ -421,7 +428,7 @@ classdef BreachSamplesPlot < handle
         function update_req_plot(this)
             
             B = this.BrSet.BrSet;
-            none_z = {'none (2D plot)', 'none', '', '2D'};
+            none_z = {'none (2D plot)', 'none','', '2D'};
             
             has_pos = isfield(this.data, 'pos_pts');
             has_vac = isfield(this.data, 'vac_pts');
@@ -803,7 +810,12 @@ classdef BreachSamplesPlot < handle
             
             function [txt] = myupdatefcn(obj,event_obj)
                 pos = event_obj.Position;
-                ipos = find(event_obj.Target.XData==pos(1)&event_obj.Target.YData==pos(2),1);
+                if ismember(this.z_axis,none_z)
+                    ipos = find(event_obj.Target.XData==pos(1)&event_obj.Target.YData==pos(2),1);
+                else
+                    ipos = find(event_obj.Target.XData==pos(1)&event_obj.Target.YData==pos(2)&event_obj.Target.ZData==pos(3),1);              
+                end                             
+                
                 is_neg = 0;
                 is_pos = 0;
                 is_vac = 0;                

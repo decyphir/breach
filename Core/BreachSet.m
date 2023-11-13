@@ -67,7 +67,7 @@ classdef BreachSet < BreachStatus
         %% Constructor
         function this = BreachSet(Sys, params, ranges)
             % BreachSet constructor from a legacy P or Sys, parameter names and ranges
-
+            InitBreach
             this.sigMap = containers.Map();
             this.sigMapInv = containers.Map();
             this.AliasMap = containers.Map();

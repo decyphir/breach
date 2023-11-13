@@ -2,6 +2,13 @@ function h_uitable = fill_uitable_params(h_uitable, params, p0, domains, issigna
 % fill_uitable_params Takes a uitable element and fill it with
 % current values of parameters, domains, etc
 
+if nargin ==2&& isa(params, 'BreachSet')
+    B = params;
+    params =B.GetParamList();
+    p0 = B.GetParam(params,1);
+    domains = B.GetDomain(params);
+end
+
 is_signal = zeros(1, numel(p0));
 if exist('issignal' , 'var')
     is_signal(issignal) = true;
@@ -19,7 +26,8 @@ set(h_uitable,'ColumnFormat', {'char', 'char', 'char', 'char', {'double','int','
 data = cell(numel(params), 5);
 for ip = 1:numel(params)
     data{ip, 1} = params{ip};
-    
+    sz(ip) = numel(params{ip});
+
     if is_signal(ip)
         data{ip,2} = '(signal)';
     else
@@ -51,5 +59,13 @@ for ip = 1:numel(params)
     
 end
 set(h_uitable, 'data', data);
+max_sz = max(sz); % longest param names in table 
+if ismac
+    SZ = {max_sz*7 80 80 80 80} ;
+else
+    SZ = {max_sz*8 100 100 100 100} ;
+end
+
+set(h_uitable, 'ColumnWidth', SZ, 'Unit', 'pixel');
 
 end

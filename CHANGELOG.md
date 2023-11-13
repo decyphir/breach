@@ -1,3 +1,7 @@
+# Release 1.11.3
+- Fix BreachSamplesPlot data tip 3D bug
+- Improved BreachProblemGui 
+
 # Release 1.11.2
 - Fix BreachRequirement Concat method
 - Fix LogX in BreachProblem somehow double logging
