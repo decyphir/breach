@@ -1,5 +1,5 @@
 function B = create_breachsignalgen(dim, varargin)
-% create_breachset(dim, varargin)
+% create_breachsignalgen(dim, varargin)
 %
 % returns a BreachSet object of various dimensions with default names for
 % parameters ('p1', 'p2', etc), with domains [0,1] 

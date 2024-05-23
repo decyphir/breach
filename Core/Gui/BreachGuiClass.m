@@ -1023,10 +1023,6 @@ classdef BreachGuiClass < handle
     
     methods
         
-        
-        
-        
-        
         %% A template for a button. Replace truc with some label.
         function this = button_template(this, mode,name,string,callback,w,h)
             % Names

@@ -61,9 +61,9 @@ end
 set(h_uitable, 'data', data);
 max_sz = max(sz); % longest param names in table 
 if ismac
-    SZ = {max_sz*7 80 80 80 80} ;
+    SZ = {max(100, max_sz*7) 80 80 80 80} ;
 else
-    SZ = {max_sz*8 100 100 100 100} ;
+    SZ = {max(120, max_sz*8) 100 100 100 100} ;
 end
 
 set(h_uitable, 'ColumnWidth', SZ, 'Unit', 'pixel');

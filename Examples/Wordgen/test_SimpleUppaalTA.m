@@ -7,7 +7,6 @@ labels_ranges.all__.sig1 = [5 20];
 labels_ranges.all__.sig2 = [-10 0];
 
 labels_ranges.phase1.sig2 = -4; % sig2 fixed in phase1
-
 labels_ranges.phase2.sig1 = 10; % sig1 constant in phase2
 
 B_uppaal = BreachTASignalGen( ...

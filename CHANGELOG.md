@@ -1,3 +1,16 @@
+# Release 1.11.4
+- BreachProblemGui improvements
+- Added SDToolbox (Sigma-Delta) and example
+- Reorganized and fixed wordgen support
+- Set_t0 method for BreachRequirement
+
+## Minor
+- param_gen now checks output parameters when they are changed
+- BreachRequirement display requirements names 
+- BreachRequirement checks if STL file exists when reading from a file
+- fixed bug with traj.time when reading from disk cache
+- waitbar for parSim
+
 # Release 1.11.3
 - Fix BreachSamplesPlot data tip 3D bug
 - Improved BreachProblemGui 

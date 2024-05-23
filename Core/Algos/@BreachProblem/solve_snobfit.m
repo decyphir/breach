@@ -89,7 +89,7 @@ while ncall0 < ncall % repeat till ncall function values are reached
     clear x
     clear f
     
-    if isfield(this.BrSys.Sys, 'use_parallel') && this.BrSys.Sys.use_parallel
+    if isfield(this.BrSys, 'Sys') && isfield(this.BrSys.Sys, 'use_parallel') && this.BrSys.Sys.use_parallel
         % Parallel computation
         this.use_parallel = 1;
         x = request(:, 1:n);

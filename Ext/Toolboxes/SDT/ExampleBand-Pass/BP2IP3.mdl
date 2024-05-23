@@ -1,0 +1,1242 @@
+Model {
+  Name			  "BP2IP"
+  Version		  2.20
+  SimParamPage		  Solver
+  SampleTimeColors	  off
+  InvariantConstants	  off
+  WideVectorLines	  off
+  ShowLineWidths	  off
+  StartTime		  "0.0"
+  StopTime		  "6e-3"
+  Solver		  FixedStepDiscrete
+  RelTol		  "1e-3"
+  AbsTol		  "1e-3"
+  Refine		  "1"
+  MaxStep		  "3.90625e-06"
+  InitialStep		  "auto"
+  FixedStep		  "Ts"
+  MaxOrder		  5
+  OutputOption		  RefineOutputTimes
+  OutputTimes		  "[]"
+  LoadExternalInput	  off
+  ExternalInput		  "[t, u]"
+  SaveTime		  off
+  TimeSaveName		  "tout"
+  SaveState		  off
+  StateSaveName		  "xout"
+  SaveOutput		  off
+  OutputSaveName	  "yout"
+  LoadInitialState	  off
+  InitialState		  "xInitial"
+  SaveFinalState	  off
+  FinalStateName	  "xFinal"
+  LimitMaxRows		  off
+  MaxRows		  "1000"
+  Decimation		  "1"
+  AlgebraicLoopMsg	  warning
+  MinStepSizeMsg	  warning
+  UnconnectedInputMsg	  warning
+  UnconnectedOutputMsg	  warning
+  UnconnectedLineMsg	  warning
+  ConsistencyChecking	  off
+  ZeroCross		  on
+  SimulationMode	  normal
+  RTWSystemTargetFile	  "grt.tlc"
+  RTWInlineParameters	  off
+  RTWPlaceOutputsASAP	  off
+  RTWRetainRTWFile	  off
+  RTWTemplateMakefile	  "grt.tmf"
+  RTWMakeCommand	  "make_rtw"
+  RTWGenerateCodeOnly	  off
+  ExtModeMexFile	  "ext_comm"
+  ExtModeBatchMode	  off
+  CloseFcn		  ";slview('closediagram',bdroot);"
+  BlockDefaults {
+    Orientation		    right
+    ForegroundColor	    black
+    BackgroundColor	    white
+    DropShadow		    off
+    NamePlacement	    normal
+    FontName		    "Helvetica"
+    FontSize		    10
+    FontWeight		    normal
+    FontAngle		    normal
+    ShowName		    on
+  }
+  AnnotationDefaults {
+    HorizontalAlignment	    center
+    VerticalAlignment	    middle
+    ForegroundColor	    black
+    BackgroundColor	    white
+    DropShadow		    off
+    FontName		    "Helvetica"
+    FontSize		    10
+    FontWeight		    normal
+    FontAngle		    normal
+  }
+  LineDefaults {
+    FontName		    "Helvetica"
+    FontSize		    9
+    FontWeight		    normal
+    FontAngle		    normal
+  }
+  System {
+    Name		    "BP2IP"
+    Location		    [309, 193, 1108, 660]
+    Open		    on
+    ToolBar		    on
+    StatusBar		    on
+    ScreenColor		    white
+    PaperOrientation	    landscape
+    PaperPositionMode	    auto
+    PaperType		    usletter
+    PaperUnits		    inches
+    Block {
+      BlockType		      Relay
+      Name		      "Comparator"
+      Position		      [570, 190, 600, 210]
+      NamePlacement	      alternate
+      OnSwitchValue	      "eps"
+      OffSwitchValue	      "eps"
+      OnOutputValue	      "Vref"
+      OffOutputValue	      "-Vref"
+    }
+    Block {
+      BlockType		      SubSystem
+      Name		      "IDEAL \nresonator"
+      Ports		      [1, 1, 0, 0, 0]
+      Position		      [470, 182, 525, 218]
+      ShowPortLabels	      on
+      MaskType		      "Integrator"
+      MaskDescription	      "Ideal discrete resonator with delay.\n"
+      MaskHelp		      "Parameters:\nTs:       Sample time\n"
+      MaskPromptString	      "Sample Time:"
+      MaskStyleString	      "edit"
+      MaskTunableValueString  "on"
+      MaskVariables	      "Ts=@1;"
+      MaskDisplay	      "dpoly([0 0 -1], [1 0 1], 'z-')"
+      MaskIconFrame	      on
+      MaskIconOpaque	      on
+      MaskIconRotate	      none
+      MaskIconUnits	      autoscale
+      MaskValueString	      "Ts"
+      System {
+	Name			"IDEAL \nresonator"
+	Location		[144, 90, 722, 337]
+	Open			off
+	ToolBar			off
+	StatusBar		off
+	ScreenColor		white
+	PaperOrientation	landscape
+	PaperPositionMode	auto
+	PaperType		usletter
+	PaperUnits		inches
+	Block {
+	  BlockType		  Inport
+	  Name			  "IN"
+	  Position		  [110, 35, 130, 55]
+	  Port			  "1"
+	  PortWidth		  "-1"
+	  SampleTime		  "-1"
+	}
+	Block {
+	  BlockType		  Sum
+	  Name			  "Sum"
+	  Ports			  [2, 1, 0, 0, 0]
+	  Position		  [180, 38, 205, 62]
+	  Inputs		  "++"
+	}
+	Block {
+	  BlockType		  UnitDelay
+	  Name			  "Unit Delay"
+	  Position		  [280, 35, 310, 65]
+	  X0			  "0"
+	  SampleTime		  "Ts"
+	}
+	Block {
+	  BlockType		  UnitDelay
+	  Name			  "Unit Delay1"
+	  Position		  [340, 35, 370, 65]
+	  X0			  "0"
+	  SampleTime		  "Ts"
+	}
+	Block {
+	  BlockType		  Gain
+	  Name			  "c3"
+	  Position		  [225, 35, 255, 65]
+	  ShowName		  off
+	  Gain			  "-1"
+	}
+	Block {
+	  BlockType		  Outport
+	  Name			  "Out1"
+	  Position		  [430, 41, 450, 59]
+	  Port			  "1"
+	  OutputWhenDisabled	  held
+	  InitialOutput		  "[]"
+	}
+	Line {
+	  SrcBlock		  "IN"
+	  SrcPort		  1
+	  DstBlock		  "Sum"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "Unit Delay"
+	  SrcPort		  1
+	  DstBlock		  "Unit Delay1"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "Unit Delay1"
+	  SrcPort		  1
+	  Points		  [25, 0]
+	  Branch {
+	    DstBlock		    "Out1"
+	    DstPort		    1
+	  }
+	  Branch {
+	    Points		    [0, 55; -245, 0; 0, -50]
+	    DstBlock		    "Sum"
+	    DstPort		    2
+	  }
+	}
+	Line {
+	  SrcBlock		  "Sum"
+	  SrcPort		  1
+	  DstBlock		  "c3"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "c3"
+	  SrcPort		  1
+	  DstBlock		  "Unit Delay"
+	  DstPort		  1
+	}
+      }
+    }
+    Block {
+      BlockType		      SubSystem
+      Name		      "NoiseInt1"
+      Ports		      [1, 1, 0, 0, 0]
+      Position		      [180, 235, 230, 265]
+      ShowName		      off
+      ShowPortLabels	      on
+      MaskType		      "OpAmp Noise"
+      MaskPromptString	      "Random Number Seed:|Sample Time:|Op-amp Noise S"
+"td. Dev.:"
+      MaskStyleString	      "edit,edit,edit"
+      MaskTunableValueString  "on,on,on"
+      MaskVariables	      "seed=@1;Ts=@2;noise=@3;"
+      MaskDisplay	      "disp('OpNoise')"
+      MaskIconFrame	      on
+      MaskIconOpaque	      on
+      MaskIconRotate	      none
+      MaskIconUnits	      autoscale
+      MaskValueString	      "sum(clock)^1/111|Ts|noise1"
+      System {
+	Name			"NoiseInt1"
+	Location		[236, 346, 661, 541]
+	Open			off
+	ToolBar			off
+	StatusBar		off
+	ScreenColor		white
+	PaperOrientation	landscape
+	PaperPositionMode	auto
+	PaperType		usletter
+	PaperUnits		inches
+	Block {
+	  BlockType		  Inport
+	  Name			  "C"
+	  Position		  [35, 25, 55, 45]
+	  Port			  "1"
+	  PortWidth		  "-1"
+	  SampleTime		  "-1"
+	}
+	Block {
+	  BlockType		  Gain
+	  Name			  "Gain"
+	  Position		  [190, 90, 220, 120]
+	  Gain			  "noise"
+	}
+	Block {
+	  BlockType		  Product
+	  Name			  "Product"
+	  Ports			  [2, 1, 0, 0, 0]
+	  Position		  [285, 42, 315, 73]
+	  Inputs		  "2"
+	}
+	Block {
+	  BlockType		  RandomNumber
+	  Name			  "Random\nNumber"
+	  Position		  [35, 90, 65, 120]
+	  Mean			  "0"
+	  Variance		  "1"
+	  Seed			  "seed"
+	  SampleTime		  "Ts"
+	}
+	Block {
+	  BlockType		  ZeroOrderHold
+	  Name			  "Zero-Order\nHold"
+	  Position		  [115, 90, 145, 120]
+	  SampleTime		  "Ts"
+	}
+	Block {
+	  BlockType		  Outport
+	  Name			  "N"
+	  Position		  [345, 53, 375, 67]
+	  Port			  "1"
+	  OutputWhenDisabled	  held
+	  InitialOutput		  "0"
+	}
+	Line {
+	  SrcBlock		  "Random\nNumber"
+	  SrcPort		  1
+	  DstBlock		  "Zero-Order\nHold"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "Zero-Order\nHold"
+	  SrcPort		  1
+	  DstBlock		  "Gain"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "Product"
+	  SrcPort		  1
+	  DstBlock		  "N"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "Gain"
+	  SrcPort		  1
+	  Points		  [45, 0]
+	  DstBlock		  "Product"
+	  DstPort		  2
+	}
+	Line {
+	  SrcBlock		  "C"
+	  SrcPort		  1
+	  Points		  [210, 0]
+	  DstBlock		  "Product"
+	  DstPort		  1
+	}
+      }
+    }
+    Block {
+      BlockType		      SubSystem
+      Name		      "REAL\nResonator1"
+      Ports		      [1, 1, 0, 0, 0]
+      Position		      [300, 177, 355, 213]
+      ShowPortLabels	      on
+      MaskType		      "Integrator"
+      MaskDescription	      "Real discrete integrator with delay.\nModels op"
+"-amp saturation and slew rate."
+      MaskHelp		      "Parameters:\nTs:       Sample time\nG:         "
+"Finite op-amp gain (ideal op-amp G=1)\nAmax:  Saturation value\nsr:       sle"
+"w rate in V/s"
+      MaskPromptString	      "Sample Time:|Finite Gain:|Saturation:|Slew Rate"
+":|Gain-Bandwidth"
+      MaskStyleString	      "edit,edit,edit,edit,edit"
+      MaskTunableValueString  "on,on,on,on,on"
+      MaskVariables	      "Ts=@1;alfa=@2;Amax=@3;sr=@4;GBW=@5;"
+      MaskDisplay	      "dpoly([0 0 -1], [1 0 1], 'z-')"
+      MaskIconFrame	      on
+      MaskIconOpaque	      on
+      MaskIconRotate	      none
+      MaskIconUnits	      autoscale
+      MaskValueString	      "Ts|alfa|Amax|sr|GBW"
+      System {
+	Name			"REAL\nResonator1"
+	Location		[146, 88, 724, 335]
+	Open			off
+	ToolBar			off
+	StatusBar		off
+	ScreenColor		white
+	PaperOrientation	landscape
+	PaperPositionMode	auto
+	PaperType		usletter
+	PaperUnits		inches
+	Block {
+	  BlockType		  Inport
+	  Name			  "IN"
+	  Position		  [15, 35, 35, 55]
+	  Port			  "1"
+	  PortWidth		  "-1"
+	  SampleTime		  "-1"
+	}
+	Block {
+	  BlockType		  Saturate
+	  Name			  "Saturation"
+	  Position		  [390, 35, 420, 65]
+	  UpperLimit		  "Amax"
+	  LowerLimit		  "-Amax"
+	}
+	Block {
+	  BlockType		  Sum
+	  Name			  "Sum"
+	  Ports			  [2, 1, 0, 0, 0]
+	  Position		  [180, 38, 205, 62]
+	  Inputs		  "++"
+	}
+	Block {
+	  BlockType		  UnitDelay
+	  Name			  "Unit Delay"
+	  Position		  [230, 35, 260, 65]
+	  X0			  "0"
+	  SampleTime		  "Ts"
+	}
+	Block {
+	  BlockType		  UnitDelay
+	  Name			  "Unit Delay1"
+	  Position		  [290, 35, 320, 65]
+	  X0			  "0"
+	  SampleTime		  "Ts"
+	}
+	Block {
+	  BlockType		  Gain
+	  Name			  "alfa"
+	  Position		  [290, 120, 320, 150]
+	  Orientation		  left
+	  Gain			  "alfa"
+	}
+	Block {
+	  BlockType		  Gain
+	  Name			  "alfa1"
+	  Position		  [340, 35, 370, 65]
+	  Gain			  "-1"
+	}
+	Block {
+	  BlockType		  MATLABFcn
+	  Name			  "slewRate"
+	  Position		  [70, 30, 130, 60]
+	  MATLABFcn		  "slew(u,alfa,sr,GBW,Ts)"
+	  OutputWidth		  "-1"
+	}
+	Block {
+	  BlockType		  Outport
+	  Name			  "Out1"
+	  Position		  [505, 41, 525, 59]
+	  Port			  "1"
+	  OutputWhenDisabled	  held
+	  InitialOutput		  "[]"
+	}
+	Line {
+	  SrcBlock		  "Sum"
+	  SrcPort		  1
+	  DstBlock		  "Unit Delay"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "Saturation"
+	  SrcPort		  1
+	  Points		  [15, 0]
+	  Branch {
+	    DstBlock		    "Out1"
+	    DstPort		    1
+	  }
+	  Branch {
+	    Points		    [0, 85]
+	    DstBlock		    "alfa"
+	    DstPort		    1
+	  }
+	}
+	Line {
+	  SrcBlock		  "IN"
+	  SrcPort		  1
+	  DstBlock		  "slewRate"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "slewRate"
+	  SrcPort		  1
+	  DstBlock		  "Sum"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "alfa"
+	  SrcPort		  1
+	  Points		  [-130, 0; 0, -80]
+	  DstBlock		  "Sum"
+	  DstPort		  2
+	}
+	Line {
+	  SrcBlock		  "Unit Delay"
+	  SrcPort		  1
+	  DstBlock		  "Unit Delay1"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "Unit Delay1"
+	  SrcPort		  1
+	  DstBlock		  "alfa1"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "alfa1"
+	  SrcPort		  1
+	  DstBlock		  "Saturation"
+	  DstPort		  1
+	}
+      }
+    }
+    Block {
+      BlockType		      SubSystem
+      Name		      "SC1"
+      Ports		      [2, 1, 0, 0, 0]
+      Position		      [79, 130, 126, 170]
+      Orientation	      down
+      NamePlacement	      alternate
+      ShowName		      off
+      ShowPortLabels	      on
+      MaskType		      "kT/C Noise"
+      MaskDescription	      "Models the kT/Cs noise of a switched capacitanc"
+"e Cs.\nIN input: the input signal line\nC input:   accepts the coefficient WI"
+"TH SIGN (Cs/Ci)"
+      MaskHelp		      "Block parameters:\nTs:        Sample time\nCi: "
+"       Integrating Capacitance\nTemp:   Absolute Temperature in Kelvin\nk:   "
+"      Boltzmann Constant\nseed:    Initial seed for random number generator\n"
+"Outputs the noisy signal.\n"
+      MaskPromptString	      "Sample Time:|Integrating Capacitance:|Absolute "
+"Temperature:|Boltzman Constant:|Random Number Seed:"
+      MaskStyleString	      "edit,edit,edit,edit,edit"
+      MaskTunableValueString  "on,on,on,on,on"
+      MaskVariables	      "Ts=@1;Ci=@2;Temp=@3;k=@4;seed=@5;"
+      MaskDisplay	      "disp('kT/C')\n\n"
+      MaskIconFrame	      on
+      MaskIconOpaque	      on
+      MaskIconRotate	      none
+      MaskIconUnits	      autoscale
+      MaskValueString	      "Ts|Cf|Temp|k|sum(clock)"
+      System {
+	Name			"SC1"
+	Location		[181, 74, 792, 430]
+	Open			off
+	ToolBar			off
+	StatusBar		off
+	ScreenColor		white
+	PaperOrientation	landscape
+	PaperPositionMode	auto
+	PaperType		usletter
+	PaperUnits		inches
+	Block {
+	  BlockType		  Inport
+	  Name			  "C"
+	  Position		  [15, 20, 35, 40]
+	  Port			  "1"
+	  PortWidth		  "-1"
+	  SampleTime		  "-1"
+	}
+	Block {
+	  BlockType		  Inport
+	  Name			  "IN"
+	  Position		  [335, 80, 355, 100]
+	  Port			  "2"
+	  PortWidth		  "-1"
+	  SampleTime		  "-1"
+	}
+	Block {
+	  BlockType		  Product
+	  Name			  "Product"
+	  Ports			  [2, 1, 0, 0, 0]
+	  Position		  [310, 137, 340, 168]
+	  Inputs		  "2"
+	}
+	Block {
+	  BlockType		  Product
+	  Name			  "Product2"
+	  Ports			  [2, 1, 0, 0, 0]
+	  Position		  [465, 77, 495, 108]
+	  Inputs		  "2"
+	}
+	Block {
+	  BlockType		  RandomNumber
+	  Name			  "Random\nNumber"
+	  Position		  [130, 145, 160, 175]
+	  Mean			  "0"
+	  Variance		  "1"
+	  Seed			  "seed"
+	  SampleTime		  "Ts"
+	}
+	Block {
+	  BlockType		  Sum
+	  Name			  "Sum"
+	  Ports			  [2, 1, 0, 0, 0]
+	  Position		  [390, 82, 420, 113]
+	  Inputs		  "++"
+	}
+	Block {
+	  BlockType		  ZeroOrderHold
+	  Name			  "Zero-Order\nHold"
+	  Position		  [210, 145, 240, 175]
+	  SampleTime		  "Ts"
+	}
+	Block {
+	  BlockType		  Fcn
+	  Name			  "kT/C noise"
+	  Position		  [170, 15, 230, 45]
+	  Expr			  "sqrt((k*Temp/Ci)/abs(u))"
+	}
+	Block {
+	  BlockType		  Outport
+	  Name			  "Y"
+	  Position		  [525, 85, 545, 105]
+	  Port			  "1"
+	  OutputWhenDisabled	  held
+	  InitialOutput		  "0"
+	}
+	Line {
+	  SrcBlock		  "Random\nNumber"
+	  SrcPort		  1
+	  DstBlock		  "Zero-Order\nHold"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "C"
+	  SrcPort		  1
+	  Points		  [95, 0]
+	  Branch {
+	    Points		    [0, 35; 315, 0]
+	    DstBlock		    "Product2"
+	    DstPort		    1
+	  }
+	  Branch {
+	    DstBlock		    "kT/C noise"
+	    DstPort		    1
+	  }
+	}
+	Line {
+	  SrcBlock		  "Zero-Order\nHold"
+	  SrcPort		  1
+	  DstBlock		  "Product"
+	  DstPort		  2
+	}
+	Line {
+	  SrcBlock		  "kT/C noise"
+	  SrcPort		  1
+	  Points		  [60, 0]
+	  DstBlock		  "Product"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "Sum"
+	  SrcPort		  1
+	  DstBlock		  "Product2"
+	  DstPort		  2
+	}
+	Line {
+	  SrcBlock		  "IN"
+	  SrcPort		  1
+	  DstBlock		  "Sum"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "Product2"
+	  SrcPort		  1
+	  DstBlock		  "Y"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "Product"
+	  SrcPort		  1
+	  Points		  [30, 0]
+	  DstBlock		  "Sum"
+	  DstPort		  2
+	}
+      }
+    }
+    Block {
+      BlockType		      SubSystem
+      Name		      "SC2"
+      Ports		      [2, 1, 0, 0, 0]
+      Position		      [79, 240, 126, 280]
+      Orientation	      up
+      NamePlacement	      alternate
+      ShowName		      off
+      ShowPortLabels	      on
+      MaskType		      "kT/C Noise"
+      MaskDescription	      "Models the kT/Cs noise of a switched capacitanc"
+"e Cs.\nIN input: the input signal line\nC input:   accepts the coefficient WI"
+"TH SIGN (Cs/Ci)"
+      MaskHelp		      "Block parameters:\nTs:        Sample time\nCi: "
+"       Integrating Capacitance\nTemp:   Absolute Temperature in Kelvin\nk:   "
+"      Boltzmann Constant\nseed:    Initial seed for random number generator\n"
+"Outputs the noisy signal.\n"
+      MaskPromptString	      "Sample Time:|Integrating Capacitance:|Absolute "
+"Temperature:|Boltzman Constant:|Random Number Seed:"
+      MaskStyleString	      "edit,edit,edit,edit,edit"
+      MaskTunableValueString  "on,on,on,on,on"
+      MaskVariables	      "Ts=@1;Ci=@2;Temp=@3;k=@4;seed=@5;"
+      MaskDisplay	      "disp('kT/C')\n"
+      MaskIconFrame	      on
+      MaskIconOpaque	      on
+      MaskIconRotate	      none
+      MaskIconUnits	      autoscale
+      MaskValueString	      "Ts|Cf|Temp|k|2.11*sum(clock)"
+      System {
+	Name			"SC2"
+	Location		[181, 74, 792, 430]
+	Open			off
+	ToolBar			off
+	StatusBar		off
+	ScreenColor		white
+	PaperOrientation	landscape
+	PaperPositionMode	auto
+	PaperType		usletter
+	PaperUnits		inches
+	Block {
+	  BlockType		  Inport
+	  Name			  "C"
+	  Position		  [15, 20, 35, 40]
+	  Port			  "1"
+	  PortWidth		  "-1"
+	  SampleTime		  "-1"
+	}
+	Block {
+	  BlockType		  Inport
+	  Name			  "IN"
+	  Position		  [335, 80, 355, 100]
+	  Port			  "2"
+	  PortWidth		  "-1"
+	  SampleTime		  "-1"
+	}
+	Block {
+	  BlockType		  Product
+	  Name			  "Product"
+	  Ports			  [2, 1, 0, 0, 0]
+	  Position		  [310, 137, 340, 168]
+	  Inputs		  "2"
+	}
+	Block {
+	  BlockType		  Product
+	  Name			  "Product2"
+	  Ports			  [2, 1, 0, 0, 0]
+	  Position		  [465, 77, 495, 108]
+	  Inputs		  "2"
+	}
+	Block {
+	  BlockType		  RandomNumber
+	  Name			  "Random\nNumber"
+	  Position		  [130, 145, 160, 175]
+	  Mean			  "0"
+	  Variance		  "1"
+	  Seed			  "seed"
+	  SampleTime		  "Ts"
+	}
+	Block {
+	  BlockType		  Sum
+	  Name			  "Sum"
+	  Ports			  [2, 1, 0, 0, 0]
+	  Position		  [390, 82, 420, 113]
+	  Inputs		  "++"
+	}
+	Block {
+	  BlockType		  ZeroOrderHold
+	  Name			  "Zero-Order\nHold"
+	  Position		  [210, 145, 240, 175]
+	  SampleTime		  "Ts"
+	}
+	Block {
+	  BlockType		  Fcn
+	  Name			  "kT/C noise"
+	  Position		  [170, 15, 230, 45]
+	  Expr			  "sqrt((k*Temp/Ci)/abs(u))"
+	}
+	Block {
+	  BlockType		  Outport
+	  Name			  "Y"
+	  Position		  [525, 85, 545, 105]
+	  Port			  "1"
+	  OutputWhenDisabled	  held
+	  InitialOutput		  "0"
+	}
+	Line {
+	  SrcBlock		  "Random\nNumber"
+	  SrcPort		  1
+	  DstBlock		  "Zero-Order\nHold"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "C"
+	  SrcPort		  1
+	  Points		  [95, 0]
+	  Branch {
+	    Points		    [0, 35; 315, 0]
+	    DstBlock		    "Product2"
+	    DstPort		    1
+	  }
+	  Branch {
+	    DstBlock		    "kT/C noise"
+	    DstPort		    1
+	  }
+	}
+	Line {
+	  SrcBlock		  "Zero-Order\nHold"
+	  SrcPort		  1
+	  DstBlock		  "Product"
+	  DstPort		  2
+	}
+	Line {
+	  SrcBlock		  "kT/C noise"
+	  SrcPort		  1
+	  Points		  [60, 0]
+	  DstBlock		  "Product"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "Sum"
+	  SrcPort		  1
+	  DstBlock		  "Product2"
+	  DstPort		  2
+	}
+	Line {
+	  SrcBlock		  "IN"
+	  SrcPort		  1
+	  DstBlock		  "Sum"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "Product2"
+	  SrcPort		  1
+	  DstBlock		  "Y"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "Product"
+	  SrcPort		  1
+	  Points		  [30, 0]
+	  DstBlock		  "Sum"
+	  DstPort		  2
+	}
+      }
+    }
+    Block {
+      BlockType		      SubSystem
+      Name		      "Sampling Jitter"
+      Ports		      [1, 1, 0, 0, 0]
+      Position		      [125, 80, 170, 110]
+      Orientation	      left
+      NamePlacement	      alternate
+      ShowPortLabels	      on
+      MaskType		      "Jitter"
+      MaskDescription	      "Models the kT/Cs noise of a switched capacitanc"
+"e Cs.\nIN input: the input signal line\nC input:   accepts the coefficient WI"
+"TH SIGN (Cs/Ci)"
+      MaskHelp		      "Block parameters:\nTs:        Sample time\nCi: "
+"       Integrating Capacitance\nTemp:   Absolute Temperature in Kelvin\nk:   "
+"      Boltzmann Constant\nseed:    Initial seed for random number generator\n"
+"Outputs the noisy signal.\n"
+      MaskPromptString	      "Sample Time:|Sampling Jitter:|Random Number See"
+"d:"
+      MaskStyleString	      "edit,edit,edit"
+      MaskTunableValueString  "on,on,on"
+      MaskVariables	      "Ts=@1;delta=@2;seed=@3;"
+      MaskDisplay	      "disp('Jitter')\n"
+      MaskIconFrame	      on
+      MaskIconOpaque	      on
+      MaskIconRotate	      none
+      MaskIconUnits	      autoscale
+      MaskValueString	      "Ts|delta|(sum(clock))^3.33"
+      System {
+	Name			"Sampling Jitter"
+	Location		[181, 74, 792, 430]
+	Open			off
+	ToolBar			off
+	StatusBar		off
+	ScreenColor		white
+	PaperOrientation	landscape
+	PaperPositionMode	auto
+	PaperType		usletter
+	PaperUnits		inches
+	Block {
+	  BlockType		  Inport
+	  Name			  "IN"
+	  Position		  [75, 80, 95, 100]
+	  Port			  "1"
+	  PortWidth		  "-1"
+	  SampleTime		  "-1"
+	}
+	Block {
+	  BlockType		  Derivative
+	  Name			  "Derivative"
+	  Position		  [140, 145, 170, 175]
+	}
+	Block {
+	  BlockType		  Gain
+	  Name			  "Jitter"
+	  Position		  [235, 220, 265, 250]
+	  Gain			  "delta"
+	}
+	Block {
+	  BlockType		  Product
+	  Name			  "Product"
+	  Ports			  [2, 1, 0, 0, 0]
+	  Position		  [310, 152, 340, 183]
+	  Inputs		  "2"
+	}
+	Block {
+	  BlockType		  RandomNumber
+	  Name			  "Random\nNumber"
+	  Position		  [110, 220, 140, 250]
+	  Mean			  "0"
+	  Variance		  "1"
+	  Seed			  "seed"
+	  SampleTime		  "Ts"
+	}
+	Block {
+	  BlockType		  Sum
+	  Name			  "Sum"
+	  Ports			  [2, 1, 0, 0, 0]
+	  Position		  [390, 82, 420, 113]
+	  Inputs		  "++"
+	}
+	Block {
+	  BlockType		  ZeroOrderHold
+	  Name			  "Zero-Order\nHold"
+	  Position		  [170, 220, 200, 250]
+	  SampleTime		  "Ts"
+	}
+	Block {
+	  BlockType		  ZeroOrderHold
+	  Name			  "Zero-Order\nHold1"
+	  Position		  [455, 85, 485, 115]
+	  SampleTime		  "Ts"
+	}
+	Block {
+	  BlockType		  Outport
+	  Name			  "Y"
+	  Position		  [525, 90, 545, 110]
+	  Port			  "1"
+	  OutputWhenDisabled	  held
+	  InitialOutput		  "0"
+	}
+	Line {
+	  SrcBlock		  "IN"
+	  SrcPort		  1
+	  Points		  [15, 0]
+	  Branch {
+	    DstBlock		    "Sum"
+	    DstPort		    1
+	  }
+	  Branch {
+	    Points		    [0, 70]
+	    DstBlock		    "Derivative"
+	    DstPort		    1
+	  }
+	}
+	Line {
+	  SrcBlock		  "Random\nNumber"
+	  SrcPort		  1
+	  DstBlock		  "Zero-Order\nHold"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "Derivative"
+	  SrcPort		  1
+	  DstBlock		  "Product"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "Zero-Order\nHold"
+	  SrcPort		  1
+	  DstBlock		  "Jitter"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "Jitter"
+	  SrcPort		  1
+	  Points		  [25, 0]
+	  DstBlock		  "Product"
+	  DstPort		  2
+	}
+	Line {
+	  SrcBlock		  "Product"
+	  SrcPort		  1
+	  Points		  [20, 0; 0, -65]
+	  DstBlock		  "Sum"
+	  DstPort		  2
+	}
+	Line {
+	  SrcBlock		  "Sum"
+	  SrcPort		  1
+	  DstBlock		  "Zero-Order\nHold1"
+	  DstPort		  1
+	}
+	Line {
+	  SrcBlock		  "Zero-Order\nHold1"
+	  SrcPort		  1
+	  DstBlock		  "Y"
+	  DstPort		  1
+	}
+      }
+    }
+    Block {
+      BlockType		      Sum
+      Name		      "Sum2"
+      Ports		      [2, 1, 0, 0, 0]
+      Position		      [260, 185, 280, 205]
+      ShowName		      off
+      Inputs		      "+-"
+    }
+    Block {
+      BlockType		      Sum
+      Name		      "Sum3"
+      Ports		      [2, 1, 0, 0, 0]
+      Position		      [145, 180, 165, 200]
+      ShowName		      off
+      Inputs		      "+-"
+    }
+    Block {
+      BlockType		      Sum
+      Name		      "Sum4"
+      Ports		      [2, 1, 0, 0, 0]
+      Position		      [380, 190, 400, 210]
+      ShowName		      off
+      Inputs		      "+-"
+    }
+    Block {
+      BlockType		      Sum
+      Name		      "Sum5"
+      Ports		      [2, 1, 0, 0, 0]
+      Position		      [200, 85, 220, 105]
+      Orientation	      left
+      ShowName		      off
+      Inputs		      "+-"
+    }
+    Block {
+      BlockType		      Sin
+      Name		      "Vin"
+      Position		      [270, 30, 300, 60]
+      Orientation	      left
+      NamePlacement	      alternate
+      Amplitude		      "Ampl"
+      Frequency		      "finrad1"
+      Phase		      "0"
+      SampleTime	      "0"
+    }
+    Block {
+      BlockType		      Sin
+      Name		      "Vin1"
+      Position		      [275, 105, 305, 135]
+      Orientation	      left
+      NamePlacement	      alternate
+      Amplitude		      "Ampl"
+      Frequency		      "finrad2"
+      Phase		      "0"
+      SampleTime	      "0"
+    }
+    Block {
+      BlockType		      Constant
+      Name		      "b"
+      Position		      [80, 80, 100, 100]
+      Orientation	      down
+      NamePlacement	      alternate
+      ShowName		      off
+      Value		      "b"
+    }
+    Block {
+      BlockType		      Constant
+      Name		      "b1"
+      Position		      [140, 240, 160, 260]
+      ShowName		      off
+      Value		      "b"
+    }
+    Block {
+      BlockType		      Constant
+      Name		      "b2"
+      Position		      [80, 305, 100, 325]
+      Orientation	      up
+      NamePlacement	      alternate
+      ShowName		      off
+      Value		      "b"
+    }
+    Block {
+      BlockType		      Gain
+      Name		      "c3"
+      Position		      [420, 185, 450, 215]
+      ShowName		      off
+      Gain		      "b2"
+    }
+    Block {
+      BlockType		      Gain
+      Name		      "c4"
+      Position		      [350, 240, 380, 270]
+      Orientation	      up
+      ShowName		      off
+      Gain		      "b3"
+    }
+    Block {
+      BlockType		      ToWorkspace
+      Name		      "y1"
+      Position		      [410, 96, 445, 124]
+      VariableName	      "y1"
+      Buffer		      "inf"
+      Decimation	      "1"
+      SampleTime	      "-1"
+    }
+    Block {
+      BlockType		      ToWorkspace
+      Name		      "y2"
+      Position		      [570, 96, 605, 124]
+      VariableName	      "y2"
+      Buffer		      "inf"
+      Decimation	      "1"
+      SampleTime	      "-1"
+    }
+    Block {
+      BlockType		      ToWorkspace
+      Name		      "yout"
+      Position		      [630, 186, 665, 214]
+      VariableName	      "yout"
+      Buffer		      "inf"
+      Decimation	      "1"
+      SampleTime	      "-1"
+    }
+    Line {
+      SrcBlock		      "Sum2"
+      SrcPort		      1
+      DstBlock		      "REAL\nResonator1"
+      DstPort		      1
+    }
+    Line {
+      SrcBlock		      "Sum4"
+      SrcPort		      1
+      DstBlock		      "c3"
+      DstPort		      1
+    }
+    Line {
+      SrcBlock		      "c3"
+      SrcPort		      1
+      DstBlock		      "IDEAL \nresonator"
+      DstPort		      1
+    }
+    Line {
+      SrcBlock		      "NoiseInt1"
+      SrcPort		      1
+      Points		      [5, 0; 0, -50]
+      DstBlock		      "Sum2"
+      DstPort		      2
+    }
+    Line {
+      SrcBlock		      "b1"
+      SrcPort		      1
+      DstBlock		      "NoiseInt1"
+      DstPort		      1
+    }
+    Line {
+      SrcBlock		      "Sum3"
+      SrcPort		      1
+      DstBlock		      "Sum2"
+      DstPort		      1
+    }
+    Line {
+      SrcBlock		      "SC1"
+      SrcPort		      1
+      Points		      [0, 10]
+      DstBlock		      "Sum3"
+      DstPort		      1
+    }
+    Line {
+      SrcBlock		      "b"
+      SrcPort		      1
+      DstBlock		      "SC1"
+      DstPort		      1
+    }
+    Line {
+      SrcBlock		      "SC2"
+      SrcPort		      1
+      Points		      [0, -40]
+      DstBlock		      "Sum3"
+      DstPort		      2
+    }
+    Line {
+      SrcBlock		      "Sampling Jitter"
+      SrcPort		      1
+      Points		      [-5, 0]
+      DstBlock		      "SC1"
+      DstPort		      2
+    }
+    Line {
+      SrcBlock		      "b2"
+      SrcPort		      1
+      DstBlock		      "SC2"
+      DstPort		      1
+    }
+    Line {
+      SrcBlock		      "REAL\nResonator1"
+      SrcPort		      1
+      Points		      [0, 0]
+      Branch {
+	DstBlock		"Sum4"
+	DstPort			1
+      }
+      Branch {
+	Points			[0, -85]
+	DstBlock		"y1"
+	DstPort			1
+      }
+    }
+    Line {
+      SrcBlock		      "Comparator"
+      SrcPort		      1
+      Points		      [10, 0]
+      Branch {
+	DstBlock		"yout"
+	DstPort			1
+      }
+      Branch {
+	Labels			[2, 0]
+	Points			[0, 105; -250, 0]
+	Branch {
+	  Points		  [-250, 0]
+	  DstBlock		  "SC2"
+	  DstPort		  2
+	}
+	Branch {
+	  DstBlock		  "c4"
+	  DstPort		  1
+	}
+      }
+    }
+    Line {
+      SrcBlock		      "IDEAL \nresonator"
+      SrcPort		      1
+      Points		      [10, 0]
+      Branch {
+	DstBlock		"Comparator"
+	DstPort			1
+      }
+      Branch {
+	Points			[0, -90]
+	DstBlock		"y2"
+	DstPort			1
+      }
+    }
+    Line {
+      SrcBlock		      "c4"
+      SrcPort		      1
+      DstBlock		      "Sum4"
+      DstPort		      2
+    }
+    Line {
+      SrcBlock		      "Vin1"
+      SrcPort		      1
+      Points		      [-35, 0]
+      DstBlock		      "Sum5"
+      DstPort		      2
+    }
+    Line {
+      SrcBlock		      "Vin"
+      SrcPort		      1
+      Points		      [-30, 0]
+      DstBlock		      "Sum5"
+      DstPort		      1
+    }
+    Line {
+      SrcBlock		      "Sum5"
+      SrcPort		      1
+      DstBlock		      "Sampling Jitter"
+      DstPort		      1
+    }
+  }
+}

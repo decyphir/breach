@@ -7,9 +7,6 @@ classdef BreachSystem < BreachSet
     % class is derived from BreachSet. Type help BreachSet to view
     % properties and methods of the parent class.
     %
-    % BreachSystem Properties
-    %   Specs  - a set of Signal Temporal Logic (STL) formulas.
-    %
     %
     % BreachSystem methods
     %   Sim           - Simulate the system for some time using every parameter vectors.
@@ -27,9 +24,10 @@ classdef BreachSystem < BreachSet
         Sys                   % Legacy Breach system structure
         Specs               % A set (map) of STL formulas
         ParamSrc = containers.Map()
-        use_parallel = 0     % the flag to indicate the usage of parallel computing
-        ParallelTempRoot = ''   % the default temporary folder for parallel computing
-        InitFn = ''             % Initialization function
+        use_parallel = 0          % the flag to indicate the usage of parallel computing
+        ParallelTempRoot = ''     % the default temporary folder for parallel computing
+        parallel_batch_size = 80  % when running parSim, will run by patches of this size
+        InitFn = ''              % Initialization function
         UseDiskCaching=false   %  set by SetupDiskCaching
         DiskCachingRoot
     end
@@ -123,8 +121,8 @@ classdef BreachSystem < BreachSet
             end
         end
         
-        % clear up the ModelsData/ParallelTemp folder
         function StopParallel(this)
+        % clear up the ModelsData/ParallelTemp folder
             if license('test','Distrib_Computing_Toolbox')
                 cwd = pwd;
                 cd(this.ParallelTempRoot)
@@ -161,41 +159,84 @@ classdef BreachSystem < BreachSet
             end
         end
         
-        function  Bout = parSim(this, varargin) 
-        % ALPHA tentative simpler parallel implementation. 
-        
-        if isempty(gcp('nocreate'))
-            gcp;
-        end
-        if ~isempty(this.InitFn)
-            pctRunOnAll(this.InitFn);
-        end
-        
-        num_sim = this.GetNbParamVectors();
-        num_task = num_sim; 
-        if num_sim == 1
-            this.Sim(varargin{:})
-        else
-            % create tasks systems
+        function  Bout = parSim(this, varargin)
+            % Simpler parallel implementation.
+            if license('test','Distrib_Computing_Toolbox')
+                
+                batch_size = this.parallel_batch_size;
+                if isempty(gcp('nocreate'))
+                    gcp;
+                end
+                if ~isempty(this.InitFn)
+                    pctRunOnAll(this.InitFn);
+                end
+                
+                num_sim_tot = this.GetNbParamVectors();
+                
+                if num_sim_tot == 1
+                    this.Sim(varargin{:})
+                else
+                    h = waitbar(0,'Please wait...');
+                    num_sim = num_sim_tot;
+                    num_done =0;
+                    fprintf('\n');
+                    while num_sim>0
+                        num_task = min(num_sim, this.parallel_batch_size);
+                        num_sim = num_sim-num_task;
+                        
+                        % create tasks systems
+                        Btask = this.ExtractSubset(num_done+1);
+                        for i = 2:num_task
+                            Btask(i) = this.ExtractSubset(num_done+i);
+                        end
+                        
+                        clear Bres task_queue
+                        
+                        for i = 1:num_task                            
+                            task_queue(i) = parfeval(@(ii)(task_sim(Btask, ii, varargin{:})), 1, i);                            
+                        end
+                        
+                        for i = 1:num_task                            
+                            [completedIdx, value] = fetchNext(task_queue);   
+                            Bres{completedIdx} = value.copy();
+                            num_done = num_done+1;                            
+                            fprintf('\b|\n');
+                            waitbar(num_done/num_sim_tot,h)
+                            set(h, 'Name', sprintf('Running simulations %g/%g', num_done, num_sim_tot));
+                            drawnow
+                        end
+                        
+                        %parfor i = 1:num_task
+                        %    Btask(i).Sim(varargin{:});
+                        %    Bres{i} = Btask(i).copy(); % need to actually copy to get trace data
+                        %    fprintf('\b|\n');
+                       % end
 
-            for i = 1:num_sim
-                Btask(i) = this.ExtractSubset(i);
+
+                       for i = 1:num_task
+                            
+                            if (i==1)&&num_done==num_task
+                                Bout = Bres{i}.copy();
+                            else
+                                Bout.Concat(Bres{i},1)
+                            end
+                        end
+                        %num_done = num_done+num_task;
+                        fprintf('\b %g%%\n\n', floor(100*num_done/num_sim_tot));
+                    end
+                    this.P = Bout.P;
+                    %close(h)
+                end
+            else
+                warning('BreachSystem:parSim:ToolboxNotFound','Parallel toolbox not found, falling back to serial.')
+                Bout = this.Sim(varargin{:});
+                
             end
-           
-            fprintf(2,[repmat('|',1,num_task) ' 100%%\n\n']);           
-            parfor i = 1:num_task
-                Btask(i).Sim(varargin{:});
-                Bres{i} = Btask(i).copy(); % need to actually copy to get trace data                
-                fprintf('\b|\n');                
+            function Bres_ii = task_sim(Btask, ii, varargin)
+                Btask(ii).Sim(varargin{:});
+                Bres_ii = Btask(ii).copy(); % need to actually copy to get trace data
             end
-            fprintf('\n');
-            Bout = Bres{1}.copy();
-            for i = 2:num_task
-                Bout.Concat(Bres{i},1)                
-            end
-            this.P = Bout.P;
-        end
-            
+            close(h)
         end
         
         
@@ -251,7 +292,7 @@ classdef BreachSystem < BreachSet
             this.CheckinDomainParam();
             if nargin==1
                 if this.hasTraj()
-                    tspan = [0 this.P.traj{1}.time(end)];
+                    tspan = [0 this.P.traj{1}.time(1,end)];
                 else
                     tspan = this.Sys.tspan;
                 end

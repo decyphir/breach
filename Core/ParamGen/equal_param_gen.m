@@ -1,5 +1,5 @@
 classdef equal_param_gen < param_gen
-    % equal_param_gen enforces one param_out to be always equal to param_in
+    % equal_param_gen enforces a set of param_out to be always equal to one param_in
 
     properties
         n_out
@@ -8,6 +8,8 @@ classdef equal_param_gen < param_gen
     methods
         function this = equal_param_gen(param_in, param_out, p0)
             this.params = {param_in};
+            
+            
             if ~iscell(param_out)
                 param_out={param_out};
             end
@@ -15,7 +17,7 @@ classdef equal_param_gen < param_gen
             this.n_out= numel(this.params_out);
 
             if nargin<3
-                p0= 0;
+                p0=0;
             end
             this.p0 =p0;
         end

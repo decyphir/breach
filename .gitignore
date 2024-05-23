@@ -39,6 +39,7 @@ Ext/ModelsData
 fileServerFolder
 docrun_backup.mat
 *.exe
+!wordgen.exe
 *.r2015a
 *_ert_rtw
 *.7z

@@ -1,7 +1,7 @@
 classdef BreachProblem < BreachStatus
     % BreachProblem A class for generic optimization problem involving STL specifications
     %
-    % A BreachProblem is essentially created from a BreachSystem and a
+    % A BreachProblem is essentially created from a BreachSet orBreachSystem and a
     % property. E.g.,
     %
     %   problem = BreachProblem(BrSys, phi);
@@ -33,7 +33,6 @@ classdef BreachProblem < BreachStatus
     %                     (often translates into number of simulations of 
     %                      system under test)
     %   log_traces     -  (default=true) logs all traces computed during optimization                 
-    %   T_spec         -  time 
     % 
     % BreachProblem Properties (outputs)
     %   BrSet_Logged    -  BreachSet with parameter vectors used during optimization.
@@ -62,6 +61,7 @@ classdef BreachProblem < BreachStatus
         x0
         solver= 'global_nelder_mead'   % default solver name       
         solver_options    % solver options
+        
         Spec              % BreachRequirement object reset to R0 for each objective evaluation
         T_Spec=0
         
@@ -254,9 +254,11 @@ classdef BreachProblem < BreachStatus
                 this.BrSet = BrSet.copy();
             end
             
-            this.BrSet.Sys.Verbose=0;
             this.BrSet.verbose = 0; 
-            
+            if isa(BrSet,'BreachSystem')
+                  this.BrSet.Sys.Verbose=0;
+            end
+
             % Parameter ranges
             if ~exist('params','var')
                 [params, ipr] = this.BrSet.GetBoundedDomains();
@@ -291,14 +293,14 @@ classdef BreachProblem < BreachStatus
             
             % robustness
             this.BrSys = this.BrSet.copy();
-            
             this.BrSys.SetParam(this.params, this.x0(:,1), 'spec');
             [~, ia] = unique( this.BrSys.P.pts','rows');
             if numel(ia)<size(this.BrSys.P.pts,2)
                 this.BrSys = this.BrSys.ExtractSubset(ia);
             end
-
-            this.BrSys.Sys.Verbose=0;
+            if isa(BrSet, 'BreachSystem')
+                this.BrSys.Sys.Verbose=0;
+            end
             this.BrSys.verbose=0;
             
             this.robust_fn = @(x) (this.Spec.Eval(this.BrSys, this.params, x));
@@ -321,7 +323,31 @@ classdef BreachProblem < BreachStatus
             this.time_start = tic; 
         end
         
+
+        function SetupParallel(this, varargin)
+            this.use_parallel = 1;  
+            % Create parallel pool and get number of workers
+            this.BrSys.SetupParallel(varargin{:});      
+            
+            % Enable DiskCaching
+            this.SetupDiskCaching();
+
+            % Possible need to change the optimization option
+            % this.setup_solver();
+            % TODO: review when needed on solver-by-solver basis - maybe
+            % warning in order ?
+            
+        end
         
+        function StopParallel(this)
+            this.use_parallel = 0;
+            this.BrSys.StopParallel();
+        end
+        
+        function SetupDiskCaching(this, varargin)
+            this.log_traces = 0;  % FIXME
+            this.BrSys.SetupDiskCaching(varargin{:});
+        end
         %% Stochastic stuff
         function set_stochastic_params(this, sparams, sdomains)
             this.stochastic_params = sparams;
@@ -340,6 +366,173 @@ classdef BreachProblem < BreachStatus
             
         end
         
+        
+        
+        %% Objective function and wrapper                
+        function [obj, cval] = objective_fn(this,x)
+            
+            % reset this.Spec
+            this.Spec.ResetEval();
+
+            % Default objective_fn is mostly robust satisfaction of the
+            % least for falsification
+            this.robust_fn(x);
+            robs = this.Spec.traces_vals;
+
+            if (~isempty(this.Spec.traces_vals_precond))
+                num_tr = size(this.Spec.traces_vals_precond,1);
+                precond_robs = zeros(num_tr,1);
+                for itr = 1:num_tr
+                    precond_robs(itr) = min(this.Spec.traces_vals_precond(itr,:));
+                    if  precond_robs(itr)<0
+                        robs(itr,:)= -precond_robs(itr);
+                    end
+                end
+            end
+            NaN_idx = isnan(robs); % if rob is undefined, make it inf to ignore it
+            robs(NaN_idx) = inf;
+            obj = min(robs,[],1)';
+            cval = inf;
+            if (~isempty(this.Spec.traces_vals_precond))
+                NaN_idx = isnan(precond_robs); % if rob is undefined, make it inf to ignore it
+                precond_robs(NaN_idx) = inf;
+                cval = min(precond_robs,[],1)';
+            end
+            
+                        
+        end
+        
+        function [fval, cval, x_stoch] = objective_wrapper(this,x)
+            % reset this.Spec
+            % objective_wrapper calls the objective function and wraps some bookkeeping
+            if size(x,1) ~= numel(this.params)
+                x = x';
+            end
+            
+            nb_eval =  size(x,2);
+            fval = inf*ones(size(this.Spec.req_monitors,2), nb_eval);            
+            cval = inf*ones(1, nb_eval);
+            
+            if ~isempty(this.stochastic_params)
+                this.BrStoch.ResetParamSet();
+                this.BrStoch.SampleDomain(nb_eval);
+                x_stoch = this.BrStoch.GetParam(this.stochastic_params);
+                this.BrSys.SetParam(this.stochastic_params, x_stoch);
+            else
+                x_stoch = nan(0, nb_eval); 
+            end
+
+            fun = @(isample) this.objective_fn(x(:, isample));
+            nb_iter = min(nb_eval, this.max_obj_eval);
+     
+            if this.stopping()==false
+                if nb_iter == 1 || ~this.use_parallel
+                    iter = 0;
+                    while ~this.stopping()&&iter<size(x,2)
+                        iter= iter+1;
+                        
+                        % checks whether x has already been computed or not
+                        % skips logging if already computed 
+                        % might cause inconsistencies down the road...
+                        
+                        if ~isempty(this.X_log)
+                            xi = x(:, iter);
+                            idx = find(sum(abs(this.X_log-repmat(xi, 1, size(this.X_log, 2)))) == 0,1);
+                        else
+                            idx=[];
+                        end
+                        
+                        if ~isempty(idx)
+                            fval(:,iter) = this.obj_log(:,idx);
+                        else
+                            % calling actual objective function
+                            [fval(:,iter), cval(:,iter)] = fun(iter);
+                            
+                            % Normalize the function value based on average
+                            % robustness stated
+                            fval(:, iter) = fval(:, iter)./this.avgRobForNormalization;
+                            
+                            % logging and updating best
+                            this.time_spent = toc(this.time_start);
+                            this.LogX(x(:, iter), fval(:,iter), cval(:,iter), x_stoch(:,iter));
+
+                            % update status
+                            if ~rem(this.nb_obj_eval,this.freq_update)
+                                this.display_status(fval(:,iter), cval(:,iter) );
+                                % callback
+                                if ~isempty(this.callback_obj)
+                                   e.name ='obj_computed';
+                                   e.values.fval = fval;                                   
+                                   e.values.nb_obj_eval=this.nb_obj_eval;
+                                   this.callback_obj(this,e);
+                                end
+                            end
+
+                        end
+                                                                        
+                    end
+                else % Parallel case
+                                        
+                    for batch_counter = 1:this.parallelBatchSize:nb_iter                                                    
+                        start_index = batch_counter;
+                        end_index = min(batch_counter + this.parallelBatchSize - 1, nb_iter);
+                                                
+                        % Launch tasks                        
+                        for iter = start_index:end_index                            
+                            par_f(:,iter) = parfeval(fun,3, iter);                            
+                        end
+                        
+                        num_this_batch = end_index-start_index+1;                                                
+                        for idx = 1:num_this_batch
+                            
+                            [completedIdx(idx), fval_batch, cval_batch ] = fetchNext(par_f);
+                            
+                            % Timing to get new fetch
+                            this.time_spent = toc(this.time_start);
+                            
+                            % Normalize the function value based on average
+                            % robustness stated
+                            fval_batch = fval_batch./this.avgRobForNormalization;                                                        
+                         
+                            % we log in the order of arrival, but will 
+                            % reorder after the batch using completedIdx
+                            this.LogX(x(:,completedIdx(idx)),fval_batch,cval_batch,x_stoch(:,completedIdx(idx))); 
+                            
+                            % this way we can update status
+                            if ~rem(this.nb_obj_eval,this.freq_update)
+                                this.display_status(fval_batch, cval_batch);
+                                if ~isempty(this.callback_obj)
+                                    e.name ='obj_computed';
+                                    e.values.fval = fval;
+                                    e.values.nb_obj_eval=this.nb_obj_eval;
+                                    this.callback_obj(this,e);
+                                end
+                            end
+                            
+                            fval(:,completedIdx(idx)) = fval_batch;
+                            cval(:,completedIdx(idx)) = cval_batch;
+                            
+                            if this.stopping()
+                                cancel(par_f);
+                                break
+                            end
+                            
+                        end
+                            
+                        % Let's reorder the log 
+                        [~, ia] = sort(completedIdx);
+                        this.obj_log(:,end-numel(completedIdx)+1:end) = this.obj_log(:,ia);
+                        this.X_log(:,end-numel(completedIdx)+1:end) = this.X_log(:,ia);
+                        this.X_stochastic_log(:,end-numel(completedIdx)+1:end) = this.X_stochastic_log(:,ia);                                                        
+
+                    end
+                end
+            else
+                fval = this.obj_best*ones(1, nb_eval);
+                
+            end                       
+            
+        end
         
         %% Options for various solvers
         function [solver_opt, is_gui] = setup_solver(this, solver_name, is_gui)
@@ -387,8 +580,7 @@ classdef BreachProblem < BreachStatus
             this.solver = 'random';
             this.solver_options = solver_opt; 
         end
-
-        
+      
         function solver_opt = setup_corners(this, varargin)
             solver_opt = struct('num_corners', 100, ...   % arbitrary - should  be dim-dependant?  
             'group_by_inputs', true...
@@ -630,11 +822,8 @@ classdef BreachProblem < BreachStatus
                 case 'simulated_annealing'
                     % Simulated Annealing from S-TaLiRo
                     
-                    
                     inputRanges = [this.lb this.ub];
-                    
                     fun = this.objective;
-                    
                     startSample = this.solver_options.start_sample;
                     
                     if isempty(startSample)
@@ -742,7 +931,7 @@ classdef BreachProblem < BreachStatus
                     if isfield(this.solver_options,'start_function_values')
                         this.solver_options=rmfield(this.solver_options, 'start_function_values');
                     end
-                    
+                    this.display_status_header();
                     [x, fval, counteval, stopflag, out, bestever] = cmaes(this.objective, this.x0', this.insigma, this.solver_options);
                     res = struct('x',x, 'fval',fval, 'counteval', counteval, 'out', out, 'bestever', bestever);
                     res.stopflag = stopflag;
@@ -815,6 +1004,7 @@ classdef BreachProblem < BreachStatus
                         res = struct('x',x,'fval',fval, 'exitflag', exitflag, 'output', output);                        
                     end
                     this.add_res(res);
+                
                 case 'optimtool'
                     problem.solver = 'fmincon';
                     optimtool(problem);
@@ -1034,194 +1224,6 @@ classdef BreachProblem < BreachStatus
             this.constraints_fn = @(x) (deal(-this.BrSys.GetRobustSat(phi, this.params, x, this.T_Spec), []));
         end
         
-        %% Parallel 
-        function SetupParallel(this, varargin)
-            this.use_parallel = 1;  
-            % Create parallel pool and get number of workers
-            this.BrSys.SetupParallel(varargin{:});      
-            
-            % Enable DiskCaching
-            this.SetupDiskCaching();
-
-            % Possible need to change the optimization option
-            % this.setup_solver();
-            % TODO: review when needed on solver-by-solver basis - maybe
-            % warning in order ?
-            
-        end
-        
-        function StopParallel(this)
-            this.use_parallel = 0;
-            this.BrSys.StopParallel();
-        end
-        
-        function SetupDiskCaching(this, varargin)
-            this.log_traces = 0;  % FIXME
-            this.BrSys.SetupDiskCaching(varargin{:});
-        end
-        
-        %% Objective function and wrapper                
-        function [obj, cval, x_stoch] = objective_fn(this,x)
-            
-            % reset this.Spec
-            this.Spec.ResetEval();
-
-            % checks stochastic domain
-            if ~isempty(this.stochastic_params)
-                this.BrStoch.ResetParamSet();
-                this.BrStoch.SampleDomain(size(x, 2));
-                x_stoch = this.BrStoch.GetParam(this.stochastic_params);
-                this.BrSys.SetParam(this.stochastic_params, x_stoch);
-            else
-                x_stoch = nan(0, size(x,2)); 
-            end
-            
-            % For falsification, default objective_fn is mostly robust satisfaction of the least
-            this.robust_fn(x);
-            robs = this.Spec.traces_vals;
-
-            if (~isempty(this.Spec.traces_vals_precond))
-                num_tr = size(this.Spec.traces_vals_precond,1);
-                precond_robs = zeros(num_tr,1);
-                for itr = 1:num_tr
-                    precond_robs(itr) = min(this.Spec.traces_vals_precond(itr,:));
-                    if  precond_robs(itr)<0
-                        robs(itr,:)= -precond_robs(itr);
-                    end
-                end
-            end
-            NaN_idx = isnan(robs); % if rob is undefined, make it inf to ignore it
-            robs(NaN_idx) = inf;
-            obj = min(robs,[],1)';
-            cval = inf;
-            if (~isempty(this.Spec.traces_vals_precond))
-                NaN_idx = isnan(precond_robs); % if rob is undefined, make it inf to ignore it
-                precond_robs(NaN_idx) = inf;
-                cval = min(precond_robs,[],1)';
-            end
-            
-                        
-        end
-        
-        function [fval, cval, x_stoch] = objective_wrapper(this,x)
-            % reset this.Spec
-            % objective_wrapper calls the objective function and wraps some bookkeeping
-            if size(x,1) ~= numel(this.params)
-                x = x';
-            end
-            
-            nb_eval =  size(x,2);
-            fval = inf*ones(size(this.Spec.req_monitors,2), nb_eval);            
-            cval = inf*ones(1, nb_eval);
-            x_stoch = nan(numel(this.stochastic_params), nb_eval);
-            
-            fun = @(isample) this.objective_fn(x(:, isample));
-            nb_iter = min(nb_eval, this.max_obj_eval);
-     
-            if this.stopping()==false
-                if nb_iter == 1 || ~this.use_parallel
-                    iter = 0;
-                    while ~this.stopping()&&iter<size(x,2)
-                        iter= iter+1;
-                        
-                        % checks whether x has already been computed or not
-                        % skips logging if already computed 
-                        % might cause inconsistencies down the road...
-                        
-                        if ~isempty(this.X_log)
-                            xi = x(:, iter);
-                            idx = find(sum(abs(this.X_log-repmat(xi, 1, size(this.X_log, 2)))) == 0,1);
-                        else
-                            idx=[];
-                        end
-                        
-                        if ~isempty(idx)
-                            fval(:,iter) = this.obj_log(:,idx);
-                        else
-                            % calling actual objective function
-                            [fval(:,iter), cval(:,iter), x_stoch(:,iter)] = fun(iter);
-                            
-                            % Normalize the function value based on average
-                            % robustness stated
-                            fval(:, iter) = fval(:, iter)./this.avgRobForNormalization;
-                            
-                            % logging and updating best
-                            this.time_spent = toc(this.time_start);
-                            this.LogX(x(:, iter), fval(:,iter), cval(:,iter), x_stoch(:,iter));
-
-                            % update status
-                            if ~rem(this.nb_obj_eval,this.freq_update)
-                                this.display_status(fval(:,iter), cval(:,iter) );
-                                % callback
-                                if ~isempty(this.callback_obj)
-                                   e.name ='obj_computed';
-                                   e.values.fval = fval;                                   
-                                   e.values.nb_obj_eval=this.nb_obj_eval;
-                                   this.callback_obj(this,e);
-                                end
-                            end
-
-                        end
-                                                                        
-                    end
-                else % Parallel case
-                                        
-                    for batch_counter = 1:this.parallelBatchSize:nb_iter                                                    
-                        start_index = batch_counter;
-                        end_index = min(batch_counter + this.parallelBatchSize - 1, nb_iter);
-                                                
-                        % Launch tasks                        
-                        for iter = start_index:end_index                            
-                            par_f(:,iter) = parfeval(fun,3, iter);                            
-                        end
-                        
-                        num_this_batch = end_index-start_index+1;                                                
-                        for idx = 1:num_this_batch
-                            
-                            [completedIdx(idx), fval_batch, cval_batch ,x_stoch_batch] = fetchNext(par_f);
-                            
-                            % Timing to get new fetch
-                            this.time_spent = toc(this.time_start);
-                            
-                            % Normalize the function value based on average
-                            % robustness stated
-                            fval_batch = fval_batch./this.avgRobForNormalization;                                                        
-                         
-                            % we log in the order of arrival, but will 
-                            % reorder after the batch using completedIdx
-                            this.LogX(x(:,completedIdx(idx)),fval_batch,cval_batch,x_stoch_batch); 
-                            
-                            % this way we can update status
-                            if ~rem(this.nb_obj_eval,this.freq_update)
-                                this.display_status(fval_batch, cval_batch);
-                            end
-                            
-                            fval(:,completedIdx(idx)) = fval_batch;
-                            cval(:,completedIdx(idx)) = cval_batch;
-                            x_stoch(:,completedIdx(idx)) = x_stoch_batch;
-                            
-                            if this.stopping()
-                                cancel(par_f);
-                                break
-                            end
-                            
-                        end
-                            
-                        % Let's reorder the log 
-                        [~, ia] = sort(completedIdx);
-                        this.obj_log(:,end-numel(completedIdx)+1:end) = this.obj_log(:,ia);
-                        this.X_log(:,end-numel(completedIdx)+1:end) = this.X_log(:,ia);
-                        this.X_stochastic_log(:,end-numel(completedIdx)+1:end) = this.X_stochastic_log(:,ia);  
-                                                                                                
-                    end
-                end
-            else
-                fval = this.obj_best*ones(1, nb_eval);
-                
-            end                       
-            
-        end
-        
         function b = stopping(this)
             b = (this.time_spent >= this.max_time) ||...
                 (this.nb_obj_eval>= this.max_obj_eval) || ...
@@ -1275,7 +1277,8 @@ classdef BreachProblem < BreachStatus
                 end
             end
         end
-     
+    
+
         function [BrOut, Berr, BbadU] = GetBrSet_Logged(this)
             % GetBrSet_Logged gets BreachSet object containing parameters and traces computed during optimization
             BrOut = this.BrSet_Logged;
@@ -1346,6 +1349,16 @@ classdef BreachProblem < BreachStatus
             Rbest = this.GetBrSet_Best(varargin{:});
         end
 
+        function B = GetBrSet_ObjLog(this)
+            B = [];
+            if ~isempty(this.X_log)
+                B = BreachSet([this.params 'obj']);
+                B.SetParam(this.params, this.X_log);
+                B.SetParam('obj', this.obj_log);
+            end
+            
+        end
+        
         %% Display functions
 
         function Display_X(this, param_values)
@@ -1404,7 +1417,30 @@ classdef BreachProblem < BreachStatus
             end
             
         end
-        
+       
+        function plot_obj_scatter_heat(this, params)
+            
+            if nargin==1
+                idx_params = 1:2;
+                params = this.params(1:2);
+            elseif isnumeric(params)
+                idx_params = params;
+                params = this.params(idx_params);
+            end
+
+            if numel(idx_params)==2 % 2d plot
+                x = this.X_log(idx_params(1),:);
+                y = this.X_log(idx_params(2),:);
+                c = this.obj_log;
+                scatter_heat(x,y,c);
+            end
+
+            xlabel(this.params{idx_params(1)});
+            ylabel(this.params{idx_params(2)});
+            grid on;
+
+        end
+
         
         
     end
@@ -1540,6 +1576,9 @@ classdef BreachProblem < BreachStatus
                 
             end
         end
+
+    
+
     end
     
     

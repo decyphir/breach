@@ -11,7 +11,7 @@ classdef expr_param_gen < param_gen
             this.params_out = {param_out};
             
             if nargin<3
-                p0 = 0;
+                p0 = zeros(numel(this.params),1);
             end
             this.p0 = p0;
             

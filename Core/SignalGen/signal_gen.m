@@ -22,6 +22,7 @@ classdef signal_gen <handle
         params_out_domain
         domains = containers.Map()  % maps all of the above to their respective domains, supposedly (TODO)
         p0              % default values
+        t0=0           % signal start time
     end
       
     methods

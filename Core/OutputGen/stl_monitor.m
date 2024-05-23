@@ -92,7 +92,7 @@ classdef stl_monitor < req_monitor
             this.init_tXp(time,X,p);
 
             % compute robustnes of top formula at time 0
-            [time, Xout] = this.get_standard_rob(this.formula, 0);
+            [time, Xout] = this.get_standard_rob(this.formula, this.t0);
         end
 
         function [v, t, Xout] = eval(this, t, X,p)

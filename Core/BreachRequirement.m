@@ -41,18 +41,22 @@ classdef BreachRequirement < BreachTraceSystem
                             this.AddRandReq();
                     end
                 
-                elseif ischar(req_monitors)&&exist(req_monitors, 'file')
-                    phis = STL_ReadFile(req_monitors);
+                elseif ischar(req_monitors)&&~isempty(regexp(req_monitors,'\.stl$','once'))
+                    % req_monitors looks like .stl file
+                    if exist(req_monitors,'file')==2
+                        phis = STL_ReadFile(req_monitors);
 
-                    if nargin==1
-                        reqs= phis;
+                        if nargin==1
+                            reqs= phis;
+                        else
+                            reqs = postprocess_signal_gens;
+                            postprocess_signal_gens = {};
+                        end
+                        this.AddReq(reqs);
                     else
-                        reqs = postprocess_signal_gens;
-                        postprocess_signal_gens = {};
+                        error('BreachRequirement:STLFileNotFound','STL file not found: %s', req_monitors);
                     end
-                    this.AddReq(reqs);
-               
-                else                    
+                else
                     this.AddReq(req_monitors);
                 end
             else
@@ -153,6 +157,20 @@ classdef BreachRequirement < BreachTraceSystem
         end
         
         %% Evaluation
+        function Set_t0(this, t0)
+        % set initial time for requirements evaluation
+            for i_req = 1:numel(this.req_monitors)
+                r = this.req_monitors{i_req};
+                r.t0 = t0;
+            end
+            
+            for i_req = 1:numel(this.precond_monitors)
+                r = this.req_monitors{i_req};
+                r.t0 = t0;
+            end
+        end
+
+        
         function ResetEval(this)
             this.BrSet = [];         
             this.SetParam('data_trace_idx_', 0);
@@ -168,7 +186,8 @@ classdef BreachRequirement < BreachTraceSystem
             this.traces_vals = [];
             this.val = [];            
         end
-        
+                
+
         function  [val_precond, traj_req] = evalTracePrecond(this,traj_req)
             % evalTracePrecond eval satisfaction of requirements for one trace.
             
@@ -1150,11 +1169,17 @@ classdef BreachRequirement < BreachTraceSystem
         %% Display
           
         function varargout = disp(this)
+            reqs = '';
+            for ifo = 1:numel(this.req_monitors)
+                reqs = [reqs  this.req_monitors{ifo}.name ', ' ];
+            end
+            reqs = reqs(1:end-2);
+
             signals_in_st = cell2mat(cellfun(@(c) (['''' c ''', ']), this.signals_in, 'UniformOutput', false));
-            signals_in_st = ['{' signals_in_st(1:end-2) '}'];
+            signals_in_st =  signals_in_st(1:end-2);
             summary = this.GetStatement();
             
-            st = sprintf('BreachRequirement object for signal(s): %s. %s\n', signals_in_st, summary.statement);
+            st = sprintf('BreachRequirement object with requirement(s) {%s} involving signal(s) {%s}. %s\n', reqs, signals_in_st, summary.statement);
             
             if nargout == 0
                 varargout = {};

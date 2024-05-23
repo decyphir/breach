@@ -314,9 +314,7 @@ classdef BreachSignalsPlot < handle
                         lc(end+1) = c(idx);
                         st{end+1} = lst;
                     end
-                end
-                
-                
+                end   
             end
             
             if num_patch>0
@@ -338,7 +336,14 @@ classdef BreachSignalsPlot < handle
                 end
             end
             if pos ==  numel(this.Axes)
-                error('Axes not found!');
+                if isa(ax, 'matlab.graphics.axis.Axes') % creates it
+                    new_Axe.ax = ax;
+                    new_Axe.signals = {};
+                    new_Axe.robs = {}; 
+                    this.Axes(pos) = new_Axe;
+                else
+                    error('Not a proper ax');
+                end
             end
         end
         
@@ -691,33 +696,18 @@ classdef BreachSignalsPlot < handle
                         b=true;
                     end
                     if b||bb
-                        sig_values = this.BrSet.GetSignalValues(s{1}, ipts);
+                        sig_values = this.BrSet.GetSignalValues(s{1}, ipt);
                         l = this.get_line_from_signal_name(ax, s{1});
                         if isempty(l)
                             l = plot(time , sig_values, 'DisplayName', s{1});
                         else
                             set(l, 'XData',time,'YData',sig_values);
-                        end
-
-                    else % try robustnes... should be obsolete
-                        warning('Not sure what I am doing here, plot_signal but trying robustness signal ?');
-                        l = this.get_line_from_signal_name(ax, s{1});
-                        [t,r]= this.BrSet.GetRobustSat(1, ipt, s{1});
-                        if isempty(l)
-                            l = plot(t, r, 'DisplayName', s{1});
-                        else
-                            set(l,'XData',t,'YData',r);
-                        end
-                        if isempty(this.get_line_from_signal_name(ax,this.zero_rob_line_name))
-                            plot(time, 0*time, 'DisplayName', this.zero_rob_line_name, 'LineStyle', '--', 'Color','r');
-                        end
-
+                        end                                        
+                    else 
+                        l = plot(nan,nan, 'r+', 'DisplayName', [s{1} ' not found']);
                     end
                 end
             end
-
-        end
-              
+        end              
     end
 end
-

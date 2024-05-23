@@ -200,7 +200,12 @@ else
     end
     if size(request,1) < nreq, snobwarn, end
     clear xnew fnew u1 v1 nreq
+    try 
     save(file)
+    catch
+    warning(['Could not save file ' file]);
+    end
+    
     return
   end
 end
@@ -392,6 +397,8 @@ if size(request,1) < nreq
 end
 if size(request,1) < nreq, snobwarn, end
 clear xnew fnew u1 v1 nreq p
-save(file)
-
-
+try
+    save(file)
+catch
+    warning(['Could not save ' file])
+end

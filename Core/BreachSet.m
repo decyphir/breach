@@ -446,24 +446,33 @@ classdef BreachSet < BreachStatus
         end
 
         function SetParamGenItem(this, pg)
+            % set a new param_gen. If new parameter is introduced, sets them to pg.p0
+
+            all_pg_params = [pg.params pg.params_out];
+            all_pg_p0 = [pg.p0; nan(numel(pg.params_out),1)];
+
+            % We need to split between existing parameters
+            exist_params = this.GetParamList();
+
+            % checks for new parameters
+            [new_params, idx_new] = setdiff(all_pg_params, exist_params);
+            new_p0 = all_pg_p0(idx_new);
+
+            % adds param_gen, and execute it (!) 
             this.ParamGens{end+1} = pg;
-
-            % create/update domain of input parameters
-            this.SetParam(pg.params, pg.p0, true);
-            if ~isempty(pg.domain)
-                this.SetDomain(pg.params, pg.domain);
+            if ~isempty(new_params)
+                this.SetParam(new_params,new_p0, true); % Note: this is what creates the new parameters
             else
-                domain = repmat(BreachDomain, 1, numel(pg.params));
-                this.SetDomain(pg.params, domain);
+                this.ApplyParamGens(pg.params);
             end
 
-            
-            % this.SetParam(pg.params_out, nan, true); % why ?
-            params_nan = setdiff(pg.params_out, pg.params);
-            if ~isempty(params_nan)
-                this.SetParam(params_nan, nan, true);
+            % if domain is specified we should set it
+            if ~isempty(pg.domain)
+                for ip =1:numel(pg.params_in)
+                    this.SetDomain(pg.params{ip}, pg.domain{ip});
+                end
             end
-            
+
             % update domain of output parameters
             if ~isempty(pg.domain_out)
                 for ip =1:numel(pg.params_out)
@@ -471,7 +480,6 @@ classdef BreachSet < BreachStatus
                 end
             end
 
-            this.ApplyParamGens();
         end
 
         function ApplyParamGens(this, params)
@@ -487,14 +495,28 @@ classdef BreachSet < BreachStatus
                     ip = params;
                     params = this.P.ParamList{ip};
                 end
+
+                % loop over list of param_gen and apply them
                 for ig = 1:numel(this.ParamGens)
                     pg = this.ParamGens{ig};
                     params_in= pg.params;
-                    if ~isempty(intersect(params, params_in))
-                        p_in = this.GetParam(params_in);
-                        p_out = pg.computeParams(p_in);
-                        ip_out = FindParam(this.P, pg.params_out);
-                        this.P.pts(ip_out,:) = p_out;
+                    params_out = pg.params_out;
+                    if ~isempty(intersect(params, [params_in params_out])) % if empty, this param_gen is not concerned
+                        if isempty(params_out)&&isempty(params_in)
+                            pg.computeParams(); % pure callback
+                        elseif isempty(params_out)&&~isempty(params_in)
+                            p_in = this.GetParam(params_in);
+                            pg.computeParams(p_in)
+                        elseif ~isempty(params_out)&&isempty(params_in)
+                            p_out = pg.computeParams();
+                            ip_out = FindParam(this.P, pg.params_out);
+                            this.P.pts(ip_out,:) = p_out;
+                        else
+                            p_in = this.GetParam(params_in);
+                            p_out = pg.computeParams(p_in);
+                            ip_out = FindParam(this.P, pg.params_out);
+                            this.P.pts(ip_out,:) = p_out;
+                        end
                     end
                 end
                 if ~isempty(ig)
@@ -1087,12 +1109,6 @@ classdef BreachSet < BreachStatus
             SplotTraj(this.P, varargin{:});
         end
 
-        function h= PlotSurf(this)
-            
-            
-        end
-
-
         %% Sampling
         function SampleDomain(this, params, num_samples, method, opt_multi, max_num_samples)
             % BreachSet.SampleDomain generic sampling function
@@ -1385,7 +1401,7 @@ classdef BreachSet < BreachStatus
         end
 
         function PlotParams(this, varargin)
-            % Plot parameters
+            % Plot parameters legacy version
             gca;
             %P = DiscrimPropValues(this.P);
             params = SplotPts(this.P, varargin{:});
@@ -2923,6 +2939,8 @@ classdef BreachSet < BreachStatus
 
         end
 
+
+        %% Plotting coverage
         function h = plot_cover_stats(this)
             % Plots coverage results in all projections as percentage bars
             if ~isempty(this.CoverRes)
@@ -3373,7 +3391,7 @@ classdef BreachSet < BreachStatus
 
         end
 
-
+ 
         %% Requirements - sort of deprecated per BreachRequirement class
         function  SortbyRob(this)
             sat_values = this.GetSatValues();
