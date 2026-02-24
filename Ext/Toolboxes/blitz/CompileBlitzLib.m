@@ -1,6 +1,12 @@
 function CompileBlitzLib()
 
-MEX = 'mex ';
+if ismac && strcmp(computer('arch'),'maca64')
+    % Workaround for recent Apple linker on macOS arm64 (maca64):
+    % force classic linker for MEX to avoid undefined mex* adapter symbols.
+    MEX = 'mex ''LDFLAGS=\$LDFLAGS -ld_classic'' ';
+else
+    MEX = 'mex ';
+end
 INCLUDE = [ '-I.' filesep 'include '];
 FLAGS = ' -c ';
 src_file = ['.' filesep 'src' filesep 'libblitz.cpp '];

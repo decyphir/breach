@@ -22,7 +22,13 @@ end
 % Johan fix
 silent = 0;
 
-MEX = 'mex ';
+% Workaround for recent Apple linker on macOS arm64 (maca64):
+% force classic linker for MEX to avoid undefined mex* adapter symbols.
+if ismac && strcmp(computer('arch'),'maca64')
+    MEX = 'mex ''LDFLAGS=\$LDFLAGS -ld_classic'' ';
+else
+    MEX = 'mex ';
+end
 FLAGS = ' '; 
 if silent
    FLAGS = [FLAGS ' -silent '];

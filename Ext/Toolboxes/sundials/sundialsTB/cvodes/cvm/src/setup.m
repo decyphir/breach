@@ -5,6 +5,12 @@ builddir = '.' ;
 mexopts  = '' ;
 mexflags = '-O' ;
 
+if ismac && strcmp(computer('arch'),'maca64')
+  % Workaround for recent Apple linker on macOS arm64 (maca64):
+  % force classic linker for MEX to avoid undefined mex* adapter symbols.
+  mexflags = sprintf('%s ''LDFLAGS=\$LDFLAGS -ld_classic''', mexflags);
+end
+
 cc          = 'cc' ;
 mpicc       = '' ;
 mpi_incdir  = '' ;
