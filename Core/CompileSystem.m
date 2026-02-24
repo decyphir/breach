@@ -117,11 +117,19 @@ try
         qwrap([obj_out_dir filesep 'breach' obj_ext ]) ...
         ];
     
+    if ismac && strcmp(computer('arch'),'maca64')
+        % Workaround for recent Apple linker on macOS arm64 (maca64):
+        % force classic linker for MEX to avoid undefined mex* adapter symbols.
+        mex_cmd = 'mex ''LDFLAGS=\$LDFLAGS -ld_classic'' ';
+    else
+        mex_cmd = 'mex ';
+    end
+
     % compile commands
     
-    compile_cvodes_cmd = ['mex -c -outdir ' qwrap(cv_obj_out_dir) ' ' compile_flags ' ' inc_flags ' ' cvodesTB_src_files ];
-    compile_obj_cmd = ['mex -c -outdir ' qwrap(obj_out_dir) ' ' compile_flags ' ' inc_flags ' ' src_files ];
-    compile_cvm_cmd = ['mex -output cvm ' compile_flags obj_files cv_obj_files qwrap(blitz_lib) ];
+    compile_cvodes_cmd = [mex_cmd '-c -outdir ' qwrap(cv_obj_out_dir) ' ' compile_flags ' ' inc_flags ' ' cvodesTB_src_files ];
+    compile_obj_cmd = [mex_cmd '-c -outdir ' qwrap(obj_out_dir) ' ' compile_flags ' ' inc_flags ' ' src_files ];
+    compile_cvm_cmd = [mex_cmd '-output cvm ' compile_flags obj_files cv_obj_files qwrap(blitz_lib) ];
     
     % execute commands
     

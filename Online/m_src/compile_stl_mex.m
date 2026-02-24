@@ -70,6 +70,12 @@ if ispc
  cxxflags = '-DIS_PC';
 end    
 
+if ismac && strcmp(computer('arch'),'maca64')
+    % Workaround for recent Apple linker on macOS arm64 (maca64):
+    % force classic linker for MEX to avoid undefined mex* adapter symbols.
+    cxxflags = [cxxflags ' ''LDFLAGS=\$LDFLAGS -ld_classic'' '];
+end
+
 
 if ispc
     obj_ext = 'obj';

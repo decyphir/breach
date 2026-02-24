@@ -25,7 +25,13 @@ obj_files = ['robustness' obj_ext ...
     ' av_robustness' obj_ext ...
     ];
 
-MEX = 'mex ';
+% Workaround for recent Apple linker on macOS arm64 (maca64):
+% force classic linker for MEX to avoid undefined mex* adapter symbols.
+if ismac && strcmp(computer('arch'),'maca64')
+    MEX = 'mex ''LDFLAGS=\$LDFLAGS -ld_classic'' ';
+else
+    MEX = 'mex ';
+end
 FLAGS = ' ';
 
 if isfield(BreachGlobOpt, 'disable_robust_linear_interpolation')
